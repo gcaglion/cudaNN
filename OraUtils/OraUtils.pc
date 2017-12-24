@@ -1,0 +1,289 @@
+#include "OraUtils.h"
+
+#include <sqlca.h>
+
+
+//-- local copies
+void Trim(char* str) {
+	int l = 0;
+	int i;
+	int r = (int)strlen(str);
+	char ret[MAX_PATH];
+	while (isspace(str[l])>0) l++;
+	while (isspace(str[r-1])>0) r--;
+	for (i = 0; i<(r-l); i++) ret[i] = str[l+i];
+	ret[r-l] = '\0';
+	strcpy(str, ret);
+}
+void getCurrentTime(char* ot) {
+	time_t mytime = time(NULL);
+	sprintf(ot, "%s", ctime(&mytime));
+}
+void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount, ...) {
+	// pLogLevel=	0 (No screen, No file) | 1 (Screen, No file) | 2 (Screen AND File)
+	int n;
+	char*			arg_s;
+	int				arg_d;
+	double			arg_f;
+	va_list			arguments;
+	char submsg[MAX_PATH];
+	unsigned int	im = 0;
+	int				prev_im = 0;
+	char timestamp[60];
+
+	if (DebugParms->DebugLevel==0&&LogType==LOG_INFO) return;
+
+	if (DebugParms->ThreadSafeLogging>0) WaitForSingleObject(DebugParms->Mtx, INFINITE);
+
+	//-- Opens Log file only once
+	if (DebugParms->fIsOpen!=1) {
+		strcpy(DebugParms->FullfName, DebugParms->fPath); strcat(DebugParms->FullfName, "/"); strcat(DebugParms->FullfName, DebugParms->fName);
+		DebugParms->fHandle = fopen(DebugParms->FullfName, "a");
+		DebugParms->fIsOpen = 1;
+		getCurrentTime(timestamp);
+		fprintf(DebugParms->fHandle, "\n---------- Process %d Started New Log at %s ----------\n", GetCurrentProcessId(), timestamp);
+	}
+
+	va_start(arguments, argcount);
+	n = 0;
+
+	do {
+		if (msg[im]==37) {                // "%"
+			memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
+			n++;
+			prev_im = im+2;
+			if (msg[im+1]==115) {   // "s"
+				arg_s = va_arg(arguments, char*);
+				if (DebugParms->DebugLevel==1||DebugParms->DebugLevel==3||LogType==LOG_ERROR) printf(submsg, arg_s);
+				if (DebugParms->DebugLevel==2||DebugParms->DebugLevel==3||LogType==LOG_ERROR)	fprintf(DebugParms->fHandle, submsg, arg_s);
+			} else if (msg[im+1]==100) {   // "d"
+				arg_d = va_arg(arguments, int);
+				if (DebugParms->DebugLevel==1||DebugParms->DebugLevel==3||LogType==LOG_ERROR) printf(submsg, arg_d);
+				if (DebugParms->DebugLevel==2||DebugParms->DebugLevel==3||LogType==LOG_ERROR)	fprintf(DebugParms->fHandle, submsg, arg_d);
+			} else if (msg[im+1]==112) {   // "p"
+				arg_d = va_arg(arguments, long);
+				if (DebugParms->DebugLevel==1||DebugParms->DebugLevel==3||LogType==LOG_ERROR) printf(submsg, arg_d);
+				if (DebugParms->DebugLevel==2||DebugParms->DebugLevel==3||LogType==LOG_ERROR)	fprintf(DebugParms->fHandle, submsg, arg_d);
+			} else {   // this could be 67 ("f") or any mask before "f" -> in any case, it's a double
+				arg_f = va_arg(arguments, double);
+				if (DebugParms->DebugLevel==1||DebugParms->DebugLevel==3||LogType==LOG_ERROR) printf(submsg, arg_f);
+				if (DebugParms->DebugLevel==2||DebugParms->DebugLevel==3||LogType==LOG_ERROR)	fprintf(DebugParms->fHandle, submsg, arg_f);
+			}
+		}
+		im++;
+	} while (im<strlen(msg));
+
+	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
+	if (DebugParms->DebugLevel==1||DebugParms->DebugLevel==3||LogType==LOG_ERROR) printf(submsg);
+	if (DebugParms->DebugLevel==2||DebugParms->DebugLevel==3||LogType==LOG_ERROR) fprintf(DebugParms->fHandle, submsg);
+	if (LogType==LOG_ERROR && DebugParms->PauseOnError>0) { printf("Press any key..."); getchar(); }
+
+	va_end(arguments);
+
+	if (DebugParms->ThreadSafeLogging>0) ReleaseMutex(DebugParms->Mtx);
+}
+
+//=== DB common functions
+EXPORT int  OraConnect(tDebugInfo* DebugParms, tDBConnection* DBConnInfo) {
+
+	EXEC SQL BEGIN DECLARE SECTION;
+	char* username = DBConnInfo->DBUser;
+	char* password = DBConnInfo->DBPassword;
+	char* dbstring = DBConnInfo->DBConnString;
+	sql_context vCtx = NULL;
+	EXEC SQL END DECLARE SECTION;
+
+	//LogWrite_C(DebugParms, "%s About to execute connect with %s , %s , %s\n", 4, timestamp_C, pUserName, pPassword, pDBString);
+
+	char* vPath = getenv("PATH");
+	char* vOH = getenv("ORACLE_HOME");
+	//printf("PATH=%s\nORACLE_HOME=%s\n", vPath, vOH);
+
+	EXEC SQL CONTEXT ALLOCATE : vCtx;
+	EXEC SQL CONTEXT USE : vCtx;
+	EXEC SQL CONNECT : username IDENTIFIED BY : password USING : dbstring;
+
+	if (sqlca.sqlcode==0) {
+		//memcpy(DBConnInfo->Ctx, vCtx, sizeof(sql_context));
+		DBConnInfo->DBCtx = vCtx;
+		//DebugParms->DBCtx = vCtx;
+		LogWrite(DebugParms, LOG_INFO, "OraConnect() - Connected to ORACLE as user: %s ; DBConnInfo->DBCtx=%p\n", 2, username, DBConnInfo->DBCtx);
+	} else {
+		LogWrite(DebugParms, LOG_INFO, "PATH=%s\n", 1, vPath);
+		LogWrite(DebugParms, LOG_INFO, "ORACLE_HOME=%s\n", 1, vOH);
+		LogWrite(DebugParms, LOG_INFO, "DBUser=%s\n", 1, DBConnInfo->DBUser);
+		//Oerr(DebugParms, __func__, sqlca.sqlcode);
+		LogWrite(DebugParms, LOG_ERROR, "%s failed. user = %s\n Error %s", 3, __func__, DBConnInfo->DBUser, sqlca.sqlerrm.sqlerrmc);
+	}
+	return(sqlca.sqlcode);
+}
+EXPORT void OraDisconnect(sql_context pCtx, int Commit) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	sql_context vCtx = pCtx;
+	EXEC SQL END   DECLARE SECTION;
+
+	EXEC SQL CONTEXT USE : vCtx;
+	if (Commit==0) {
+		EXEC SQL ROLLBACK RELEASE;
+	} else {
+		EXEC SQL COMMIT WORK RELEASE;
+	}
+}
+EXPORT void OraCommit(void* pCtx) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	sql_context vCtx = pCtx;
+	EXEC SQL END   DECLARE SECTION;
+
+	EXEC SQL CONTEXT USE : vCtx;
+	EXEC SQL COMMIT;
+}
+//===
+
+EXPORT int GetFlatBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, float* oBarData, float* oBaseBar) {
+	//-- 'Flat' bar means returning OHLC(V) values for each record as an array 
+	EXEC SQL BEGIN DECLARE SECTION;
+	int retval = 0;
+	int i;
+	char stmt[1000];
+	char vNDT[12+1];
+	float vOpen, vHigh, vLow, vClose;
+	EXEC SQL END   DECLARE SECTION;
+	strcpy(stmt, pSQL);
+
+	EXEC SQL CONTEXT USE : pCtx;
+	EXEC SQL PREPARE s4f FROM : stmt;
+	EXEC SQL DECLARE c4f CURSOR FOR s4f;
+	EXEC SQL OPEN c4f;
+	for (i = pRecCount-1; i>=0; i--) {
+		EXEC SQL FETCH c4f into : vNDT, : vOpen, : vHigh, : vLow, : vClose;
+		if (sqlca.sqlcode==0) {
+			oBarData[4*i+0] = vOpen;
+			oBarData[4*i+1] = vHigh;
+			oBarData[4*i+2] = vLow;
+			oBarData[4*i+3] = vClose;
+		} else if (sqlca.sqlcode==1403) {
+			break;
+		} else {
+			LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			retval = sqlca.sqlcode;
+			break;
+		}
+	}
+	//-- one more fetch to get baseBar
+	EXEC SQL FETCH c4f into : vNDT, : vOpen, : vHigh, : vLow, : vClose;
+	if (sqlca.sqlcode==0) {
+		oBaseBar[0] = vOpen;
+		oBaseBar[1] = vHigh;
+		oBaseBar[2] = vLow;
+		oBaseBar[3] = vClose;
+	} else if (sqlca.sqlcode!=1403) {
+		LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		retval = sqlca.sqlcode;
+	}
+
+	EXEC SQL CLOSE c4f;
+
+	return retval;
+}
+EXPORT int GetBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, int pSkipFirstN, tBar* oBar) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	int i = 0;  int j;
+	int retval = 0;
+	char vNDT[12+1];
+	//sql_context vCtx = pCtx;
+	struct sBar {
+		char NewDateTime[12+1];
+		double Open;
+		double High;
+		double Low;
+		double Close;
+		double OpenD;
+		double HighD;
+		double LowD;
+		double CloseD;
+		double Volume;
+		double VolumeD;
+	} *vBar;
+	char stmt[1000];
+	EXEC SQL END DECLARE SECTION;
+	vBar = (struct sBar*)malloc((pRecCount+pSkipFirstN)*sizeof(struct sBar));
+	strcpy(stmt, pSQL);
+
+	EXEC SQL CONTEXT USE : pCtx;
+	EXEC SQL PREPARE s4 FROM : stmt;
+	EXEC SQL DECLARE c4 CURSOR FOR s4;
+	EXEC SQL OPEN c4;
+	for (i = 0; i<(pRecCount+pSkipFirstN); i++) {
+		EXEC SQL FETCH c4 INTO : vNDT, : vBar[i].Open, : vBar[i].High, : vBar[i].Low, : vBar[i].Close, : vBar[i].Volume;
+		if (sqlca.sqlcode==0) {
+			strcpy(vBar[i].NewDateTime, vNDT);
+		} else if (sqlca.sqlcode==1403) {
+			break;
+		} else {
+			LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			retval = sqlca.sqlcode;
+			break;
+		}
+	}
+	EXEC SQL CLOSE c4;
+
+	if (i > 0) {
+		for (j = 0; j < pRecCount; j++) {
+			memcpy(&oBar[j], &vBar[pSkipFirstN+j], sizeof(tBar));
+		}
+	}
+	free(vBar);
+	return retval;
+}
+EXPORT int GetCharPFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, char* oRet) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	char stmt[1000];
+	char vRet[1000];
+	sql_context vCtx = pCtx;
+	EXEC SQL END   DECLARE SECTION;
+	strcpy(stmt, pSQL);
+
+	EXEC SQL CONTEXT USE : vCtx;
+	EXEC SQL PREPARE s8 FROM : stmt;
+	EXEC SQL DECLARE c8 CURSOR FOR s8;
+	EXEC SQL OPEN c8;
+	if (sqlca.sqlcode!=0) {
+		LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		return sqlca.sqlcode;
+	}
+	EXEC SQL FETCH c8 INTO : vRet;
+	if (sqlca.sqlcode!=0) {
+		LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		return sqlca.sqlcode;
+	}
+	Trim(vRet); strcpy(oRet, vRet);
+	EXEC SQL CLOSE c8;
+	return sqlca.sqlcode;
+}
+EXPORT int GetStringArrayFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int ArrLen, char** oRet) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	char stmt[1000];
+	char vRet[1000];
+	sql_context vCtx = pCtx;
+	EXEC SQL END   DECLARE SECTION;
+	strcpy(stmt, pSQL);
+
+	EXEC SQL CONTEXT USE : vCtx;
+	EXEC SQL PREPARE s82 FROM : stmt;
+	EXEC SQL DECLARE c82 CURSOR FOR s82;
+	EXEC SQL OPEN c82;
+	if (sqlca.sqlcode!=0) {
+		LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		return sqlca.sqlcode;
+	}
+	for (int i=0; i<ArrLen; i++) {
+		EXEC SQL FETCH c82 INTO : vRet;
+		if (sqlca.sqlcode!=0) {
+			LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			return sqlca.sqlcode;
+		}
+		Trim(vRet); strcpy(oRet[i], vRet);
+	}
+	EXEC SQL CLOSE c82;
+	return sqlca.sqlcode;
+}
