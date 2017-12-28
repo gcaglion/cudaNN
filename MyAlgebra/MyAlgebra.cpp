@@ -1,3 +1,6 @@
+#define _CRT_RAND_S
+#include <stdlib.h>
+
 #include "MyAlgebra.h"
 
 #ifdef USE_GPU
@@ -35,12 +38,6 @@ EXPORT void Msub(int my, int mx, numtype* INm, numtype* OUTsm, int smy0, int smx
 }
 
 //-- TODO: CUDA VERSIONS !!!
-EXPORT void Vinit(int Vlen, int* V, int val) {
-	for (int i=0; i<Vlen; i++) V[i]=val;
-}
-EXPORT void Vinit(int Vlen, numtype* V, numtype val) {
-	for (int i=0; i<Vlen; i++) V[i]=val;
-}
 EXPORT int Vsum(int Vlen, int* V) {
 	int ret=0;
 	for (int i=0; i<Vlen; i++) ret+=V[i];
@@ -65,6 +62,14 @@ EXPORT void Mfill(int size, numtype* m, numtype start, numtype inc) {
 #endif
 //--
 
+EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2) {
+#ifdef USE_GPU
+	return(Vcopy_cu(vlen, v1, v2));
+#else
+	for (int i=0; i<vlen; i++) v2[i]=v1[i];
+	return 0;
+#endif
+}
 EXPORT int Vdiff(int vlen, numtype* v1, numtype* v2, numtype* ov) {
 #ifdef USE_GPU
 	return (Vdiff_cu(vlen, v1, v2, ov));
@@ -78,8 +83,29 @@ EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm) {
 	return (Vnorm_cu(cublasH, Vlen, V, oVnorm));
 #else
 	numtype vsum=0;
-	for (int i=0; i<Vlen; i++) vsum+=pow(V[i], 2);
-	(*oVnorm)=(numtype)sqrt(VSSum);
+	for (int i=0; i<Vlen; i++) vsum+=(numtype)pow(V[i], 2);
+	(*oVnorm)=(numtype)sqrt(vsum);
+	return 0;
+#endif
+}
+EXPORT int Vinit(int Vlen, numtype* V, numtype val) {
+#ifdef USE_GPU
+	return(Vinit_cu(Vlen, V, val));
+#else
+	for (int i=0; i<Vlen; i++) V[i]=val;
+	return 0;
+#endif
+}
+EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH) {
+#ifdef USE_GPU
+	return(VinitRnd_cu(Vlen, V, rndmin, rndmax, cuRandH));
+#else
+	unsigned int number=1234;
+	int err;
+	for (int i=0; i<Vlen; i++) {
+		err = rand_s(&number);
+		V[i] = rndmin+(numtype)number/((numtype)UINT_MAX+1) * (rndmax-rndmin);
+	}
 	return 0;
 #endif
 }
@@ -102,11 +128,10 @@ EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, numtype* A, int By, int Bx, 
 }
 
 
-EXPORT int MbyM(int Ay, int Ax, numtype Ascale, numtype* A, int By, int Bx, numtype Bscale, numtype* B, numtype* C,
+EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, numtype* A, int By, int Bx, numtype Bscale, numtype* B, numtype* C,
 	int sAy, int sAx, int sAy0, int sAx0,
 	int sBy, int sBx, int sBy0, int sBx0,
-	int sCy, int sCx, int sCy0, int sCx0,
-	void* cublasH
+	int sCy, int sCx, int sCy0, int sCx0	
 ) {
 #ifdef USE_GPU
 	return MbyM_cu(cublasH, Ay, Ax, Ascale, A, By, Bx, Bscale, B, C, sAy, sAx, sAy0, sAx0, sBy, sBx, sBy0, sBx0, sCy, sCx, sCy0, sCx0);
@@ -116,20 +141,21 @@ EXPORT int MbyM(int Ay, int Ax, numtype Ascale, numtype* A, int By, int Bx, numt
 }
 
 //-- memory initialization
-EXPORT int myMemInit(void* cublasH) {
+EXPORT int myMemInit(void* cublasH, void* cuRandH) {
 #ifdef USE_GPU
 	if (initCUDA()!=0) return -1;
 	if (initCUBLAS(cublasH)!=0) return -1;
+	if (initCURand(cuRandH)!=0) return -1;
 	return 0;
 #else
 	return 0;
 #endif
 }
-EXPORT int myMalloc(numtype* var, int size) {
+EXPORT int myMalloc(numtype** var, int size) {
 #ifdef USE_GPU
 	return (Malloc_cu(var, size));
 #else
-	var = (numtype*)malloc(size*sizeof(numtype));
+	(*var) = (numtype*)malloc(size*sizeof(numtype));
 	return 0;
 #endif
 }
@@ -142,60 +168,78 @@ EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size) {
 	return 0;
 #endif
 }
+EXPORT void dumpData(int vlen, numtype* v, const char* fname) {
+	BOOL F = HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
+#ifdef USE_GPU
+	dumpData_cu(vlen, v, fname);
+#else
+	FILE* f=fopen(fname, "w");
+	for (int i=0; i<vlen; i++) fprintf(f, "%f\n", v[i]);
+	fclose(f);
+#endif
+}
 
-EXPORT void Tanh(int Vlen, numtype* in, numtype* out){
+EXPORT int Tanh(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
-	cuTanh(Vlen, in, out);
+	return(Tanh_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)tanh(i);
+	return 0;
 #endif 
 }
-EXPORT void dTanh(int Vlen, numtype* in, numtype* out){
+EXPORT int dTanh(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
-	cudTanh(Vlen, in, out);
+	return (dTanh_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1-pow(tanh(i),2));
+	return 0;
 #endif 
 }
-EXPORT void Exp4(int Vlen, numtype* in, numtype* out){
+EXPORT int Exp4(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
-	cuExp4(Vlen, in, out);
+	return(Exp4_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1/(1+exp(-4*in[i])));
+	return 0;
 #endif
 }
-EXPORT void dExp4(int Vlen, numtype* in, numtype* out){
+EXPORT int dExp4(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
-	cudExp4(Vlen, in, out);
+	return(dExp4_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(4*exp(4*in[i])/(pow(exp(4*in[i])+1, 2)));
+	return 0;
 #endif
 }
-EXPORT void Relu(int Vlen, numtype* in, numtype* out){
+EXPORT int Relu(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
-	cuRelu(Vlen, in, out);
+	return(Relu_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(((in[i] > 0) ? 1 : 0));
+	return 0;
 #endif 
 }
-EXPORT void dRelu(int Vlen, numtype* in, numtype* out){
+EXPORT int dRelu(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
-	cudRelu(Vlen, in, out);
+	return(dRelu_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(((in[i] > 0) ? in[i] : 0));
+	return 0;
 #endif 
 }
-EXPORT void SoftPlus(int Vlen, numtype* in, numtype* out){
+EXPORT int SoftPlus(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
-	cuSoftPlus(Vlen, in, out);
+	return(SoftPlus_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(log(1+exp(in[i])));
+	return 0;
 #endif 
 }
-EXPORT void dSoftPlus(int Vlen, numtype* in, numtype* out){
+EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
-	cudSoftPlus(Vlen, in, out);
+	return(dSoftPlus_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1/(1+exp(-in[i])));
+	return 0;
 #endif 
 }

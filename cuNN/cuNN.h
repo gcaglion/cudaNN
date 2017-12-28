@@ -1,6 +1,7 @@
 #pragma once
 
 #include "..\CommonEnv.h"
+#include "../MyUtils/MyUtils.h"
 #include "../MyAlgebra/MyAlgebra.h"
 
 //-- Exceptions
@@ -11,6 +12,7 @@
 #define FAIL_MALLOC_N "Neurons memory allocation failed. \n"
 #define FAIL_MALLOC_W "Weights memory allocation failed. \n"
 #define FAIL_MALLOC_e "Errors memory allocation failed. \n"
+#define FAIL_MALLOC_u "Targets memory allocation failed. \n"
 
 #define MLP 0
 #define RNN 1
@@ -37,18 +39,21 @@
 
 typedef struct sNN {
 	void* cublasH;
+	void* cuRandH;
 
 	//-- topology
 	int InputCount;
 	int OutputCount;
-	int FeaturesCount;
-	int TotalSamplesCount;
-	int batchSampleCount;	// usually referred to as Batch Size
-	bool useContext;
-
+	//int FeaturesCount;
 	int batchCnt;
-	int inputSize;	// InputCount*FeaturesCount (# of neurons in layer 0 for single sample)
-	int outputSize;	// OutputCount*FeaturesCount (# of neurons in output layer for single sample)
+	int batchSamplesCnt;	// usually referred to as Batch Size
+	bool useContext;
+	bool useBias;
+
+//	int batchCnt;
+//	int inputSize;	// InputCount*FeaturesCount (# of neurons in layer 0 for single sample)
+//	int outputSize;	// OutputCount*FeaturesCount (# of neurons in output layer for single sample)
+
 	float levelRatio[MAX_LEVELS];
 	int levelsCnt;
 	int nodesCnt[MAX_LEVELS];
@@ -76,13 +81,13 @@ typedef struct sNN {
 	numtype* e;
 	numtype* u;
 
-	EXPORT sNN(int InputCount_, int OutputCount_, int FeaturesCount_, char LevelRatioS_[60], int TotalSamplesCount_, int batchSize_, bool useContext_, bool useGPU);
+	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_);
 	~sNN();
 
-	void setLayout(int InputCount_, int OutputCount_, int FeaturesCount_, char LevelRatioS[60], bool useContext_);
+	void setLayout(char LevelRatioS[60]);
 
 	EXPORT void setActivationFunction(int func_);
-	void sNN::Activate(int level);
+	int sNN::Activate(int level);
 
 	EXPORT int train(numtype* sample, numtype* target);
 

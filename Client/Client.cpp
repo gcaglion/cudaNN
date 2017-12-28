@@ -160,7 +160,7 @@ int client2(NN* pNN) {
 		int s1w0=levelFirstWeight[sm+1];
 		int s0w0=levelFirstWeight[sm];
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_cu() - (pointer subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM(nodesCnt[sm+2], nodesCnt[sm+1], 1, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, &w[s0w0], sw_mres[sm], -1,-1,-1,-1,-1, -1, -1, -1, -1, -1, -1, -1, pNN->cublasH);
+		MbyM(pNN->cublasH, nodesCnt[sm+2], nodesCnt[sm+1], 1, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, &w[s0w0], sw_mres[sm]);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
@@ -169,6 +169,8 @@ int client2(NN* pNN) {
 }
 
 int main() {
+
+	BOOL f = HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;
@@ -183,19 +185,18 @@ int main() {
 
 	int historyLen=100;
 	int sampleLen=20;
-	int featuresCnt=4;	//OHLC;
 	int predictionLen=2;
+	int featuresCnt=4;	//OHLC;
 	int batchSamplesCount=10;
 
-	int inputCount=sampleLen*featuresCnt;
-	int outputCount=predictionLen*featuresCnt;
 	int totSamplesCount=historyLen-sampleLen;
+	int batchCount=(int)(floor(totSamplesCount/batchSamplesCount));
 
 	char* levelRatioS="1, 0.5";
 
 	NN* myNN=nullptr;
 	try {
-		myNN=new NN(inputCount, outputCount, featuresCnt, levelRatioS, totSamplesCount, batchSamplesCount, false, true);
+		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, false, false);
 	} catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
 	}
@@ -224,7 +225,7 @@ int main() {
 	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fSample, predictionLen*featuresCnt, fTarget, 2);
 
 	//-- Train
-	//myNN->train(fSample, fTarget);
+	myNN->train(fSample, fTarget);
 
 	//int ret1=client1(myNN);
 	int ret2=client2(myNN);

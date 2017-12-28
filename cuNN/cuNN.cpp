@@ -1,76 +1,43 @@
 #include "cuNN.h"
 
-void Trim(char* str) {
-	int l = 0;
-	int i;
-	int r = (int)strlen(str);
-	char ret[MAX_PATH];
-	while (isspace(str[l])>0) l++;
-	while (isspace(str[r-1])>0) r--;
-	for (i = 0; i<(r-l); i++) ret[i] = str[l+i];
-	ret[r-l] = '\0';
-	strcpy(str, ret);
-}
-int cslToArray(char* csl, char Separator, char** StrList) {
-	//-- 1. Put a <separator>-separated list of string values into an array of strings, and returns list length
-	int i = 0;
-	int prevSep = 0;
-	int ListLen = 0;
-	int kaz;
-
-	while (csl[i]!='\0') {
-		kaz = (prevSep==0) ? 0 : 1;
-		if (csl[i]==Separator) {
-			// separator
-			memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
-			StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
-			Trim(StrList[ListLen]);
-			ListLen++;
-			prevSep = i;
-		}
-		i++;
-	}
-	//-- portion of pDesc after the last comma
-	memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
-	StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
-	Trim(StrList[ListLen]);
-
-	return (ListLen+1);
-}
-
-sNN::sNN(int InputCount_, int OutputCount_, int FeaturesCount_, char LevelRatioS_[60], int TotalSamplesCount_, int batchSize_, bool useContext_, bool useGPU) {
-	batchSampleCount=batchSize_;
-	TotalSamplesCount=TotalSamplesCount_;
-	batchCnt=(int)floor(TotalSamplesCount/batchSampleCount);
+sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_) {
+	batchCnt=batchCnt_;
+	batchSamplesCnt=batchSamplesCnt_;
 	useContext=useContext_;
+	useBias=useBias_;
+
+	InputCount=sampleLen_*featuresCnt_*batchSamplesCnt;
+	OutputCount=predictionLen_*featuresCnt_*batchSamplesCnt;
 
 	//-- 0. init CUDA/BLAS
 	cublasH=new void*;
-	if (myMemInit(cublasH)!=0) throw FAIL_INITCU;
+	cuRandH=new void*;
+	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
 
 	//-- 1. set Layout
-	setLayout(InputCount_, OutputCount_, FeaturesCount_, LevelRatioS_, useContext_);
+	setLayout(LevelRatioS_);
 
 	//-- 2. malloc neurons and weights on GPU
-	if (myMalloc(N, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(dN, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(W, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
-	if (myMalloc(e, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_e;
-
+	if (myMalloc(&N, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&dN, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&W, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
+	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_e;
+	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_u;
 
 }
 sNN::~sNN() {
+	//!!!!!!!!!!!!!! create a myFree() functio to handle CUDA-based variables !
 	free(weightsCnt);
 	free(N);
 	free(W);
+	//.....
+	// free cublasH, cuRandH, curanddestroygenerator...
 }
 
-void sNN::setLayout(int InputCount_, int OutputCount_, int FeaturesCount_, char LevelRatioS[60], bool useContext_) {
-	int i, nl;
+void sNN::setLayout(char LevelRatioS[60]) {
+	int i, l, nl;
 	int Levcnt;	// Levels count
 	char** DescList=(char**)malloc(MAX_LEVELS*sizeof(char*)); for (i=0; i<MAX_LEVELS; i++) DescList[i]=(char*)malloc(256);
-
-	InputCount=InputCount_; OutputCount=OutputCount_; FeaturesCount=FeaturesCount_; useContext=useContext_;
 
 	//-- 0.1. levels and nodes count
 	Levcnt = cslToArray(LevelRatioS, ',', DescList);
@@ -78,9 +45,7 @@ void sNN::setLayout(int InputCount_, int OutputCount_, int FeaturesCount_, char 
 	for (i = 0; i<=Levcnt; i++) levelRatio[i] = (numtype)atof(DescList[i]);
 	levelsCnt = (Levcnt+2);
 	// set nodesCnt (single sample)
-	inputSize=InputCount*FeaturesCount;
-	outputSize=OutputCount*FeaturesCount;
-	nodesCnt[0] = inputSize;
+	nodesCnt[0] = InputCount;
 	nodesCnt[levelsCnt-1] = OutputCount;
 	for (nl = 0; nl<(levelsCnt-2); nl++) nodesCnt[nl+1] = (int)floor(nodesCnt[nl]*levelRatio[nl]);
 	//-- add context neurons
@@ -90,24 +55,23 @@ void sNN::setLayout(int InputCount_, int OutputCount_, int FeaturesCount_, char 
 		}
 	}
 	//-- add one bias neurons for each layer, except output layer
-	for (nl = 0; nl<(levelsCnt-1); nl++) nodesCnt[nl] += 1;
+	if (useBias) {
+		for (nl = 0; nl<(levelsCnt-1); nl++) nodesCnt[nl] += 1;
+	}
 
-	//-- 0.2. weights count
+	//-- 0.2. calc nodesCntTotal
+	nodesCntTotal=0;
+	for (l=0; l<levelsCnt; l++) nodesCntTotal+=nodesCnt[l];
+
+	//-- 0.3. weights count
 	weightsCntTotal=0;
-	for (int l=0; l<(levelsCnt-1); l++) {
-		weightsCnt[l]=nodesCnt[l]*nodesCnt[l+1];
+	for (l=0; l<(levelsCnt-1); l++) {
+		weightsCnt[l]=nodesCnt[l]*nodesCnt[l+1] /batchSamplesCnt;
 		weightsCntTotal+=weightsCnt[l];
 	}
 
-	//-- 0.3. multiply nodesCnt[] by batchSize, anc calc nodesCntTotal
-	nodesCntTotal=0;
-	for (int l=0; l<levelsCnt; l++) {
-		nodesCnt[l]*=batchSampleCount;
-		nodesCntTotal+=nodesCnt[l];
-	}
-
 	//-- 0.4. set first node and first weight for each layer
-	for (int l=0; l<levelsCnt; l++) {
+	for (l=0; l<levelsCnt; l++) {
 		levelFirstNode[l]=0;
 		levelFirstWeight[l]=0;
 		for (int ll=0; ll<l; ll++) {
@@ -146,72 +110,81 @@ void sNN::setActivationFunction(int func_) {
 	}
 
 }
-void sNN::Activate(int level) {
+int sNN::Activate(int level) {
+	int ret, retd;
 	switch (ActivationFunction) {
 	case NN_ACTIVATION_TANH:
-		Tanh(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
-		dTanh(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
+		ret=Tanh(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
+		retd=dTanh(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
 		break;
 	case NN_ACTIVATION_EXP4:
-		Exp4(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
-		dExp4(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
+		ret=Exp4(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
+		retd=dExp4(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
 		break;
 	case NN_ACTIVATION_RELU:
-		Relu(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
-		dRelu(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
+		ret=Relu(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
+		retd=dRelu(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
 		break;
 	case NN_ACTIVATION_SOFTPLUS:
-		SoftPlus(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
-		dSoftPlus(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
+		ret=SoftPlus(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
+		retd=dSoftPlus(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
 		break;
 	default:
 		break;
 	}
+	return((ret==0&&retd==0)?0:-1);
 }
 
-/*
-int sNN::getLevelFirstNeuron(int l) {
-	int ret=0;
-	for (int ll=0; ll<l; ll++) ret+=nodesCnt[ll];
-	return ret;
-}
-int sNN::getLevelFirstWeight(int l) {
-	int ret=0;
-	for (int ll=0; ll<l; ll++) ret+=weightsCnt[ll];
-	return ret;
-}
-*/
 int sNN::train(numtype* sample, numtype* target) {
 	int l;
+	char fname[MAX_PATH];
 
 	//-- 0. Init
-	//---- 0.1. Init Neurons
+	
+	//---- 0.1. Init Neurons (must set context neurons=0, at least for layer 0)
+	if( Vinit(nodesCnt[0], &N[0], 0) !=0) return -1;
+
 	//---- 0.2. Init Weights
+	for (l=0; l<(levelsCnt-1); l++) {
+		VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), cuRandH);
+	}
+	//dumpData(weightsCntTotal, &W[0], "C:/temp/W.txt");
 
 	//-- 1. train one batch at a time
-	int batchMemInputSize=inputSize*batchSampleCount*sizeof(numtype);
-	int batchMemOutputSize=outputSize*batchSampleCount*sizeof(numtype);
+	int batchMemInputSize=InputCount*sizeof(numtype);
+	int batchMemOutputSize=OutputCount*sizeof(numtype);
 	for (int b=0; b<batchCnt; b++) {
 		//-- 1.1.  load samples + targets onto GPU
 		if (loadBatchData(&N[0], &sample[b*batchMemInputSize], batchMemInputSize)!=0) return -1;
 		if (loadBatchData(&u[0], &target[b*batchMemOutputSize], batchMemOutputSize)!=0) return -1;
+		dumpData(InputCount, &N[0], "C:/temp/F0.txt");
 		//-- 1.2. reset batch error = 0
 		Vinit(nodesCnt[levelsCnt-1], e, 0);
 		//-- 1.3. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
 		for (l=0; l<(levelsCnt-1); l++) {
+			int W10y=nodesCnt[l+1]/batchSamplesCnt;
+			int W10x=nodesCnt[l]/batchSamplesCnt;
 			int W10start= levelFirstWeight[l];
+			int N0y=W10x;
+			int N0x=batchSamplesCnt;
 			int N0start= levelFirstNode[l];
 			int N1start= levelFirstNode[l+1];
 
 			//-- N[l+1]=N[l]*W[l]
-			if (MbyM(nodesCnt[l+1], nodesCnt[l], 1, &W[W10start], nodesCnt[l], batchSampleCount, 1, &N[N0start], &N[N1start] ) !=0) return -1;
-			//-- activation
-			Activate(l);
+			if (MbyM(cublasH, W10y, W10x, 1, &W[W10start], N0y, N0x, 1, &N[N0start], &N[N1start] ) !=0) return -1;
+			
+			sprintf(fname, "C:/temp/F%d.txt", l); dumpData(nodesCnt[l], &N[levelFirstNode[l]], fname);
+			sprintf(fname, "C:/temp/F%d.txt", l+1); dumpData(nodesCnt[l+1], &N[levelFirstNode[l+1]], fname);
+
+			//-- l+1 activation
+			if(Activate(l+1)!=0) return -1;
 
 		}
 		//-- 1.4. Calc Error
 		int outNstart=levelFirstNode[levelsCnt-1];
 		if (Vdiff(nodesCnt[levelsCnt-1], &N[outNstart], u, e)!=0) return -1;
+		sprintf(fname, "C:/temp/e.txt"); dumpData(nodesCnt[levelsCnt-1], &N[outNstart], fname);
+		sprintf(fname, "C:/temp/u.txt"); dumpData(nodesCnt[levelsCnt-1], &u[0], fname);
 		//-- 1.5. BackPropagate, update batch error
 /*		for (l = levelsCnt-1; l>0; l--) {
 			if (l==(levelsCnt-1)) {
