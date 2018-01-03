@@ -5,6 +5,11 @@
 
 #ifdef __cplusplus
 
+template <typename T> void swap(T* v1, T* v2) {
+	T tmp=(*v1);
+	(*v1)=(*v2);
+	(*v2)=tmp;
+}
 template <typename T> int sgn(T val) {
 	return (T(0) < val) - (val < T(0));
 }

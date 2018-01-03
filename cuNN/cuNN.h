@@ -77,9 +77,14 @@ typedef struct sNN {
 
 	numtype* N;
 	numtype* dN;
+	numtype* edN;
 	numtype* W;
+	numtype* dW;
+	numtype* dJdW;
 	numtype* e;
 	numtype* u;
+
+	numtype mse;
 
 	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_);
 	~sNN();

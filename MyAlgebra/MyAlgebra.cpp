@@ -1,6 +1,3 @@
-#define _CRT_RAND_S
-#include <stdlib.h>
-
 #include "MyAlgebra.h"
 
 #ifdef USE_GPU
@@ -43,11 +40,6 @@ EXPORT int Vsum(int Vlen, int* V) {
 	for (int i=0; i<Vlen; i++) ret+=V[i];
 	return ret;
 }
-EXPORT numtype Vsum(numtype Vlen, numtype* V) {
-	numtype ret=0;
-	for (int i=0; i<Vlen; i++) ret+=V[i];
-	return ret;
-}
 EXPORT void Vscale(int Vlen, int* V, float s) {
 	for (int i=0; i<Vlen; i++) V[i]=(int)(V[i]*s);
 }
@@ -70,11 +62,28 @@ EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2) {
 	return 0;
 #endif
 }
-EXPORT int Vdiff(int vlen, numtype* v1, numtype* v2, numtype* ov) {
+EXPORT int Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
 #ifdef USE_GPU
-	return (Vdiff_cu(vlen, v1, v2, ov));
+	return (Vadd_cu(vlen, v1, scale1, v2, scale2, ov));
 #else
-	for (int i=0; i<vlen; i++) ov[i]=v2[i]-v1[i];
+	for (int i=0; i<vlen; i++) ov[i]=v2[i]*scale2+v1[i]*scale1;
+	return 0;
+#endif
+}
+EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
+#ifdef USE_GPU
+	return (Vdiff_cu(vlen, v1, scale1, v2, scale2, ov));
+#else
+	for (int i=0; i<vlen; i++) ov[i]=v2[i]*scale2-v1[i]*scale1;
+	return 0;
+#endif
+}
+EXPORT int Vssum(numtype Vlen, numtype* V, numtype* osSum) {
+	(*osSum)=0;
+#ifdef USE_GPU
+	return (Vsum_cu(Vlen, V, osSum));
+#else
+	for (int i=0; i<Vlen; i++) (*osSum)+=V[i]*V[i];
 	return 0;
 #endif
 }
@@ -100,22 +109,42 @@ EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* 
 #ifdef USE_GPU
 	return(VinitRnd_cu(Vlen, V, rndmin, rndmax, cuRandH));
 #else
+	time_t t;
+	srand((unsigned)time(&t));
+
+	/* Print 5 random numbers from 0 to 49 */
+	for (int i = 0; i < Vlen; i++) {
+		V[i] = rndmin+(numtype)rand()/((numtype)RAND_MAX+1) * (rndmax-rndmin);
+		//printf("rand[%d]=%f\n", i, V[i]);
+	}
+/*
 	unsigned int number=1234;
 	int err;
 	for (int i=0; i<Vlen; i++) {
 		err = rand_s(&number);
 		V[i] = rndmin+(numtype)number/((numtype)UINT_MAX+1) * (rndmax-rndmin);
 	}
+*/
 	return 0;
 #endif
 }
-
-EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, numtype* A, int By, int Bx, numtype Bscale, numtype* B, numtype* C,
+EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV) {
+#ifdef USE_GPU
+	return(VbyV2V_cu(Vlen, V1, V2, oV));
+#else
+	for (int i = 0; i < Vlen; i++) oV[i] = V1[i]*V2[i];
+	return 0;
+#endif
+}
+EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C,
 	int sAy, int sAx, int sAy0, int sAx0,
 	int sBy, int sBx, int sBy0, int sBx0,
 	int sCy, int sCx, int sCy0, int sCx0
 ) {
 	//-- As, Bs are scalars to multiply A and B cells, respectively, before multiplication
+	if (Atr) swap(&Ax, &Ay);
+	if (Btr) swap(&Bx, &By);
+
 	for (int y = 0; y < Ay; y++) {
 		for (int x2 = 0; x2 < Bx; x2++) {
 			C[y*Bx+x2] = 0;
@@ -128,15 +157,15 @@ EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, numtype* A, int By, int Bx, 
 }
 
 
-EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, numtype* A, int By, int Bx, numtype Bscale, numtype* B, numtype* C,
+EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C,
 	int sAy, int sAx, int sAy0, int sAx0,
 	int sBy, int sBx, int sBy0, int sBx0,
 	int sCy, int sCx, int sCy0, int sCx0	
 ) {
 #ifdef USE_GPU
-	return MbyM_cu(cublasH, Ay, Ax, Ascale, A, By, Bx, Bscale, B, C, sAy, sAx, sAy0, sAx0, sBy, sBx, sBy0, sBx0, sCy, sCx, sCy0, sCx0);
+	return MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, sAy, sAx, sAy0, sAx0, sBy, sBx, sBy0, sBx0, sCy, sCx, sCy0, sCx0);
 #else
-	return MbyM_std(Ay, Ax, Ascale, A, By, Bx, Bscale, B, C, sAy, sAx, sAy0, sAx0, sBy, sBx, sBy0, sBx0, sCy, sCx, sCy0, sCx0);
+	return MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, sAy, sAx, sAy0, sAx0, sBy, sBx, sBy0, sBx0, sCy, sCx, sCy0, sCx0);
 #endif
 }
 
@@ -183,7 +212,7 @@ EXPORT int Tanh(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return(Tanh_cu(Vlen, in, out));
 #else 
-	for (int i=0; i<Vlen; i++) out[i]=(numtype)tanh(i);
+	for (int i=0; i<Vlen; i++) out[i]=(numtype)tanh(in[i]);
 	return 0;
 #endif 
 }
@@ -191,7 +220,7 @@ EXPORT int dTanh(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return (dTanh_cu(Vlen, in, out));
 #else 
-	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1-pow(tanh(i),2));
+	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1-pow(tanh(in[i]),2));
 	return 0;
 #endif 
 }

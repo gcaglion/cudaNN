@@ -3,8 +3,10 @@
 #include "../MyTimeSeries/MyTimeSeries.h"
 #include "..\cuNN\cuNN.h"
 
+#ifdef USE_GPU
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
+#endif
 
 void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
 	for (int l=0; l<Vlen; l++) {
@@ -12,7 +14,7 @@ void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
 		for (int ll=0; ll<l; ll++) oVsumPrevs[l]+=V[ll];
 	}
 }
-
+#ifdef USE_GPU
 int client1(NN* myNN) {
 	float alpha=1, beta=0;
 
@@ -82,7 +84,7 @@ int client1(NN* myNN) {
 
 	return 0;
 }
-
+#endif
 int client2(NN* pNN) {
 	int l, sm, n;
 	float alpha=1, beta=0;
@@ -138,7 +140,7 @@ int client2(NN* pNN) {
 	printf("\n------------------------------------------------------------------------------------------------------\n");
 	for (sm=0; sm<(levelsCnt-2); sm++) {
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_std() - (finite subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, sw[sm+1], nodesCnt[sm+1], nodesCnt[sm], 1, sw[sm], sw_mres[sm]);
+		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, false, sw[sm+1], nodesCnt[sm+1], nodesCnt[sm], 1, false, sw[sm], sw_mres[sm]);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
@@ -149,12 +151,13 @@ int client2(NN* pNN) {
 		int s1w0=levelFirstWeight[sm+1];
 		int s0w0=levelFirstWeight[sm];
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_std() - (pointer subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, &w[s0w0], sw_mres[sm]);
+		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, false, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, false, &w[s0w0], sw_mres[sm]);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
 
 	//-- MbyM_cu(), multiplication on pointer submatrices, into finite submatrix
+#ifdef USE_GPU
 	printf("\n------------------------------------------------------------------------------------------------------\n");
 	for (sm=0; sm<(levelsCnt-2); sm++) {
 		int s1w0=levelFirstWeight[sm+1];
@@ -164,7 +167,7 @@ int client2(NN* pNN) {
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
-
+#endif
 	return 0;
 }
 
@@ -177,14 +180,14 @@ int main() {
 	DebugParms->DebugLevel = 2;
 	DebugParms->DebugDest = LOG_TO_TEXT;
 	strcpy(DebugParms->fPath, "C:/temp");
-	strcpy(DebugParms->fName, "kaz.log");
+	strcpy(DebugParms->fName, "Client.log");
 	DebugParms->PauseOnError = 1;
 	//--
 
 	float scaleM, scaleP;
 
 	int historyLen=100;
-	int sampleLen=20;
+	int sampleLen=6;// 20;
 	int predictionLen=2;
 	int featuresCnt=4;	//OHLC;
 	int batchSamplesCount=10;
@@ -192,8 +195,12 @@ int main() {
 	int totSamplesCount=historyLen-sampleLen;
 	int batchCount=(int)(floor(totSamplesCount/batchSamplesCount));
 
-	char* levelRatioS="1, 0.5";
-
+	char* levelRatioS="0.5";// "1, 0.5";
+/*
+	int l=10;
+	numtype* V=(numtype*)malloc(l*sizeof(numtype));
+	VinitRnd(l, V, -0.5, 0.5);
+*/
 	NN* myNN=nullptr;
 	try {
 		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, false, false);
@@ -228,7 +235,7 @@ int main() {
 	myNN->train(fSample, fTarget);
 
 	//int ret1=client1(myNN);
-	int ret2=client2(myNN);
+	//int ret2=client2(myNN);
 
 	system("pause");
 	return 0;
