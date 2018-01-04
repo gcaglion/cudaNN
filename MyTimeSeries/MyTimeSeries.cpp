@@ -66,18 +66,20 @@ EXPORT void fSlideArrayF(int iWholeSetLen, numtype* iWholeSet, int featuresCnt, 
 
 	for (s = 0; s<iSampleCount; s++) {
 
+		//-- sample
 		for (i=0; i<iSampleSize; i++) {
 			ofSample[s*iSampleSize+i]=iWholeSet[s*featuresCnt+i];
 			if (pWriteLog>0) fprintf(LogFile, "%f ", ofSample[s*iSampleSize+i]);
 		}
 
+		//-- target
 		for (i=0; i<iTargetSize; i++) {
 			if (s>=(iSampleCount-(int)(iTargetSize/featuresCnt))) {
-				ofTarget[s*iSampleSize+i]=ofTarget[(s-1)*iSampleSize+i];
+				ofTarget[s*iTargetSize+i]=ofTarget[s*iTargetSize+i-featuresCnt];
 			} else {
-				ofTarget[s*iSampleSize+i]=iWholeSet[s*featuresCnt+iSampleSize+i];
+				ofTarget[s*iTargetSize+i]=iWholeSet[s*featuresCnt+iSampleSize+i];
 			}
-			if (pWriteLog>0) fprintf(LogFile, "%f ", ofTarget[s*iSampleSize+i]);
+			if (pWriteLog>0) fprintf(LogFile, "%f ", ofTarget[s*iTargetSize+i]);
 		}
 		if (pWriteLog>0) fprintf(LogFile, "\n");
 	}

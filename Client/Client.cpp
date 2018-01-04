@@ -189,7 +189,7 @@ int main() {
 	int historyLen=100;
 	int sampleLen=6;// 20;
 	int predictionLen=2;
-	int featuresCnt=4;	//OHLC;
+	int featuresCnt=2;	//OHLC;
 	int batchSamplesCount=10;
 
 	int totSamplesCount=historyLen-sampleLen;
@@ -228,6 +228,8 @@ int main() {
 	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
 	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201508010000", historyLen, historyData, baseData)<0) return -1;
 	dataTrS(historyLen, featuresCnt, historyData, baseData, DT_DELTA, myNN->scaleMin, myNN->scaleMax, hd_trs, &scaleM, &scaleP);
+	//for (int i=0; i<(historyLen*featuresCnt); i++) hd_trs[i]=i;
+	
 	//SlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, Sample, predictionLen*featuresCnt, Target, 2);
 	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fSample, predictionLen*featuresCnt, fTarget, 2);
 

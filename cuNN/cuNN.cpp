@@ -161,7 +161,7 @@ int sNN::train(numtype* sample, numtype* target) {
 			//-- 1.0.1.  load samples + targets onto GPU
 			if (loadBatchData(&N[0], &sample[b*InputCount], InputCount*sizeof(numtype) )!=0) return -1;
 			if (loadBatchData(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype) )!=0) return -1;
-			dumpData(InputCount, &N[0], "C:/temp/F0.txt");
+			//dumpData(InputCount, &N[0], "C:/temp/F0.txt");
 		
 			//-- 1.0.2. reset batch error = 0
 			Vinit(nodesCnt[levelsCnt-1], e, 0);
