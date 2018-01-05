@@ -3,8 +3,10 @@
 #include "../MyTimeSeries/MyTimeSeries.h"
 #include "..\cuNN\cuNN.h"
 
+#ifdef USE_GPU
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
+#endif
 
 void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
 	for (int l=0; l<Vlen; l++) {
@@ -12,7 +14,7 @@ void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
 		for (int ll=0; ll<l; ll++) oVsumPrevs[l]+=V[ll];
 	}
 }
-
+#ifdef USE_GPU
 int client1(NN* myNN) {
 	float alpha=1, beta=0;
 
@@ -82,7 +84,7 @@ int client1(NN* myNN) {
 
 	return 0;
 }
-
+#endif
 int client2(NN* pNN) {
 	int l, sm, n;
 	float alpha=1, beta=0;
@@ -138,7 +140,7 @@ int client2(NN* pNN) {
 	printf("\n------------------------------------------------------------------------------------------------------\n");
 	for (sm=0; sm<(levelsCnt-2); sm++) {
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_std() - (finite subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, sw[sm+1], nodesCnt[sm+1], nodesCnt[sm], 1, sw[sm], sw_mres[sm]);
+		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, false, sw[sm+1], nodesCnt[sm+1], nodesCnt[sm], 1, false, sw[sm], sw_mres[sm]);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
@@ -149,12 +151,13 @@ int client2(NN* pNN) {
 		int s1w0=levelFirstWeight[sm+1];
 		int s0w0=levelFirstWeight[sm];
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_std() - (pointer subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, &w[s0w0], sw_mres[sm]);
+		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, false, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, false, &w[s0w0], sw_mres[sm]);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
 
 	//-- MbyM_cu(), multiplication on pointer submatrices, into finite submatrix
+#ifdef USE_GPU
 	printf("\n------------------------------------------------------------------------------------------------------\n");
 	for (sm=0; sm<(levelsCnt-2); sm++) {
 		int s1w0=levelFirstWeight[sm+1];
@@ -164,7 +167,7 @@ int client2(NN* pNN) {
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
-
+#endif
 	return 0;
 }
 
@@ -183,22 +186,24 @@ int main() {
 
 	float scaleM, scaleP;
 
-	int historyLen=10;
+	int historyLen=100;
 	int sampleLen=6;// 20;
 	int predictionLen=2;
-	int featuresCnt=1;// 4;	//OHLC;
-	int batchSamplesCount=1;// 10;
-	bool useContext=false;
-	bool useBias=false;
+	int featuresCnt=2;	//OHLC;
+	int batchSamplesCount=10;
 
 	int totSamplesCount=historyLen-sampleLen;
 	int batchCount=(int)(floor(totSamplesCount/batchSamplesCount));
 
 	char* levelRatioS="0.5";// "1, 0.5";
-
+/*
+	int l=10;
+	numtype* V=(numtype*)malloc(l*sizeof(numtype));
+	VinitRnd(l, V, -0.5, 0.5);
+*/
 	NN* myNN=nullptr;
 	try {
-		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, useContext, useBias);
+		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, false, false);
 	} catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
 	}
@@ -223,6 +228,8 @@ int main() {
 	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
 	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201508010000", historyLen, historyData, baseData)<0) return -1;
 	dataTrS(historyLen, featuresCnt, historyData, baseData, DT_DELTA, myNN->scaleMin, myNN->scaleMax, hd_trs, &scaleM, &scaleP);
+	//for (int i=0; i<(historyLen*featuresCnt); i++) hd_trs[i]=i;
+	
 	//SlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, Sample, predictionLen*featuresCnt, Target, 2);
 	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fSample, predictionLen*featuresCnt, fTarget, 2);
 

@@ -62,7 +62,7 @@ EXPORT void dumpData_cu(int vlen, numtype* v, char* fname) {
 }
 
 EXPORT int MbyM_cu(void* cublasH,
-	int fAy, int fAx, numtype Ascale, numtype* fA, int fBy, int fBx, numtype Bscale, numtype* fB, numtype* fC,
+	int fAy, int fAx, numtype Ascale, bool Atr, numtype* fA, int fBy, int fBx, numtype Bscale, bool Btr, numtype* fB, numtype* fC,
 	int sAy, int sAx, int sAy0, int sAx0,
 	int sBy, int sBx, int sBy0, int sBx0,
 	int sCy, int sCx, int sCy0, int sCx0
@@ -84,7 +84,7 @@ EXPORT int MbyM_cu(void* cublasH,
 
 	// Do the actual multiplication
 
-	if (cublasSgemm((*(cublasHandle_t*)cublasH), CUBLAS_OP_N, CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
+	if (cublasSgemm((*(cublasHandle_t*)cublasH), (Atr)?CUBLAS_OP_T:CUBLAS_OP_N, (Btr)?CUBLAS_OP_T:CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
 		return 0;
 	} else {
 		return -1;
@@ -96,9 +96,16 @@ __global__ void cuVcopy_ker(const int vlen, const numtype *v1, numtype *v2) {
 	int tid = blockIdx.x * blockDim.x+threadIdx.x;
 	if (tid < vlen) v2[tid] = v1[tid];
 }
-__global__ void cuVminusV_ker(const int vlen, const numtype *a, const numtype *b, numtype* c) {
+__global__ void cuVminusV_ker(const int vlen, const numtype *a, const numtype sa, const numtype *b, const numtype sb, numtype* c) {
 	int tid = blockIdx.x * blockDim.x+threadIdx.x;
-	if (tid < vlen) c[tid] = a[tid]-b[tid];
+	if (tid < vlen) c[tid] = a[tid]*sa-b[tid]*sb;
+}
+__global__ void cuVplusV_ker(const int vlen, const numtype *a, const numtype sa, const numtype *b, const numtype sb, numtype* c) {
+	int tid = blockIdx.x * blockDim.x+threadIdx.x;
+	if (tid < vlen) c[tid] = a[tid]*sa+b[tid]*sb;
+}
+__global__ void cuVsum_ker(const int vlen, const numtype *v, numtype* osum) {
+//========   TO DO !!!! ========
 }
 __global__ void Vscale(int vlen, numtype* v, numtype scaleM, numtype scaleP) {
 	int i = blockIdx.x*blockDim.x+threadIdx.x;
@@ -107,6 +114,10 @@ __global__ void Vscale(int vlen, numtype* v, numtype scaleM, numtype scaleP) {
 __global__ void Vinit_ker(int vlen, numtype* v, numtype val) {
 	int i = blockIdx.x*blockDim.x+threadIdx.x;
 	if (i<vlen) v[i] = val;
+}
+__global__ void VbyV2V_ker(int vlen, numtype* v1, numtype* v2, numtype* ov) {
+	int i = blockIdx.x*blockDim.x+threadIdx.x;
+	if (i<vlen) ov[i]=v1[i]*v2[i];
 }
 EXPORT int Vcopy_cu(int vlen, numtype* v1, numtype* v2) {
 	dim3 gridDim;
@@ -118,15 +129,35 @@ EXPORT int Vcopy_cu(int vlen, numtype* v1, numtype* v2) {
 
 	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-EXPORT int Vdiff_cu(int vlen, numtype* v1, numtype* v2, numtype* ov) {
+EXPORT int Vadd_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
 	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
 
-	cuVminusV_ker<<< gridDim, blockDim>>> (vlen, v1, v2, ov);
+	cuVplusV_ker<<< gridDim, blockDim>>> (vlen, v1, scale1, v2, scale2, ov);
 
 	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
+}
+EXPORT int Vdiff_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
+	dim3 gridDim;
+	dim3 blockDim;
+	blockDim.x = CUDA_BLOCK_SIZE;
+	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
+
+	cuVminusV_ker<<< gridDim, blockDim>>> (vlen, v1, scale1, v2, scale2, ov);
+
+	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
+}
+EXPORT int Vsum_cu(numtype vlen, numtype* v, numtype* ovsum) {
+	dim3 gridDim;
+	dim3 blockDim;
+	blockDim.x = CUDA_BLOCK_SIZE;
+	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
+
+	cuVsum_ker<<< gridDim, blockDim>>> (vlen, v, ovsum);
+
+	return -1;	// ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
 EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm) {
 	return ((cublasSnrm2_v2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVnorm)==CUBLAS_STATUS_SUCCESS) ? 0 : -1);
@@ -138,6 +169,16 @@ EXPORT int Vinit_cu(int vlen, numtype* v, numtype val) {
 	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
 
 	Vinit_ker<<< gridDim, blockDim>>> (vlen, v, val);
+
+	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
+}
+EXPORT int VbyV2V(int vlen, numtype* v1, numtype* v2, numtype* ov) {
+	dim3 gridDim;
+	dim3 blockDim;
+	blockDim.x = CUDA_BLOCK_SIZE;
+	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
+
+	VbyV2V_ker<<< gridDim, blockDim>>> (vlen, v1, v2, ov);
 
 	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
