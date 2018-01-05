@@ -88,11 +88,11 @@ EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm) {
 	return 0;
 #endif
 }
-EXPORT int Vinit(int Vlen, numtype* V, numtype val) {
+EXPORT int Vinit(int Vlen, numtype* V, numtype start, numtype inc) {
 #ifdef USE_GPU
-	return(Vinit_cu(Vlen, V, val));
+	return(Vinit_cu(Vlen, V, start));
 #else
-	for (int i=0; i<Vlen; i++) V[i]=val;
+	for (int i=0; i<Vlen; i++) V[i]=start+i*inc;
 	return 0;
 #endif
 }
@@ -169,13 +169,13 @@ EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size) {
 #endif
 }
 EXPORT void dumpData(int vlen, numtype* v, const char* fname) {
-	BOOL F = HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 #ifdef USE_GPU
 	dumpData_cu(vlen, v, fname);
 #else
-	FILE* f=fopen(fname, "w");
+/*	FILE* f=fopen(fname, "w");
 	for (int i=0; i<vlen; i++) fprintf(f, "%f\n", v[i]);
 	fclose(f);
+*/	for (int i=0; i<vlen; i++) printf("%f\n", v[i]);
 #endif
 }
 
@@ -183,7 +183,7 @@ EXPORT int Tanh(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return(Tanh_cu(Vlen, in, out));
 #else 
-	for (int i=0; i<Vlen; i++) out[i]=(numtype)tanh(i);
+	for (int i=0; i<Vlen; i++) out[i]=(numtype)tanh(in[i]);
 	return 0;
 #endif 
 }
@@ -191,7 +191,7 @@ EXPORT int dTanh(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return (dTanh_cu(Vlen, in, out));
 #else 
-	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1-pow(tanh(i),2));
+	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1-pow(tanh(in[i]),2));
 	return 0;
 #endif 
 }

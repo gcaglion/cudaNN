@@ -86,17 +86,17 @@ EXPORT void fSlideArrayF(int iWholeSetLen, numtype* iWholeSet, int featuresCnt, 
 }
 
 EXPORT void dataTrS(int datalen, int featuresCnt, numtype* Idata, numtype* base, int txtype, numtype scaleMin, numtype scaleMax, numtype* Odata, numtype* OscaleM, numtype* OscaleP) {
-	FILE* ftrs=fopen("c:/temp/ftrs.csv", "w");
-	fprintf(ftrs, "i,O,Otr,Otrs,H,Htr,Htrs,L,Ltr,Ltrs,C,Ctr,Ctrs \n");
-	fprintf(ftrs, "%d,%f,,,%f,,,%f,,,%f \n", -1, base[0], base[1], base[2], base[3]);
+//	FILE* ftrs=fopen("c:/temp/ftrs.csv", "w");
+//	fprintf(ftrs, "i,O,Otr,Otrs,H,Htr,Htrs,L,Ltr,Ltrs,C,Ctr,Ctrs \n");
+//	fprintf(ftrs, "%d,%f,,,%f,,,%f,,,%f \n", -1, base[0], base[1], base[2], base[3]);
 	int idx=0;
 	numtype datamin=1e8, datamax=-1e8;
 	int mini, minj, maxi, maxj;
 	//-- first, transform
 	for (int i=0; i<datalen; i++) {
-		fprintf(ftrs, "%d", i);
+//		fprintf(ftrs, "%d", i);
 		for (int j=0; j<featuresCnt; j++) {
-			fprintf(ftrs, ",%f", Idata[i*featuresCnt+j]);
+//			fprintf(ftrs, ",%f", Idata[i*featuresCnt+j]);
 			switch (txtype) {
 			case DT_NONE:
 				break;
@@ -106,7 +106,7 @@ EXPORT void dataTrS(int datalen, int featuresCnt, numtype* Idata, numtype* base,
 				} else {
 					Odata[i*featuresCnt+j]=Idata[i*featuresCnt+j]-base[j];
 				}
-				fprintf(ftrs, ",%f,", Odata[i*featuresCnt+j]);
+//				fprintf(ftrs, ",%f,", Odata[i*featuresCnt+j]);
 				break;
 			case DT_LOG:
 				break;
@@ -124,21 +124,21 @@ EXPORT void dataTrS(int datalen, int featuresCnt, numtype* Idata, numtype* base,
 				maxi=i; maxj=j;
 			}
 		}
-		fprintf(ftrs, "\n");
+//		fprintf(ftrs, "\n");
 	}
 
 	//-- then, scale
-	fprintf(ftrs, "\n");
+//	fprintf(ftrs, "\n");
 	(*OscaleM) = (scaleMax-scaleMin)/(datamax-datamin);
 	(*OscaleP) = scaleMax-(*OscaleM)*datamax;
 	for (int i=0; i<datalen; i++) {
 		for (int j=0; j<featuresCnt; j++) {
 			Odata[i*featuresCnt+j]=Odata[i*featuresCnt+j]*(*OscaleM)+(*OscaleP);
-			fprintf(ftrs, ",,,%f", Odata[i*featuresCnt+j]);
+//			fprintf(ftrs, ",,,%f", Odata[i*featuresCnt+j]);
 		}
-		fprintf(ftrs, "\n");
+//		fprintf(ftrs, "\n");
 	}
-	fclose(ftrs);
+//	fclose(ftrs);
 }
 //--
 

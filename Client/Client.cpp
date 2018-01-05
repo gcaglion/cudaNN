@@ -177,26 +177,28 @@ int main() {
 	DebugParms->DebugLevel = 2;
 	DebugParms->DebugDest = LOG_TO_TEXT;
 	strcpy(DebugParms->fPath, "C:/temp");
-	strcpy(DebugParms->fName, "kaz.log");
+	strcpy(DebugParms->fName, "Client.log");
 	DebugParms->PauseOnError = 1;
 	//--
 
 	float scaleM, scaleP;
 
-	int historyLen=100;
-	int sampleLen=20;
+	int historyLen=10;
+	int sampleLen=6;// 20;
 	int predictionLen=2;
-	int featuresCnt=4;	//OHLC;
-	int batchSamplesCount=10;
+	int featuresCnt=1;// 4;	//OHLC;
+	int batchSamplesCount=1;// 10;
+	bool useContext=false;
+	bool useBias=false;
 
 	int totSamplesCount=historyLen-sampleLen;
 	int batchCount=(int)(floor(totSamplesCount/batchSamplesCount));
 
-	char* levelRatioS="1, 0.5";
+	char* levelRatioS="0.5";// "1, 0.5";
 
 	NN* myNN=nullptr;
 	try {
-		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, false, false);
+		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, useContext, useBias);
 	} catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
 	}
@@ -228,7 +230,7 @@ int main() {
 	myNN->train(fSample, fTarget);
 
 	//int ret1=client1(myNN);
-	int ret2=client2(myNN);
+	//int ret2=client2(myNN);
 
 	system("pause");
 	return 0;
