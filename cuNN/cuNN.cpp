@@ -193,7 +193,7 @@ int sNN::train(numtype* sample, numtype* target) {
 			//sprintf(fname, "C:/temp/e.txt"); dumpData(nodesCnt[levelsCnt-1], &N[outNstart], fname);
 			//sprintf(fname, "C:/temp/u.txt"); dumpData(nodesCnt[levelsCnt-1], &u[0], fname);
 
-			//-- 1.0.5. BackPropagate, update batch error
+			//-- 1.0.5. BackPropagate, calc dJdW
 			int sc=batchSamplesCnt;
 			for (l = levelsCnt-1; l>0; l--) {
 				if (l==(levelsCnt-1)) {
@@ -201,11 +201,12 @@ int sNN::train(numtype* sample, numtype* target) {
 					VbyV2V(nodesCnt[levelsCnt-1], e, &N[outNstart], &edN[outNstart]);	// edF(l) = e * F'(l)
 				} else {
 					//-- lower levels
-					MbyM(cublasH, sc, nodesCnt[l+1]/sc, 1, false, &edN[levelFirstNode[l+1]], nodesCnt[l+1]/sc, nodesCnt[l]/sc, 1, false, &W[levelFirstWeight[l]], &edN[levelFirstNode[l]]);	// edF(l) = edF(l+1) * WT(l)
+					MbyM(cublasH, nodesCnt[l+1], 1, 1, false, &edN[levelFirstNode[l+1]], 1, nodesCnt[l], 1, false, &W[levelFirstWeight[l]], &edN[levelFirstNode[l]]);	// edF(l) = edF(l+1) * WT(l)
 					VbyV2V(nodesCnt[l], &edN[levelFirstNode[l]], &dN[levelFirstNode[l]], &edN[levelFirstNode[l]]);	// edF(l) = edF(l) * F'(l)
 				}
-				//-- common
-				MbyM(cublasH, nodesCnt[l+1]/sc, sc, 1, true, &N[levelFirstNode[l-1]], sc, nodesCnt[l]/sc, 1, false, &edN[levelFirstNode[l]], &dJdW[levelFirstNode[l]]);
+				
+				//-- common:	dJdW(l-1) = edF(l) * F(l-1)				
+				MbyM(cublasH, nodesCnt[l-1], 1, 1, false, &edN[levelFirstNode[l]], 1, nodesCnt[l-1], 1, false, &N[levelFirstNode[l-1]], &dJdW[levelFirstWeight[l-1]]);
 			}
 
 			//-- 1.0.6. update weights
