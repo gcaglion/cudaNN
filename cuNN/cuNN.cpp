@@ -140,7 +140,7 @@ int sNN::Activate(int level) {
 
 int sNN::train(numtype* sample, numtype* target) {
 	int l;
-	char fname[MAX_PATH];
+	//char fname[MAX_PATH];
 
 	//-- 0. Init
 	

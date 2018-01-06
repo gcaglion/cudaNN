@@ -52,7 +52,7 @@ EXPORT		void initGPUData(float *data, int numElements, float value) {
 EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size) {
 	return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyHostToDevice)==cudaSuccess) ? 0 : -1);
 }
-EXPORT void dumpData_cu(int vlen, numtype* v, char* fname) {
+EXPORT void dumpData_cu(int vlen, numtype* v, const char* fname) {
 	numtype* hw=(numtype*)malloc(vlen*sizeof(numtype));
 	if (cudaMemcpy(hw, v, vlen*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return;
 	FILE* f=fopen(fname, "w");
@@ -149,7 +149,7 @@ EXPORT int Vdiff_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype 
 
 	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-EXPORT int Vsum_cu(numtype vlen, numtype* v, numtype* ovsum) {
+EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -172,7 +172,7 @@ EXPORT int Vinit_cu(int vlen, numtype* v, numtype val) {
 
 	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-EXPORT int VbyV2V(int vlen, numtype* v1, numtype* v2, numtype* ov) {
+EXPORT int VbyV2V_cu(int vlen, numtype* v1, numtype* v2, numtype* ov) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;

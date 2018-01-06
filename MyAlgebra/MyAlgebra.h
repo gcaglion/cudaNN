@@ -19,7 +19,7 @@ EXPORT void Mfill(int size, numtype* m, numtype start, numtype inc);
 EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2);
 EXPORT int Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
 EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
-EXPORT int Vssum(numtype Vlen, numtype* V, numtype* osSum);
+EXPORT int Vssum(int Vlen, numtype* V, numtype* osSum);
 EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm);
 EXPORT int Vinit(int Vlen, numtype* V, numtype val);
 EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH=NULL);
