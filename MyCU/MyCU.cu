@@ -186,7 +186,13 @@ EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum) {
 	blockDim.x = CUDA_BLOCK_SIZE;
 	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
 
-	cuVsum_ker<<< gridDim, blockDim>>> (vlen, v, ovsum);
+	numtype* vsum_d;
+	if (Malloc_cu(&vsum_d, sizeof(numtype))!=cudaSuccess) return -1;
+
+	cuVsum_ker<<< gridDim, blockDim>>> (vlen, v, vsum_d );
+	int ret=cudaGetLastError();
+
+	if (cudaMemcpy(&ovsum, &vsum_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }

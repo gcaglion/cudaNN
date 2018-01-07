@@ -15,6 +15,7 @@ void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
 	}
 }
 
+#ifdef USE_GPU
 int client1(NN* myNN) {
 	float alpha=1, beta=0;
 
@@ -84,6 +85,7 @@ int client1(NN* myNN) {
 
 	return 0;
 }
+#endif
 
 int client2(NN* pNN) {
 	int l, sm, n;

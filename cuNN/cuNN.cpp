@@ -141,6 +141,7 @@ int sNN::Activate(int level) {
 int sNN::train(numtype* sample, numtype* target) {
 	int l;
 	char fname[MAX_PATH];
+	numtype tse;
 
 	//-- 0. Init
 	
@@ -159,6 +160,7 @@ int sNN::train(numtype* sample, numtype* target) {
 
 		//-- 1.0. reset batch error = 0
 		Vinit(nodesCnt[levelsCnt-1], e, 0);
+		tse=0;
 
 		//-- 1.1. train one batch at a time
 		for (int b=0; b<batchCnt; b++) {
@@ -220,7 +222,6 @@ int sNN::train(numtype* sample, numtype* target) {
 			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
 		}
 		//-- 1.1. calc and display MSE
-		numtype tse;
 		if (Vssum(nodesCnt[levelsCnt-1], e, &tse)!=0) return -1;
 		mse=tse/batchCnt/nodesCnt[levelsCnt-1];
 		printf("\repoch %d, MSE=%f", epoch, mse);
