@@ -140,7 +140,7 @@ int sNN::Activate(int level) {
 
 int sNN::train(numtype* sample, numtype* target) {
 	int l;
-	//char fname[MAX_PATH];
+	char fname[MAX_PATH];
 
 	//-- 0. Init
 	
@@ -150,23 +150,25 @@ int sNN::train(numtype* sample, numtype* target) {
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), cuRandH);
 	//dumpData(weightsCntTotal, &W[0], "C:/temp/W.txt");
+
 	//---- 0.3. Init dW
-	for (l=0; l<(levelsCnt-1); l++) if( Vinit(weightsCnt[l], &dW[levelFirstWeight[l]], 0) !=0) return -1;
+	for (l=0; l<(levelsCnt-1); l++) if (Vinit(weightsCnt[l], &dW[levelFirstWeight[l]], 0)!=0) return -1;
 
 	//-- 1. for every epoch, calc and display MSE
 	for(int epoch=0; epoch<MaxEpochs; epoch++) {
-		//-- 1.0. train one batch at a time
+
+		//-- 1.0. reset batch error = 0
+		Vinit(nodesCnt[levelsCnt-1], e, 0);
+
+		//-- 1.1. train one batch at a time
 		for (int b=0; b<batchCnt; b++) {
 
-			//-- 1.0.1.  load samples + targets onto GPU
+			//-- 1.1.1.  load samples + targets onto GPU
 			if (loadBatchData(&N[0], &sample[b*InputCount], InputCount*sizeof(numtype) )!=0) return -1;
 			if (loadBatchData(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype) )!=0) return -1;
 			//dumpData(InputCount, &N[0], "C:/temp/F0.txt");
 		
-			//-- 1.0.2. reset batch error = 0
-			Vinit(nodesCnt[levelsCnt-1], e, 0);
-		
-			//-- 1.0.3. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
+			//-- 1.1.2. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
 			for (l=0; l<(levelsCnt-1); l++) {
 				int W10y=nodesCnt[l+1]/batchSamplesCnt;
 				int W10x=nodesCnt[l]/batchSamplesCnt;
@@ -187,32 +189,33 @@ int sNN::train(numtype* sample, numtype* target) {
 
 			}
 		
-			//-- 1.0.4. Calc Error
-			int outNstart=levelFirstNode[levelsCnt-1];
-			if (Vdiff(nodesCnt[levelsCnt-1], &N[outNstart], 1, u, 1, e)!=0) return -1;
+			//-- 1.1.3. Calc Error
+			if (Vdiff(nodesCnt[levelsCnt-1], &N[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;
 			//sprintf(fname, "C:/temp/e.txt"); dumpData(nodesCnt[levelsCnt-1], &N[outNstart], fname);
 			//sprintf(fname, "C:/temp/u.txt"); dumpData(nodesCnt[levelsCnt-1], &u[0], fname);
 
-			//-- 1.0.5. BackPropagate, calc dJdW
+			//-- 1.1.4. BackPropagate, calc dJdW
 			int sc=batchSamplesCnt;
 			for (l = levelsCnt-1; l>0; l--) {
 				if (l==(levelsCnt-1)) {
 					//-- top level only
-					VbyV2V(nodesCnt[levelsCnt-1], e, &N[outNstart], &edN[outNstart]);	// edF(l) = e * F'(l)
+					if( VbyV2V(nodesCnt[l], e, &N[levelFirstNode[l]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = e * dF(l)
 				} else {
 					//-- lower levels
-					MbyM(cublasH, nodesCnt[l+1], 1, 1, false, &edN[levelFirstNode[l+1]], 1, nodesCnt[l], 1, false, &W[levelFirstWeight[l]], &edN[levelFirstNode[l]]);	// edF(l) = edF(l+1) * WT(l)
-					VbyV2V(nodesCnt[l], &edN[levelFirstNode[l]], &dN[levelFirstNode[l]], &edN[levelFirstNode[l]]);	// edF(l) = edF(l) * F'(l)
+					if( MbyM(cublasH, nodesCnt[l], nodesCnt[l+1], 1, false, &W[levelFirstWeight[l]], nodesCnt[l+1], sc, 1, false, &edN[levelFirstNode[l+1]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l+1) * WT(l)
+					if( VbyV2V(nodesCnt[l], &edN[levelFirstNode[l]], &dN[levelFirstNode[l]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l) * dF(l)
 				}
 				
-				//-- common:	dJdW(l-1) = edF(l) * F(l-1)				
-				MbyM(cublasH, nodesCnt[l-1], 1, 1, false, &edN[levelFirstNode[l]], 1, nodesCnt[l-1], 1, false, &N[levelFirstNode[l-1]], &dJdW[levelFirstWeight[l-1]]);
+				//-- common			
+				if( MbyM(cublasH, nodesCnt[l], sc, 1, false, &edN[levelFirstNode[l]], sc, nodesCnt[l-1], 1, false, &N[levelFirstNode[l-1]], &dJdW[levelFirstWeight[l-1]]) !=0) return -1;	// // dJdW(l-1) = edF(l) * F(l-1)
+				sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);
 			}
 
-			//-- 1.0.6. update weights
+			//-- 1.1.5. update weights
 
 			//-- dW = LM*dW - LR*dJdW
 			if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW) !=0) return -1;
+			sprintf(fname, "C:/temp/dW.txt"); dumpData(weightsCntTotal, dW, fname);
 			//-- W = W + dW
 			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
 		}

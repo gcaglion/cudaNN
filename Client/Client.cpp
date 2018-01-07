@@ -14,7 +14,7 @@ void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
 		for (int ll=0; ll<l; ll++) oVsumPrevs[l]+=V[ll];
 	}
 }
-#ifdef USE_GPU
+
 int client1(NN* myNN) {
 	float alpha=1, beta=0;
 
@@ -56,7 +56,7 @@ int client1(NN* myNN) {
 	Mprint(by, bx, b);
 
 	printf("(full) C=AxB using MbM():\n");
-	MbyM_std(ay, ax, 1, a, by, bx, 1, b, c);
+	MbyM_std(ay, ax, 1, false, a, by, bx, 1, false, b, c);
 	Mprint(cy, cx, c);
 	printf("(full) C=AxB using cublasSgem():\n");
 	if (cublasSgemm((*((cublasHandle_t*)myNN->cublasH)), CUBLAS_OP_N, CUBLAS_OP_N, bx, ay, ax, &alpha, b_d, bx, a_d, ax, &beta, c_d, cx)!=CUBLAS_STATUS_SUCCESS) return -1;
@@ -69,7 +69,7 @@ int client1(NN* myNN) {
 	printf("b[%dx%d], start at[%dx%d], size [%dx%d] (finite submatrix)\n", by, bx, sby0, sbx0, sby, sbx);
 	Mprint(sby, sbx, sb);
 	printf("(sub) C=AxB using MbM() on finite submatrices:\n");
-	MbyM_std(say, sax, 1, sa, sby, sbx, 1, sb, sc);
+	MbyM_std(say, sax, 1, false, sa, sby, sbx, 1, false, sb, sc);
 	Mprint(scy, scx, sc);
 	printf("------------------------------------------------------------------------------------------------------\n");
 	printf("a[%dx%d], start at[%dx%d], size [%dx%d] (vector math)\n", ay, ax, say0, sax0, say, sax);
@@ -84,7 +84,7 @@ int client1(NN* myNN) {
 
 	return 0;
 }
-#endif
+
 int client2(NN* pNN) {
 	int l, sm, n;
 	float alpha=1, beta=0;
@@ -163,7 +163,7 @@ int client2(NN* pNN) {
 		int s1w0=levelFirstWeight[sm+1];
 		int s0w0=levelFirstWeight[sm];
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_cu() - (pointer subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM(pNN->cublasH, nodesCnt[sm+2], nodesCnt[sm+1], 1, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, &w[s0w0], sw_mres[sm]);
+		MbyM(pNN->cublasH, nodesCnt[sm+2], nodesCnt[sm+1], 1, false, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, false, &w[s0w0], sw_mres[sm]);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
@@ -190,7 +190,7 @@ int main() {
 	int sampleLen=6;// 20;
 	int predictionLen=2;
 	int featuresCnt=2;	//OHLC;
-	int batchSamplesCount=10;
+	int batchSamplesCount=5;
 
 	int totSamplesCount=historyLen-sampleLen;
 	int batchCount=(int)(floor(totSamplesCount/batchSamplesCount));
@@ -213,7 +213,7 @@ int main() {
 	myNN->MaxEpochs=1000;
 	myNN->TargetMSE=(float)0.0001;
 	myNN->BP_Algo=BP_STD;
-	myNN->LearningRate=(numtype)0.05;
+	myNN->LearningRate=(numtype)0.1;
 	myNN->LearningMomentum=(numtype)0.7;
 
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
@@ -228,8 +228,12 @@ int main() {
 	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
 	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201508010000", historyLen, historyData, baseData)<0) return -1;
 	dataTrS(historyLen, featuresCnt, historyData, baseData, DT_DELTA, myNN->scaleMin, myNN->scaleMax, hd_trs, &scaleM, &scaleP);
-	//for (int i=0; i<(historyLen*featuresCnt); i++) hd_trs[i]=i;
-	
+
+/*	for (int i=0; i<(historyLen); i++) {		
+		hd_trs[2*i]=((numtype)i+1)/10;
+		hd_trs[2*i+1]=-hd_trs[2*i];
+	}
+*/
 	//SlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, Sample, predictionLen*featuresCnt, Target, 2);
 	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fSample, predictionLen*featuresCnt, fTarget, 2);
 

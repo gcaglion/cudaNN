@@ -1,5 +1,11 @@
 #include "MyCU.h"
 
+void swap(int* v1, int* v2) {
+	int tmp=(*v1);
+	(*v1)=(*v2);
+	(*v2)=tmp;
+}
+
 EXPORT int initCUDA() {
 	// init CUDA GPU
 	if (cudaSetDevice(0)!=cudaSuccess) {
@@ -81,9 +87,12 @@ EXPORT int MbyM_cu(void* cublasH,
 	//int pCy=(sCy==-1) ? fCy : sCy;
 	//int pCx=(sCx==-1) ? fCx : sCx;
 	int fCx=fBx;
+	
+//	if (Atr) swap(&pAx, &pAy);
+//	if (Btr) swap(&pBx, &pAx);
 
 	// Do the actual multiplication
-
+	
 	if (cublasSgemm((*(cublasHandle_t*)cublasH), (Atr)?CUBLAS_OP_T:CUBLAS_OP_N, (Btr)?CUBLAS_OP_T:CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
 		return 0;
 	} else {
@@ -105,7 +114,29 @@ __global__ void cuVplusV_ker(const int vlen, const numtype *a, const numtype sa,
 	if (tid < vlen) c[tid] = a[tid]*sa+b[tid]*sb;
 }
 __global__ void cuVsum_ker(const int vlen, const numtype *v, numtype* osum) {
-//========   TO DO !!!! ========
+
+	//@@ Load a segment of the input vector into shared memory
+	__shared__ float partialSum[2*CUDA_BLOCK_SIZE];
+	unsigned int t = threadIdx.x, start = 2*blockIdx.x * CUDA_BLOCK_SIZE;
+	if (start+t < vlen)
+		partialSum[t] = v[start+t];
+	else
+		partialSum[t] = 0;
+	if (start+CUDA_BLOCK_SIZE+t < vlen)
+		partialSum[CUDA_BLOCK_SIZE+t] = v[start+CUDA_BLOCK_SIZE+t];
+	else
+		partialSum[CUDA_BLOCK_SIZE+t] = 0;
+	//@@ Traverse the reduction tree
+	for (unsigned int stride = CUDA_BLOCK_SIZE; stride>=1; stride >>= 1) {
+		__syncthreads();
+		if (t < stride)
+			partialSum[t] += partialSum[t+stride];
+	}
+	//@@ Write the computed sum of the block to the output vector at the 
+	//@@ correct index
+	if (t==0)
+		osum[blockIdx.x] = partialSum[0];
+
 }
 __global__ void Vscale(int vlen, numtype* v, numtype scaleM, numtype scaleP) {
 	int i = blockIdx.x*blockDim.x+threadIdx.x;
@@ -157,7 +188,7 @@ EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum) {
 
 	cuVsum_ker<<< gridDim, blockDim>>> (vlen, v, ovsum);
 
-	return -1;	// ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
+	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
 EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm) {
 	return ((cublasSnrm2_v2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVnorm)==CUBLAS_STATUS_SUCCESS) ? 0 : -1);
