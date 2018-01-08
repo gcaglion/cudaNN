@@ -210,14 +210,14 @@ int sNN::train(numtype* sample, numtype* target) {
 				
 				//-- common			
 				if( MbyM(cublasH, nodesCnt[l], sc, 1, false, &edN[levelFirstNode[l]], sc, nodesCnt[l-1], 1, false, &N[levelFirstNode[l-1]], &dJdW[levelFirstWeight[l-1]]) !=0) return -1;	// // dJdW(l-1) = edF(l) * F(l-1)
-				sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);
+				//sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);
 			}
 
 			//-- 1.1.5. update weights
 
 			//-- dW = LM*dW - LR*dJdW
 			if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW) !=0) return -1;
-			sprintf(fname, "C:/temp/dW.txt"); dumpData(weightsCntTotal, dW, fname);
+			//sprintf(fname, "C:/temp/dW.txt"); dumpData(weightsCntTotal, dW, fname);
 			//-- W = W + dW
 			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
 		}

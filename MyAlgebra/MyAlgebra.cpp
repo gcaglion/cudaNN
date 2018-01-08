@@ -4,12 +4,13 @@
 	#include "../MyCU/MyCU.h"
 #endif
 
-EXPORT void Mprint(int my, int mx, numtype* sm, int smy0, int smx0, int smy, int smx) {
+EXPORT void Mprint(int my, int mx, numtype* sm, const char* msg, int smy0, int smx0, int smy, int smx) {
 
 	if (smy==-1) smy=my;
 	if (smx==-1) smx=mx;
 
 	int idx;
+	if (msg!=nullptr) printf("%s\n", msg);
 	for (int y=0; y<smy; y++) {
 		for (int x=0; x<smx; x++) {
 			idx= y*mx+x;

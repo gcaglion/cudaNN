@@ -6,7 +6,72 @@
 #include <time.h>
 #include <math.h>
 
-EXPORT void Mprint(int my, int mx, numtype* sm, int smy0=-1, int smx0=-1, int smy=-1, int smx=-1);
+typedef struct s_matrix {
+	int my;
+	int mx;
+	numtype* m;
+
+	//-- TODO: CUDA VERSIONS !!!
+
+	s_matrix(int my_, int mx_, bool init_=false, numtype val0=0, numtype inc=0 ) {
+		my=my_; mx=mx_;
+		m=(numtype*)malloc(my*mx*sizeof(numtype));
+		if(init_) { for (int i=0; i<(my*mx); i++) m[i]=val0+i*inc; }
+		
+		
+	}
+	~s_matrix() {
+		free(m);
+	}
+	
+	void transpose() {
+		numtype** tm=(numtype**)malloc(mx*sizeof(numtype*)); for (int y=0; y<mx; y++) tm[y]=(numtype*)malloc(my*sizeof(numtype));
+		for (int y = 0; y < my; y++) {
+			for (int x = 0; x < mx; x++) {
+				tm[x][y] = m[y*mx+x];
+			}
+		}
+		for (int y = 0; y < my; y++) {
+			for (int x = 0; x < mx; x++) {
+				m[x*my+y]=tm[x][y];
+			}
+		}
+
+		for (int y=0; y<mx; y++) free(tm[y]);
+		free(tm);
+
+		int tmp=my;	my=mx; mx=tmp;
+	}
+	void fill(numtype start, numtype inc) {
+		for (int i=0; i<(my*mx); i++) m[i]=start+i*inc;
+	}
+	void scale(float s) {
+		for (int i=0; i<(my*mx); i++) m[i]*=s;
+	}
+	void print(const char* msg=nullptr, int smy0=-1, int smx0=-1, int smy=-1, int smx=-1) {
+		if (smy==-1) smy=my;
+		if (smx==-1) smx=mx;
+
+		int idx;
+		if (msg!=nullptr) printf("%s [%dx%d] - from [%d,%d] to [%d,%d]\n", msg, my, mx, (smy0==-1)?0:smy0,(smx0==-1)?0:smx0,smy0+smy,smx0+smx);
+		for (int y=0; y<smy; y++) {
+			for (int x=0; x<smx; x++) {
+				idx= y*mx+x;
+				printf("|%4.1f", m[idx]);
+			}
+			printf("|\n");
+		}
+	}
+	void copyTo(s_matrix* tom) {
+		if(tom->my!=my || tom->mx!=mx) {
+			printf("copyTo() can only work with same-sized matrices!\n");
+			return;
+		}
+		for (int i=0; i<(my*mx); i++) tom->m[i]=m[i];
+	}
+} matrix;
+
+EXPORT void Mprint(int my, int mx, numtype* sm, const char* msg=nullptr, int smy0=-1, int smx0=-1, int smy=-1, int smx=-1);
 EXPORT void Msub(int my, int mx, numtype* INm, numtype* OUTsm, int smy0, int smx0, int smy, int smx);
 
 //-- TODO: CUDA VERSIONS !!!
