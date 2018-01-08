@@ -62,12 +62,28 @@ typedef struct s_matrix {
 			printf("|\n");
 		}
 	}
-	void copyTo(s_matrix* tom) {
+	int copyTo(s_matrix* tom) {
 		if(tom->my!=my || tom->mx!=mx) {
 			printf("copyTo() can only work with same-sized matrices!\n");
-			return;
+			return -1;
 		}
 		for (int i=0; i<(my*mx); i++) tom->m[i]=m[i];
+		return 0;
+	}
+	int copySubTo(int y0, int x0, int smy, int smx, s_matrix* osm) {
+		int INidx=0; int OUTidx=0;
+		for (int y=0; y<smy; y++) {
+			for (int x=0; x<smx; x++) {
+				INidx= y*mx+x;
+				osm->m[OUTidx]=m[INidx];
+				OUTidx++;
+			}
+		}
+		return 0;
+	}
+	int X(s_matrix* B, s_matrix* C, bool trA, bool trB) {
+		if (trA) swap(&mx, &my);
+		if (trB) swap(&B->mx, &B->my);
 	}
 } matrix;
 

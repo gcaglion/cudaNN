@@ -176,6 +176,11 @@ int client2(NN* pNN) {
 void client3() {
 	matrix* A=new matrix(5, 7, true, 0.1f, 0.1f);
 	A->print("A");
+	matrix* sA=new matrix(2, 3);
+	A->copySubTo(1, 2, 2, 3, sA);
+	sA->print("sA");
+	return;
+
 	A->transpose();
 	A->print("A after transpose()");
 	matrix* tA=new matrix(7, 5);
@@ -189,11 +194,15 @@ void client3() {
 
 	MbyM_std(5, 7, 1, true, tA->m, B->my, B->mx, 1, false, B->m, C->m);
 	C->print("C=AxB, transpose by MbyM()");
+
+
 }
 
 int main() {
 
-	//client3();
+	client3();
+	system("pause");
+	return -1;
 
 	BOOL f = HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 

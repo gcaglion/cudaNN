@@ -209,7 +209,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				}
 				
 				//-- common			
-				if( MbyM(cublasH, nodesCnt[l], sc, 1, false, &edN[levelFirstNode[l]], sc, nodesCnt[l-1], 1, false, &N[levelFirstNode[l-1]], &dJdW[levelFirstWeight[l-1]]) !=0) return -1;	// // dJdW(l-1) = edF(l) * F(l-1)
+				if( MbyM(cublasH, nodesCnt[l], sc, 1, true, &edN[levelFirstNode[l]], sc, nodesCnt[l-1], 1, true, &N[levelFirstNode[l-1]], &dJdW[levelFirstWeight[l-1]]) !=0) return -1;	// // dJdW(l-1) = edF(l) * F(l-1)
 				//sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);
 			}
 
