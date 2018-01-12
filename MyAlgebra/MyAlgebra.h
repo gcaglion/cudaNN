@@ -11,8 +11,6 @@ typedef struct s_matrix {
 	int mx;
 	numtype* m;
 
-	//-- TODO: CUDA VERSIONS !!!
-
 	s_matrix(int my_, int mx_, bool init_=false, numtype val0=0, numtype inc=0 ) {
 		my=my_; mx=mx_;
 		m=(numtype*)malloc(my*mx*sizeof(numtype));
@@ -42,6 +40,18 @@ typedef struct s_matrix {
 
 		int tmp=my;	my=mx; mx=tmp;
 	}
+	int transposeTo(s_matrix* otm) {
+		if (otm->mx!=my||otm->my!=mx) {
+			printf("transposeTo() dimensions mismatch!\n");
+			return -1;
+		}
+		for (int y = 0; y < my; y++) {
+			for (int x = 0; x < mx; x++) {
+				otm->m[x*my+y] = m[y*mx+x];
+			}
+		}
+		return 0;
+	}
 	void fill(numtype start, numtype inc) {
 		for (int i=0; i<(my*mx); i++) m[i]=start+i*inc;
 	}
@@ -70,20 +80,35 @@ typedef struct s_matrix {
 		for (int i=0; i<(my*mx); i++) tom->m[i]=m[i];
 		return 0;
 	}
-	int copySubTo(int y0, int x0, int smy, int smx, s_matrix* osm) {
-		int INidx=0; int OUTidx=0;
-		for (int y=0; y<smy; y++) {
-			for (int x=0; x<smx; x++) {
-				INidx= y*mx+x;
-				osm->m[OUTidx]=m[INidx];
-				OUTidx++;
+	int copySubTo(int y0=0, int x0=0, s_matrix* osm=nullptr) {
+		if (osm==nullptr) return -1;
+
+		int idx;
+		int odx=0;
+		for (int y=y0; y<(y0+osm->my); y++) {
+			for (int x=x0; x<(x0+osm->mx); x++) {
+				idx= y*this->mx+x;
+				osm->m[odx]=m[idx];
+				odx++;
+			}
+		}
+
+		return 0;
+	}
+
+	int X(s_matrix* B, s_matrix* C, bool trA, bool trB, float Ascale=1, float Bscale=1) {
+		if (trA) swap(&mx, &my);
+		if (trB) swap(&B->mx, &B->my);
+
+		for (int y = 0; y < my; y++) {
+			for (int x2 = 0; x2 < B->mx; x2++) {
+				C->m[y*B->mx+x2] = 0;
+				for (int x = 0; x < mx; x++) {
+					C->m[y*B->mx+x2] += m[y*mx+x]*Ascale * B->m[x*B->mx+x2]*Bscale;
+				}
 			}
 		}
 		return 0;
-	}
-	int X(s_matrix* B, s_matrix* C, bool trA, bool trB) {
-		if (trA) swap(&mx, &my);
-		if (trB) swap(&B->mx, &B->my);
 	}
 } matrix;
 

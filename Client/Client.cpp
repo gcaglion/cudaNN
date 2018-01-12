@@ -176,9 +176,21 @@ int client2(NN* pNN) {
 void client3() {
 	matrix* A=new matrix(5, 7, true, 0.1f, 0.1f);
 	A->print("A");
-	matrix* sA=new matrix(2, 3);
-	A->copySubTo(1, 2, 2, 3, sA);
+
+/*	matrix* sA=new matrix(2, 3);
+	A->copySubTo(1, 2, sA);
 	sA->print("sA");
+
+	matrix* tA=new matrix(7, 5);
+	A->transposeTo(tA);
+	tA->print("tA");
+
+	matrix* stA=new matrix(2, 3);
+	tA->copySubTo(1, 2, stA);
+	stA->print("stA (1)");
+
+	sA->transposeTo(stA);
+	stA->print("stA (2)");
 	return;
 
 	A->transpose();
@@ -186,23 +198,47 @@ void client3() {
 	matrix* tA=new matrix(7, 5);
 	A->copyTo(tA);
 	tA->print("tA");
+*/
 	matrix* B=new matrix(5, 3, true, -0.1f, -0.1f);
 	B->print("B");
 	matrix* C=new matrix(7, 3);
-	MbyM(nullptr, tA->my, tA->mx, 1, false, tA->m, B->my, B->mx, 1, false, B->m, C->m);
-	C->print("C=tAxB");
+//	MbyM(nullptr, tA->my, tA->mx, 1, false, tA->m, B->my, B->mx, 1, false, B->m, C->m);
+//	C->print("C=tAxB");
 
-	MbyM_std(5, 7, 1, true, tA->m, B->my, B->mx, 1, false, B->m, C->m);
-	C->print("C=AxB, transpose by MbyM()");
+	MbyM_std(7, 5, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m);
+	C->print("C=AxB, MbyM_std()");
+
+	A->X(B, C, false, false);
+	C->print("C=AxB, X()");
+
 
 
 }
 
+void client4() {
+	matrix* A=new matrix(4, 5, true, 0.1, 0.1);
+	A->print("A");
+	matrix* B=new matrix(5, 6, true, -0.1, -0.1);
+	B->print("B");
+	matrix* C=new matrix(4, 6);
+	MbyM(nullptr, A->my, A->mx, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m);
+	C->print("C");
+
+	matrix* Bt=new matrix(6, 5, true, -0.1, -0.1);
+	Bt->print("Bt");
+	MbyM(nullptr, A->my, A->mx, 1, false, A->m, Bt->my, Bt->mx, 1, true, Bt->m, C->m);
+	C->print("C");
+}
 int main() {
 
-	client3();
+	/*client3();
 	system("pause");
 	return -1;
+
+	client4();
+	system("pause");
+	return -1;
+	*/
 
 	BOOL f = HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 
@@ -220,7 +256,7 @@ int main() {
 	int historyLen=100;
 	int sampleLen=6;// 20;
 	int predictionLen=2;
-	int featuresCnt=2;	//OHLC;
+	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
 	int batchSamplesCount=5;
 
 	int totSamplesCount=historyLen-sampleLen;

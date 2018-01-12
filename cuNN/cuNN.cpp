@@ -69,7 +69,7 @@ void sNN::setLayout(char LevelRatioS[60]) {
 	//-- 0.3. weights count
 	weightsCntTotal=0;
 	for (l=0; l<(levelsCnt-1); l++) {
-		weightsCnt[l]=nodesCnt[l]*nodesCnt[l+1] /batchSamplesCnt;
+		weightsCnt[l]=nodesCnt[l]/batchSamplesCnt*nodesCnt[l+1]/batchSamplesCnt;
 		weightsCntTotal+=weightsCnt[l];
 	}
 
@@ -179,7 +179,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				int N0x=batchSamplesCnt;
 				int N0start= levelFirstNode[l];
 				int N1start= levelFirstNode[l+1];
-
+				
 				//-- N[l+1]=N[l]*W[l]
 				if (MbyM(cublasH, W10y, W10x, 1, false, &W[W10start], N0y, N0x, 1, false, &N[N0start], &N[N1start] ) !=0) return -1;
 			
@@ -198,6 +198,7 @@ int sNN::train(numtype* sample, numtype* target) {
 
 			//-- 1.1.4. BackPropagate, calc dJdW
 			int sc=batchSamplesCnt;
+			numtype* A; numtype* B; numtype* C;
 			for (l = levelsCnt-1; l>0; l--) {
 				if (l==(levelsCnt-1)) {
 					//-- top level only
@@ -208,8 +209,21 @@ int sNN::train(numtype* sample, numtype* target) {
 					if( VbyV2V(nodesCnt[l], &edN[levelFirstNode[l]], &dN[levelFirstNode[l]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l) * dF(l)
 				}
 				
-				//-- common			
-				if( MbyM(cublasH, nodesCnt[l], sc, 1, true, &edN[levelFirstNode[l]], sc, nodesCnt[l-1], 1, true, &N[levelFirstNode[l-1]], &dJdW[levelFirstWeight[l-1]]) !=0) return -1;	// // dJdW(l-1) = edF(l) * F(l-1)
+				//-- common	
+				int Ay=nodesCnt[l]/sc;
+				int Ax=sc;
+				int Astart=levelFirstNode[l];
+				A=&edN[Astart];
+				int By=nodesCnt[l-1]/sc;
+				int Bx=sc;
+				int Bstart=levelFirstNode[l-1];
+				B=&N[Bstart];
+				int Cstart=levelFirstWeight[l-1];
+				C=&dJdW[Cstart];
+				if( MbyM(cublasH, Ay, Ax, 1, false, A, sc, By, Bx, true, B, C ) !=0) return -1;	// dJdW(l-1) = edF(l) * F(l-1)
+				Mprint(Ay, Ax, A, "A");
+				Mprint(By, Bx, B, "B");
+				Mprint(Ay, Bx, C, "C");
 				//sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);
 			}
 
