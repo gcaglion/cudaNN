@@ -62,16 +62,36 @@ EXPORT void fSlideArrayF(int iWholeSetLen, numtype* iWholeSet, int featuresCnt, 
 	if (pWriteLog>0) {
 		sprintf(LogFileName, "C:/temp/SlideArray.log");
 		LogFile = fopen(LogFileName, "w");
+		fprintf(LogFile, "SampleId\t");
+		for (int b=0; b<(iSampleSize/featuresCnt); b++) {
+			for (int f=0; f<featuresCnt; f++) {
+				fprintf(LogFile, "  Bar%dF%d\t", b, f);
+			}
+		}
+		fprintf(LogFile, "\t");
+		for (int b=0; b<(iTargetSize/featuresCnt); b++) {
+			for (int f=0; f<featuresCnt; f++) {
+				fprintf(LogFile, "  Prd%dF%d\t", b, f);
+			}
+		}
+		fprintf(LogFile, "\n");
+		for (i=0; i<(1+iSampleSize); i++) fprintf(LogFile, "---------\t");
+		fprintf(LogFile, "\t");
+		for (i=0; i<iTargetSize; i++) fprintf(LogFile, "---------\t");
+		fprintf(LogFile, "\n");
 	}
 
 	for (s = 0; s<iSampleCount; s++) {
 
 		//-- sample
+		if (pWriteLog>0) {
+			fprintf(LogFile, "%d\t\t\t", s);
+		}
 		for (i=0; i<iSampleSize; i++) {
 			ofSample[s*iSampleSize+i]=iWholeSet[s*featuresCnt+i];
-			if (pWriteLog>0) fprintf(LogFile, "%f ", ofSample[s*iSampleSize+i]);
+			if (pWriteLog>0) fprintf(LogFile, "%f\t", ofSample[s*iSampleSize+i]);
 		}
-
+		if (pWriteLog>0) fprintf(LogFile, "|\t");
 		//-- target
 		for (i=0; i<iTargetSize; i++) {
 			if (s>=(iSampleCount-(int)(iTargetSize/featuresCnt))) {
@@ -79,7 +99,7 @@ EXPORT void fSlideArrayF(int iWholeSetLen, numtype* iWholeSet, int featuresCnt, 
 			} else {
 				ofTarget[s*iTargetSize+i]=iWholeSet[s*featuresCnt+iSampleSize+i];
 			}
-			if (pWriteLog>0) fprintf(LogFile, "%f ", ofTarget[s*iTargetSize+i]);
+			if (pWriteLog>0) fprintf(LogFile, "%f\t", ofTarget[s*iTargetSize+i]);
 		}
 		if (pWriteLog>0) fprintf(LogFile, "\n");
 	}

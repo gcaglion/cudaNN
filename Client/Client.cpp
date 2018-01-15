@@ -216,29 +216,81 @@ void client3() {
 }
 
 void client4() {
-	matrix* A=new matrix(4, 5, true, 0.1, 0.1);
+	matrix* A=new matrix(8, 5, true, 0.1, 0.1);
 	A->print("A");
-	matrix* B=new matrix(5, 6, true, -0.1, -0.1);
+	matrix* B=new matrix(5, 12, true, -0.1, -0.1);
 	B->print("B");
-	matrix* C=new matrix(4, 6);
+	matrix* C=new matrix(8, 12);
 	MbyM(nullptr, A->my, A->mx, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m);
 	C->print("C");
 
-	matrix* Bt=new matrix(6, 5, true, -0.1, -0.1);
+	matrix* Bt=new matrix(12, 5, true, -0.1, -0.1);
 	Bt->print("Bt");
 	MbyM(nullptr, A->my, A->mx, 1, false, A->m, Bt->my, Bt->mx, 1, true, Bt->m, C->m);
 	C->print("C");
 }
+
+void D012_120(int d0, int d1, int d2, numtype* v) {
+	numtype* newv=(numtype*)malloc(d0*d1*d2*sizeof(numtype));
+	int i120, i012=0;
+	for (int id0=0; id0<d0; id0++) {
+		for (int id1=0; id1<d1; id1++) {
+			for (int id2=0; id2<d2; id2++) {
+				i120=id1*d2*d0+id2*d0+id0;
+				newv[i120]=v[i012];
+				i012++;
+			}
+		}
+	}
+	memcpy(v, newv, d0*d1*d2*sizeof(numtype));
+	free(newv);
+}
+void D012_102(int d0, int d1, int d2, numtype* v) {
+	numtype* newv=(numtype*)malloc(d0*d1*d2*sizeof(numtype));
+	int i102, i012=0;
+	for (int id0=0; id0<d0; id0++) {
+		for (int id1=0; id1<d1; id1++) {
+			for (int id2=0; id2<d2; id2++) {
+				i102=id1*d0*d2+id0*d2+id2;
+				newv[i102]=v[i012];
+				i012++;
+			}
+		}
+	}
+	memcpy(v, newv, d0*d1*d2*sizeof(numtype));
+	free(newv);
+}
+
+void client5(int d0, int d1, int d2) {
+	numtype* v=(numtype*)malloc(d0*d1*d2*sizeof(numtype));
+	int i012=0;
+	for (int id0=0; id0<d0; id0++) {
+		for (int id1=0; id1<d1; id1++) {
+			for (int id2=0; id2<d2; id2++) {
+				v[i012]=i012;
+				i012++;
+			}
+		}
+	}
+	D012_102(d0, d1, d2, v);
+
+}
+
 int main() {
 
 	/*client3();
 	system("pause");
 	return -1;
-
+	
 	client4();
 	system("pause");
 	return -1;
+	
+	client5(5, 6, 4);
+	system("pause");
+	return -1;
 	*/
+
 
 	BOOL f = HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 
@@ -263,11 +315,7 @@ int main() {
 	int batchCount=(int)(floor(totSamplesCount/batchSamplesCount));
 
 	char* levelRatioS="0.5";// "1, 0.5";
-/*
-	int l=10;
-	numtype* V=(numtype*)malloc(l*sizeof(numtype));
-	VinitRnd(l, V, -0.5, 0.5);
-*/
+
 	NN* myNN=nullptr;
 	try {
 		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, false, false);
@@ -286,8 +334,8 @@ int main() {
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
 	numtype* historyData=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
 	numtype* hd_trs=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
-	numtype** Sample=MallocArray<numtype>(totSamplesCount, sampleLen*featuresCnt);
-	numtype** Target=MallocArray<numtype>(totSamplesCount, predictionLen*featuresCnt);
+	//numtype** Sample=MallocArray<numtype>(totSamplesCount, sampleLen*featuresCnt);
+	//numtype** Target=MallocArray<numtype>(totSamplesCount, predictionLen*featuresCnt);
 	//-- flat versions
 	numtype* fSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
 	numtype* fTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
@@ -296,19 +344,10 @@ int main() {
 	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201508010000", historyLen, historyData, baseData)<0) return -1;
 	dataTrS(historyLen, featuresCnt, historyData, baseData, DT_DELTA, myNN->scaleMin, myNN->scaleMax, hd_trs, &scaleM, &scaleP);
 
-/*	for (int i=0; i<(historyLen); i++) {		
-		hd_trs[2*i]=((numtype)i+1)/10;
-		hd_trs[2*i+1]=-hd_trs[2*i];
-	}
-*/
-	//SlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, Sample, predictionLen*featuresCnt, Target, 2);
 	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fSample, predictionLen*featuresCnt, fTarget, 2);
 
 	//-- Train
 	myNN->train(fSample, fTarget);
-
-	//int ret1=client1(myNN);
-	//int ret2=client2(myNN);
 
 	system("pause");
 	return 0;

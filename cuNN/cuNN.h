@@ -44,7 +44,11 @@ typedef struct sNN {
 	//-- topology
 	int InputCount;
 	int OutputCount;
-	//int FeaturesCount;
+	//--
+	int featuresCnt;
+	int sampleLen;
+	int predictionLen;
+	//--
 	int batchCnt;
 	int batchSamplesCnt;	// usually referred to as Batch Size
 	bool useContext;

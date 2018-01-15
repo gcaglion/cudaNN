@@ -1,8 +1,42 @@
 #include "cuNN.h"
 
+void D012_120(int d0, int d1, int d2, numtype* v) {
+	numtype* newv=(numtype*)malloc(d0*d1*d2*sizeof(numtype));
+	int i120, i012=0;
+	for (int id0=0; id0<d0; id0++) {
+		for (int id1=0; id1<d1; id1++) {
+			for (int id2=0; id2<d2; id2++) {
+				i120=id1*d2*d0+id2*d0+id0;
+				newv[i120]=v[i012];
+				i012++;
+			}
+		}
+	}
+	memcpy(v, newv, d0*d1*d2*sizeof(numtype));
+	free(newv);
+}
+void D012_102(int d0, int d1, int d2, numtype* v) {
+	numtype* newv=(numtype*)malloc(d0*d1*d2*sizeof(numtype));
+	int i102, i012=0;
+	for (int id0=0; id0<d0; id0++) {
+		for (int id1=0; id1<d1; id1++) {
+			for (int id2=0; id2<d2; id2++) {
+				i102=id1*d0*d2+id0*d2+id2;
+				newv[i102]=v[i012];
+				i012++;
+			}
+		}
+	}
+	memcpy(v, newv, d0*d1*d2*sizeof(numtype));
+	free(newv);
+}
+
 sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_) {
 	batchCnt=batchCnt_;
 	batchSamplesCnt=batchSamplesCnt_;
+	sampleLen=sampleLen_;
+	predictionLen=predictionLen_;
+	featuresCnt=featuresCnt_;
 	useContext=useContext_;
 	useBias=useBias_;
 
@@ -143,6 +177,12 @@ int sNN::train(numtype* sample, numtype* target) {
 	char fname[MAX_PATH];
 	numtype tse;
 
+	//-- Change the leading dimension in sample and target, from [Sample][Bar][Feature] to [Bar][Feature][Sample]
+	int sampleCnt=batchCnt*batchSamplesCnt;	// 94
+
+	D012_120(sampleCnt, sampleLen,  featuresCnt, sample);
+	D012_120(sampleCnt, predictionLen, featuresCnt, target);
+
 	//-- 0. Init
 	
 	//---- 0.1. Init Neurons (must set context neurons=0, at least for layer 0)
@@ -218,12 +258,16 @@ int sNN::train(numtype* sample, numtype* target) {
 				int Bx=sc;
 				int Bstart=levelFirstNode[l-1];
 				B=&N[Bstart];
+				int Cy=Ay;
+				int Cx=By;// because B gets transposed
 				int Cstart=levelFirstWeight[l-1];
 				C=&dJdW[Cstart];
-				if( MbyM(cublasH, Ay, Ax, 1, false, A, sc, By, Bx, true, B, C ) !=0) return -1;	// dJdW(l-1) = edF(l) * F(l-1)
+				Mfill(Ay*Ax, A, 0.1, 0.1);
+				Mfill(By*Bx, B, -0.1, -0.1);
 				Mprint(Ay, Ax, A, "A");
 				Mprint(By, Bx, B, "B");
-				Mprint(Ay, Bx, C, "C");
+				if( MbyM(cublasH, Ay, Ax, 1, false, A, sc, By, Bx, true, B, C ) !=0) return -1;	// dJdW(l-1) = edF(l) * F(l-1)
+				Mprint(Cy, Cx, C, "C");
 				//sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);
 			}
 

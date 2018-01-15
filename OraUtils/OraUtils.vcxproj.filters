@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="OraUtils.pc" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="OraUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -26,5 +23,10 @@
     <ClCompile Include="OraUtils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="OraUtils.pc">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

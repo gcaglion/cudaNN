@@ -10,11 +10,11 @@ EXPORT void Mprint(int my, int mx, numtype* sm, const char* msg, int smy0, int s
 	if (smx==-1) smx=mx;
 
 	int idx;
-	if (msg!=nullptr) printf("%s\n", msg);
+	if (msg!=nullptr) printf("%s [%dx%d] - from [%d,%d] to [%d,%d]\n", msg, my, mx, (smy0==-1) ? 0 : smy0, (smx0==-1) ? 0 : smx0, smy0+smy, smx0+smx);
 	for (int y=0; y<smy; y++) {
 		for (int x=0; x<smx; x++) {
 			idx= y*mx+x;
-			printf("|%4.1f", sm[idx]);
+			printf("|%2.5f", sm[idx]);
 		}
 		printf("|\n");
 	}
