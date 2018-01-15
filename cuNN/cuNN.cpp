@@ -30,6 +30,20 @@ void D012_102(int d0, int d1, int d2, numtype* v) {
 	memcpy(v, newv, d0*d1*d2*sizeof(numtype));
 	free(newv);
 }
+void SBF2BFS(int ds, int db, int df, numtype* v) {
+	numtype* newv=(numtype*)malloc(ds*db*df*sizeof(numtype));
+	int i=0;
+	for(int s=0; s<ds; s++) {
+		for(int b=0; b<db; b++) {
+			for(int f=0; f<df; f++) {
+				newv[b*ds*df+f*ds+s]=v[i];
+				i++;
+			}
+		}
+	}
+	memcpy(v, newv, ds*db*df*sizeof(numtype));
+	free(newv);
+}
 
 sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_) {
 	batchCnt=batchCnt_;
@@ -180,8 +194,8 @@ int sNN::train(numtype* sample, numtype* target) {
 	//-- Change the leading dimension in sample and target, from [Sample][Bar][Feature] to [Bar][Feature][Sample]
 	int sampleCnt=batchCnt*batchSamplesCnt;	// 94
 
-	D012_120(sampleCnt, sampleLen,  featuresCnt, sample);
-	D012_120(sampleCnt, predictionLen, featuresCnt, target);
+	SBF2BFS(sampleCnt, sampleLen,  featuresCnt, sample);
+	SBF2BFS(sampleCnt, predictionLen, featuresCnt, target);
 
 	//-- 0. Init
 	
@@ -266,6 +280,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				Mfill(By*Bx, B, -0.1, -0.1);
 				Mprint(Ay, Ax, A, "A");
 				Mprint(By, Bx, B, "B");
+
 				if( MbyM(cublasH, Ay, Ax, 1, false, A, sc, By, Bx, true, B, C ) !=0) return -1;	// dJdW(l-1) = edF(l) * F(l-1)
 				Mprint(Cy, Cx, C, "C");
 				//sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);

@@ -261,18 +261,14 @@ void D012_102(int d0, int d1, int d2, numtype* v) {
 	free(newv);
 }
 
-void client5(int d0, int d1, int d2) {
-	numtype* v=(numtype*)malloc(d0*d1*d2*sizeof(numtype));
-	int i012=0;
-	for (int id0=0; id0<d0; id0++) {
-		for (int id1=0; id1<d1; id1++) {
-			for (int id2=0; id2<d2; id2++) {
-				v[i012]=i012;
-				i012++;
-			}
-		}
-	}
-	D012_102(d0, d1, d2, v);
+void client5() {
+	matrix* a=new matrix(3, 2, true, 0, 1); a->print("a");
+	matrix* b=new matrix(4, 2, true, 0, 1); b->print("b");
+	matrix* c=new matrix(3, 4);
+	b->transpose(); b->print(" b after transpose()");
+	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, false, b->m, c->m); c->print("C-false");
+	b->transpose(); //b->print(" b reset");
+	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, true, b->m, c->m); c->print("C-true");
 
 }
 
@@ -285,11 +281,11 @@ int main() {
 	client4();
 	system("pause");
 	return -1;
-	
-	client5(5, 6, 4);
+	*/
+	client5();
 	system("pause");
 	return -1;
-	*/
+	
 
 
 	BOOL f = HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
@@ -334,9 +330,7 @@ int main() {
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
 	numtype* historyData=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
 	numtype* hd_trs=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
-	//numtype** Sample=MallocArray<numtype>(totSamplesCount, sampleLen*featuresCnt);
-	//numtype** Target=MallocArray<numtype>(totSamplesCount, predictionLen*featuresCnt);
-	//-- flat versions
+
 	numtype* fSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
 	numtype* fTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
 
