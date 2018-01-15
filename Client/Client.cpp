@@ -263,32 +263,26 @@ void D012_102(int d0, int d1, int d2, numtype* v) {
 
 void client5() {
 	matrix* a=new matrix(3, 2, true, 0, 1); a->print("a");
-	matrix* b=new matrix(4, 2, true, 0, 1); b->print("b");
-	matrix* c=new matrix(3, 4);
-	b->transpose(); b->print(" b after transpose()");
+	matrix* b=new matrix(3, 4, true, 0, 1); b->print("b");
+	matrix* c=new matrix(2, 4);
+	a->transpose(); a->print(" a after transpose()");
+	//Mtranspose_std(&a->my, &a->mx, a->m);  a->print(" a after Mtranspose_std()");
+	//b->transpose(); b->print(" b after transpose()");
 	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, false, b->m, c->m); c->print("C-false");
-	b->transpose(); //b->print(" b reset");
-	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, true, b->m, c->m); c->print("C-true");
+	//Mtranspose_std(&a->my, &a->mx, a->m);  a->print(" a reset");
+	a->transpose(); a->print("a after reset");
+	MbyM_std(a->my, a->mx, 1, true, a->m, b->my, b->mx, 1, false, b->m, c->m); c->print("C-true");
 
 }
 
 int main() {
 
-	/*client3();
-	system("pause");
-	return -1;
 	
-	client4();
-	system("pause");
-	return -1;
-	*/
-	client5();
-	system("pause");
-	return -1;
-	
-
-
-	BOOL f = HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
+	//client3();	
+	//client4();
+	//client5();
+	//system("pause");
+	//return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;

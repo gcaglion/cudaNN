@@ -143,28 +143,26 @@ EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By
 	int sCy, int sCx, int sCy0, int sCx0
 ) {
 	//-- As, Bs are scalars to multiply A and B cells, respectively, before multiplication
-	//if (Atr) swap(&Ax, &Ay);
-	//if (Btr) swap(&Bx, &By);
-	if(!Atr && Btr) {
-		for (int y = 0; y < Ay; y++) {
-			for (int x2 = 0; x2 < Bx; x2++) {
-				C[y*Ay+x2] = 0;
-				for (int x = 0; x < Ax; x++) C[y*By+x2] += A[y*Ax+x]*Ascale * B[x2*Bx+y]*Bscale;
-			}
-		}
-	} else {
-		for (int y = 0; y < Ay; y++) {
-			for (int x2 = 0; x2 < Bx; x2++) {
-				C[y*Bx+x2] = 0;
-				for (int x = 0; x < Ax; x++) C[y*Bx+x2] += A[y*Ax+x]*Ascale * B[x*Bx+x2]*Bscale;
-			}
+
+	if (Atr) Mtranspose_std(&Ay, &Ax, A);
+	if (Btr) Mtranspose_std(&By, &Bx, B);
+	
+	for (int y = 0; y < Ay; y++) {
+		for (int x2 = 0; x2 < Bx; x2++) {
+			C[y*Bx+x2] = 0;
+			for (int x = 0; x < Ax; x++) C[y*Bx+x2] += A[y*Ax+x]*Ascale * B[x*Bx+x2]*Bscale;
 		}
 	}
+
+	if (Atr) Mtranspose_std(&Ay, &Ax, A);
+	if (Btr) Mtranspose_std(&By, &Bx, B);
+
 	//==== !!! sub-matrix handling missing !!! ===
 
 	return 0;
 }
-EXPORT int Mtranspose_std(int my, int mx, numtype* m) {
+EXPORT int Mtranspose_std(int* my_, int* mx_, numtype* m) {
+	int my=(*my_), mx=(*mx_);
 	numtype** tm=(numtype**)malloc(mx*sizeof(numtype*)); for (int y=0; y<mx; y++) tm[y]=(numtype*)malloc(my*sizeof(numtype));
 	for (int y = 0; y < my; y++) {
 		for (int x = 0; x < mx; x++) {
@@ -180,7 +178,7 @@ EXPORT int Mtranspose_std(int my, int mx, numtype* m) {
 	for (int y=0; y<mx; y++) free(tm[y]);
 	free(tm);
 
-	int tmp=my;	my=mx; mx=tmp;
+	int tmp=my;	(*my_)=mx; (*mx_)=tmp;
 
 	return 0;
 }

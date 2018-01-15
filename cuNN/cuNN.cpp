@@ -191,6 +191,9 @@ int sNN::train(numtype* sample, numtype* target) {
 	char fname[MAX_PATH];
 	numtype tse;
 
+	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
+	numtype* A; numtype* B; numtype* C;
+
 	//-- Change the leading dimension in sample and target, from [Sample][Bar][Feature] to [Bar][Feature][Sample]
 	int sampleCnt=batchCnt*batchSamplesCnt;	// 94
 
@@ -252,37 +255,49 @@ int sNN::train(numtype* sample, numtype* target) {
 
 			//-- 1.1.4. BackPropagate, calc dJdW
 			int sc=batchSamplesCnt;
-			numtype* A; numtype* B; numtype* C;
 			for (l = levelsCnt-1; l>0; l--) {
 				if (l==(levelsCnt-1)) {
 					//-- top level only
 					if( VbyV2V(nodesCnt[l], e, &N[levelFirstNode[l]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = e * dF(l)
 				} else {
 					//-- lower levels
-					if( MbyM(cublasH, nodesCnt[l], nodesCnt[l+1], 1, false, &W[levelFirstWeight[l]], nodesCnt[l+1], sc, 1, false, &edN[levelFirstNode[l+1]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l+1) * WT(l)
+					Ay=weightsCnt[l];
+					Ax=weightsCnt[l-1];
+					Astart=levelFirstWeight[l];
+					A=&W[Astart];
+					By=nodesCnt[l+1]/sc;
+					Bx=sc;
+					Bstart=levelFirstNode[l+1];
+					B=&edN[Bstart];
+					Cy=Ax;	// because A gets transposed
+					Cx=Bx;
+					Cstart=levelFirstNode[l];
+					C=&dN[Cstart];
+
+					if (MbyM(cublasH, Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
 					if( VbyV2V(nodesCnt[l], &edN[levelFirstNode[l]], &dN[levelFirstNode[l]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l) * dF(l)
 				}
 				
 				//-- common	
-				int Ay=nodesCnt[l]/sc;
-				int Ax=sc;
-				int Astart=levelFirstNode[l];
+				Ay=nodesCnt[l]/sc;
+				Ax=sc;
+				Astart=levelFirstNode[l];
 				A=&edN[Astart];
-				int By=nodesCnt[l-1]/sc;
-				int Bx=sc;
-				int Bstart=levelFirstNode[l-1];
+				By=nodesCnt[l-1]/sc;
+				Bx=sc;
+				Bstart=levelFirstNode[l-1];
 				B=&N[Bstart];
-				int Cy=Ay;
-				int Cx=By;// because B gets transposed
-				int Cstart=levelFirstWeight[l-1];
+				Cy=Ay;
+				Cx=By;// because B gets transposed
+				Cstart=levelFirstWeight[l-1];
 				C=&dJdW[Cstart];
-				Mfill(Ay*Ax, A, 0.1, 0.1);
-				Mfill(By*Bx, B, -0.1, -0.1);
-				Mprint(Ay, Ax, A, "A");
-				Mprint(By, Bx, B, "B");
+				//Mfill(Ay*Ax, A, 0.1, 0.1);
+				//Mfill(By*Bx, B, -0.1, -0.1);
+				//Mprint(Ay, Ax, A, "A");
+				//Mprint(By, Bx, B, "B");
 
-				if( MbyM(cublasH, Ay, Ax, 1, false, A, sc, By, Bx, true, B, C ) !=0) return -1;	// dJdW(l-1) = edF(l) * F(l-1)
-				Mprint(Cy, Cx, C, "C");
+				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C ) !=0) return -1;	// dJdW(l-1) = edF(l) * F(l-1)
+				//Mprint(Cy, Cx, C, "C");
 				//sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);
 			}
 
