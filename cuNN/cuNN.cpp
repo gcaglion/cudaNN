@@ -261,8 +261,8 @@ int sNN::train(numtype* sample, numtype* target) {
 					if( VbyV2V(nodesCnt[l], e, &N[levelFirstNode[l]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = e * dF(l)
 				} else {
 					//-- lower levels
-					Ay=weightsCnt[l];
-					Ax=weightsCnt[l-1];
+					Ay=nodesCnt[l+1]/sc;
+					Ax=nodesCnt[l]/sc;
 					Astart=levelFirstWeight[l];
 					A=&W[Astart];
 					By=nodesCnt[l+1]/sc;
@@ -272,7 +272,7 @@ int sNN::train(numtype* sample, numtype* target) {
 					Cy=Ax;	// because A gets transposed
 					Cx=Bx;
 					Cstart=levelFirstNode[l];
-					C=&dN[Cstart];
+					C=&edN[Cstart];
 
 					if (MbyM(cublasH, Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
 					if( VbyV2V(nodesCnt[l], &edN[levelFirstNode[l]], &dN[levelFirstNode[l]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l) * dF(l)
