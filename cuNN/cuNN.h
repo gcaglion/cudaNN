@@ -79,16 +79,19 @@ typedef struct sNN {
 	float LearningRate;
 	float LearningMomentum;
 
-	numtype* N;
-	numtype* dN;
-	numtype* edN;
+	numtype* a;
+	numtype* F;
+	numtype* dF;
+	numtype* edF;
 	numtype* W;
 	numtype* dW;
 	numtype* dJdW;
 	numtype* e;
 	numtype* u;
 
-	numtype mse;
+	numtype bte;	// batch total error (not squared)
+	numtype tse;	// total squared error
+	numtype mse;	// mean squared error
 
 	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_);
 	~sNN();
@@ -97,6 +100,7 @@ typedef struct sNN {
 
 	EXPORT void setActivationFunction(int func_);
 	int sNN::Activate(int level);
+	int sNN::calcErr();
 
 	EXPORT int train(numtype* sample, numtype* target);
 

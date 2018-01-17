@@ -295,7 +295,7 @@ int main() {
 
 	float scaleM, scaleP;
 
-	int historyLen=100;
+	int historyLen=1000;
 	int sampleLen=6;// 20;
 	int predictionLen=2;
 	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);

@@ -34,18 +34,14 @@ EXPORT void Msub(int my, int mx, numtype* INm, numtype* OUTsm, int smy0, int smx
 	}
 
 }
-
-//-- TODO: CUDA VERSIONS !!!
 EXPORT int Vsum(int Vlen, int* V) {
 	int ret=0;
 	for (int i=0; i<Vlen; i++) ret+=V[i];
 	return ret;
 }
+//-- TODO: CUDA VERSIONS !!!
 EXPORT void Vscale(int Vlen, int* V, float s) {
 	for (int i=0; i<Vlen; i++) V[i]=(int)(V[i]*s);
-}
-EXPORT void Vscale(int Vlen, numtype* V, float s) {
-	for (int i=0; i<Vlen; i++) V[i]*=s;
 }
 EXPORT void Mfill(int size, numtype* m, numtype start, numtype inc) {
 	for (int i=0; i<size; i++) m[i]=start+i*inc;
@@ -55,6 +51,14 @@ EXPORT void Mfill(int size, numtype* m, numtype start, numtype inc) {
 #endif
 //--
 
+EXPORT int Vscale(int vlen, numtype* v, numtype s) {
+#ifdef USE_GPU
+	return(Vscale_cu(vlen, v, s));
+#else
+	for (int i=0; i<vlen; i++) v[i]*=s;
+	return 0;
+#endif
+}
 EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2) {
 #ifdef USE_GPU
 	return(Vcopy_cu(vlen, v1, v2));
@@ -79,10 +83,19 @@ EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype sca
 	return 0;
 #endif
 }
+EXPORT int Vsum(int Vlen, numtype* V, numtype* oSum) {
+	(*oSum)=0;
+#ifdef USE_GPU
+	return (Vsum_cu(Vlen, V, osSum));
+#else
+	for (int i=0; i<Vlen; i++) (*oSum)+=V[i];
+	return 0;
+#endif
+}
 EXPORT int Vssum(int Vlen, numtype* V, numtype* osSum) {
 	(*osSum)=0;
 #ifdef USE_GPU
-	return (Vsum_cu(Vlen, V, osSum));
+	return (Vssum_cu(Vlen, V, osSum));
 #else
 	for (int i=0; i<Vlen; i++) (*osSum)+=V[i]*V[i];
 	return 0;

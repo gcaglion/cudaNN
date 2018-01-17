@@ -66,9 +66,10 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	setLayout(LevelRatioS_);
 
 	//-- 2. malloc neurons and weights on GPU
-	if (myMalloc(&N, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(&dN, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(&edN, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&a, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&F, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&dF, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&edF, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
 	if (myMalloc(&W, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&dW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&dJdW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
@@ -79,7 +80,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 sNN::~sNN() {
 	//!!!!!!!!!!!!!! create a myFree() functio to handle CUDA-based variables !
 	free(weightsCnt);
-	free(N);
+	free(a);  free(F); free(dF); free(edF);
 	free(W);
 	//.....
 	// free cublasH, cuRandH, curanddestroygenerator...
@@ -162,34 +163,42 @@ void sNN::setActivationFunction(int func_) {
 
 }
 int sNN::Activate(int level) {
+	// sets dN
 	int ret, retd;
 	switch (ActivationFunction) {
 	case NN_ACTIVATION_TANH:
-		ret=Tanh(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
-		retd=dTanh(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
+		ret=Tanh(nodesCnt[level], &a[levelFirstNode[level]], &F[levelFirstNode[level]]);
+		retd=dTanh(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
 		break;
 	case NN_ACTIVATION_EXP4:
-		ret=Exp4(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
-		retd=dExp4(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
+		ret=Exp4(nodesCnt[level], &a[levelFirstNode[level]], &F[levelFirstNode[level]]);
+		retd=dExp4(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
 		break;
 	case NN_ACTIVATION_RELU:
-		ret=Relu(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
-		retd=dRelu(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
+		ret=Relu(nodesCnt[level], &a[levelFirstNode[level]], &F[levelFirstNode[level]]);
+		retd=dRelu(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
 		break;
 	case NN_ACTIVATION_SOFTPLUS:
-		ret=SoftPlus(nodesCnt[level], &N[levelFirstNode[level]], &N[levelFirstNode[level]]);
-		retd=dSoftPlus(nodesCnt[level], &N[levelFirstNode[level]], &dN[levelFirstNode[level]]);
+		ret=SoftPlus(nodesCnt[level], &a[levelFirstNode[level]], &F[levelFirstNode[level]]);
+		retd=dSoftPlus(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
 		break;
 	default:
 		break;
 	}
 	return((ret==0&&retd==0)?0:-1);
 }
-
+int sNN:: calcErr() {
+	//-- sets e, bte; adds squared sum(e) to tse
+	numtype se;
+	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
+	if (Vsum(nodesCnt[levelsCnt-1], e, &bte)!=0) return -1;											// bte=sum(e)
+	if (Vssum(nodesCnt[levelsCnt-1], e, &se)!=0) return -1;											// se=ssum(e) 
+	tse+=se;
+	return 0;
+}
 int sNN::train(numtype* sample, numtype* target) {
 	int l;
 	char fname[MAX_PATH];
-	numtype tse;
 
 	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
 	numtype* A; numtype* B; numtype* C;
@@ -203,7 +212,7 @@ int sNN::train(numtype* sample, numtype* target) {
 	//-- 0. Init
 	
 	//---- 0.1. Init Neurons (must set context neurons=0, at least for layer 0)
-	if( Vinit(nodesCnt[0], &N[0], 0) !=0) return -1;
+	if( Vinit(nodesCnt[0], &F[0], 0) !=0) return -1;
 
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), cuRandH);
@@ -215,15 +224,16 @@ int sNN::train(numtype* sample, numtype* target) {
 	//-- 1. for every epoch, calc and display MSE
 	for(int epoch=0; epoch<MaxEpochs; epoch++) {
 
-		//-- 1.0. reset batch error = 0
-		Vinit(nodesCnt[levelsCnt-1], e, 0);
+		//-- 1.0. reset batch error and batch dW
+		//Vinit(nodesCnt[levelsCnt-1], e, 0);
+		//Vinit(weightsCntTotal, dW, 0);
 		tse=0;
 
 		//-- 1.1. train one batch at a time
 		for (int b=0; b<batchCnt; b++) {
 
 			//-- 1.1.1.  load samples + targets onto GPU
-			if (loadBatchData(&N[0], &sample[b*InputCount], InputCount*sizeof(numtype) )!=0) return -1;
+			if (loadBatchData(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype) )!=0) return -1;
 			if (loadBatchData(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype) )!=0) return -1;
 			//dumpData(InputCount, &N[0], "C:/temp/F0.txt");
 		
@@ -237,28 +247,28 @@ int sNN::train(numtype* sample, numtype* target) {
 				int N0start= levelFirstNode[l];
 				int N1start= levelFirstNode[l+1];
 				
-				//-- N[l+1]=N[l]*W[l]
-				if (MbyM(cublasH, W10y, W10x, 1, false, &W[W10start], N0y, N0x, 1, false, &N[N0start], &N[N1start] ) !=0) return -1;
+				//-- a[l+1]=F[l]*W[l]
+				if (MbyM(cublasH, W10y, W10x, 1, false, &W[W10start], N0y, N0x, 1, false, &F[N0start], &a[N1start] ) !=0) return -1;
 			
 				//sprintf(fname, "C:/temp/F%d.txt", l); dumpData(nodesCnt[l], &N[levelFirstNode[l]], fname);
 				//sprintf(fname, "C:/temp/F%d.txt", l+1); dumpData(nodesCnt[l+1], &N[levelFirstNode[l+1]], fname);
 
-				//-- l+1 activation
+				//-- activation sets F[l+1] and dF[l+1]
 				if(Activate(l+1)!=0) return -1;
-
 			}
 		
-			//-- 1.1.3. Calc Error
-			if (Vdiff(nodesCnt[levelsCnt-1], &N[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;
+			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
+			if (calcErr()!=0) return -1;
+
 			//sprintf(fname, "C:/temp/e.txt"); dumpData(nodesCnt[levelsCnt-1], &N[outNstart], fname);
 			//sprintf(fname, "C:/temp/u.txt"); dumpData(nodesCnt[levelsCnt-1], &u[0], fname);
 
-			//-- 1.1.4. BackPropagate, calc dJdW
+			//-- 1.1.4. BackPropagate, calc dJdW for the whole batch
 			int sc=batchSamplesCnt;
 			for (l = levelsCnt-1; l>0; l--) {
 				if (l==(levelsCnt-1)) {
 					//-- top level only
-					if( VbyV2V(nodesCnt[l], e, &N[levelFirstNode[l]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = e * dF(l)
+					if( VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]) !=0) return -1;	// edF(l) = e * dF(l)
 				} else {
 					//-- lower levels
 					Ay=nodesCnt[l+1]/sc;
@@ -268,25 +278,25 @@ int sNN::train(numtype* sample, numtype* target) {
 					By=nodesCnt[l+1]/sc;
 					Bx=sc;
 					Bstart=levelFirstNode[l+1];
-					B=&edN[Bstart];
+					B=&edF[Bstart];
 					Cy=Ax;	// because A gets transposed
 					Cx=Bx;
 					Cstart=levelFirstNode[l];
-					C=&edN[Cstart];
+					C=&edF[Cstart];
 
 					if (MbyM(cublasH, Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
-					if( VbyV2V(nodesCnt[l], &edN[levelFirstNode[l]], &dN[levelFirstNode[l]], &edN[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l) * dF(l)
+					if( VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l) * dF(l)
 				}
 				
 				//-- common	
 				Ay=nodesCnt[l]/sc;
 				Ax=sc;
 				Astart=levelFirstNode[l];
-				A=&edN[Astart];
+				A=&edF[Astart];
 				By=nodesCnt[l-1]/sc;
 				Bx=sc;
 				Bstart=levelFirstNode[l-1];
-				B=&N[Bstart];
+				B=&F[Bstart];
 				Cy=Ay;
 				Cx=By;// because B gets transposed
 				Cstart=levelFirstWeight[l-1];
@@ -296,21 +306,31 @@ int sNN::train(numtype* sample, numtype* target) {
 				//Mprint(Ay, Ax, A, "A");
 				//Mprint(By, Bx, B, "B");
 
-				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C ) !=0) return -1;	// dJdW(l-1) = edF(l) * F(l-1)
+				// dJdW(l-1) = edF(l) * F(l-1)
+				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C ) !=0) return -1;	
+				
+
+
 				//Mprint(Cy, Cx, C, "C");
 				//sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);
 			}
 
-			//-- 1.1.5. update weights
+			//-- 1.1.5. update weights for the whole batch
+			//-- W = W - LR * dJdW
+			if (Vadd(weightsCntTotal, W, 1, dJdW, -LearningRate, W)!=0) return -1;
 
 			//-- dW = LM*dW - LR*dJdW
-			if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW) !=0) return -1;
+			//if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW) !=0) return -1;
 			//sprintf(fname, "C:/temp/dW.txt"); dumpData(weightsCntTotal, dW, fname);
-			//-- W = W + dW
-			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
+
+			//-- dW = - LR*dJdW
+			//-- if (Vscale(weightsCntTotal, dJdW, -LearningRate)!=0) return -1;
+
 		}
+
+
 		//-- 1.1. calc and display MSE
-		if (Vssum(nodesCnt[levelsCnt-1], e, &tse)!=0) return -1;
+		//if (Vssum(nodesCnt[levelsCnt-1], e, &tse)!=0) return -1;
 		mse=tse/batchCnt/nodesCnt[levelsCnt-1];
 		printf("\repoch %d, MSE=%f", epoch, mse);
 	}
