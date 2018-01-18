@@ -199,6 +199,8 @@ int sNN:: calcErr() {
 int sNN::train(numtype* sample, numtype* target) {
 	int l;
 	char fname[MAX_PATH];
+	DWORD batch_starttime, epoch_starttime;
+	DWORD training_starttime=timeGetTime();
 
 	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
 	numtype* A; numtype* B; numtype* C;
@@ -212,17 +214,20 @@ int sNN::train(numtype* sample, numtype* target) {
 	//-- 0. Init
 	
 	//---- 0.1. Init Neurons (must set context neurons=0, at least for layer 0)
-	if( Vinit(nodesCnt[0], &F[0], 0) !=0) return -1;
+	if( Vinit(nodesCnt[0], &F[0], 0, 0) !=0) return -1;
 
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), cuRandH);
 	//dumpData(weightsCntTotal, &W[0], "C:/temp/W.txt");
 
 	//---- 0.3. Init dW
-	for (l=0; l<(levelsCnt-1); l++) if (Vinit(weightsCnt[l], &dW[levelFirstWeight[l]], 0)!=0) return -1;
+	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
 
 	//-- 1. for every epoch, calc and display MSE
 	for(int epoch=0; epoch<MaxEpochs; epoch++) {
+
+		//-- timing
+		epoch_starttime=timeGetTime();
 
 		//-- 1.0. reset batch error and batch dW
 		//Vinit(nodesCnt[levelsCnt-1], e, 0);
@@ -317,14 +322,14 @@ int sNN::train(numtype* sample, numtype* target) {
 
 			//-- 1.1.5. update weights for the whole batch
 			//-- W = W - LR * dJdW
-			if (Vadd(weightsCntTotal, W, 1, dJdW, -LearningRate, W)!=0) return -1;
+			//if (Vadd(weightsCntTotal, W, 1, dJdW, -LearningRate, W)!=0) return -1;
 
 			//-- dW = LM*dW - LR*dJdW
-			//if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW) !=0) return -1;
+			if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW) !=0) return -1;
 			//sprintf(fname, "C:/temp/dW.txt"); dumpData(weightsCntTotal, dW, fname);
 
-			//-- dW = - LR*dJdW
-			//-- if (Vscale(weightsCntTotal, dJdW, -LearningRate)!=0) return -1;
+			//-- W = W + dW
+			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
 
 		}
 
@@ -332,8 +337,10 @@ int sNN::train(numtype* sample, numtype* target) {
 		//-- 1.1. calc and display MSE
 		//if (Vssum(nodesCnt[levelsCnt-1], e, &tse)!=0) return -1;
 		mse=tse/batchCnt/nodesCnt[levelsCnt-1];
-		printf("\repoch %d, MSE=%f", epoch, mse);
+
+		printf("\repoch %d, MSE=%f, duration=%d ms", epoch, mse, (timeGetTime()-epoch_starttime));
 	}
+	printf("\nTraining complete. Elapsed time: %0.1f seconds.\n", (((float)timeGetTime()-(float)training_starttime)/(float)1000));
 	//-
 	return 0;
 }

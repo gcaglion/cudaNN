@@ -4,6 +4,7 @@
 	#include "../MyCU/MyCU.h"
 #endif
 
+
 EXPORT void Mprint(int my, int mx, numtype* sm, const char* msg, int smy0, int smx0, int smy, int smx) {
 
 	if (smy==-1) smy=my;
@@ -34,18 +35,16 @@ EXPORT void Msub(int my, int mx, numtype* INm, numtype* OUTsm, int smy0, int smx
 	}
 
 }
+//-- int functions
 EXPORT int Vsum(int Vlen, int* V) {
 	int ret=0;
 	for (int i=0; i<Vlen; i++) ret+=V[i];
 	return ret;
 }
-//-- TODO: CUDA VERSIONS !!!
 EXPORT void Vscale(int Vlen, int* V, float s) {
 	for (int i=0; i<Vlen; i++) V[i]=(int)(V[i]*s);
 }
-EXPORT void Mfill(int size, numtype* m, numtype start, numtype inc) {
-	for (int i=0; i<size; i++) m[i]=start+i*inc;
-}
+
 #ifdef USE_GPU
 #else
 #endif
@@ -79,14 +78,14 @@ EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype sca
 #ifdef USE_GPU
 	return (Vdiff_cu(vlen, v1, scale1, v2, scale2, ov));
 #else
-	for (int i=0; i<vlen; i++) ov[i]=v2[i]*scale2-v1[i]*scale1;
+	for (int i=0; i<vlen; i++) ov[i]=v1[i]*scale1-v2[i]*scale2;
 	return 0;
 #endif
 }
 EXPORT int Vsum(int Vlen, numtype* V, numtype* oSum) {
 	(*oSum)=0;
 #ifdef USE_GPU
-	return (Vsum_cu(Vlen, V, osSum));
+	return (Vsum_cu(Vlen, V, oSum));
 #else
 	for (int i=0; i<Vlen; i++) (*oSum)+=V[i];
 	return 0;
@@ -111,11 +110,11 @@ EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm) {
 	return 0;
 #endif
 }
-EXPORT int Vinit(int Vlen, numtype* V, numtype val) {
+EXPORT int Vinit(int size, numtype* v, numtype start, numtype inc) {
 #ifdef USE_GPU
-	return(Vinit_cu(Vlen, V, val));
+	return(Vinit_cu(size, v, start, inc));
 #else
-	for (int i=0; i<Vlen; i++) V[i]=val;
+	for (int i=0; i<size; i++) v[i]=start+i*inc;
 	return 0;
 #endif
 }
@@ -228,7 +227,14 @@ EXPORT int myMalloc(numtype** var, int size) {
 	return 0;
 #endif
 }
-
+EXPORT int myFree(numtype* var) {
+	#ifdef USE_GPU
+		return (Free_cu(var));
+	#else
+		free(var);
+		return 0;
+	#endif
+}
 EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size) {
 #ifdef USE_GPU
 	return(loadBatchData_cu(destAddr, srcAddr, size));

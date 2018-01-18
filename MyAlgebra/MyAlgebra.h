@@ -117,18 +117,17 @@ EXPORT void Msub(int my, int mx, numtype* INm, numtype* OUTsm, int smy0, int smx
 EXPORT int Vsum(int Vlen, int* V);
 
 //-- TODO: CUDA VERSIONS !!!
-EXPORT int Vscale(int vlen, numtype* v, numtype s);
-EXPORT void Mfill(int size, numtype* m, numtype start, numtype inc);
+EXPORT void Vscale(int Vlen, int* V, float s);
 //--
 
-EXPORT void Vscale(int Vlen, int* V, float s);
+EXPORT int Vscale(int vlen, numtype* v, numtype s);
 EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2);
 EXPORT int Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
 EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
 EXPORT int Vsum(int Vlen, numtype* V, numtype* oSum);
 EXPORT int Vssum(int Vlen, numtype* V, numtype* osSum);
 EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm);
-EXPORT int Vinit(int Vlen, numtype* V, numtype val);
+EXPORT int Vinit(int size, numtype* v, numtype start, numtype inc);
 EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH=NULL);
 EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV);
 
@@ -138,6 +137,7 @@ EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype
 
 EXPORT int myMemInit(void* cublasH, void* cuRandH);
 EXPORT int myMalloc(numtype** var, int size);
+EXPORT int myFree(numtype* var);
 
 EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size);
 

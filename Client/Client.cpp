@@ -23,7 +23,7 @@ int client1(NN* myNN) {
 	int say0=2, sax0=4;
 	int say=3, sax=5;
 	numtype* a=(numtype*)malloc(ay*ax*sizeof(numtype));
-	Mfill(ay*ax, a, 0, 0.1f);
+	Vinit(ay*ax, a, 0, 0.1f);
 	numtype* sa=(numtype*)malloc(say*sax*sizeof(numtype));
 	Msub(ay, ax, &a[sax0+ax*say0], sa, say0, sax0, say, sax);
 
@@ -31,7 +31,7 @@ int client1(NN* myNN) {
 	int sby0=4, sbx0=2;
 	int sby=5, sbx=4;
 	numtype* b=(numtype*)malloc(by*bx*sizeof(numtype));
-	Mfill(by*bx, b, 0.0f, 0.1f);
+	Vinit(by*bx, b, 0.0f, 0.1f);
 	numtype* sb=(numtype*)malloc(sby*sbx*sizeof(numtype));
 	Msub(by, bx, &b[sbx0+bx*sby0], sb, sby0, sbx0, sby, sbx);
 
@@ -74,9 +74,9 @@ int client1(NN* myNN) {
 	Mprint(scy, scx, sc);
 	printf("------------------------------------------------------------------------------------------------------\n");
 	printf("a[%dx%d], start at[%dx%d], size [%dx%d] (vector math)\n", ay, ax, say0, sax0, say, sax);
-	Mprint(ay, ax, &a[sax0+ax*say0], say0, sax0, say, sax);
+	Mprint(ay, ax, &a[sax0+ax*say0], nullptr, say0, sax0, say, sax);
 	printf("b[%dx%d], start at[%dx%d], size [%dx%d] (vector math)\n", by, bx, sby0, sbx0, sby, sbx);
-	Mprint(by, bx, &b[sbx0+bx*sby0], sby0, sbx0, sby, sbx);
+	Mprint(by, bx, &b[sbx0+bx*sby0], nullptr, sby0, sbx0, sby, sbx);
 
 	printf("(sub) C=AxB using cublasSgem():\n");
 	if (cublasSgemm((*(cublasHandle_t*)myNN->cublasH), CUBLAS_OP_N, CUBLAS_OP_N, sbx, say, sax, &alpha, &b_d[sbx0+bx*sby0], bx, &a_d[sax0+ax*say0], ax, &beta, c_d, cx)!=CUBLAS_STATUS_SUCCESS) return -1;
@@ -95,7 +95,7 @@ int client2(NN* pNN) {
 	int nodesCnt[4]={ 8, 6, 4, 2 };
 	int batchSize=2;
 
-	Vscale(levelsCnt, nodesCnt, batchSize);
+	Vscale(levelsCnt, nodesCnt, (float)batchSize);
 	int nodesCntTot=Vsum(levelsCnt, nodesCnt);
 	int* levelFirstNode=(int*)malloc(levelsCnt*sizeof(int));
 	VsumPrevs(levelsCnt, nodesCnt, levelFirstNode);
@@ -109,10 +109,10 @@ int client2(NN* pNN) {
 
 	printf("\n------------------------------------------------------------------------------------------------------\n");
 	numtype* N=(numtype*)malloc(nodesCntTot*sizeof(numtype));
-	Mfill(nodesCntTot, N, -1, -0.1f);
+	Vinit(nodesCntTot, N, -1, -0.1f);
 
 	numtype* w=(numtype*)malloc(wcntTot*sizeof(numtype));
-	Mfill(wcntTot, w, 1, 0.1f);
+	Vinit(wcntTot, w, 1, 0.1f);
 	//-- sub-w[]
 	numtype** sw=(numtype**)malloc((levelsCnt-1)*sizeof(numtype*));
 	for (sm=0; sm<(levelsCnt-1); sm++) sw[sm]=(numtype*)malloc(wcnt[sm]*sizeof(numtype));
@@ -216,9 +216,9 @@ void client3() {
 }
 
 void client4() {
-	matrix* A=new matrix(8, 5, true, 0.1, 0.1);
+	matrix* A=new matrix(8, 5, true, 0.1f, 0.1f);
 	A->print("A");
-	matrix* B=new matrix(5, 12, true, -0.1, -0.1);
+	matrix* B=new matrix(5, 12, true, -0.1f, -0.1f);
 	B->print("B");
 	matrix* C=new matrix(8, 12);
 	MbyM(nullptr, A->my, A->mx, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m);
@@ -275,12 +275,43 @@ void client5() {
 
 }
 
+int client6() {
+
+	DWORD start;
+	DWORD end;
+
+	void* cublasH=new void*;
+	void* cuRandH=new void*;
+	
+	start=timeGetTime();
+	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+	
+	numtype* v;
+	numtype s;
+	int vsize=1024*1024;
+	start=timeGetTime();
+	if (myMalloc(&v, vsize) !=0) return -1;
+	printf("myMalloc(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+	start=timeGetTime();
+	Vinit(vsize, v, 0.0f, 1.0f);
+	printf("Vinit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+	start=timeGetTime();
+	if (Vssum(vsize, v, &s)!=0) return -1;
+	printf("Vssum(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+	return(myFree(v));
+}
+
 int main() {
 
 	
 	//client3();	
 	//client4();
 	//client5();
+	//client6();
+
 	//system("pause");
 	//return -1;
 
@@ -296,7 +327,7 @@ int main() {
 	float scaleM, scaleP;
 
 	int historyLen=1000;
-	int sampleLen=6;// 20;
+	int sampleLen=100;// 20;
 	int predictionLen=2;
 	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
 	int batchSamplesCount=5;
@@ -315,10 +346,10 @@ int main() {
 
 	myNN->setActivationFunction(NN_ACTIVATION_TANH);
 
-	myNN->MaxEpochs=1000;
+	myNN->MaxEpochs=10;
 	myNN->TargetMSE=(float)0.0001;
 	myNN->BP_Algo=BP_STD;
-	myNN->LearningRate=(numtype)0.1;
+	myNN->LearningRate=(numtype)0.05;
 	myNN->LearningMomentum=(numtype)0.7;
 
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));

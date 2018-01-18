@@ -38,6 +38,9 @@ EXPORT int initCURand(void* cuRandH) {
 EXPORT int Malloc_cu(numtype** var, int size) {
 	return ((cudaMalloc(var, size*sizeof(numtype))==cudaSuccess) ? 0 : -1);
 }
+EXPORT int Free_cu(numtype* var) {
+	return (cudaFree(var));
+}
 
 __global__	void initGPUData_ker(float *data, int numElements, float value) {
 	int tid = blockIdx.x * blockDim.x+threadIdx.x;
@@ -101,6 +104,10 @@ EXPORT int MbyM_cu(void* cublasH,
 
 }
 
+__global__ void cuVscale_ker(const int vlen, numtype *v, const numtype s) {
+	int tid = blockIdx.x * blockDim.x+threadIdx.x;
+	if (tid < vlen) v[tid] *= s;
+}
 __global__ void cuVcopy_ker(const int vlen, const numtype *v1, numtype *v2) {
 	int tid = blockIdx.x * blockDim.x+threadIdx.x;
 	if (tid < vlen) v2[tid] = v1[tid];
@@ -138,17 +145,53 @@ __global__ void cuVsum_ker(const int vlen, const numtype *v, numtype* osum) {
 		osum[blockIdx.x] = partialSum[0];
 
 }
+__global__ void cuVssum_ker(const int vlen, const numtype *v, numtype* ossum) {
+
+	//@@ Load a segment of the input vector into shared memory
+	__shared__ float partialSum[2*CUDA_BLOCK_SIZE];
+	unsigned int t = threadIdx.x, start = 2*blockIdx.x * CUDA_BLOCK_SIZE;
+	if (start+t < vlen)
+		partialSum[t] = v[start+t]*v[start+t];
+	else
+		partialSum[t] = 0;
+	if (start+CUDA_BLOCK_SIZE+t < vlen)
+		partialSum[CUDA_BLOCK_SIZE+t] = v[start+CUDA_BLOCK_SIZE+t]*v[start+CUDA_BLOCK_SIZE+t];
+	else
+		partialSum[CUDA_BLOCK_SIZE+t] = 0;
+	//@@ Traverse the reduction tree
+	for (unsigned int stride = CUDA_BLOCK_SIZE; stride>=1; stride >>= 1) {
+		__syncthreads();
+		if (t < stride)
+			partialSum[t] += partialSum[t+stride];
+	}
+	//@@ Write the computed sum of the block to the output vector at the 
+	//@@ correct index
+	if (t==0)
+		ossum[blockIdx.x] = partialSum[0];
+
+}
 __global__ void Vscale(int vlen, numtype* v, numtype scaleM, numtype scaleP) {
 	int i = blockIdx.x*blockDim.x+threadIdx.x;
 	if (i<vlen) v[i] = scaleM*v[i]+scaleP;
 }
-__global__ void Vinit_ker(int vlen, numtype* v, numtype val) {
+__global__ void Vinit_ker(int vlen, numtype* v, numtype start, numtype inc) {
 	int i = blockIdx.x*blockDim.x+threadIdx.x;
-	if (i<vlen) v[i] = val;
+	if (i<vlen) v[i] = start+i*inc;
 }
 __global__ void VbyV2V_ker(int vlen, numtype* v1, numtype* v2, numtype* ov) {
 	int i = blockIdx.x*blockDim.x+threadIdx.x;
 	if (i<vlen) ov[i]=v1[i]*v2[i];
+}
+
+EXPORT int Vscale_cu(int vlen, numtype* v, numtype s){
+	dim3 gridDim;
+	dim3 blockDim;
+	blockDim.x = CUDA_BLOCK_SIZE;
+	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
+
+	cuVscale_ker<<< gridDim, blockDim>>> (vlen, v, s);
+
+	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
 EXPORT int Vcopy_cu(int vlen, numtype* v1, numtype* v2) {
 	dim3 gridDim;
@@ -196,16 +239,33 @@ EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum) {
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm) {
-	return ((cublasSnrm2_v2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVnorm)==CUBLAS_STATUS_SUCCESS) ? 0 : -1);
-}
-EXPORT int Vinit_cu(int vlen, numtype* v, numtype val) {
+EXPORT int Vssum_cu(int vlen, numtype* v, numtype* ovssum) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
 	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
 
-	Vinit_ker<<< gridDim, blockDim>>> (vlen, v, val);
+	numtype* vssum_d;
+	if (Malloc_cu(&vssum_d, sizeof(numtype))!=cudaSuccess) return -1;
+
+	cuVssum_ker<<< gridDim, blockDim>>> (vlen, v, vssum_d);
+	int ret=cudaGetLastError();
+
+	if (cudaMemcpy(ovssum, vssum_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+
+	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
+}
+
+EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm) {
+	return ((cublasSnrm2_v2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVnorm)==CUBLAS_STATUS_SUCCESS) ? 0 : -1);
+}
+EXPORT int Vinit_cu(int vlen, numtype* v, numtype start, numtype inc) {
+	dim3 gridDim;
+	dim3 blockDim;
+	blockDim.x = CUDA_BLOCK_SIZE;
+	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
+
+	Vinit_ker<<< gridDim, blockDim>>> (vlen, v, start, inc);
 
 	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
