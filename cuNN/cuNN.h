@@ -13,6 +13,7 @@
 #define FAIL_MALLOC_W "Weights memory allocation failed. \n"
 #define FAIL_MALLOC_e "Errors memory allocation failed. \n"
 #define FAIL_MALLOC_u "Targets memory allocation failed. \n"
+#define FAIL_MALLOC_SCALAR "Scalars memory allocation failed. \n"
 
 #define MLP 0
 #define RNN 1
@@ -92,6 +93,9 @@ typedef struct sNN {
 	numtype bte;	// batch total error (not squared)
 	numtype tse;	// total squared error
 	numtype mse;	// mean squared error
+	numtype se;		// squared sum e
+	//--
+	numtype* ss;	// device-side shared scalar value, to be used to calc any of the above
 
 	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_);
 	~sNN();

@@ -104,6 +104,9 @@ EXPORT int MbyM_cu(void* cublasH,
 
 }
 
+__global__ void cuSadd(const numtype* s1, const numtype* s2, numtype* ssum) {
+	ssum[0]=s1[0]+s2[0];
+}
 __global__ void cuVscale_ker(const int vlen, numtype *v, const numtype s) {
 	int tid = blockIdx.x * blockDim.x+threadIdx.x;
 	if (tid < vlen) v[tid] *= s;
@@ -183,6 +186,13 @@ __global__ void VbyV2V_ker(int vlen, numtype* v1, numtype* v2, numtype* ov) {
 	if (i<vlen) ov[i]=v1[i]*v2[i];
 }
 
+//-- scalar functions
+EXPORT int Sadd_cu(numtype* s1, numtype* s2, numtype* ssum) {
+	cuSadd<<< 1, 1>>>(s1, s2, ssum);
+	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
+}
+
+//-- vector functions;
 EXPORT int Vscale_cu(int vlen, numtype* v, numtype s){
 	dim3 gridDim;
 	dim3 blockDim;

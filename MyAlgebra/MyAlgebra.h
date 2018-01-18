@@ -120,6 +120,10 @@ EXPORT int Vsum(int Vlen, int* V);
 EXPORT void Vscale(int Vlen, int* V, float s);
 //--
 
+//-- scalar functions
+EXPORT int Sadd(numtype* s1, numtype* s2, numtype* ssum);
+
+//-- vector functions
 EXPORT int Vscale(int vlen, numtype* v, numtype s);
 EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2);
 EXPORT int Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);

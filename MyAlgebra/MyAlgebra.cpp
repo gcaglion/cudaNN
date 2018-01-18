@@ -50,6 +50,17 @@ EXPORT void Vscale(int Vlen, int* V, float s) {
 #endif
 //--
 
+//-- scalar functions
+EXPORT int Sadd(numtype* s1, numtype* s2, numtype* ssum) {
+#ifdef USE_GPU
+	return(Sadd_cu(s1, s2, ssum));
+#else
+	(*ssum)=(*s1)+(*s2);
+	return 0;
+#endif
+}
+
+//-- vector functions
 EXPORT int Vscale(int vlen, numtype* v, numtype s) {
 #ifdef USE_GPU
 	return(Vscale_cu(vlen, v, s));

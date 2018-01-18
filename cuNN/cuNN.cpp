@@ -76,6 +76,11 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_e;
 	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_u;
 
+	//-- device-based scalar value, to be used by reduction functions (sum, ssum, ...)
+#ifdef USE_GPU
+	if (myMalloc(&ss, 1)!=0) throw FAIL_MALLOC_SCALAR;
+#endif
+
 }
 sNN::~sNN() {
 	//!!!!!!!!!!!!!! create a myFree() functio to handle CUDA-based variables !
@@ -189,7 +194,6 @@ int sNN::Activate(int level) {
 }
 int sNN:: calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
-	numtype se;
 	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
 	if (Vsum(nodesCnt[levelsCnt-1], e, &bte)!=0) return -1;											// bte=sum(e)
 	if (Vssum(nodesCnt[levelsCnt-1], e, &se)!=0) return -1;											// se=ssum(e) 
