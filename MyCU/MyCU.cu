@@ -91,13 +91,12 @@ EXPORT int MbyM_cu(void* cublasH,
 	//int pCx=(sCx==-1) ? fCx : sCx;
 	int fCx=fBx;
 	
-//	if (Atr) swap(&pAx, &pAy);
-//	if (Btr) swap(&pBx, &pAx);
+	if (Atr) swap(&pAx, &pAy);
+	//if (Btr) swap(&pBx, &pAx);
 
 	// Do the actual multiplication
 	
-	if (cublasSgemm((*(cublasHandle_t*)cublasH), CUBLAS_OP_N, CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
-	//if (cublasSgemm((*(cublasHandle_t*)cublasH), (Atr) ? CUBLAS_OP_T : CUBLAS_OP_N, (Btr) ? CUBLAS_OP_T : CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
+	if (cublasSgemm((*(cublasHandle_t*)cublasH), (Atr) ? CUBLAS_OP_T : CUBLAS_OP_N, (Btr) ? CUBLAS_OP_T : CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
 			return 0;
 	} else {
 		return -1;

@@ -333,11 +333,7 @@ int sNN::train(numtype* sample, numtype* target) {
 
 				// dJdW(l-1) = edF(l) * F(l-1)
 				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C ) !=0) return -1;	
-				
 
-
-				//Mprint(Cy, Cx, C, "C");
-				//sprintf(fname, "C:/temp/dJdW.txt"); dumpData(weightsCntTotal, dJdW, fname);
 			}
 
 			//-- 1.1.5. update weights for the whole batch

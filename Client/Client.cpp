@@ -23,7 +23,7 @@ int client1(NN* myNN) {
 	int say0=2, sax0=4;
 	int say=3, sax=5;
 	numtype* a=(numtype*)malloc(ay*ax*sizeof(numtype));
-	Vinit(ay*ax, a, 0, 0.1f);
+	for(int i=0; i<(ay*ax); i++) a[i]=i*0.1f;
 	numtype* sa=(numtype*)malloc(say*sax*sizeof(numtype));
 	Msub(ay, ax, &a[sax0+ax*say0], sa, say0, sax0, say, sax);
 
@@ -31,7 +31,7 @@ int client1(NN* myNN) {
 	int sby0=4, sbx0=2;
 	int sby=5, sbx=4;
 	numtype* b=(numtype*)malloc(by*bx*sizeof(numtype));
-	Vinit(by*bx, b, 0.0f, 0.1f);
+	for (int i=0; i<(by*bx); i++) b[i]=i*0.1f;
 	numtype* sb=(numtype*)malloc(sby*sbx*sizeof(numtype));
 	Msub(by, bx, &b[sbx0+bx*sby0], sb, sby0, sbx0, sby, sbx);
 
@@ -262,16 +262,34 @@ void D012_102(int d0, int d1, int d2, numtype* v) {
 }
 
 void client5() {
-	matrix* a=new matrix(3, 2, true, 0, 1); a->print("a");
-	matrix* b=new matrix(3, 4, true, 0, 1); b->print("b");
+	matrix* a=new matrix(2, 3, true, 0, 1); a->print("a");
+	matrix* b=new matrix(4, 3, true, 0, 1); b->print("b");
 	matrix* c=new matrix(2, 4);
-	a->transpose(); a->print(" a after transpose()");
+	//a->transpose(); a->print(" a after transpose()");
 	//Mtranspose_std(&a->my, &a->mx, a->m);  a->print(" a after Mtranspose_std()");
-	//b->transpose(); b->print(" b after transpose()");
+	b->transpose(); b->print(" b after transpose()");
 	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, false, b->m, c->m); c->print("C-false");
 	//Mtranspose_std(&a->my, &a->mx, a->m);  a->print(" a reset");
-	a->transpose(); a->print("a after reset");
-	MbyM_std(a->my, a->mx, 1, true, a->m, b->my, b->mx, 1, false, b->m, c->m); c->print("C-true");
+	b->transpose(); //b->print("b after reset");
+	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, true, b->m, c->m); c->print("C-true");
+
+	//-- 0. init CUDA/BLAS
+	void* cublasH=new void*;
+	void* cuRandH=new void*;
+	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+
+	//-- load a,b,c onto gpu
+	numtype* da; if (cudaMalloc(&da, 3*2*sizeof(numtype))!=0) return;
+	numtype* db; if (cudaMalloc(&db, 3*4*sizeof(numtype))!=0) return;
+	numtype* dc; if (cudaMalloc(&dc, 2*4*sizeof(numtype))!=0) return;
+	if (cudaMemcpy(da, a->m, 3*2*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
+	if (cudaMemcpy(db, b->m, 3*4*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
+	
+	if (MbyM(cublasH, 2, 3, 1, false, da, 3,4, 1, true, db, dc)!=0) return;
+	
+	if (cudaMemcpy(c->m, dc, 2*4*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
+	c->print("C-from Cublas");
+	return;
 
 }
 
@@ -306,14 +324,13 @@ int client6() {
 
 int main() {
 
-	
 	//client3();	
 	//client4();
-	//client5();
+	client5();
 	//client6();
 
-	//system("pause");
-	//return -1;
+	system("pause");
+	return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;
@@ -327,7 +344,7 @@ int main() {
 	float scaleM, scaleP;
 
 	int historyLen=1000;
-	int sampleLen=6;// 20;
+	int sampleLen=20;// 20;
 	int predictionLen=2;
 	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
 	int batchSamplesCount=5;
@@ -339,7 +356,7 @@ int main() {
 
 	NN* myNN=nullptr;
 	try {
-		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, true, false);
+		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, false, false);
 	} catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
 	}
@@ -349,8 +366,12 @@ int main() {
 	myNN->MaxEpochs=100;
 	myNN->TargetMSE=(float)0.0001;
 	myNN->BP_Algo=BP_STD;
-	myNN->LearningRate=(numtype)0.005;
+	myNN->LearningRate=(numtype)0.05;
 	myNN->LearningMomentum=(numtype)0.7;
+
+	client1(myNN);
+	system("pause");
+	return -1;
 
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
 	numtype* historyData=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
