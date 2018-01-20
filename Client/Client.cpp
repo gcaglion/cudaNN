@@ -327,19 +327,19 @@ int main() {
 	float scaleM, scaleP;
 
 	int historyLen=1000;
-	int sampleLen=20;// 20;
+	int sampleLen=6;// 20;
 	int predictionLen=2;
 	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
-	int batchSamplesCount=10;
+	int batchSamplesCount=5;
 
 	int totSamplesCount=historyLen-sampleLen;
 	int batchCount=(int)(floor(totSamplesCount/batchSamplesCount));
 
-	char* levelRatioS="1, 0.5";// "1, 0.5";
+	char* levelRatioS="0.5, 1";// "1, 0.5";
 
 	NN* myNN=nullptr;
 	try {
-		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, false, false);
+		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, true, false);
 	} catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
 	}
@@ -349,7 +349,7 @@ int main() {
 	myNN->MaxEpochs=100;
 	myNN->TargetMSE=(float)0.0001;
 	myNN->BP_Algo=BP_STD;
-	myNN->LearningRate=(numtype)0.05;
+	myNN->LearningRate=(numtype)0.005;
 	myNN->LearningMomentum=(numtype)0.7;
 
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));

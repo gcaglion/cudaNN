@@ -137,6 +137,13 @@ void sNN::setLayout(char LevelRatioS[60]) {
 		}
 	}
 
+	//-- ctxStart[] can only be defined after levelFirstNode has been defined.
+	if (useContext) {
+		for (nl=0; nl<(levelsCnt-1); nl++) {
+			ctxStart[nl]=levelFirstNode[nl+1]-nodesCnt[nl+1];
+		}
+	}
+
 	for (i=0; i<MAX_LEVELS; i++) free(DescList[i]);	free(DescList);
 
 }
@@ -262,12 +269,17 @@ int sNN::train(numtype* sample, numtype* target) {
 				
 				//-- a[l+1]=F[l]*W[l]
 				if (MbyM(cublasH, W10y, W10x, 1, false, &W[W10start], N0y, N0x, 1, false, &F[N0start], &a[N1start] ) !=0) return -1;
-			
+
 				//sprintf(fname, "C:/temp/F%d.txt", l); dumpData(nodesCnt[l], &N[levelFirstNode[l]], fname);
 				//sprintf(fname, "C:/temp/F%d.txt", l+1); dumpData(nodesCnt[l+1], &N[levelFirstNode[l+1]], fname);
 
 				//-- activation sets F[l+1] and dF[l+1]
 				if(Activate(l+1)!=0) return -1;
+
+				//-- feed back to context neurons
+				if (useContext) {
+					Vcopy(nodesCnt[l+1], &F[N1start], &F[ctxStart[l]]);
+				}
 			}
 		
 			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch

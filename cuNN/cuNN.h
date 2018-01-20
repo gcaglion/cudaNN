@@ -63,6 +63,7 @@ typedef struct sNN {
 	int levelsCnt;
 	int nodesCnt[MAX_LEVELS];
 	int levelFirstNode[MAX_LEVELS];
+	int ctxStart[MAX_LEVELS];
 
 	int nodesCntTotal;
 	int weightsCnt[MAX_LEVELS-1];
