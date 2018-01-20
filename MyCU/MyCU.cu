@@ -70,7 +70,15 @@ EXPORT void dumpData_cu(int vlen, numtype* v, const char* fname) {
 	fclose(f);
 }
 
-EXPORT int MbyM_cu(void* cublasH,
+//-- matrix functions
+EXPORT int Mtr_cublas(cublasHandle_t handle, int my, int mx, numtype* m, numtype* otm) {
+	float alpha=1;
+	float beta=0;
+	if (cublasSgeam(handle, CUBLAS_OP_T, CUBLAS_OP_T, my, mx, &alpha, m, mx, &beta, m, mx, otm, my)!=CUBLAS_STATUS_SUCCESS) return -1;
+	return 0;
+}
+
+EXPORT int MbyM_cu_ORIG(void* cublasH,
 	int fAy, int fAx, numtype Ascale, bool Atr, numtype* fA, int fBy, int fBx, numtype Bscale, bool Btr, numtype* fB, numtype* fC,
 	int sAy, int sAx, int sAy0, int sAx0,
 	int sBy, int sBx, int sBy0, int sBx0,
@@ -79,6 +87,9 @@ EXPORT int MbyM_cu(void* cublasH,
 
 	const float *alpha = &Ascale;
 	const float *beta = &Bscale;
+
+	cublasOperation_t Aop=(Atr) ? CUBLAS_OP_T : CUBLAS_OP_N;
+	cublasOperation_t Bop=(Btr) ? CUBLAS_OP_T : CUBLAS_OP_N;
 
 	//-- starting point and yx size for A,B,C
 	int pAy=(sAy==-1) ? fAy : sAy;
@@ -90,18 +101,61 @@ EXPORT int MbyM_cu(void* cublasH,
 	//int pCy=(sCy==-1) ? fCy : sCy;
 	//int pCx=(sCx==-1) ? fCx : sCx;
 	int fCx=fBx;
-	
-	if (Atr) swap(&pAx, &pAy);
+
+	//if (Atr) swap(&pAx, &pAy);
 	//if (Btr) swap(&pBx, &pAx);
 
 	// Do the actual multiplication
-	
-	if (cublasSgemm((*(cublasHandle_t*)cublasH), (Atr) ? CUBLAS_OP_T : CUBLAS_OP_N, (Btr) ? CUBLAS_OP_T : CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
-			return 0;
+
+	if (cublasSgemm((*(cublasHandle_t*)cublasH), Aop, Bop, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
+		return 0;
 	} else {
 		return -1;
 	}
 
+}
+
+EXPORT int MbyM_cu(void* cublasH,
+	int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T,
+	int sAy, int sAx, int sAy0, int sAx0,
+	int sBy, int sBx, int sBy0, int sBx0,
+	int sCy, int sCx, int sCy0, int sCx0
+) {
+
+	float *alpha = &Ascale;
+	float *beta = &Bscale;
+
+	cublasOperation_t Aop=CUBLAS_OP_N;
+	cublasOperation_t Bop=CUBLAS_OP_N;
+
+	int Cx=(Btr) ? By : Bx;
+
+	int m=Bx;
+	int n=Ay;
+	int k=Ax;
+	int ldA=Ax;
+	int ldB=Bx;
+	int ldC=Cx;
+
+	numtype* vA = A;
+	numtype* vB = B;
+
+	if (Atr) {
+		if (Mtr_cublas((*(cublasHandle_t*)cublasH), Ay, Ax, A, T)!=0) return -1;
+		vA=T;
+		n=Ax; k=Ay;
+		ldA=Ay;
+	}
+	if (Btr) {
+		if (Mtr_cublas((*(cublasHandle_t*)cublasH), By, Bx, B, T)!=0) return -1;
+		vB=T;
+		m=By;
+		ldB=By;
+	}
+
+	if (cublasSgemm((*(cublasHandle_t*)cublasH), Bop, Aop, m, n, k, alpha, vB, ldB, vA, ldA, beta, C, ldC)!=CUBLAS_STATUS_SUCCESS) return -1;
+
+	return 0;
 }
 
 __global__ void cuSadd(const numtype* s1, const numtype* s2, numtype* ssum) {

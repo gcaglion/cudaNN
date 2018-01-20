@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="MyCU.cu" />
+    <CudaCompile Include="MyCUtest.cu" />
     <CudaCompile Include="reduction_kernel.cu" />
   </ItemGroup>
   <ItemGroup>

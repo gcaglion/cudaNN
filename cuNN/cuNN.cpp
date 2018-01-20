@@ -75,6 +75,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	if (myMalloc(&W, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&dW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&dJdW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
+	if (myMalloc(&TMP, weightsCnt[0])!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_e;
 	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_u;
 
@@ -268,7 +269,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				int N1start= levelFirstNode[l+1];
 				
 				//-- a[l+1]=F[l]*W[l]
-				if (MbyM(cublasH, W10y, W10x, 1, false, &W[W10start], N0y, N0x, 1, false, &F[N0start], &a[N1start] ) !=0) return -1;
+				if (MbyM(cublasH, W10y, W10x, 1, false, &W[W10start], N0y, N0x, 1, false, &F[N0start], &a[N1start], TMP ) !=0) return -1;
 
 				//sprintf(fname, "C:/temp/F%d.txt", l); dumpData(nodesCnt[l], &N[levelFirstNode[l]], fname);
 				//sprintf(fname, "C:/temp/F%d.txt", l+1); dumpData(nodesCnt[l+1], &N[levelFirstNode[l+1]], fname);
@@ -309,7 +310,7 @@ int sNN::train(numtype* sample, numtype* target) {
 					Cstart=levelFirstNode[l];
 					C=&edF[Cstart];
 
-					if (MbyM(cublasH, Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
+					if (MbyM(cublasH, Ay, Ax, 1, true, A, By, Bx, 1, false, B, C, TMP)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
 					if( VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l) * dF(l)
 				}
 				
@@ -332,7 +333,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				//Mprint(By, Bx, B, "B");
 
 				// dJdW(l-1) = edF(l) * F(l-1)
-				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C ) !=0) return -1;	
+				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C, TMP) !=0) return -1;
 
 			}
 

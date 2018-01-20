@@ -90,6 +90,7 @@ typedef struct sNN {
 	numtype* dJdW;
 	numtype* e;
 	numtype* u;
+	numtype* TMP;	// used to transpose matrices before multiplication. sized as weightsCnt[0]
 
 	numtype bte;	// batch total error (not squared)
 	numtype tse;	// total squared error

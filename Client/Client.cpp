@@ -165,7 +165,7 @@ int client2(NN* pNN) {
 		int s1w0=levelFirstWeight[sm+1];
 		int s0w0=levelFirstWeight[sm];
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_cu() - (pointer subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM(pNN->cublasH, nodesCnt[sm+2], nodesCnt[sm+1], 1, false, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, false, &w[s0w0], sw_mres[sm]);
+		MbyM(pNN->cublasH, nodesCnt[sm+2], nodesCnt[sm+1], 1, false, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, false, &w[s0w0], sw_mres[sm], nullptr);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
@@ -221,12 +221,12 @@ void client4() {
 	matrix* B=new matrix(5, 12, true, -0.1f, -0.1f);
 	B->print("B");
 	matrix* C=new matrix(8, 12);
-	MbyM(nullptr, A->my, A->mx, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m);
+	MbyM(nullptr, A->my, A->mx, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m, nullptr);
 	C->print("C");
 
 	matrix* Bt=new matrix(12, 5, true, -0.1, -0.1);
 	Bt->print("Bt");
-	MbyM(nullptr, A->my, A->mx, 1, false, A->m, Bt->my, Bt->mx, 1, true, Bt->m, C->m);
+	MbyM(nullptr, A->my, A->mx, 1, false, A->m, Bt->my, Bt->mx, 1, true, Bt->m, C->m, nullptr);
 	C->print("C");
 }
 
@@ -262,15 +262,15 @@ void D012_102(int d0, int d1, int d2, numtype* v) {
 }
 
 void client5() {
-	matrix* a=new matrix(2, 3, true, 0, 1); a->print("a");
-	matrix* b=new matrix(4, 3, true, 0, 1); b->print("b");
-	matrix* c=new matrix(2, 4);
-	//a->transpose(); a->print(" a after transpose()");
-	//Mtranspose_std(&a->my, &a->mx, a->m);  a->print(" a after Mtranspose_std()");
+
+	int unitsize=2;
+
+	matrix* a=new matrix(2*unitsize, 3*unitsize, true, 0, 1); //a->print("a");
+	matrix* b=new matrix(4*unitsize, 3*unitsize, true, 0, 1); b->print("b");
+	matrix* c=new matrix(2*unitsize, 4*unitsize);
 	b->transpose(); b->print(" b after transpose()");
-	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, false, b->m, c->m); c->print("C-false");
-	//Mtranspose_std(&a->my, &a->mx, a->m);  a->print(" a reset");
-	b->transpose(); //b->print("b after reset");
+	//MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, false, b->m, c->m); c->print("C-false");
+	b->transpose(); b->print(" b reset");
 	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, true, b->m, c->m); c->print("C-true");
 
 	//-- 0. init CUDA/BLAS
@@ -279,18 +279,35 @@ void client5() {
 	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
 
 	//-- load a,b,c onto gpu
-	numtype* da; if (cudaMalloc(&da, 3*2*sizeof(numtype))!=0) return;
-	numtype* db; if (cudaMalloc(&db, 3*4*sizeof(numtype))!=0) return;
-	numtype* dc; if (cudaMalloc(&dc, 2*4*sizeof(numtype))!=0) return;
-	if (cudaMemcpy(da, a->m, 3*2*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
-	if (cudaMemcpy(db, b->m, 3*4*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
-	
-	if (MbyM(cublasH, 2, 3, 1, false, da, 3,4, 1, true, db, dc)!=0) return;
-	
-	if (cudaMemcpy(c->m, dc, 2*4*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
-	c->print("C-from Cublas");
-	return;
+	numtype* da; if (cudaMalloc(&da, 3*unitsize*2*unitsize*sizeof(numtype))!=0) return;
+	numtype* db; if (cudaMalloc(&db, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
+	numtype* dc; if (cudaMalloc(&dc, 2*unitsize*4*unitsize*sizeof(numtype))!=0) return;
+	if (cudaMemcpy(da, a->m, 2*unitsize*3*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
+	if (cudaMemcpy(db, b->m, 4*unitsize*3*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
 
+	numtype* dtmp; if (cudaMalloc(&dtmp, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
+	if (MbyM(cublasH, 2*unitsize, 3*unitsize, 1, false, da, 4*unitsize, 3*unitsize, 1, true, db, dc, dtmp)!=0) return;
+	if (cudaMemcpy(c->m, dc, 2*unitsize*4*unitsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
+	c->print("C from cublas");
+/*
+	matrix* bT=new matrix(3*unitsize, 4*unitsize);
+	numtype* dbT; if (cudaMalloc(&dbT, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
+	if (Mtr(cublasH, 4*unitsize, 3*unitsize, db, dbT, 1)!=0) return;
+	if (cudaMemcpy(bT->m, dbT, 3*unitsize*4*unitsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
+	bT->print(" bT after Mtr()");
+*/
+	/*numtype* dbT; if (cudaMalloc(&dbT, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
+	matrix* aT=new matrix(2*unitsize, 3*unitsize);
+	matrix* bT=new matrix(4*unitsize, 3*unitsize);
+	if (cudaMemcpy(da, a->m, 3*unitsize*2*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
+	if (cudaMemcpy(db, b->m, 3*unitsize*4*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
+	if (Mtranspose(a->my, a->mx, da, daT)!=0) return;
+	if (Mtranspose(b->my, b->mx, db, dbT)!=0) return;
+	if (cudaMemcpy(aT->m, daT, 3*unitsize*2*unitsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
+	if (cudaMemcpy(bT->m, dbT, 3*unitsize*4*unitsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
+	*/
+
+	
 }
 
 int client6() {
@@ -328,7 +345,7 @@ int main() {
 	//client4();
 	client5();
 	//client6();
-
+	
 	system("pause");
 	return -1;
 
