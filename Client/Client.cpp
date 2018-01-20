@@ -327,15 +327,15 @@ int main() {
 	float scaleM, scaleP;
 
 	int historyLen=1000;
-	int sampleLen=100;// 20;
+	int sampleLen=20;// 20;
 	int predictionLen=2;
 	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
-	int batchSamplesCount=5;
+	int batchSamplesCount=10;
 
 	int totSamplesCount=historyLen-sampleLen;
 	int batchCount=(int)(floor(totSamplesCount/batchSamplesCount));
 
-	char* levelRatioS="0.5";// "1, 0.5";
+	char* levelRatioS="1, 0.5";// "1, 0.5";
 
 	NN* myNN=nullptr;
 	try {
@@ -346,7 +346,7 @@ int main() {
 
 	myNN->setActivationFunction(NN_ACTIVATION_TANH);
 
-	myNN->MaxEpochs=10;
+	myNN->MaxEpochs=100;
 	myNN->TargetMSE=(float)0.0001;
 	myNN->BP_Algo=BP_STD;
 	myNN->LearningRate=(numtype)0.05;

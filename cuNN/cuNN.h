@@ -92,8 +92,9 @@ typedef struct sNN {
 
 	numtype bte;	// batch total error (not squared)
 	numtype tse;	// total squared error
-	numtype mse;	// mean squared error
 	numtype se;		// squared sum e
+	//--
+	numtype* mse;	// mean squared error, array indexed by epoch, always on host
 	//--
 	numtype* ss;	// device-side shared scalar value, to be used to calc any of the above
 

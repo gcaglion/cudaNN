@@ -30,18 +30,20 @@ void D012_102(int d0, int d1, int d2, numtype* v) {
 	memcpy(v, newv, d0*d1*d2*sizeof(numtype));
 	free(newv);
 }
-void SBF2BFS(int ds, int db, int df, numtype* v) {
-	numtype* newv=(numtype*)malloc(ds*db*df*sizeof(numtype));
+void SBF2BFS(int db, int ds, int dbar, int df, numtype* v) {
+	numtype* newv=(numtype*)malloc(db*ds*dbar*df*sizeof(numtype));
 	int i=0;
-	for(int s=0; s<ds; s++) {
-		for(int b=0; b<db; b++) {
-			for(int f=0; f<df; f++) {
-				newv[b*ds*df+f*ds+s]=v[i];
-				i++;
+	for (int b=0; b<db; b++) {
+		for (int bar=0; bar<dbar; bar++) {
+			for (int f=0; f<df; f++) {
+				for (int s=0; s<ds; s++) {
+					newv[i]=v[b*ds*dbar*df+s*dbar*df+bar*df+f];
+					i++;
+				}
 			}
 		}
 	}
-	memcpy(v, newv, ds*db*df*sizeof(numtype));
+	memcpy(v, newv, db*ds*dbar*df*sizeof(numtype));
 	free(newv);
 }
 
@@ -77,9 +79,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_u;
 
 	//-- device-based scalar value, to be used by reduction functions (sum, ssum, ...)
-#ifdef USE_GPU
 	if (myMalloc(&ss, 1)!=0) throw FAIL_MALLOC_SCALAR;
-#endif
 
 }
 sNN::~sNN() {
@@ -195,8 +195,8 @@ int sNN::Activate(int level) {
 int sNN:: calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
 	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
-	if (Vsum(nodesCnt[levelsCnt-1], e, &bte)!=0) return -1;											// bte=sum(e)
-	if (Vssum(nodesCnt[levelsCnt-1], e, &se)!=0) return -1;											// se=ssum(e) 
+	if (Vsum(nodesCnt[levelsCnt-1], e, &bte, ss)!=0) return -1;											// bte=sum(e)
+	if (Vssum(nodesCnt[levelsCnt-1], e, &se, ss)!=0) return -1;											// se=ssum(e) 
 	tse+=se;
 	return 0;
 }
@@ -205,6 +205,10 @@ int sNN::train(numtype* sample, numtype* target) {
 	char fname[MAX_PATH];
 	DWORD batch_starttime, epoch_starttime;
 	DWORD training_starttime=timeGetTime();
+	int epoch;
+
+	//-- malloc mse[maxepochs], always host-side
+	mse=(numtype*)malloc(MaxEpochs*sizeof(numtype));
 
 	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
 	numtype* A; numtype* B; numtype* C;
@@ -212,8 +216,8 @@ int sNN::train(numtype* sample, numtype* target) {
 	//-- Change the leading dimension in sample and target, from [Sample][Bar][Feature] to [Bar][Feature][Sample]
 	int sampleCnt=batchCnt*batchSamplesCnt;	// 94
 
-	SBF2BFS(sampleCnt, sampleLen,  featuresCnt, sample);
-	SBF2BFS(sampleCnt, predictionLen, featuresCnt, target);
+	SBF2BFS(batchCnt, batchSamplesCnt, sampleLen,  featuresCnt, sample);
+	SBF2BFS(batchCnt, batchSamplesCnt, predictionLen, featuresCnt, target);
 
 	//-- 0. Init
 	
@@ -228,7 +232,7 @@ int sNN::train(numtype* sample, numtype* target) {
 	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
 
 	//-- 1. for every epoch, calc and display MSE
-	for(int epoch=0; epoch<MaxEpochs; epoch++) {
+	for(epoch=0; epoch<MaxEpochs; epoch++) {
 
 		//-- timing
 		epoch_starttime=timeGetTime();
@@ -339,12 +343,19 @@ int sNN::train(numtype* sample, numtype* target) {
 
 
 		//-- 1.1. calc and display MSE
-		//if (Vssum(nodesCnt[levelsCnt-1], e, &tse)!=0) return -1;
-		mse=tse/batchCnt/nodesCnt[levelsCnt-1];
-
-		printf("\repoch %d, MSE=%f, duration=%d ms", epoch, mse, (timeGetTime()-epoch_starttime));
+		mse[epoch]=tse/batchCnt/nodesCnt[levelsCnt-1];
+		printf("\repoch %d, MSE=%f, duration=%d ms", epoch, mse[epoch], (timeGetTime()-epoch_starttime));
+		if (mse[epoch]<TargetMSE) break;
+		
 	}
-	printf("\nTraining complete. Elapsed time: %0.1f seconds.\n", (((float)timeGetTime()-(float)training_starttime)/(float)1000));
-	//-
+	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;
+	float elapsed_avg=elapsed_tot/epoch;
+	printf("\nTraining complete. Elapsed time: %0.1f seconds. Epoch average=%0.0f ms.\n", (elapsed_tot/(float)1000), elapsed_avg);
+
+	//-- !!! TODO: Proper LogSaveMSE() !!!
+	dumpData(epoch-1, mse, "C:/temp/mse.log");
+
+
+	free(mse);
 	return 0;
 }

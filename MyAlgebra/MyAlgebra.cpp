@@ -93,19 +93,19 @@ EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype sca
 	return 0;
 #endif
 }
-EXPORT int Vsum(int Vlen, numtype* V, numtype* oSum) {
+EXPORT int Vsum(int Vlen, numtype* V, numtype* oSum, numtype* ss_d) {
 	(*oSum)=0;
 #ifdef USE_GPU
-	return (Vsum_cu(Vlen, V, oSum));
+	return (Vsum_cu(Vlen, V, oSum, ss_d));
 #else
 	for (int i=0; i<Vlen; i++) (*oSum)+=V[i];
 	return 0;
 #endif
 }
-EXPORT int Vssum(int Vlen, numtype* V, numtype* osSum) {
+EXPORT int Vssum(int Vlen, numtype* V, numtype* osSum, numtype* ss_d) {
 	(*osSum)=0;
 #ifdef USE_GPU
-	return (Vssum_cu(Vlen, V, osSum));
+	return (Vssum_cu(Vlen, V, osSum, ss_d));
 #else
 	for (int i=0; i<Vlen; i++) (*osSum)+=V[i]*V[i];
 	return 0;

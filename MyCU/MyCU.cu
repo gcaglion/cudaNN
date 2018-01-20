@@ -96,8 +96,9 @@ EXPORT int MbyM_cu(void* cublasH,
 
 	// Do the actual multiplication
 	
-	if (cublasSgemm((*(cublasHandle_t*)cublasH), (Atr)?CUBLAS_OP_T:CUBLAS_OP_N, (Btr)?CUBLAS_OP_T:CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
-		return 0;
+	if (cublasSgemm((*(cublasHandle_t*)cublasH), CUBLAS_OP_N, CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
+	//if (cublasSgemm((*(cublasHandle_t*)cublasH), (Atr) ? CUBLAS_OP_T : CUBLAS_OP_N, (Btr) ? CUBLAS_OP_T : CUBLAS_OP_N, pBx, pAy, pAx, alpha, &fB[pB0], fBx, &fA[pA0], fAx, beta, fC, fCx)==CUBLAS_STATUS_SUCCESS) {
+			return 0;
 	} else {
 		return -1;
 	}
@@ -233,35 +234,27 @@ EXPORT int Vdiff_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype 
 
 	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum) {
+EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum, numtype* ss_d) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
 	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
 
-	numtype* vsum_d;
-	if (Malloc_cu(&vsum_d, sizeof(numtype))!=cudaSuccess) return -1;
+	cuVsum_ker<<< gridDim, blockDim>>> (vlen, v, ss_d );
 
-	cuVsum_ker<<< gridDim, blockDim>>> (vlen, v, vsum_d );
-	int ret=cudaGetLastError();
-
-	if (cudaMemcpy(&ovsum, &vsum_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+	if (cudaMemcpy(ovsum, ss_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-EXPORT int Vssum_cu(int vlen, numtype* v, numtype* ovssum) {
+EXPORT int Vssum_cu(int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
 	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
 
-	numtype* vssum_d;
-	if (Malloc_cu(&vssum_d, sizeof(numtype))!=cudaSuccess) return -1;
+	cuVssum_ker<<< gridDim, blockDim>>> (vlen, v, ss_d);
 
-	cuVssum_ker<<< gridDim, blockDim>>> (vlen, v, vssum_d);
-	int ret=cudaGetLastError();
-
-	if (cudaMemcpy(ovssum, vssum_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+	if (cudaMemcpy(ovssum, ss_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
