@@ -157,3 +157,6 @@ EXPORT int Relu(int Vlen, numtype* in, numtype* out);
 EXPORT int dRelu(int Vlen, numtype* in, numtype* out);
 EXPORT int SoftPlus(int Vlen, numtype* in, numtype* out);
 EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out);
+
+EXPORT int VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu);
+EXPORT int Vsumcomp(int Vlen, numtype* V, numtype* oSum, numtype* ss_d, bool usegpu);

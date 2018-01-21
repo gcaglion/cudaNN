@@ -6,6 +6,17 @@
 #ifdef USE_GPU
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
+
+//#define cuErr(stat) { cudaErrCheck_((stat), __FILE__, __LINE__); }
+#define cuErr(stat) cudaErrCheck_((stat), __FILE__, __LINE__)
+boolean cudaErrCheck_(cudaError_t stat, const char *file, int line) {
+	if (stat!=cudaSuccess) {
+		fprintf(stderr, "CUDA Error: %s %s %d\n", cudaGetErrorString(stat), file, line);
+		return true;
+	}
+	return false;
+}
+
 #endif
 
 void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
@@ -14,6 +25,7 @@ void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
 		for (int ll=0; ll<l; ll++) oVsumPrevs[l]+=V[ll];
 	}
 }
+
 
 #ifdef USE_GPU
 int client1(NN* myNN) {
@@ -340,15 +352,87 @@ int client6() {
 	return(myFree(v));
 }
 
+int client7() {
+	void* cublasH=new void*;
+	void* cuRandH=new void*;
+	DWORD start, end;
+	bool success=true;
+
+	start=timeGetTime();
+	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+	int vsize=(1024*100000);
+	//-- malloc host
+	numtype* v1h=(numtype*)malloc(vsize*sizeof(numtype));
+	numtype* v2h=(numtype*)malloc(vsize*sizeof(numtype));
+	numtype* v3h=(numtype*)malloc(vsize*sizeof(numtype));
+	numtype* v3r=(numtype*)malloc(vsize*sizeof(numtype));	//-- gets copy of the results from device 
+	//-- malloc dev
+	numtype* v1d; if (cuErr(cudaMalloc(&v1d, vsize*sizeof(numtype)))) return -1;
+	numtype* v2d; if (cudaMalloc(&v2d, vsize*sizeof(numtype))!=cudaSuccess) return -1;
+	numtype* v3d; if (cudaMalloc(&v3d, vsize*sizeof(numtype))!=cudaSuccess) return -1;
+	//-- sum variables (dev and host)
+	numtype s1, s2, s1h, s2h, s1d, s2d;
+	numtype* ssd; if(cudaMalloc(&ssd, sizeof(numtype))!=cudaSuccess) return -1;
+
+	for (int test=0; test<100; test++) {
+		
+		//-- init dev
+		start=timeGetTime();
+		if (VinitRnd(vsize, v1d, -1, 1, cuRandH)!=0) return -1;
+		if (VinitRnd(vsize, v2d, -1, 1, cuRandH)!=0) return -1;
+		printf("Init dev; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+		//-- copy dev->host
+		start=timeGetTime();
+		if (cudaMemcpy(v1h, v1d, vsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+		if (cudaMemcpy(v2h, v2d, vsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+		printf("copy dev->host; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+		//-- cpu run
+		start=timeGetTime();
+		//if (VVVcomp(vsize, v1h, v2h, v3h, false)!=0) return -1;
+		if (Vsumcomp(vsize, v1h, &s1, ssd, false)!=0) return -1;
+		if (Vsumcomp(vsize, v2h, &s2, ssd, false)!=0) return -1;
+		s1h=s1; s2h=s2;
+		printf("CPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+		//-- gpu run
+		start=timeGetTime();
+		//if (VVVcomp(vsize, v1d, v2d, v3d, true)!=0) return -1;
+		if (Vsumcomp(vsize, v1d, &s1, ssd, true)!=0) return -1;
+		if (Vsumcomp(vsize, v2d, &s2, ssd, true)!=0) return -1;
+		s1d=s1; s2d=s2;
+		printf("GPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+		//-- copy results dev->host, and compare
+/*		start=timeGetTime();
+		if (cudaMemcpy(v3r, v3d, vsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+		for (int i=0; i<vsize; i++) {
+			if (v3r[i]!=v3h[i]) {
+				success=false;
+				break;
+			}
+		}
+*/
+		//-- compare results
+		success=(s1d==s1h &&s2d==s2h);
+		printf("Result: %s\n", (success) ? "SUCCESS" : "FAILURE");
+
+	}
+}
+
 int main() {
 
 	//client3();	
 	//client4();
 	//client5();
 	//client6();
+	client7();
 	
-	//system("pause");
-	//return -1;
+	system("pause");
+	return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;

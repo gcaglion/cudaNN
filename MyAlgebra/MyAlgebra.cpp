@@ -330,3 +330,23 @@ EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out){
 	return 0;
 #endif 
 }
+
+
+EXPORT int VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu) {
+	
+	if (usegpu) {
+		if (VbyV2V_cu(Vlen, V1, V2, oV)!=0) return -1;
+	} else {
+		for (int i = 0; i<Vlen; i++) oV[i] = V1[i]*V2[i];
+	}
+	return 0;
+}
+EXPORT int Vsumcomp(int Vlen, numtype* V, numtype* oSum, numtype* ss_d, bool usegpu) {
+	if (usegpu) {
+		if (Vsum_cu(Vlen, V, oSum, ss_d)!=0) return -1;
+	} else {
+		(*oSum)=0;
+		for (int i=0; i<Vlen; i++) (*oSum)+=V[i];
+	}
+	return 0;
+}
