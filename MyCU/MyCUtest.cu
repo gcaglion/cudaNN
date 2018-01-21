@@ -3,6 +3,8 @@
 //-- CUDA (no CUBLAS) matrix utilities
 #define TILE_DIM 32
 #define BLOCK_ROWS 8
+#define BLOCK_DIM 16
+
 __global__ void transposeNaive(float *odata, const float *idata)
 {
 	int x = blockIdx.x * TILE_DIM+threadIdx.x;
@@ -11,6 +13,28 @@ __global__ void transposeNaive(float *odata, const float *idata)
 
 	for (int j = 0; j < TILE_DIM; j+= BLOCK_ROWS)
 		odata[x*width+(y+j)] = idata[(y+j)*width+x];
+}
+__global__ void transposeNaive2(float *odata, float* idata, int width, int height) {
+	unsigned int xIndex = blockDim.x * blockIdx.x+threadIdx.x;
+	unsigned int yIndex = blockDim.y * blockIdx.y+threadIdx.y;
+
+	if (xIndex < width && yIndex < height)
+	{
+		unsigned int index_in  = xIndex+width * yIndex;
+		unsigned int index_out = yIndex+height * xIndex;
+		odata[index_out] = idata[index_in];
+	}
+}
+__global__ void transposeNaive3(float *odata, float* idata, int width, int height, int nreps) {
+	int xIndex = blockIdx.x*TILE_DIM+threadIdx.x;
+	int yIndex = blockIdx.y*TILE_DIM+threadIdx.y;
+	int index_in = xIndex+width * yIndex;
+	int index_out = yIndex+height * xIndex;
+	for (int r=0; r < nreps; r++) {
+		for (int i=0; i<TILE_DIM; i+=BLOCK_ROWS) {
+			odata[index_out+i] = idata[index_in+i*width];
+		}
+	}
 }
 __global__ void transposeCoalesced(float *odata, const float *idata) {
 
@@ -54,30 +78,6 @@ __global__ void transpose_per_element_tiled(float* t, const float* m, int matrix
 
 	t[to] = tile[tx];
 }
-
-EXPORT int Mtranspose_cu(int my, int mx, numtype* m, numtype* omt) {
-
-	int matrixSize=my*mx;
-	dim3 block(1024);
-	dim3 grid(matrixSize/block.x);
-
-	// 6. Like #5, but reduced block dimension from 1024 threads to 256 (16x16) 
-	//    Transpose with thread per element tiled and padded to avoid bank conflicts 
-	//    We pad y dimension by one element  
-	block.x = 16;
-	block.y = 16;
-	grid.x = (matrixSize/block.x);
-	grid.y = (matrixSize/block.y);
-
-	transpose_per_element_tiled<<< grid, block, block.x * (block.y+1)*sizeof(float)>>>(omt, m, matrixSize);
-
-	cudaDeviceSynchronize();
-	int err=cudaGetLastError();
-	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
-
-}
-//--
-
 __global__ void copy(float *odata, float* idata, int width, int height, int nreps) {
 	int xIndex = blockIdx.x*TILE_DIM+threadIdx.x;
 	int yIndex = blockIdx.y*TILE_DIM+threadIdx.y;
@@ -85,17 +85,6 @@ __global__ void copy(float *odata, float* idata, int width, int height, int nrep
 	for (int r=0; r < nreps; r++) {
 		for (int i=0; i<TILE_DIM; i+=BLOCK_ROWS) {
 			odata[index+i*width] = idata[index+i*width];
-		}
-	}
-}
-__global__ void transposeNaive(float *odata, float* idata, int width, int height, int nreps) {
-	int xIndex = blockIdx.x*TILE_DIM+threadIdx.x;
-	int yIndex = blockIdx.y*TILE_DIM+threadIdx.y;
-	int index_in = xIndex+width * yIndex;
-	int index_out = yIndex+height * xIndex;
-	for (int r=0; r < nreps; r++) {
-		for (int i=0; i<TILE_DIM; i+=BLOCK_ROWS) {
-			odata[index_out+i] = idata[index_in+i*width];
 		}
 	}
 }
@@ -216,9 +205,6 @@ __global__ void transposeDiagonal(float *odata,	float *idata, int width, int hei
 		}
 	}
 }
-
-#define BLOCK_DIM 16
-
 // This kernel is optimized to ensure all global reads and writes are coalesced,
 // and to avoid bank conflicts in shared memory.  This kernel is up to 11x faster
 // than the naive kernel below.  Note that the shared memory array is sized to 
@@ -251,26 +237,12 @@ __global__ void transpose(float *odata, float *idata, int width, int height) {
 	}
 }
 
-// This naive transpose kernel suffers from completely non-coalesced writes.
-// It can be up to 10x slower than the kernel above for large matrices.
-__global__ void transpose_naive(float *odata, float* idata, int width, int height) {
-	unsigned int xIndex = blockDim.x * blockIdx.x+threadIdx.x;
-	unsigned int yIndex = blockDim.y * blockIdx.y+threadIdx.y;
-
-	if (xIndex < width && yIndex < height)
-	{
-		unsigned int index_in  = xIndex+width * yIndex;
-		unsigned int index_out = yIndex+height * xIndex;
-		odata[index_out] = idata[index_in];
-	}
-}
-
 EXPORT int cuMtr_naive(int my, int mx, numtype* m, numtype* omt) {
 
 	int size_x=mx, size_y=my;
 
 	dim3 grid(size_x/TILE_DIM, size_y/TILE_DIM), threads(TILE_DIM, BLOCK_ROWS);
-	transposeNaive<<<grid, threads>>>(omt, m, size_x, size_y, 1);
+	transposeNaive3<<<grid, threads>>>(omt, m, size_x, size_y, 1);
 
 	return((cudaGetLastError()==cudaSuccess) ? 0 : 1);
 
@@ -278,7 +250,8 @@ EXPORT int cuMtr_naive(int my, int mx, numtype* m, numtype* omt) {
 
 // Number of repetitions used for timing.
 #define NUM_REPS 100
- int cuMtr() {
+/* 
+int cuMtr() {
 
 	// set matrix size
 	const int size_x = 2048, size_y = 4096;
@@ -308,13 +281,13 @@ EXPORT int cuMtr_naive(int my, int mx, numtype* m, numtype* omt) {
 	// copy host data to device
 	cudaMemcpy(d_idata, h_idata, mem_size,
 		cudaMemcpyHostToDevice);
-/*
+
 	// Compute reference transpose solution
-	computeTransposeGold(transposeGold, h_idata, size_x, size_y);
+	//computeTransposeGold(transposeGold, h_idata, size_x, size_y);
 	// print out common data for all kernels
-	printf("\nMatrix size: %dx%d, tile: %dx%d, block: %dx%d\n\n",
+	//printf("\nMatrix size: %dx%d, tile: %dx%d, block: %dx%d\n\n",
 		size_x, size_y, TILE_DIM, TILE_DIM, TILE_DIM, BLOCK_ROWS);
-*/
+
 	printf("Kernel\t\t\tLoop over kernel\tLoop within kernel\n");
 	printf("------\t\t\t----------------\t------------------\n");
 	//
@@ -404,4 +377,4 @@ EXPORT int cuMtr_naive(int my, int mx, numtype* m, numtype* omt) {
 	cudaFree(d_idata); cudaFree(d_odata);
 	cudaEventDestroy(start); cudaEventDestroy(stop);
 
-	return 0;}
+	return 0;}*/

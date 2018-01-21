@@ -16,7 +16,7 @@ EXPORT int Malloc_cu(numtype** var, int size);
 EXPORT int Free_cu(numtype* var);
 
 EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size);
-EXPORT int MbyM_cu(void* cublasH, int fAy, int fAx, numtype Ascale, bool Atr, numtype* fA, int fBy, int fBx, numtype Bscale, bool Btr, numtype* fB, numtype* fC, numtype* fT, int sAy, int sAx, int sAy0, int sAx0, int sBy, int sBx, int sBy0, int sBx0, int sCy, int sCx, int sCy0, int sCx0 );
+EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T);
 
 //-- scalar functions
 EXPORT int Sadd_cu(numtype* s1, numtype* s2, numtype* ssum);
@@ -38,8 +38,7 @@ EXPORT void initGPUData(float *data, int numElements, float value);
 EXPORT void dumpData_cu(int vlen, numtype* v, const char* fname);
 
 //-- matrix functions
-EXPORT int Mtr_cublas(cublasHandle_t handle, int my, int mx, numtype* m, numtype* otm);
-EXPORT int Mtranspose_cu(int my, int mx, numtype* m, numtype* omt);
+EXPORT int cuMtr_cublas(void* cublasH, int my, int mx, numtype* m, numtype* otm);
 
 EXPORT int Tanh_cu(int vlen, numtype* in, numtype* out);
 EXPORT int dTanh_cu(int vlen, numtype* in, numtype* out);

@@ -160,32 +160,21 @@ EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV) {
 	return 0;
 #endif
 }
-EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C,
-	int sAy, int sAx, int sAy0, int sAx0,
-	int sBy, int sBx, int sBy0, int sBx0,
-	int sCy, int sCx, int sCy0, int sCx0
-) {
-	//-- As, Bs are scalars to multiply A and B cells, respectively, before multiplication
 
-	if (Atr) Mtranspose_std(&Ay, &Ax, A);
-	if (Btr) Mtranspose_std(&By, &Bx, B);
-	
-	for (int y = 0; y < Ay; y++) {
-		for (int x2 = 0; x2 < Bx; x2++) {
-			C[y*Bx+x2] = 0;
-			for (int x = 0; x < Ax; x++) C[y*Bx+x2] += A[y*Ax+x]*Ascale * B[x*Bx+x2]*Bscale;
+EXPORT int Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm) {
+#ifdef USE_GPU
+	return(cuMtr_cublas(cublasH, my, mx, m, otm));
+#else
+	for (int y = 0; y < my; y++) {
+		for (int x = 0; x < mx; x++) {
+			otm[x*my+y] = m[y*mx+x];
 		}
 	}
-
-	if (Atr) Mtranspose_std(&Ay, &Ax, A);
-	if (Btr) Mtranspose_std(&By, &Bx, B);
-
-	//==== !!! sub-matrix handling missing !!! ===
-
 	return 0;
+#endif
 }
-
-EXPORT int Mtranspose_std(int* my_, int* mx_, numtype* m) {
+//-- to fix!
+int Mtranspose_old(int* my_, int* mx_, numtype* m) {
 	int my=(*my_), mx=(*mx_);
 	numtype** tm=(numtype**)malloc(mx*sizeof(numtype*)); for (int y=0; y<mx; y++) tm[y]=(numtype*)malloc(my*sizeof(numtype));
 	for (int y = 0; y < my; y++) {
@@ -206,23 +195,28 @@ EXPORT int Mtranspose_std(int* my_, int* mx_, numtype* m) {
 
 	return 0;
 }
-EXPORT int Mtranspose(int my, int mx, numtype* m, numtype* omt) {
-#ifdef USE_GPU
-	return(Mtranspose_cu(my, mx, m, omt));
-#else
-	return(Mtranspose_std(my, mx, m, m));
-#endif
+EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
+	if (Atr) Mtranspose_old(&Ay, &Ax, A);
+	if (Btr) Mtranspose_old(&By, &Bx, B);
+
+	for (int y = 0; y < Ay; y++) {
+		for (int x2 = 0; x2 < Bx; x2++) {
+			C[y*Bx+x2] = 0;
+			for (int x = 0; x < Ax; x++) C[y*Bx+x2] += A[y*Ax+x]*Ascale * B[x*Bx+x2]*Bscale;
+		}
+	}
+
+	if (Atr) Mtranspose_old(&Ay, &Ax, A);
+	if (Btr) Mtranspose_old(&By, &Bx, B);
+
+	return 0;
 }
 
-EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T,
-	int sAy, int sAx, int sAy0, int sAx0,
-	int sBy, int sBx, int sBy0, int sBx0,
-	int sCy, int sCx, int sCy0, int sCx0	
-) {
+EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
 #ifdef USE_GPU
-	return MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T, sAy, sAx, sAy0, sAx0, sBy, sBx, sBy0, sBx0, sCy, sCx, sCy0, sCx0);
+	return MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T);
 #else
-	return MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, sAy, sAx, sAy0, sAx0, sBy, sBx, sBy0, sBx0, sCy, sCx, sCy0, sCx0);
+	return MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T);
 #endif
 }
 
@@ -335,17 +329,4 @@ EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out){
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1/(1+exp(-in[i])));
 	return 0;
 #endif 
-}
-
-EXPORT int Mtr(void* cublasH, int my, int mx, numtype* m, numtype* omt, int algo) {
-	int ret=0;
-	switch (algo) {
-	case 0:
-		ret=cuMtr_naive(my, mx, m, omt);
-		break;
-	case 1:
-		ret=Mtr_cublas((*(cublasHandle_t*)cublasH), my, mx, m, omt);
-		break;
-}
-return ret;
 }

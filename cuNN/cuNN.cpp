@@ -271,9 +271,6 @@ int sNN::train(numtype* sample, numtype* target) {
 				//-- a[l+1]=F[l]*W[l]
 				if (MbyM(cublasH, W10y, W10x, 1, false, &W[W10start], N0y, N0x, 1, false, &F[N0start], &a[N1start], TMP ) !=0) return -1;
 
-				//sprintf(fname, "C:/temp/F%d.txt", l); dumpData(nodesCnt[l], &N[levelFirstNode[l]], fname);
-				//sprintf(fname, "C:/temp/F%d.txt", l+1); dumpData(nodesCnt[l+1], &N[levelFirstNode[l+1]], fname);
-
 				//-- activation sets F[l+1] and dF[l+1]
 				if(Activate(l+1)!=0) return -1;
 
@@ -341,12 +338,14 @@ int sNN::train(numtype* sample, numtype* target) {
 			//-- W = W - LR * dJdW
 			//if (Vadd(weightsCntTotal, W, 1, dJdW, -LearningRate, W)!=0) return -1;
 
+			//dumpData(weightsCntTotal, dJdW, "C:/temp/dJdW.log");
 			//-- dW = LM*dW - LR*dJdW
 			if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW) !=0) return -1;
-			//sprintf(fname, "C:/temp/dW.txt"); dumpData(weightsCntTotal, dW, fname);
+			//dumpData(weightsCntTotal, dW, "C:/temp/dW.log");
 
 			//-- W = W + dW
 			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
+			//dumpData(weightsCntTotal, W, "C:/temp/W.log");
 
 		}
 
@@ -362,7 +361,7 @@ int sNN::train(numtype* sample, numtype* target) {
 	printf("\nTraining complete. Elapsed time: %0.1f seconds. Epoch average=%0.0f ms.\n", (elapsed_tot/(float)1000), elapsed_avg);
 
 	//-- !!! TODO: Proper LogSaveMSE() !!!
-	dumpData(epoch-1, mse, "C:/temp/mse.log");
+	//dumpData(epoch-1, mse, "C:/temp/mse.log");
 
 
 	free(mse);

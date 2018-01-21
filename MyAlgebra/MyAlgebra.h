@@ -135,11 +135,11 @@ EXPORT int Vinit(int size, numtype* v, numtype start, numtype inc);
 EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH=NULL);
 EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV);
 
-EXPORT int Mtranspose_std(int* my_, int* mx_, numtype* m);
-EXPORT int Mtranspose(int my, int mx, numtype* m, numtype* omt);
 
-EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, int sAy=-1, int sAx=-1, int sAy0=-1, int sAx0=-1, int sBy=-1, int sBx=-1, int sBy0=-1, int sBx0=-1, int sCy=-1, int sCx=-1, int sCy0=-1, int sCx0=-1);
-EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, int sAy=-1, int sAx=-1, int sAy0=-1, int sAx0=-1, int sBy=-1, int sBx=-1, int sBy0=-1, int sBx0=-1, int sCy=-1, int sCx=-1, int sCy0=-1, int sCx0=-1);
+//-- matrix functions
+EXPORT int Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm);
+EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T=nullptr);
+EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T=nullptr);
 
 EXPORT int myMemInit(void* cublasH, void* cuRandH);
 EXPORT int myMalloc(numtype** var, int size);
@@ -157,5 +157,3 @@ EXPORT int Relu(int Vlen, numtype* in, numtype* out);
 EXPORT int dRelu(int Vlen, numtype* in, numtype* out);
 EXPORT int SoftPlus(int Vlen, numtype* in, numtype* out);
 EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out);
-
-EXPORT int Mtr(void* cublasH, int my, int mx, numtype* m, numtype* omt, int algo=0);
