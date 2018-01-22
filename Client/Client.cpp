@@ -277,12 +277,12 @@ void client5() {
 
 	int unitsize=2;
 
-	matrix* a=new matrix(2*unitsize, 3*unitsize, true, 0, 1); //a->print("a");
-	matrix* b=new matrix(4*unitsize, 3*unitsize, true, 0, 1); b->print("b");
-	matrix* c=new matrix(2*unitsize, 4*unitsize);
-	b->transpose(); b->print(" b after transpose()");
+	matrix* a=new matrix(3*unitsize, 2*unitsize, true, 0, 1); a->print("a");
+	matrix* b=new matrix(4*unitsize, 2*unitsize, true, 0, 1); b->print("b");
+	matrix* c=new matrix(3*unitsize, 4*unitsize);
+	//b->transpose(); b->print(" b after transpose()");
 	//MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, false, b->m, c->m); c->print("C-false");
-	b->transpose(); b->print(" b reset");
+	//b->transpose(); b->print(" b reset");
 	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, true, b->m, c->m); c->print("C-true");
 
 	//-- 0. init CUDA/BLAS
@@ -292,14 +292,14 @@ void client5() {
 #ifdef USE_GPU
 	//-- load a,b,c onto gpu
 	numtype* da; if (cudaMalloc(&da, 3*unitsize*2*unitsize*sizeof(numtype))!=0) return;
-	numtype* db; if (cudaMalloc(&db, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
-	numtype* dc; if (cudaMalloc(&dc, 2*unitsize*4*unitsize*sizeof(numtype))!=0) return;
-	if (cudaMemcpy(da, a->m, 2*unitsize*3*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
-	if (cudaMemcpy(db, b->m, 4*unitsize*3*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
+	numtype* db; if (cudaMalloc(&db, 4*unitsize*2*unitsize*sizeof(numtype))!=0) return;
+	numtype* dc; if (cudaMalloc(&dc, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
+	if (cudaMemcpy(da, a->m, 3*unitsize*2*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
+	if (cudaMemcpy(db, b->m, 4*unitsize*2*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
 
 	numtype* dtmp; if (cudaMalloc(&dtmp, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
-	if (MbyM(cublasH, 2*unitsize, 3*unitsize, 1, false, da, 4*unitsize, 3*unitsize, 1, true, db, dc, dtmp)!=0) return;
-	if (cudaMemcpy(c->m, dc, 2*unitsize*4*unitsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
+	if (MbyM(cublasH, 3*unitsize, 2*unitsize, 1, false, da, 4*unitsize, 2*unitsize, 1, true, db, dc, dtmp)!=0) return;
+	if (cudaMemcpy(c->m, dc, 3*unitsize*4*unitsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
 	c->print("C from cublas");
 #endif
 /*
@@ -429,6 +429,110 @@ int client7() {
 
 	}
 }
+void mprint(int my, int mx, numtype* m, char* msg=nullptr, int smy0=-1, int smx0=-1, int smy=-1, int smx=-1) {
+	if (smy==-1) smy=my;
+	if (smx==-1) smx=mx;
+
+	int idx;
+	if (msg!=nullptr) printf("%s [%dx%d] - from [%d,%d] to [%d,%d]\n", msg, my, mx, (smy0==-1) ? 0 : smy0, (smx0==-1) ? 0 : smx0, smy0+smy, smx0+smx);
+	for (int y=0; y<smy; y++) {
+		for (int x=0; x<smx; x++) {
+			idx= y*mx+x;
+			printf("|%4.1f", m[idx]);
+		}
+		printf("|\n");
+	}
+
+}
+int client8() {
+	void* cublasH=new void*;
+	void* cuRandH=new void*;
+	DWORD start, end;
+	bool success=true;
+
+	start=timeGetTime();
+	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+	int Ay=3, Ax=2; bool trA=false;
+	int By=4, Bx=2; bool trB=true;
+	int Cy=Ay, Cx=Bx;
+
+	
+	
+
+	int sizemult=200;
+	Ay*=sizemult; Ax*=sizemult;
+	By*=sizemult; Bx*=sizemult;
+	Cy*=sizemult; Cx*=sizemult;
+
+	
+	//-- malloc host
+	numtype* Ah=(numtype*)malloc(Ay*Ax*sizeof(numtype));
+	numtype* Bh=(numtype*)malloc(By*Bx*sizeof(numtype));
+	numtype* Ch=(numtype*)malloc(Cy*Cx*sizeof(numtype));
+	numtype* Th=(numtype*)malloc((Ay+By)*(Ax+Bx)*sizeof(numtype));
+	numtype* Cr=(numtype*)malloc(Cy*Cx*sizeof(numtype));	//-- gets copy of the results from device 
+	//-- malloc dev
+	numtype* Ad; if (cudaMalloc(&Ad, Ay*Ax*sizeof(numtype))!=cudaSuccess) return -1;
+	numtype* Bd; if (cudaMalloc(&Bd, By*Bx*sizeof(numtype))!=cudaSuccess) return -1;
+	numtype* Cd; if (cudaMalloc(&Cd, Cy*Cx*sizeof(numtype))!=cudaSuccess) return -1;
+	numtype* Td; if (cudaMalloc(&Td, (Ay+By)*(Ax+Bx)*sizeof(numtype))!=cudaSuccess) return -1;
+
+	for (int test=0; test<10; test++) {
+
+		//-- init dev
+		start=timeGetTime();
+		if (VinitRnd(Ay*Ax, Ad, -1, 1, cuRandH)!=0) return -1;
+		if (VinitRnd(By*Bx, Bd, -1, 1, cuRandH)!=0) return -1;
+		if (Vinit(Cy*Cx, Cd, 0, 0)!=0) return -1;
+		printf("Init dev; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+		//-- copy dev->host
+		start=timeGetTime();
+		if (cudaMemcpy(Ah, Ad, Ay*Ax*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+		if (cudaMemcpy(Bh, Bd, By*Bx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+		//if (cudaMemcpy(Ch, Cd, Cy*Cx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+		printf("copy dev->host; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+		//-- cpu run
+		start=timeGetTime();
+		if (MbyMcomp(cublasH, Ay, Ax, 1, trA, Ah, By, Bx, 1, trB, Bh, Ch, Th, false)!=0) return -1;
+		printf("CPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+		//mprint(Ay, Ax, Ah, "Ah"); mprint(By, Bx, Bh, "Bh"); mprint(Cy, Cx, Ch, "Ch");
+
+		//-- gpu run
+		start=timeGetTime();
+		if (MbyMcomp(cublasH, Ay, Ax, 1, trA, Ad, By, Bx, 1, trB, Bd, Cd, Td, true)!=0) return -1;
+		printf("GPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+		//-- copy results dev->host, and compare
+		start=timeGetTime();
+		if (cudaMemcpy(Cr, Cd, Cy*Cx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) {
+			printf("CUDA error %d\n", cudaGetLastError());
+			return -1;
+		}
+		//mprint(Cy, Cx, Cr, "Cr");
+		numtype diff;
+		success=true;
+		for (int i=0; i<(Cy*Cx); i++) {
+			diff=fabs(Cr[i]-Ch[i]);
+			if (diff>1e-5) {
+				printf("test=%d: diff at [%d] = %f \n", test, i, diff);
+				success=false;
+				//break;
+			}
+		}
+
+		//-- compare results
+		//success=(diffh==diffd);	// (s1d==s1h &&s2d==s2h);
+		//diff1=fabs(s1d-s1h); diff2=fabs(s2d-s2h);
+		//numtype diffdiff=fabs(diffh-diffd);
+		printf("Result: %s\n", (success) ? "SUCCESS" : "FAILURE");
+
+	}
+}
+
 #endif
 
 int main() {
@@ -438,9 +542,9 @@ int main() {
 	//client5();
 	//client6();
 	//client7();
-	
-	//system("pause");
-	//return -1;
+	client8();
+	system("pause");
+	return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;

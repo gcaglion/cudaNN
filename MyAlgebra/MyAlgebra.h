@@ -161,3 +161,4 @@ EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out);
 EXPORT int VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu);
 EXPORT int Vssumcomp(void* cublasH, int Vlen, numtype* V, numtype* osSum, numtype* ss_d, bool usegpu);
 EXPORT int Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtype scale2, numtype* oV, bool usegpu);
+EXPORT int MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu);

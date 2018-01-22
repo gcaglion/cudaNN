@@ -364,3 +364,13 @@ EXPORT int Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtype
 #endif
 	return 0;
 }
+EXPORT int MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu) {
+#ifdef USE_GPU	
+	if (usegpu) {
+		return MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T);
+	} else {
+		return MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T);
+	}
+#endif
+	return 0;
+}
