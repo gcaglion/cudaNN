@@ -437,10 +437,10 @@ int main() {
 	//client4();
 	//client5();
 	//client6();
-	client7();
+	//client7();
 	
-	system("pause");
-	return -1;
+	//system("pause");
+	//return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;
@@ -466,7 +466,7 @@ int main() {
 
 	NN* myNN=nullptr;
 	try {
-		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, false, false);
+		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, true, false);
 	} catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
 	}
@@ -476,7 +476,7 @@ int main() {
 	myNN->MaxEpochs=100;
 	myNN->TargetMSE=(float)0.0001;
 	myNN->BP_Algo=BP_STD;
-	myNN->LearningRate=(numtype)0.05;
+	myNN->LearningRate=(numtype)0.005;
 	myNN->LearningMomentum=(numtype)0.7;
 
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
