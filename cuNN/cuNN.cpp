@@ -203,8 +203,7 @@ int sNN::Activate(int level) {
 int sNN:: calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
 	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
-	if (Vsum(nodesCnt[levelsCnt-1], e, &bte, ss)!=0) return -1;											// bte=sum(e)
-	if (Vssum(nodesCnt[levelsCnt-1], e, &se, ss)!=0) return -1;											// se=ssum(e) 
+	if (Vssum(cublasH, nodesCnt[levelsCnt-1], e, &se, ss)!=0) return -1;							// se=ssum(e) 
 	tse+=se;
 	return 0;
 }

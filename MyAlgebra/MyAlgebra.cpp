@@ -102,18 +102,18 @@ EXPORT int Vsum(int Vlen, numtype* V, numtype* oSum, numtype* ss_d) {
 	return 0;
 #endif
 }
-EXPORT int Vssum(int Vlen, numtype* V, numtype* osSum, numtype* ss_d) {
+EXPORT int Vssum(void* cublasH, int Vlen, numtype* V, numtype* osSum, numtype* ss_d) {
 	(*osSum)=0;
 #ifdef USE_GPU
-	return (Vssum_cu(Vlen, V, osSum, ss_d));
+	return (Vssum_cu(cublasH, Vlen, V, osSum, ss_d));
 #else
 	for (int i=0; i<Vlen; i++) (*osSum)+=V[i]*V[i];
 	return 0;
 #endif
 }
-EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm) {
+EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm, numtype* ss_d) {
 #ifdef USE_GPU
-	return (Vnorm_cu(cublasH, Vlen, V, oVnorm));
+	return (Vnorm_cu(cublasH, Vlen, V, oVnorm, ss_d));
 #else
 	numtype vsum=0;
 	for (int i=0; i<Vlen; i++) vsum+=(numtype)pow(V[i], 2);
@@ -333,20 +333,23 @@ EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out){
 
 
 EXPORT int VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu) {
-	
+#ifdef USE_GPU	
 	if (usegpu) {
 		if (VbyV2V_cu(Vlen, V1, V2, oV)!=0) return -1;
 	} else {
 		for (int i = 0; i<Vlen; i++) oV[i] = V1[i]*V2[i];
 	}
+#endif
 	return 0;
 }
-EXPORT int Vsumcomp(int Vlen, numtype* V, numtype* oSum, numtype* ss_d, bool usegpu) {
+EXPORT int Vssumcomp(void* cublasH, int Vlen, numtype* V, numtype* osSum, numtype* ss_d, bool usegpu) {
+#ifdef USE_GPU	
 	if (usegpu) {
-		if (Vsum_cu(Vlen, V, oSum, ss_d)!=0) return -1;
+		if (Vssum_cu(cublasH, Vlen, V, osSum, ss_d)!=0) return -1;
 	} else {
-		(*oSum)=0;
-		for (int i=0; i<Vlen; i++) (*oSum)+=V[i];
+		(*osSum)=0;
+		for (int i=0; i<Vlen; i++) (*osSum)+=V[i]*V[i];
 	}
+#endif
 	return 0;
 }

@@ -323,6 +323,7 @@ void client5() {
 	
 }
 
+#ifdef USE_GPU
 int client6() {
 
 	DWORD start;
@@ -338,6 +339,7 @@ int client6() {
 	
 	numtype* v;
 	numtype s;
+	numtype* sd; if (cudaMalloc(&sd, sizeof(numtype))!=cudaSuccess) return -1;
 	int vsize=1024*1024;
 	start=timeGetTime();
 	if (myMalloc(&v, vsize) !=0) return -1;
@@ -346,7 +348,7 @@ int client6() {
 	Vinit(vsize, v, 0.0f, 1.0f);
 	printf("Vinit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 	start=timeGetTime();
-	if (Vssum(vsize, v, &s)!=0) return -1;
+	if (Vssum(cublasH, vsize, v, &s, sd)!=0) return -1;
 	printf("Vssum(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 	return(myFree(v));
@@ -362,7 +364,7 @@ int client7() {
 	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
 	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
-	int vsize=(1024*100000);
+	int vsize=100;// (1024*10000);
 	//-- malloc host
 	numtype* v1h=(numtype*)malloc(vsize*sizeof(numtype));
 	numtype* v2h=(numtype*)malloc(vsize*sizeof(numtype));
@@ -393,16 +395,16 @@ int client7() {
 		//-- cpu run
 		start=timeGetTime();
 		//if (VVVcomp(vsize, v1h, v2h, v3h, false)!=0) return -1;
-		if (Vsumcomp(vsize, v1h, &s1, ssd, false)!=0) return -1;
-		if (Vsumcomp(vsize, v2h, &s2, ssd, false)!=0) return -1;
+		if (Vssumcomp(cublasH, vsize, v1h, &s1, ssd, false)!=0) return -1;
+		if (Vssumcomp(cublasH, vsize, v2h, &s2, ssd, false)!=0) return -1;
 		s1h=s1; s2h=s2;
 		printf("CPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 		//-- gpu run
 		start=timeGetTime();
 		//if (VVVcomp(vsize, v1d, v2d, v3d, true)!=0) return -1;
-		if (Vsumcomp(vsize, v1d, &s1, ssd, true)!=0) return -1;
-		if (Vsumcomp(vsize, v2d, &s2, ssd, true)!=0) return -1;
+		if (Vssumcomp(cublasH, vsize, v1d, &s1, ssd, true)!=0) return -1;
+		if (Vssumcomp(cublasH, vsize, v2d, &s2, ssd, true)!=0) return -1;
 		s1d=s1; s2d=s2;
 		printf("GPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
@@ -422,6 +424,7 @@ int client7() {
 
 	}
 }
+#endif
 
 int main() {
 
@@ -429,10 +432,10 @@ int main() {
 	//client4();
 	//client5();
 	//client6();
-	client7();
+	//client7();
 	
-	system("pause");
-	return -1;
+	//system("pause");
+	//return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;
@@ -458,7 +461,7 @@ int main() {
 
 	NN* myNN=nullptr;
 	try {
-		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, true, false);
+		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, false, false);
 	} catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
 	}
@@ -468,7 +471,7 @@ int main() {
 	myNN->MaxEpochs=100;
 	myNN->TargetMSE=(float)0.0001;
 	myNN->BP_Algo=BP_STD;
-	myNN->LearningRate=(numtype)0.005;
+	myNN->LearningRate=(numtype)0.05;
 	myNN->LearningMomentum=(numtype)0.7;
 
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
