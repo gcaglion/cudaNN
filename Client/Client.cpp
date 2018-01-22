@@ -359,12 +359,13 @@ int client7() {
 	void* cuRandH=new void*;
 	DWORD start, end;
 	bool success=true;
+	numtype diff1, diff2;
 
 	start=timeGetTime();
 	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
 	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
-	int vsize=100;// (1024*10000);
+	int vsize= (1024*10000);
 	//-- malloc host
 	numtype* v1h=(numtype*)malloc(vsize*sizeof(numtype));
 	numtype* v2h=(numtype*)malloc(vsize*sizeof(numtype));
@@ -375,8 +376,8 @@ int client7() {
 	numtype* v2d; if (cudaMalloc(&v2d, vsize*sizeof(numtype))!=cudaSuccess) return -1;
 	numtype* v3d; if (cudaMalloc(&v3d, vsize*sizeof(numtype))!=cudaSuccess) return -1;
 	//-- sum variables (dev and host)
-	numtype s1, s2, s1h, s2h, s1d, s2d;
-	numtype* ssd; if(cudaMalloc(&ssd, sizeof(numtype))!=cudaSuccess) return -1;
+	numtype s1, s2, s1h, s2h, s1d, s2d, diffh;
+	numtype* ssd; if (cudaMalloc(&ssd, sizeof(numtype))!=cudaSuccess) return -1;
 
 	for (int test=0; test<100; test++) {
 		
@@ -395,21 +396,23 @@ int client7() {
 		//-- cpu run
 		start=timeGetTime();
 		//if (VVVcomp(vsize, v1h, v2h, v3h, false)!=0) return -1;
-		if (Vssumcomp(cublasH, vsize, v1h, &s1, ssd, false)!=0) return -1;
-		if (Vssumcomp(cublasH, vsize, v2h, &s2, ssd, false)!=0) return -1;
-		s1h=s1; s2h=s2;
+		//if (Vssumcomp(cublasH, vsize, v1h, &s1, ssd, false)!=0) return -1;
+		//if (Vssumcomp(cublasH, vsize, v2h, &s2, ssd, false)!=0) return -1;
+		if (Vdiffcomp(vsize, v1h, 1, v2h, 1, v3h, false)!=0) return -1;
+		//s1h=s1; s2h=s2;
 		printf("CPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 		//-- gpu run
 		start=timeGetTime();
 		//if (VVVcomp(vsize, v1d, v2d, v3d, true)!=0) return -1;
-		if (Vssumcomp(cublasH, vsize, v1d, &s1, ssd, true)!=0) return -1;
-		if (Vssumcomp(cublasH, vsize, v2d, &s2, ssd, true)!=0) return -1;
-		s1d=s1; s2d=s2;
+		//if (Vssumcomp(cublasH, vsize, v1d, &s1, ssd, true)!=0) return -1;
+		//if (Vssumcomp(cublasH, vsize, v2d, &s2, ssd, true)!=0) return -1;
+		if (Vdiffcomp(vsize, v1d, 1, v2d, 1, v3d, true)!=0) return -1;
+		//s1d=s1; s2d=s2;
 		printf("GPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 		//-- copy results dev->host, and compare
-/*		start=timeGetTime();
+		start=timeGetTime();
 		if (cudaMemcpy(v3r, v3d, vsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
 		for (int i=0; i<vsize; i++) {
 			if (v3r[i]!=v3h[i]) {
@@ -417,9 +420,11 @@ int client7() {
 				break;
 			}
 		}
-*/
+
 		//-- compare results
-		success=(s1d==s1h &&s2d==s2h);
+		//success=(diffh==diffd);	// (s1d==s1h &&s2d==s2h);
+		//diff1=fabs(s1d-s1h); diff2=fabs(s2d-s2h);
+		//numtype diffdiff=fabs(diffh-diffd);
 		printf("Result: %s\n", (success) ? "SUCCESS" : "FAILURE");
 
 	}
@@ -432,10 +437,10 @@ int main() {
 	//client4();
 	//client5();
 	//client6();
-	//client7();
+	client7();
 	
-	//system("pause");
-	//return -1;
+	system("pause");
+	return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;

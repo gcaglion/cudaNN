@@ -257,7 +257,7 @@ EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum, numtype* ss_d) {
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-/*EXPORT int Vssum_cu(int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
+EXPORT int Vssum_cu_orig(int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -269,7 +269,7 @@ EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum, numtype* ss_d) {
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-*/
+
 EXPORT int Vssum_cu(void* cublasH, int Vlen, numtype* V, numtype* oVssum, numtype* ss_d) {
 	if (cublasSnrm2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVssum)!=CUBLAS_STATUS_SUCCESS) return -1;
 	(*oVssum)=(*oVssum)*(*oVssum);

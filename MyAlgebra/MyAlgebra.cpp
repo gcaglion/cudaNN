@@ -346,9 +346,20 @@ EXPORT int Vssumcomp(void* cublasH, int Vlen, numtype* V, numtype* osSum, numtyp
 #ifdef USE_GPU	
 	if (usegpu) {
 		if (Vssum_cu(cublasH, Vlen, V, osSum, ss_d)!=0) return -1;
+		//if (Vssum_cu_orig(Vlen, V, osSum, ss_d)!=0) return -1;
 	} else {
 		(*osSum)=0;
 		for (int i=0; i<Vlen; i++) (*osSum)+=V[i]*V[i];
+	}
+#endif
+	return 0;
+}
+EXPORT int Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtype scale2, numtype* oV, bool usegpu) {
+#ifdef USE_GPU	
+	if (usegpu) {
+		if (Vdiff_cu(Vlen, V1, scale1, V2, scale2, oV)!=0) return -1;
+	} else {
+		for (int i = 0; i<Vlen; i++) oV[i] = V1[i]*scale1-V2[i]*scale2;
 	}
 #endif
 	return 0;

@@ -130,7 +130,7 @@ EXPORT int Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scal
 EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
 EXPORT int Vsum(int Vlen, numtype* V, numtype* oSum, numtype* ss_d);
 EXPORT int Vssum(void* cublasH, int Vlen, numtype* V, numtype* osSum, numtype* ss_d=nullptr);
-EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm);
+EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm, numtype* ss_d);
 EXPORT int Vinit(int size, numtype* v, numtype start, numtype inc);
 EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH=NULL);
 EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV);
@@ -160,3 +160,4 @@ EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out);
 
 EXPORT int VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu);
 EXPORT int Vssumcomp(void* cublasH, int Vlen, numtype* V, numtype* osSum, numtype* ss_d, bool usegpu);
+EXPORT int Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtype scale2, numtype* oV, bool usegpu);
