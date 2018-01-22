@@ -236,7 +236,7 @@ int sNN::train(numtype* sample, numtype* target) {
 	//dumpData(weightsCntTotal, &W[0], "C:/temp/W.txt");
 
 	//---- 0.3. Init dW
-	//if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
+	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
 
 	//-- 1. for every epoch, calc and display MSE
 	for(epoch=0; epoch<MaxEpochs; epoch++) {
