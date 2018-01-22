@@ -257,7 +257,13 @@ EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum, numtype* ss_d) {
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-EXPORT int Vssum_cu(int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
+EXPORT int Vssum_cu(void* cublasH, int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
+	if (cublasSnrm2((*(cublasHandle_t*)cublasH), vlen, v, 1, ss_d)==CUBLAS_STATUS_SUCCESS) return -1;
+	if (cudaMemcpy(ovssum, ss_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+	(*ovssum)*=2;
+	return 0;
+}
+EXPORT int Vssum_cu_OLD(int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -270,8 +276,10 @@ EXPORT int Vssum_cu(int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
 
-EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm) {
-	return ((cublasSnrm2_v2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVnorm)==CUBLAS_STATUS_SUCCESS) ? 0 : -1);
+EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm, numtype* ss_d) {
+	if (cublasSnrm2((*(cublasHandle_t*)cublasH), Vlen, V, 1, ss_d)==CUBLAS_STATUS_SUCCESS) return -1;
+	if (cudaMemcpy(oVnorm, ss_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+	return 0;
 }
 EXPORT int Vinit_cu(int vlen, numtype* v, numtype start, numtype inc) {
 	dim3 gridDim;
