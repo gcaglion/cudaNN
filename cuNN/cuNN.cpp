@@ -200,10 +200,10 @@ int sNN::Activate(int level) {
 	}
 	return((ret==0&&retd==0)?0:-1);
 }
-int sNN::calcErr() {
-	//-- sets e, se; adds squared sum(e) to tse
+int sNN:: calcErr() {
+	//-- sets e, bte; adds squared sum(e) to tse
 	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
-	if (Vssum(cublasH, nodesCnt[levelsCnt-1], e, &se, ss)!=0) return -1;											// se=ssum(e) 
+	if (Vssum(cublasH, nodesCnt[levelsCnt-1], e, &se, ss)!=0) return -1;							// se=ssum(e) 
 	tse+=se;
 	return 0;
 }
@@ -236,7 +236,12 @@ int sNN::train(numtype* sample, numtype* target) {
 	//dumpData(weightsCntTotal, &W[0], "C:/temp/W.txt");
 
 	//---- 0.3. Init dW
-	//if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
+	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
+	//---- the following are needed by cublas version of MbyM
+	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return -1;
+	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return -1;
+	if (Vinit(weightsCntTotal, dJdW, 0, 0)!=0) return -1;
+
 
 	//-- 1. for every epoch, calc and display MSE
 	for(epoch=0; epoch<MaxEpochs; epoch++) {
@@ -244,9 +249,7 @@ int sNN::train(numtype* sample, numtype* target) {
 		//-- timing
 		epoch_starttime=timeGetTime();
 
-		//-- 1.0. reset batch error and batch dW
-		//Vinit(nodesCnt[levelsCnt-1], e, 0);
-		//Vinit(weightsCntTotal, dW, 0);
+		//-- 1.0. reset epoch tse
 		tse=0;
 
 		//-- 1.1. train one batch at a time
