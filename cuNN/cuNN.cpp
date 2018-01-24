@@ -233,7 +233,8 @@ int sNN::train(numtype* sample, numtype* target) {
 
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), cuRandH);
-	//dumpData(weightsCntTotal, &W[0], "C:/temp/W.txt");
+	dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
+
 
 	//---- 0.3. Init dW
 	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
@@ -258,7 +259,7 @@ int sNN::train(numtype* sample, numtype* target) {
 			//-- 1.1.1.  load samples + targets onto GPU
 			if (loadBatchData(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype) )!=0) return -1;
 			if (loadBatchData(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype) )!=0) return -1;
-			//dumpData(InputCount, &N[0], "C:/temp/F0.txt");
+			//dumpArray(InputCount, &N[0], "C:/temp/F0.txt");
 		
 			//-- 1.1.2. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
 			for (l=0; l<(levelsCnt-1); l++) {
@@ -285,8 +286,8 @@ int sNN::train(numtype* sample, numtype* target) {
 			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
 			if (calcErr()!=0) return -1;
 
-			//sprintf(fname, "C:/temp/e.txt"); dumpData(nodesCnt[levelsCnt-1], &N[outNstart], fname);
-			//sprintf(fname, "C:/temp/u.txt"); dumpData(nodesCnt[levelsCnt-1], &u[0], fname);
+			//sprintf(fname, "C:/temp/e.txt"); dumpArray(nodesCnt[levelsCnt-1], &N[outNstart], fname);
+			//sprintf(fname, "C:/temp/u.txt"); dumpArray(nodesCnt[levelsCnt-1], &u[0], fname);
 
 			//-- 1.1.4. BackPropagate, calc dJdW for the whole batch
 			int sc=batchSamplesCnt;
@@ -340,14 +341,14 @@ int sNN::train(numtype* sample, numtype* target) {
 			//-- W = W - LR * dJdW
 			//if (Vadd(weightsCntTotal, W, 1, dJdW, -LearningRate, W)!=0) return -1;
 
-			//dumpData(weightsCntTotal, dJdW, "C:/temp/dJdW.log");
+			//dumpArray(weightsCntTotal, dJdW, "C:/temp/dJdW.log");
 			//-- dW = LM*dW - LR*dJdW
 			if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW) !=0) return -1;
-			//dumpData(weightsCntTotal, dW, "C:/temp/dW.log");
+			//dumpArray(weightsCntTotal, dW, "C:/temp/dW.log");
 
 			//-- W = W + dW
 			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
-			//dumpData(weightsCntTotal, W, "C:/temp/W.log");
+			//dumpArray(weightsCntTotal, W, "C:/temp/W.log");
 
 		}
 
@@ -363,7 +364,7 @@ int sNN::train(numtype* sample, numtype* target) {
 	printf("\nTraining complete. Elapsed time: %0.1f seconds. Epoch average=%0.0f ms.\n", (elapsed_tot/(float)1000), elapsed_avg);
 
 	//-- !!! TODO: Proper LogSaveMSE() !!!
-	//dumpData(epoch-1, mse, "C:/temp/mse.log");
+	//dumpArray(epoch-1, mse, "C:/temp/mse.log");
 
 
 	free(mse);

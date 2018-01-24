@@ -212,12 +212,31 @@ EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By
 	return 0;
 }
 
-EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
+EXPORT int MbyM_orig(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
 #ifdef USE_GPU
 	return MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T);
 #else
 	return MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T);
 #endif
+}
+EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
+	static int callid=0;
+	int ret;
+	char fname[MAX_PATH];
+
+	int Cy=(Atr) ? Ax : Ay;
+	int Cx=(Btr) ? By : Bx;
+
+#ifdef USE_GPU
+	ret=MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T);
+	//sprintf(fname, "C:/temp/MbyM_%d-%s-%s_cu.txt", callid, (Atr)?"true":"false", (Btr) ? "true" : "false"); dumpArray(Cy*Cx, C, fname);
+#else
+	ret=MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T);
+	//sprintf(fname, "C:/temp/MbyM_%d-%s-%s_std.txt", callid, (Atr) ? "true" : "false", (Btr) ? "true" : "false"); dumpArray(Cy*Cx, C, fname);
+#endif
+
+	callid++;
+	return ret;
 }
 
 //-- memory initialization
@@ -255,13 +274,30 @@ EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size) {
 	return 0;
 #endif
 }
-EXPORT void dumpData(int vlen, numtype* v, const char* fname) {
-	BOOL F = HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
+
+//-- read/write mem<->file
+EXPORT int dumpArray(int vlen, numtype* v, const char* fname) {
 #ifdef USE_GPU
-	dumpData_cu(vlen, v, fname);
+	return(dumpArray_cu(vlen, v, fname));
 #else
 	FILE* f=fopen(fname, "w");
+	if (f==nullptr) return -1;
 	for (int i=0; i<vlen; i++) fprintf(f, "%f\n", v[i]);
+	fclose(f);
+	return 0;
+#endif
+}
+EXPORT int loadArray(int vlen, numtype* v, const char* fname) {
+#ifdef USE_GPU
+	return(loadArray_cu(vlen, v, fname));
+#else
+	char cn[20];
+	FILE* f=fopen(fname, "r");
+	if (f==nullptr) return -1;
+	for (int i=0; i<vlen; i++) {
+		fscanf(f, "%f\n", cn);
+
+	}
 	fclose(f);
 #endif
 }

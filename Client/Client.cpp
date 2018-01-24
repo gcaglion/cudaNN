@@ -542,9 +542,9 @@ int main() {
 	//client5();
 	//client6();
 	//client7();
-	client8();
-	system("pause");
-	return -1;
+	//client8();
+	//system("pause");
+	//return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;
