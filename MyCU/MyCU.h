@@ -36,7 +36,8 @@ EXPORT int VinitRnd_cu(int vlen, numtype* v, numtype rndmin, numtype rndmax, voi
 
 //-- kernel functions wrappers
 EXPORT void initGPUData(float *data, int numElements, float value);
-EXPORT void dumpData_cu(int vlen, numtype* v, const char* fname);
+EXPORT int dumpArray_cu(int vlen, numtype* v, const char* fname);
+EXPORT int loadArray_cu(int vlen, numtype* v, const char* fname);
 
 //-- matrix functions
 EXPORT int cuMtr_cublas(void* cublasH, int my, int mx, numtype* m, numtype* otm);

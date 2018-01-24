@@ -229,19 +229,21 @@ int sNN::train(numtype* sample, numtype* target) {
 	//-- 0. Init
 	
 	//---- 0.1. Init Neurons (must set context neurons=0, at least for layer 0)
-	if( Vinit(nodesCnt[0], &F[0], 0, 0) !=0) return -1;
+	if( Vinit(nodesCntTotal, F, 0, 0) !=0) return -1;
+	//---- the following are needed by cublas version of MbyM
+	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return -1;
+	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return -1;
+	if (Vinit(nodesCntTotal, edF, 0, 0)!=0) return -1;
+	if (Vinit(weightsCntTotal, dJdW, 0, 0)!=0) return -1;
 
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), cuRandH);
-	dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
+	//dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
+	loadArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
 
 
 	//---- 0.3. Init dW
 	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
-	//---- the following are needed by cublas version of MbyM
-	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return -1;
-	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return -1;
-	if (Vinit(weightsCntTotal, dJdW, 0, 0)!=0) return -1;
 
 
 	//-- 1. for every epoch, calc and display MSE
@@ -254,6 +256,7 @@ int sNN::train(numtype* sample, numtype* target) {
 		tse=0;
 
 		//-- 1.1. train one batch at a time
+		batchCnt=3;
 		for (int b=0; b<batchCnt; b++) {
 
 			//-- 1.1.1.  load samples + targets onto GPU
@@ -282,9 +285,21 @@ int sNN::train(numtype* sample, numtype* target) {
 					Vcopy(nodesCnt[l+1], &F[N1start], &F[ctxStart[l]]);
 				}
 			}
-		
+#ifdef USE_GPU
+			sprintf(fname, "C:/temp/F_e%db%d_gpu.txt", epoch, b);
+#else
+			sprintf(fname, "C:/temp/F_e%db%d_cpu.txt", epoch, b);
+#endif
+			dumpArray(nodesCntTotal, F, fname);
+
 			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
 			if (calcErr()!=0) return -1;
+#ifdef USE_GPU
+			sprintf(fname, "C:/temp/e_e%db%d_gpu.txt", epoch, b);
+#else
+			sprintf(fname, "C:/temp/e_e%db%d_cpu.txt", epoch, b);
+#endif
+			dumpArray(nodesCnt[levelsCnt-1], e, fname);
 
 			//sprintf(fname, "C:/temp/e.txt"); dumpArray(nodesCnt[levelsCnt-1], &N[outNstart], fname);
 			//sprintf(fname, "C:/temp/u.txt"); dumpArray(nodesCnt[levelsCnt-1], &u[0], fname);
@@ -336,12 +351,16 @@ int sNN::train(numtype* sample, numtype* target) {
 				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C, TMP) !=0) return -1;
 
 			}
+#ifdef USE_GPU
+			sprintf(fname, "C:/temp/dJdW_e%db%d_gpu.txt", epoch, b); dumpArray(weightsCntTotal, dJdW, fname);
+#else
+			sprintf(fname, "C:/temp/dJdW_e%db%d_cpu.txt", epoch, b); dumpArray(weightsCntTotal, dJdW, fname);
+#endif
 
 			//-- 1.1.5. update weights for the whole batch
 			//-- W = W - LR * dJdW
 			//if (Vadd(weightsCntTotal, W, 1, dJdW, -LearningRate, W)!=0) return -1;
 
-			//dumpArray(weightsCntTotal, dJdW, "C:/temp/dJdW.log");
 			//-- dW = LM*dW - LR*dJdW
 			if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW) !=0) return -1;
 			//dumpArray(weightsCntTotal, dW, "C:/temp/dW.log");

@@ -291,12 +291,12 @@ EXPORT int loadArray(int vlen, numtype* v, const char* fname) {
 #ifdef USE_GPU
 	return(loadArray_cu(vlen, v, fname));
 #else
-	char cn[20];
+	numtype fh;
 	FILE* f=fopen(fname, "r");
 	if (f==nullptr) return -1;
 	for (int i=0; i<vlen; i++) {
-		fscanf(f, "%f\n", cn);
-
+		if (fscanf(f, "%f\n", &fh)==0) return -1;
+		v[i]=fh;
 	}
 	fclose(f);
 #endif

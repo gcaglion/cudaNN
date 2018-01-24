@@ -458,9 +458,6 @@ int client8() {
 	int By=4, Bx=2; bool trB=true;
 	int Cy=Ay, Cx=Bx;
 
-	
-	
-
 	int sizemult=200;
 	Ay*=sizemult; Ax*=sizemult;
 	By*=sizemult; Bx*=sizemult;

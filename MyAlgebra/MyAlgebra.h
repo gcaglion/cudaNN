@@ -148,6 +148,7 @@ EXPORT int myFree(numtype* var);
 EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size);
 
 EXPORT int dumpArray(int vlen, numtype* v, const char* fname);
+EXPORT int loadArray(int vlen, numtype* v, const char* fname);
 
 EXPORT int Tanh(int Vlen, numtype* in, numtype* out);
 EXPORT int dTanh(int Vlen, numtype* in, numtype* out);

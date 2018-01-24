@@ -61,13 +61,29 @@ EXPORT		void initGPUData(float *data, int numElements, float value) {
 EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size) {
 	return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyHostToDevice)==cudaSuccess) ? 0 : -1);
 }
-EXPORT void dumpData_cu(int vlen, numtype* v, const char* fname) {
+EXPORT int dumpArray_cu(int vlen, numtype* v, const char* fname) {
 	numtype* hw=(numtype*)malloc(vlen*sizeof(numtype));
-	if (cudaMemcpy(hw, v, vlen*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return;
+	if (cudaMemcpy(hw, v, vlen*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
 	FILE* f=fopen(fname, "w");
+	if (f==nullptr) return -1;
 	for (int i=0; i<vlen; i++) fprintf(f, "%f\n", hw[i]);
 	free(hw);
 	fclose(f);
+	return 0;
+}
+EXPORT int loadArray_cu(int vlen, numtype* v, const char* fname){
+	numtype fh;
+	numtype* vh=(numtype*)malloc(vlen*sizeof(numtype));
+	FILE* f=fopen(fname, "r");
+	if (f==nullptr) return -1;
+	for (int i=0; i<vlen; i++) {
+		if(fscanf(f, "%f\n", &fh)==0) return -1;
+		vh[i]=fh;
+	}
+	if (cudaMemcpy(v, vh, vlen*sizeof(numtype), cudaMemcpyHostToDevice)!=cudaSuccess) return -1;
+	fclose(f);
+	free(vh);
+	return 0;
 }
 
 //-- matrix functions
