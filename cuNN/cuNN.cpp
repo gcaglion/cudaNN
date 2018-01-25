@@ -213,6 +213,7 @@ int sNN::train(numtype* sample, numtype* target) {
 	DWORD batch_starttime, epoch_starttime;
 	DWORD training_starttime=timeGetTime();
 	int epoch;
+	int sc=batchSamplesCnt;
 
 	//-- malloc mse[maxepochs], always host-side
 	mse=(numtype*)malloc(MaxEpochs*sizeof(numtype));
@@ -256,7 +257,7 @@ int sNN::train(numtype* sample, numtype* target) {
 		tse=0;
 
 		//-- 1.1. train one batch at a time
-		batchCnt=3;
+		batchCnt=2;
 		for (int b=0; b<batchCnt; b++) {
 
 			//-- 1.1.1.  load samples + targets onto GPU
@@ -266,29 +267,43 @@ int sNN::train(numtype* sample, numtype* target) {
 		
 			//-- 1.1.2. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
 			for (l=0; l<(levelsCnt-1); l++) {
-				int W10y=nodesCnt[l+1]/batchSamplesCnt;
+/*				int W10y=nodesCnt[l+1]/batchSamplesCnt;
 				int W10x=nodesCnt[l]/batchSamplesCnt;
 				int W10start= levelFirstWeight[l];
 				int N0y=W10x;
 				int N0x=batchSamplesCnt;
 				int N0start= levelFirstNode[l];
 				int N1start= levelFirstNode[l+1];
-				
 				//-- a[l+1]=F[l]*W[l]
 				if (MbyM(cublasH, W10y, W10x, 1, false, &W[W10start], N0y, N0x, 1, false, &F[N0start], &a[N1start], TMP ) !=0) return -1;
+*/
+				int Ay=nodesCnt[l+1]/sc;
+				int Ax=nodesCnt[l]/sc;
+				numtype* A=&W[levelFirstWeight[l]];
+				int By=nodesCnt[l]/sc;
+				int Bx=sc;
+				numtype* B=&F[levelFirstNode[l]];
+				numtype* C=&a[levelFirstNode[l+1]];
+				if (MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, false, B, C, TMP)!=0) return -1;
 
 				//-- activation sets F[l+1] and dF[l+1]
 				if(Activate(l+1)!=0) return -1;
 
 				//-- feed back to context neurons
 				if (useContext) {
-					Vcopy(nodesCnt[l+1], &F[N1start], &F[ctxStart[l]]);
+					Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
 				}
 			}
 #ifdef USE_GPU
-			sprintf(fname, "C:/temp/F_e%db%d_gpu.txt", epoch, b);
+			sprintf(fname, "C:/temp/a_batch%d_gpu.txt", b);
 #else
-			sprintf(fname, "C:/temp/F_e%db%d_cpu.txt", epoch, b);
+			sprintf(fname, "C:/temp/a_batch%d_cpu.txt", b);
+#endif
+			dumpArray(nodesCntTotal, a, fname);
+#ifdef USE_GPU
+			sprintf(fname, "C:/temp/F_batch%d_gpu.txt", b);
+#else
+			sprintf(fname, "C:/temp/F_batch%d_cpu.txt", b);
 #endif
 			dumpArray(nodesCntTotal, F, fname);
 
@@ -301,11 +316,8 @@ int sNN::train(numtype* sample, numtype* target) {
 #endif
 			dumpArray(nodesCnt[levelsCnt-1], e, fname);
 
-			//sprintf(fname, "C:/temp/e.txt"); dumpArray(nodesCnt[levelsCnt-1], &N[outNstart], fname);
-			//sprintf(fname, "C:/temp/u.txt"); dumpArray(nodesCnt[levelsCnt-1], &u[0], fname);
-
+/*
 			//-- 1.1.4. BackPropagate, calc dJdW for the whole batch
-			int sc=batchSamplesCnt;
 			for (l = levelsCnt-1; l>0; l--) {
 				if (l==(levelsCnt-1)) {
 					//-- top level only
@@ -368,7 +380,7 @@ int sNN::train(numtype* sample, numtype* target) {
 			//-- W = W + dW
 			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
 			//dumpArray(weightsCntTotal, W, "C:/temp/W.log");
-
+*/
 		}
 
 
