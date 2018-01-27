@@ -410,3 +410,66 @@ EXPORT int MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, num
 #endif
 	return 0;
 }
+
+int Vcompare(int vlen, numtype* v1, numtype* v2) {
+	int ret=0;
+	numtype diff;
+	for (int i=0; i<vlen; i++) {
+		diff=fabs(v1[i]-v2[i]);
+		if (diff>1e-5) {
+			printf("diff at [%d] = %f \n", i, diff);
+			ret=-1;
+		}
+	}
+	return ret;
+}
+int MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
+#ifdef USE_GPU
+	DWORD start, end;
+	int Cy=Ay, Cx=Bx;
+	int Tsize=(Ay+By)*(Ax+Bx);
+
+	//-- malloc host
+	numtype* Ah=(numtype*)malloc(Ay*Ax*sizeof(numtype));
+	numtype* Bh=(numtype*)malloc(By*Bx*sizeof(numtype));
+	numtype* Ch=(numtype*)malloc(Cy*Cx*sizeof(numtype));
+	numtype* Th=(numtype*)malloc(Tsize*sizeof(numtype));
+	numtype* Cr=(numtype*)malloc(Cy*Cx*sizeof(numtype));	//-- gets copy of the results from device 
+
+	if (Vinit_cu(Cy*Cx, C, 0, 0)!=0) return -1;
+
+	//-- copy dev->host
+	start=timeGetTime();
+	if (cudaMemcpy(Ah, A, Ay*Ax*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+	if (cudaMemcpy(Bh, B, By*Bx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+	printf("copy dev->host; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+	//-- cpu run
+	start=timeGetTime();
+	if (MbyM_std(Ay, Ax, Ascale, Atr, Ah, By, Bx, Bscale, Btr, Bh, Ch, Th)) return -1;
+	printf("CPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+	//mprint(Ay, Ax, Ah, "Ah"); mprint(By, Bx, Bh, "Bh"); mprint(Cy, Cx, Ch, "Ch");
+
+	//-- gpu run
+	start=timeGetTime();
+	if (MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T)!=0) return -1;
+	printf("GPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+
+	//-- copy results dev->host
+	start=timeGetTime();
+	if (cudaMemcpy(Cr, C, Cy*Cx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) {
+		printf("CUDA error %d\n", cudaGetLastError());
+		return -1;
+	}
+
+	//-- compare results
+	int ret=Vcompare(Cy*Cx, Cr, Ch);
+
+	//-- free host
+	free(Ah); free(Bh); free(Ch); free(Th); free(Cr);
+
+	return ret;
+#else
+	return -1;
+#endif
+}

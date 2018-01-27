@@ -463,14 +463,14 @@ int client8() {
 	By*=sizemult; Bx*=sizemult;
 	Cy*=sizemult; Cx*=sizemult;
 
-	
+
 	//-- malloc host
 	numtype* Ah=(numtype*)malloc(Ay*Ax*sizeof(numtype));
 	numtype* Bh=(numtype*)malloc(By*Bx*sizeof(numtype));
 	numtype* Ch=(numtype*)malloc(Cy*Cx*sizeof(numtype));
 	numtype* Th=(numtype*)malloc((Ay+By)*(Ax+Bx)*sizeof(numtype));
 	numtype* Cr=(numtype*)malloc(Cy*Cx*sizeof(numtype));	//-- gets copy of the results from device 
-	//-- malloc dev
+															//-- malloc dev
 	numtype* Ad; if (cudaMalloc(&Ad, Ay*Ax*sizeof(numtype))!=cudaSuccess) return -1;
 	numtype* Bd; if (cudaMalloc(&Bd, By*Bx*sizeof(numtype))!=cudaSuccess) return -1;
 	numtype* Cd; if (cudaMalloc(&Cd, Cy*Cx*sizeof(numtype))!=cudaSuccess) return -1;
@@ -529,6 +529,42 @@ int client8() {
 
 	}
 }
+int client9() {
+	void* cublasH=new void*;
+	void* cuRandH=new void*;
+	DWORD start, end;
+
+	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+
+	int Ay=3, Ax=2; bool trA=false;
+	int By=2, Bx=4; bool trB=false;
+	int Cy=Ay, Cx=Bx;
+
+	int sizemult=200;
+	Ay*=sizemult; Ax*=sizemult;
+	By*=sizemult; Bx*=sizemult;
+	Cy*=sizemult; Cx*=sizemult;
+
+
+	//-- malloc dev
+	numtype* Ad; if (cudaMalloc(&Ad, Ay*Ax*sizeof(numtype))!=cudaSuccess) return -1;
+	numtype* Bd; if (cudaMalloc(&Bd, By*Bx*sizeof(numtype))!=cudaSuccess) return -1;
+	numtype* Cd; if (cudaMalloc(&Cd, Cy*Cx*sizeof(numtype))!=cudaSuccess) return -1;
+	numtype* Td; if (cudaMalloc(&Td, (Ay+By)*(Ax+Bx)*sizeof(numtype))!=cudaSuccess) return -1;
+
+	int ret;
+	for (int test=0; test<10; test++) {
+
+		//-- init dev
+		start=timeGetTime();
+		if (VinitRnd(Ay*Ax, Ad, -1, 1, cuRandH)!=0) return -1;
+		if (VinitRnd(By*Bx, Bd, -1, 1, cuRandH)!=0) return -1;
+
+		ret = MbyMcompare(cublasH, Ay, Ax, 1, false, Ad, By, Bx, 1, false, Bd, Cd, Td);
+		printf("Test %d %s\n", test, (ret==0) ? "SUCCESS" : "FAILURE");
+
+	}
+}
 
 #endif
 
@@ -540,6 +576,7 @@ int main() {
 	//client6();
 	//client7();
 	//client8();
+	//client9();
 	//system("pause");
 	//return -1;
 
@@ -555,7 +592,7 @@ int main() {
 	float scaleM, scaleP;
 
 	int historyLen=1000;
-	int sampleLen=20;// 20;
+	int sampleLen=20;
 	int predictionLen=2;
 	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
 	int batchSamplesCount=10;

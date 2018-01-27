@@ -257,7 +257,7 @@ int sNN::train(numtype* sample, numtype* target) {
 		tse=0;
 
 		//-- 1.1. train one batch at a time
-		batchCnt=2;
+		//batchCnt=2;
 		for (int b=0; b<batchCnt; b++) {
 
 			//-- 1.1.1.  load samples + targets onto GPU
@@ -285,6 +285,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				numtype* B=&F[levelFirstNode[l]];
 				numtype* C=&a[levelFirstNode[l+1]];
 				if (MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, false, B, C, TMP)!=0) return -1;
+				//if (MbyMcompare(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, false, B, C, TMP)!=0) return -1;
 
 				//-- activation sets F[l+1] and dF[l+1]
 				if(Activate(l+1)!=0) return -1;
@@ -294,7 +295,7 @@ int sNN::train(numtype* sample, numtype* target) {
 					Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
 				}
 			}
-#ifdef USE_GPU
+/*#ifdef USE_GPU
 			sprintf(fname, "C:/temp/a_batch%d_gpu.txt", b);
 #else
 			sprintf(fname, "C:/temp/a_batch%d_cpu.txt", b);
@@ -306,17 +307,17 @@ int sNN::train(numtype* sample, numtype* target) {
 			sprintf(fname, "C:/temp/F_batch%d_cpu.txt", b);
 #endif
 			dumpArray(nodesCntTotal, F, fname);
-
+*/
 			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
 			if (calcErr()!=0) return -1;
-#ifdef USE_GPU
+/*#ifdef USE_GPU
 			sprintf(fname, "C:/temp/e_e%db%d_gpu.txt", epoch, b);
 #else
 			sprintf(fname, "C:/temp/e_e%db%d_cpu.txt", epoch, b);
 #endif
 			dumpArray(nodesCnt[levelsCnt-1], e, fname);
+*/
 
-/*
 			//-- 1.1.4. BackPropagate, calc dJdW for the whole batch
 			for (l = levelsCnt-1; l>0; l--) {
 				if (l==(levelsCnt-1)) {
@@ -363,12 +364,12 @@ int sNN::train(numtype* sample, numtype* target) {
 				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C, TMP) !=0) return -1;
 
 			}
-#ifdef USE_GPU
+/*#ifdef USE_GPU
 			sprintf(fname, "C:/temp/dJdW_e%db%d_gpu.txt", epoch, b); dumpArray(weightsCntTotal, dJdW, fname);
 #else
 			sprintf(fname, "C:/temp/dJdW_e%db%d_cpu.txt", epoch, b); dumpArray(weightsCntTotal, dJdW, fname);
 #endif
-
+*/
 			//-- 1.1.5. update weights for the whole batch
 			//-- W = W - LR * dJdW
 			//if (Vadd(weightsCntTotal, W, 1, dJdW, -LearningRate, W)!=0) return -1;
@@ -380,7 +381,7 @@ int sNN::train(numtype* sample, numtype* target) {
 			//-- W = W + dW
 			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
 			//dumpArray(weightsCntTotal, W, "C:/temp/W.log");
-*/
+
 		}
 
 
