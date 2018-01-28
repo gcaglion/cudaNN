@@ -2,6 +2,7 @@
 #include "../MyDebug/mydebug.h"
 #include "../MyTimeSeries/MyTimeSeries.h"
 #include "..\cuNN\cuNN.h"
+#include "../Logger/Logger.h"
 
 #ifdef USE_GPU
 #include <cuda_runtime.h>
@@ -633,9 +634,12 @@ int main() {
 	//return -1;
 
 	//--
+	tDBConnection* LogDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO");
+
 	tDebugInfo* DebugParms=new tDebugInfo;
 	DebugParms->DebugLevel = 2;
-	DebugParms->DebugDest = LOG_TO_TEXT;
+	DebugParms->DebugDest = LOG_TO_ORCL;
+	DebugParms->DebugDB=LogDB;
 	strcpy(DebugParms->fPath, "C:/temp");
 	strcpy(DebugParms->fName, "Client.log");
 	DebugParms->PauseOnError = 1;
@@ -663,27 +667,40 @@ int main() {
 
 	myNN->setActivationFunction(NN_ACTIVATION_TANH);
 
-	myNN->MaxEpochs=200;
+	myNN->MaxEpochs=1000;
+	myNN->NetSaveFreq=200;
 	myNN->TargetMSE=(float)0.0001;
 	myNN->BP_Algo=BP_STD;
-	myNN->LearningRate=(numtype)0.005;
+	myNN->LearningRate=(numtype)0.01;
 	myNN->LearningMomentum=(numtype)0.7;
+	myNN->StopOnReverse=true;
 
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
 	numtype* historyData=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
 	numtype* hd_trs=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
 
-	numtype* fSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
-	numtype* fTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
+	numtype* fTrainingSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
+	numtype* fTrainingTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
 
 	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
 	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201508010000", historyLen, historyData, baseData)<0) return -1;
 	dataTrS(historyLen, featuresCnt, historyData, baseData, DT_DELTA, myNN->scaleMin, myNN->scaleMax, hd_trs, &scaleM, &scaleP);
 
-	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fSample, predictionLen*featuresCnt, fTarget, 2);
+	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fTrainingSample, predictionLen*featuresCnt, fTrainingTarget, 2);
 
 	//-- Train
-	myNN->train(fSample, fTarget);
+	myNN->train(fTrainingSample, fTrainingTarget);
+
+	//-- Persist MSE and final W
+	if (LogSaveMSE(DebugParms, myNN->pid, myNN->tid, myNN->ActualEpochs, myNN->mseT, myNN->mseV)!=0) return -1;
+	if (LogSaveW(DebugParms, myNN->pid, myNN->tid, myNN->ActualEpochs, myNN->weightsCntTotal, myNN->W)!=0) return -1;
+	//-- ... more persistance tables ...
+	//-- DB commit
+	Commit(DebugParms);
+
+	//-- Run (on training data)
+	//myNN->run();
+
 
 	system("pause");
 	return 0;

@@ -42,6 +42,10 @@ typedef struct sNN {
 	void* cublasH;
 	void* cuRandH;
 
+	//-- every instantiation has 1 process id and 1 thread id (TO BE CONFIRMED)
+	int pid;
+	int tid;
+
 	//-- topology
 	int InputCount;
 	int OutputCount;
@@ -77,6 +81,8 @@ typedef struct sNN {
 	int ActivationFunction;
 	int MaxEpochs;
 	float TargetMSE;
+	bool StopOnReverse;	// stops training if MSE turns upwards
+	int NetSaveFreq;	// saves network weights every <n> epochs
 	int BP_Algo;
 	float LearningRate;
 	float LearningMomentum;
@@ -92,12 +98,13 @@ typedef struct sNN {
 	numtype* u;
 	numtype* TMP;	// used to transpose matrices before multiplication. sized as weightsCnt[0]
 
+	//-- error measuring
 	numtype tse;	// total squared error
 	numtype se;		// squared sum e
-	//--
-	numtype* mse;	// mean squared error, array indexed by epoch, always on host
-	//--
+	numtype* mseT;	// Training mean squared error, array indexed by epoch, always on host
+	numtype* mseV;	// Validation mean squared error, array indexed by epoch, always on host
 	numtype* ss;	// device-side shared scalar value, to be used to calc any of the above
+	int ActualEpochs;
 
 	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_);
 	~sNN();
@@ -109,6 +116,7 @@ typedef struct sNN {
 	int sNN::calcErr();
 
 	EXPORT int train(numtype* sample, numtype* target);
+	EXPORT int run(int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast);
 
 } NN;
 

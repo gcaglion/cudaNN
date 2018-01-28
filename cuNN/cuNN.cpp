@@ -48,6 +48,9 @@ void SBF2BFS(int db, int ds, int dbar, int df, numtype* v) {
 }
 
 sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_) {
+	pid=GetCurrentProcessId();
+	tid=GetCurrentThreadId();
+
 	batchCnt=batchCnt_;
 	batchSamplesCnt=batchSamplesCnt_;
 	sampleLen=sampleLen_;
@@ -90,6 +93,8 @@ sNN::~sNN() {
 	free(W);
 	//.....
 	// free cublasH, cuRandH, curanddestroygenerator...
+	free(mseT); free(mseV);
+
 }
 
 void sNN::setLayout(char LevelRatioS[60]) {
@@ -215,9 +220,6 @@ int sNN::train(numtype* sample, numtype* target) {
 	int epoch;
 	int sc=batchSamplesCnt;
 
-	//-- malloc mse[maxepochs], always host-side
-	mse=(numtype*)malloc(MaxEpochs*sizeof(numtype));
-
 	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
 	numtype* A; numtype* B; numtype* C;
 
@@ -229,6 +231,10 @@ int sNN::train(numtype* sample, numtype* target) {
 
 	//-- 0. Init
 	
+	//-- malloc mse[maxepochs], always host-side
+	mseT=(numtype*)malloc(MaxEpochs*sizeof(numtype));
+	mseV=(numtype*)malloc(MaxEpochs*sizeof(numtype));
+
 	//---- 0.1. Init Neurons (must set context neurons=0, at least for layer 0)
 	if( Vinit(nodesCntTotal, F, 0, 0) !=0) return -1;
 	//---- the following are needed by cublas version of MbyM
@@ -323,10 +329,6 @@ int sNN::train(numtype* sample, numtype* target) {
 				Cx=By;// because B gets transposed
 				Cstart=levelFirstWeight[l-1];
 				C=&dJdW[Cstart];
-				//Mfill(Ay*Ax, A, 0.1, 0.1);
-				//Mfill(By*Bx, B, -0.1, -0.1);
-				//Mprint(Ay, Ax, A, "A");
-				//Mprint(By, Bx, B, "B");
 
 				// dJdW(l-1) = edF(l) * F(l-1)
 				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C, TMP) !=0) return -1;
@@ -349,19 +351,26 @@ int sNN::train(numtype* sample, numtype* target) {
 
 
 		//-- 1.1. calc and display MSE
-		mse[epoch]=tse/batchCnt/nodesCnt[levelsCnt-1];
-		printf("\repoch %d, MSE=%f, duration=%d ms", epoch, mse[epoch], (timeGetTime()-epoch_starttime));
-		if (mse[epoch]<TargetMSE) break;
+		mseT[epoch]=tse/batchCnt/nodesCnt[levelsCnt-1];
+		mseV[epoch]=0;	// TO DO !
+		printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, Validation MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], mseV[epoch], (timeGetTime()-epoch_starttime));
+		if (mseT[epoch]<TargetMSE) break;
+		if((StopOnReverse && epoch>0 && mseT[epoch]>mseT[epoch-1]) ) break;
+		if ((epoch%NetSaveFreq)==0) {
+			//-- TO DO ! (callback?)
+		}
 		
 	}
+	ActualEpochs=epoch-((epoch>MaxEpochs)?1:0);
 	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;
-	float elapsed_avg=elapsed_tot/epoch;
+	float elapsed_avg=elapsed_tot/ActualEpochs;
 	printf("\nTraining complete. Elapsed time: %0.1f seconds. Epoch average=%0.0f ms.\n", (elapsed_tot/(float)1000), elapsed_avg);
 
 	//-- !!! TODO: Proper LogSaveMSE() !!!
 	//dumpArray(epoch-1, mse, "C:/temp/mse.log");
 
-
-	free(mse);
+	return 0;
+}
+int sNN::run(int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast) {
 	return 0;
 }

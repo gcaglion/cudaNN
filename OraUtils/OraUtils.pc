@@ -137,8 +137,8 @@ EXPORT void OraCommit(void* pCtx) {
 	EXEC SQL CONTEXT USE : vCtx;
 	EXEC SQL COMMIT;
 }
-//===
 
+//=== Retrieval functions
 EXPORT int GetFlatBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, float* oBarData, float* oBaseBar) {
 	//-- 'Flat' bar means returning OHLC(V) values for each record as an array 
 	EXEC SQL BEGIN DECLARE SECTION;
@@ -286,4 +286,207 @@ EXPORT int GetStringArrayFromQuery(tDebugInfo* DebugParms, sql_context pCtx, cha
 	}
 	EXEC SQL CLOSE c82;
 	return sqlca.sqlcode;
+}
+
+//=== Logging functions
+EXPORT int Ora_LogSaveMSE(tDebugInfo* DebugParms, int pid, int tid, int mseCnt, float* mseT, float* mseV) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	int i;
+	int vInsertCount;
+	sql_context vCtx = DebugParms->DebugDB->DBCtx;
+	char stmt[1000];
+	//--
+	int* vProcessId;
+	int* vThreadId;
+	int* vEpoch;
+	double* vMSE_T;
+	double* vMSE_V;
+	//--
+	int dbl_type = 22;	// Oracle SQLT_BDOUBLE
+	int int_type = 3;	// 
+	unsigned int dbl_len = sizeof(double);
+	unsigned int vchar_type = 96;
+	unsigned int vchar_len = 12+1;
+
+	EXEC SQL END   DECLARE SECTION;
+
+	//-- Connects to DB only once
+	if (vCtx==NULL) {
+		if (OraConnect(DebugParms, DebugParms->DebugDB)!=0) {
+			LogWrite(DebugParms, LOG_ERROR, "%s() could not connect to Log Database...\n", 1, __func__);
+			return -1;
+		}
+		vCtx = DebugParms->DebugDB->DBCtx;
+	}
+	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, DebugParms->DebugDB->DBCtx, vCtx);
+
+	vInsertCount=mseCnt;
+	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
+	vThreadId=(int*)malloc(vInsertCount*sizeof(int));
+	vEpoch = (int*)malloc(vInsertCount*sizeof(int));
+	vMSE_T = (double*)malloc(vInsertCount*sizeof(double));
+	vMSE_V = (double*)malloc(vInsertCount*sizeof(double));
+
+	for (i = 0; i < vInsertCount; i++) {
+		vProcessId[i]=pid;
+		vThreadId[i]=tid;
+		vEpoch[i] = i;
+		vMSE_T[i] = mseT[i];
+		vMSE_V[i] = mseV[i];
+	}
+
+	//-- Then, Build the Insert statement
+	sprintf(&stmt[0], "insert into MyLog_MSE (ProcessId, ThreadId, Epoch, MSE_T, MSE_V) values(:P01, :P02, :P03, :P04, :P05)");
+	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
+
+	EXEC SQL CONTEXT USE :vCtx;
+	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
+	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
+	EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inMSE';
+	EXEC SQL SET DESCRIPTOR 'inMSE' COUNT = 5;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inMSE' VALUE 1 DATA = :vProcessId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inMSE' VALUE 2 DATA = :vThreadId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inMSE' VALUE 3 DATA = :vEpoch;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inMSE' VALUE 4 DATA = :vMSE_T;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inMSE' VALUE 5 DATA = :vMSE_V;
+	EXEC SQL PREPARE DynIns FROM :stmt;
+	EXEC SQL FOR :vInsertCount EXECUTE DynIns USING DESCRIPTOR 'inMSE';
+	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
+
+	//pInsertCount[vNetLevel] = sqlca.sqlerrd[2];
+	LogWrite(DebugParms, LOG_INFO, "BulkMSEInsert() inserted %d rows.\n", 1, sqlca.sqlerrd[2]);
+	if (sqlca.sqlcode!=0) {
+		if (sqlca.sqlcode!=1) LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		return sqlca.sqlcode;
+	}
+	EXEC SQL DEALLOCATE DESCRIPTOR 'inMSE';
+
+	//-- free()s
+	free(vProcessId);
+	free(vThreadId);
+	free(vEpoch);
+	free(vMSE_T);
+	free(vMSE_V);
+
+	return sqlca.sqlcode;
+}
+EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* W) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	int i;
+	int vInsertCount;
+	sql_context vCtx = DebugParms->DebugDB->DBCtx;
+	char stmt[1000];
+	//--
+	int* vProcessId;
+	int* vThreadId;
+	int* vEpoch;
+	int* vWid;
+	double* vW;
+	//--
+	int dbl_type = 22;	// Oracle SQLT_BDOUBLE
+	int int_type = 3;	// 
+	unsigned int dbl_len = sizeof(double);
+	unsigned int vchar_type = 96;
+	unsigned int vchar_len = 12+1;
+
+	EXEC SQL END   DECLARE SECTION;
+
+	//-- Connects to DB only once
+	if (vCtx==NULL) {
+		if (OraConnect(DebugParms, DebugParms->DebugDB)!=0) {
+			LogWrite(DebugParms, LOG_ERROR, "%s() could not connect to Log Database...\n", 1, __func__);
+			return -1;
+		}
+		vCtx = DebugParms->DebugDB->DBCtx;
+	}
+	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, DebugParms->DebugDB->DBCtx, vCtx);
+
+	vInsertCount=Wcnt;
+	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
+	vThreadId=(int*)malloc(vInsertCount*sizeof(int));
+	vEpoch = (int*)malloc(vInsertCount*sizeof(int));
+	vWid = (int*)malloc(vInsertCount*sizeof(int));
+	vW = (double*)malloc(vInsertCount*sizeof(double));
+
+	for (i = 0; i < vInsertCount; i++) {
+		vProcessId[i]=pid;
+		vThreadId[i]=tid;
+		vEpoch[i] = epoch;
+		vWid[i]=i;
+		vW[i]=W[i];
+	}
+
+	//-- Then, Build the Insert statement
+	sprintf(&stmt[0], "insert into CoreImage_NN (ProcessId, ThreadId, Epoch, WId, W) values(:P01, :P02, :P03, :P04, :P05)");
+	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
+
+	EXEC SQL CONTEXT USE :vCtx;
+	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
+	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
+	EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inCINN';
+	EXEC SQL SET DESCRIPTOR 'inCINN' COUNT = 5;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inCINN' VALUE 1 DATA = :vProcessId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inCINN' VALUE 2 DATA = :vThreadId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inCINN' VALUE 3 DATA = :vEpoch;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inCINN' VALUE 4 DATA = :vWid;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inCINN' VALUE 5 DATA = :vW;
+	EXEC SQL PREPARE DynIns FROM :stmt;
+	EXEC SQL FOR :vInsertCount EXECUTE DynIns USING DESCRIPTOR 'inCINN';
+	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
+
+	LogWrite(DebugParms, LOG_INFO, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
+	if (sqlca.sqlcode!=0) {
+		if (sqlca.sqlcode!=1) LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		return sqlca.sqlcode;
+	}
+	EXEC SQL DEALLOCATE DESCRIPTOR 'inCINN';
+
+	//-- free()s
+	free(vProcessId);
+	free(vThreadId);
+	free(vEpoch);
+	free(vWid);
+	free(vW);
+
+	return sqlca.sqlcode;
+}
+
+EXPORT int Ora_LogLoadW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	int i;
+	int retval = 0;
+	sql_context vCtx = DebugParms->DebugDB->DBCtx;
+	char stmt[1000];
+	//-- Network Weights variables
+	int vWid; double vW;
+	EXEC SQL END DECLARE SECTION;
+
+	//-- Connects to DB only once
+	if (vCtx==NULL) {
+		if (OraConnect(DebugParms, DebugParms->DebugDB)!=0) printf("%s() could not connect to Log Database...\n", __func__);
+		vCtx = DebugParms->DebugDB->DBCtx;
+	}
+
+	//-- Load Network Weights from CoreImage_NN
+	sprintf(&stmt[0], "select WId, W from CoreImage_NN where ProcessId=%d and ThreadId=%d and Epoch=%d order by 1,2,3", pid, tid, epoch);
+	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 3 - stmt=%s\n", 2, __func__, stmt);
+	EXEC SQL CONTEXT USE :vCtx;
+	EXEC SQL PREPARE sLoadW FROM :stmt;
+	EXEC SQL DECLARE cLoadW CURSOR FOR sLoadW;
+	EXEC SQL OPEN cLoadW;
+	for(i=0; i<Wcnt; i++) {
+		EXEC SQL FETCH cLoadW INTO vWid, vW;
+		if (sqlca.sqlcode==0) {
+			oW[i] = vW;
+		} else if (sqlca.sqlcode==1403) {
+			break;
+		} else {
+			LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			retval = sqlca.sqlcode;
+			break;
+		}
+	}
+	EXEC SQL CLOSE cLoadW;
+
+	return retval;
 }
