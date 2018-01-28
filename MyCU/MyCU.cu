@@ -127,8 +127,11 @@ EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numt
 		ldB=By;
 	}
 
-	Vinit_cu(Ay*Bx, C, 0, 0);
+	if (Vinit_cu(m*n, C, 0, 0)!=0) return -1;
+	//dumpArray_cu(m*k, vB, "C:/temp/vB.txt");
+	//dumpArray_cu(n*k, vA, "C:/temp/vA.txt");
 	if (cublasSgemm((*(cublasHandle_t*)cublasH), Bop, Aop, m, n, k, alpha, vB, ldB, vA, ldA, beta, C, ldC)!=CUBLAS_STATUS_SUCCESS) return -1;
+	//dumpArray_cu(m*n, C, "C:/temp/vC.txt");
 
 	return 0;
 }

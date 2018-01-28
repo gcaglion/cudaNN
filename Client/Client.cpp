@@ -185,9 +185,40 @@ int client2(NN* pNN) {
 	return 0;
 }
 
+int MbyM_new(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T=nullptr) {
+
+	int m1y=Ay, m1x=Ax, m1i; numtype* m1=A;
+	int m2y=By, m2x=Bx, m2i; numtype* m2=B;
+	if (Atr) {
+		m1y=Ax; m1x=Ay;
+	}
+	if (Btr) {
+		m2y=Bx; m2x=By;
+	}
+	int mmi; numtype* mm=C;
+
+	for (int y = 0; y < m1y; y++) {
+		for (int x2 = 0; x2<m2x; x2++) {
+			mmi=y*m2x+x2;
+			mm[mmi]=0;
+			for (int x = 0; x<m1x; x++) {
+				m1i=(Atr)?(x*m1y+y):(y*m1x+x);
+				m2i=(Btr)?(x2*m2y+x):(x*m2x+x2);
+				mm[mmi]+=m1[m1i]*m2[m2i];
+				//printf("C[%d] += A[%d] * B[%d] => %f * %f = %f\n", mmi, m1i, m2i, m1[m1i], m2[m2i], mm[mmi]);
+			}
+		}
+	}
+	//printf("\n");
+	return 0;
+}
 void client3() {
-	matrix* A=new matrix(5, 7, true, 0.1f, 0.1f);
+	matrix* A=new matrix(3, 5, true, 0.1f, 0.1f);
 	A->print("A");
+	matrix* At=new matrix(5, 3);
+	A->transposeTo(At);
+	//At->print("At");
+
 
 /*	matrix* sA=new matrix(2, 3);
 	A->copySubTo(1, 2, sA);
@@ -211,17 +242,27 @@ void client3() {
 	A->copyTo(tA);
 	tA->print("tA");
 */
-	matrix* B=new matrix(5, 3, true, -0.1f, -0.1f);
+	matrix* B=new matrix(4, 5, true, -0.1f, -0.1f);
 	B->print("B");
-	matrix* C=new matrix(7, 3);
-//	MbyM(nullptr, tA->my, tA->mx, 1, false, tA->m, B->my, B->mx, 1, false, B->m, C->m);
+	matrix* Bt=new matrix(5, 4);
+	B->transposeTo(Bt);
+	Bt->print("Bt");
+	matrix* C1=new matrix(3, 4);
+	matrix* C2=new matrix(3, 4);
+	//	MbyM(nullptr, tA->my, tA->mx, 1, false, tA->m, B->my, B->mx, 1, false, B->m, C->m);
 //	C->print("C=tAxB");
 
-	MbyM_std(7, 5, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m);
-	C->print("C=AxB, MbyM_std()");
+/*	MbyM_new(At->my, At->mx, 1, false, At->m, B->my, B->mx, 1, false, B->m, C1->m);
+	C1->print("C1=AtxB, MbyM_std(false, false)");
+	MbyM_new(A->my, A->mx, 1, true, A->m, B->my, B->mx, 1, false, B->m, C2->m);
+	C2->print("C2=AxB, MbyM_std(true, false)");
+*/	MbyM_new(A->my, A->mx, 1, false, A->m, Bt->my, Bt->mx, 1, false, Bt->m, C1->m);
+	C1->print("C1=AxBt, MbyM_std(false, false)");
+	MbyM_new(A->my, A->mx, 1, false, A->m, B->my, B->mx, 1, true, B->m, C2->m);
+	C2->print("C2=AxB, MbyM_std(false, true)");
 
-	A->X(B, C, false, false);
-	C->print("C=AxB, X()");
+	//A->X(B, C, false, false);
+	//C->print("C=AxB, X()");
 
 
 
@@ -536,9 +577,11 @@ int client9() {
 
 	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
 
-	int Ay=3, Ax=2; bool trA=false;
+	int Ay=2, Ax=3; bool trA=true;
 	int By=2, Bx=4; bool trB=false;
-	int Cy=Ay, Cx=Bx;
+
+	int Cy=(trA) ? Ax : Ay;
+	int Cx=(trB) ? By : Bx;
 
 	int sizemult=200;
 	Ay*=sizemult; Ax*=sizemult;
@@ -556,14 +599,23 @@ int client9() {
 	for (int test=0; test<10; test++) {
 
 		//-- init dev
-		start=timeGetTime();
 		if (VinitRnd(Ay*Ax, Ad, -1, 1, cuRandH)!=0) return -1;
 		if (VinitRnd(By*Bx, Bd, -1, 1, cuRandH)!=0) return -1;
 
-		ret = MbyMcompare(cublasH, Ay, Ax, 1, false, Ad, By, Bx, 1, false, Bd, Cd, Td);
+		start=timeGetTime();
+		//-- run test
+		ret = MbyMcompare(cublasH, Ay, Ax, 1, trA, Ad, By, Bx, 1, trB, Bd, Cy, Cx, Cd, Td);
 		printf("Test %d %s\n", test, (ret==0) ? "SUCCESS" : "FAILURE");
 
 	}
+
+	//-- free dev
+	if (cudaFree(Ad)!=cudaSuccess) return -1;
+	if (cudaFree(Bd)!=cudaSuccess) return -1;
+	if (cudaFree(Cd)!=cudaSuccess) return -1;
+	if (cudaFree(Td)!=cudaSuccess) return -1;
+
+	return 0;
 }
 
 #endif
@@ -576,9 +628,9 @@ int main() {
 	//client6();
 	//client7();
 	//client8();
-	//client9();
-	//system("pause");
-	//return -1;
+	client9();
+	system("pause");
+	return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;

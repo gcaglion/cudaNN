@@ -195,20 +195,59 @@ int Mtranspose_old(int* my_, int* mx_, numtype* m) {
 
 	return 0;
 }
-EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
-	if (Atr) Mtranspose_old(&Ay, &Ax, A);
-	if (Btr) Mtranspose_old(&By, &Bx, B);
+EXPORT int MbyM_std_old(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
 
-	for (int y = 0; y < Ay; y++) {
-		for (int x2 = 0; x2 < Bx; x2++) {
-			C[y*Bx+x2] = 0;
-			for (int x = 0; x < Ax; x++) C[y*Bx+x2] += A[y*Ax+x]*Ascale * B[x*Bx+x2]*Bscale;
-		}
+	int Aidx, Bidx, Cidx;
+	int vAy=Ay, vAx=Ax, vBy=By, vBx=Bx;
+	numtype* vA=A;
+	numtype* vB=B;
+
+	if (Atr) {
+		vAy=Ax; vAx=Ay;
+	}
+	if (Btr) {
+		vBy=Bx; vBx=By;
 	}
 
-	if (Atr) Mtranspose_old(&Ay, &Ax, A);
-	if (Btr) Mtranspose_old(&By, &Bx, B);
+	for (int y = 0; y < vAy; y++) {
+		for (int x2 = 0; x2<vBx; x2++) {
+			Cidx=y*vBx+x2;
+			C[Cidx] = 0;
+			for (int x=0; x<vAx; x++) {
+				Aidx=y*vAx+x;
+				Bidx=x*vBx+x2;
+				printf("vA[%d]=%f\n", Aidx, vA[Aidx]);
+				C[Cidx] += vA[Aidx]*B[Bidx];
+			}
+		}
+	}
+	return 0;
+}
+EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
 
+	int m1y=Ay, m1x=Ax, m1i; numtype* m1=A;
+	int m2y=By, m2x=Bx, m2i; numtype* m2=B;
+	if (Atr) {
+		m1y=Ax; m1x=Ay;
+	}
+	if (Btr) {
+		m2y=Bx; m2x=By;
+	}
+	int mmi; numtype* mm=C;
+
+	for (int y = 0; y < m1y; y++) {
+		for (int x2 = 0; x2<m2x; x2++) {
+			mmi=y*m2x+x2;
+			mm[mmi]=0;
+			for (int x = 0; x<m1x; x++) {
+				m1i=(Atr) ? (x*m1y+y) : (y*m1x+x);
+				m2i=(Btr) ? (x2*m2y+x) : (x*m2x+x2);
+				mm[mmi]+=m1[m1i]*m2[m2i];
+				//printf("C[%d] += A[%d] * B[%d] => %f * %f = %f\n", mmi, m1i, m2i, m1[m1i], m2[m2i], mm[mmi]);
+			}
+		}
+	}
+	//printf("\n");
 	return 0;
 }
 
@@ -223,9 +262,6 @@ EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype
 	static int callid=0;
 	int ret;
 	char fname[MAX_PATH];
-
-	int Cy=(Atr) ? Ax : Ay;
-	int Cx=(Btr) ? By : Bx;
 
 #ifdef USE_GPU
 	ret=MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T);
@@ -423,10 +459,15 @@ int Vcompare(int vlen, numtype* v1, numtype* v2) {
 	}
 	return ret;
 }
-int MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
+EXPORT int Vsum_cpu(int Vlen, numtype* V, numtype* oSum, numtype* ss_d) {
+	(*oSum)=0;
+	for (int i=0; i<Vlen; i++) (*oSum)+=V[i];
+	return 0;
+}
+
+int MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T) {
 #ifdef USE_GPU
 	DWORD start, end;
-	int Cy=Ay, Cx=Bx;
 	int Tsize=(Ay+By)*(Ax+Bx);
 
 	//-- malloc host
@@ -435,8 +476,6 @@ int MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype
 	numtype* Ch=(numtype*)malloc(Cy*Cx*sizeof(numtype));
 	numtype* Th=(numtype*)malloc(Tsize*sizeof(numtype));
 	numtype* Cr=(numtype*)malloc(Cy*Cx*sizeof(numtype));	//-- gets copy of the results from device 
-
-	if (Vinit_cu(Cy*Cx, C, 0, 0)!=0) return -1;
 
 	//-- copy dev->host
 	start=timeGetTime();
@@ -447,13 +486,13 @@ int MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype
 	//-- cpu run
 	start=timeGetTime();
 	if (MbyM_std(Ay, Ax, Ascale, Atr, Ah, By, Bx, Bscale, Btr, Bh, Ch, Th)) return -1;
-	printf("CPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+	printf("CPU run; elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 	//mprint(Ay, Ax, Ah, "Ah"); mprint(By, Bx, Bh, "Bh"); mprint(Cy, Cx, Ch, "Ch");
 
 	//-- gpu run
 	start=timeGetTime();
 	if (MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C, T)!=0) return -1;
-	printf("GPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+	printf("GPU run; elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- copy results dev->host
 	start=timeGetTime();
