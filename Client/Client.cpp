@@ -621,6 +621,25 @@ int client9() {
 
 #endif
 
+int runNN(tDebugInfo* DebugParms, int NetPid, int NetTid, int NetEpoch, int sampleLen, int predictionLen, int featuresCnt, int samplesCnt, numtype* runSample, numtype* runTarget, numtype* Oforecast, char* levelRatioS, int ActivationFunction, bool useContext, bool useBias ){
+	//-- 
+	int batchSamplesCount=1;
+	int batchCount=samplesCnt;
+	//--
+
+	NN* ruNN=nullptr;
+	try {
+		ruNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, ActivationFunction, useContext, useBias);
+	}
+	catch (const char* e) {
+		LogWrite(DebugParms, LOG_ERROR, "ruNN creation failed. (%s)\n", 1, e);
+	}
+
+	numtype* runWh=(numtype*)malloc(ruNN->weightsCntTotal*sizeof(numtype));
+	if( LogLoadW(DebugParms, NetPid, NetTid, NetEpoch, ruNN->weightsCntTotal, runWh) !=0) return -1;
+	ruNN->run(runWh, samplesCnt, runSample, runTarget, Oforecast);
+
+}
 int main() {
 
 	//client3();	
@@ -644,62 +663,82 @@ int main() {
 	strcpy(DebugParms->fName, "Client.log");
 	DebugParms->PauseOnError = 1;
 	//--
+	DWORD start, end;
 
 	float scaleM, scaleP;
 
-	int historyLen=1000;
-	int sampleLen=20;
+	int historyLen=50000;
+	int sampleLen=200;
 	int predictionLen=2;
 	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
-	int batchSamplesCount=10;
+	int batchSamplesCount=100;
 
 	int totSamplesCount=historyLen-sampleLen;
 	int batchCount=(int)(floor(totSamplesCount/batchSamplesCount));
 
-	char* levelRatioS="0.5, 1";// "1, 0.5";
+	char* levelRatioS="1, 0.5, 1";// "1, 0.5";
+	int activationFunction=NN_ACTIVATION_TANH;
+	bool useContext=false;
 
-	NN* myNN=nullptr;
+	NN* trNN=nullptr;
 	try {
-		myNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, true, false);
+		trNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, activationFunction, useContext, false);
 	} catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
 	}
 
-	myNN->setActivationFunction(NN_ACTIVATION_TANH);
-
-	myNN->MaxEpochs=1000;
-	myNN->NetSaveFreq=200;
-	myNN->TargetMSE=(float)0.0001;
-	myNN->BP_Algo=BP_STD;
-	myNN->LearningRate=(numtype)0.01;
-	myNN->LearningMomentum=(numtype)0.7;
-	myNN->StopOnReverse=true;
+	//-- these should be relevant for training only.
+	trNN->MaxEpochs=50;
+	trNN->NetSaveFreq=200;
+	trNN->TargetMSE=(float)0.0001;
+	trNN->BP_Algo=BP_STD;
+	trNN->LearningRate=(numtype)0.03;
+	trNN->LearningMomentum=(numtype)0.2;
+	trNN->StopOnReverse=true;
 
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
 	numtype* historyData=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
 	numtype* hd_trs=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
 
-	numtype* fTrainingSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
-	numtype* fTrainingTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
+	numtype* fTrainSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
+	numtype* fTrainTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
 
 	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
-	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201508010000", historyLen, historyData, baseData)<0) return -1;
-	dataTrS(historyLen, featuresCnt, historyData, baseData, DT_DELTA, myNN->scaleMin, myNN->scaleMax, hd_trs, &scaleM, &scaleP);
+	start=timeGetTime();
+	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201612300000", historyLen, historyData, baseData)<0) return -1;
+	printf("LoadFXdata() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
-	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fTrainingSample, predictionLen*featuresCnt, fTrainingTarget, 2);
+	start=timeGetTime();
+	dataTrS(historyLen, featuresCnt, historyData, baseData, DT_DELTA, trNN->scaleMin, trNN->scaleMax, hd_trs, &scaleM, &scaleP);
+	printf("dataTrS() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+
+	start=timeGetTime();
+	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fTrainSample, predictionLen*featuresCnt, fTrainTarget, 0);
+	printf("fSlideArrayF() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- Train
-	myNN->train(fTrainingSample, fTrainingTarget);
+	trNN->train(fTrainSample, fTrainTarget);
 
 	//-- Persist MSE and final W
-	if (LogSaveMSE(DebugParms, myNN->pid, myNN->tid, myNN->ActualEpochs, myNN->mseT, myNN->mseV)!=0) return -1;
-	if (LogSaveW(DebugParms, myNN->pid, myNN->tid, myNN->ActualEpochs, myNN->weightsCntTotal, myNN->W)!=0) return -1;
-	//-- ... more persistance tables ...
-	//-- DB commit
+/*	start=timeGetTime();
+	if (LogSaveMSE(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV)!=0) return -1;
+	printf("LogSaveMSE() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	start=timeGetTime();
+	if (LogSaveW(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W)!=0) return -1;
+	printf("LogSaveW() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	//-- Persist network structure
+//	if (LogSaveStruct(DebugParms, trNN->pid, trNN->tid, trNN->InputCount, trNN->OutputCount, trNN->featuresCnt, trNN->sampleLen, trNN->predictionLen, trNN->batchCnt, batchSamplesCount, trNN->useContext, trNN->useBias,
+//		trNN->ActivationFunction, trNN->MaxEpochs, trNN->ActualEpochs, trNN->TargetMSE, trNN->StopOnReverse, trNN->NetSaveFreq, trNN->BP_Algo, trNN->LearningRate, trNN->LearningMomentum)!=0) return -1;
+
+//-- DB commit
 	Commit(DebugParms);
+*/
+
+	//-- destroy training NN
+	delete trNN;
 
 	//-- Run (on training data)
-	//myNN->run();
+	//trNN->run();
 
 
 	system("pause");

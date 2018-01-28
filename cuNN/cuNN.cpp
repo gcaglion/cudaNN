@@ -47,7 +47,7 @@ void SBF2BFS(int db, int ds, int dbar, int df, numtype* v) {
 	free(newv);
 }
 
-sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_) {
+sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_) {
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
 
@@ -66,6 +66,9 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	cublasH=new void*;
 	cuRandH=new void*;
 	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+
+	//-- x. set Activation function (also sets scaleMin / scaleMax)
+	setActivationFunction(ActivationFunction_);
 
 	//-- 1. set Layout
 	setLayout(LevelRatioS_);
@@ -87,10 +90,21 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 
 }
 sNN::~sNN() {
-	//!!!!!!!!!!!!!! create a myFree() functio to handle CUDA-based variables !
-	free(weightsCnt);
-	free(a);  free(F); free(dF); free(edF);
-	free(W);
+	if (myFree(a)!=0) throw FAIL_FREE_N;
+	if (myFree(F)!=0) throw FAIL_FREE_N;
+	if (myFree(dF)!=0) throw FAIL_FREE_N;
+	if (myFree(edF)!=0) throw FAIL_FREE_N;
+	if (myFree(W)!=0) throw FAIL_FREE_W;
+	if (myFree(dW)!=0) throw FAIL_FREE_W;
+	if (myFree(dJdW)!=0) throw FAIL_FREE_W;
+	if (myFree(TMP)!=0) throw FAIL_FREE_W;
+	if (myFree(e)!=0) throw FAIL_FREE_N;
+	if (myFree(u)!=0) throw FAIL_FREE_N;
+	if(myFree(ss)!=0) throw FAIL_FREE_S;
+
+	//free(weightsCnt);
+	//free(a);  free(F); free(dF); free(edF);
+	//free(W);
 	//.....
 	// free cublasH, cuRandH, curanddestroygenerator...
 	free(mseT); free(mseV);
@@ -216,6 +230,10 @@ int sNN::train(numtype* sample, numtype* target) {
 	int l;
 	char fname[MAX_PATH];
 	DWORD batch_starttime, epoch_starttime;
+	DWORD LDstart, LDtimeTot=0, LDcnt=0; float LDtimeAvg;
+	DWORD FFstart, FFtimeTot=0, FFcnt=0; float FFtimeAvg;
+	DWORD BPstart, BPtimeTot=0, BPcnt=0; float BPtimeAvg;
+
 	DWORD training_starttime=timeGetTime();
 	int epoch;
 	int sc=batchSamplesCnt;
@@ -246,7 +264,7 @@ int sNN::train(numtype* sample, numtype* target) {
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), cuRandH);
 	//dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
-	loadArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
+	//loadArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
 
 
 	//---- 0.3. Init dW
@@ -266,10 +284,13 @@ int sNN::train(numtype* sample, numtype* target) {
 		for (int b=0; b<batchCnt; b++) {
 
 			//-- 1.1.1.  load samples + targets onto GPU
+			LDstart=timeGetTime(); LDcnt++;
 			if (loadBatchData(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype) )!=0) return -1;
 			if (loadBatchData(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype) )!=0) return -1;
-		
+			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
+
 			//-- 1.1.2. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
+			FFstart=timeGetTime(); FFcnt++;
 			for (l=0; l<(levelsCnt-1); l++) {
 				int Ay=nodesCnt[l+1]/sc;
 				int Ax=nodesCnt[l]/sc;
@@ -288,11 +309,13 @@ int sNN::train(numtype* sample, numtype* target) {
 					Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
 				}
 			}
+			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
 			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
 			if (calcErr()!=0) return -1;
 
 			//-- 1.1.4. BackPropagate, calc dJdW for the whole batch
+			BPstart=timeGetTime(); BPcnt++;
 			for (l = levelsCnt-1; l>0; l--) {
 				if (l==(levelsCnt-1)) {
 					//-- top level only
@@ -334,6 +357,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C, TMP) !=0) return -1;
 
 			}
+			BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
 
 			//-- 1.1.5. update weights for the whole batch
 			//-- W = W - LR * dJdW
@@ -365,12 +389,15 @@ int sNN::train(numtype* sample, numtype* target) {
 	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;
 	float elapsed_avg=elapsed_tot/ActualEpochs;
 	printf("\nTraining complete. Elapsed time: %0.1f seconds. Epoch average=%0.0f ms.\n", (elapsed_tot/(float)1000), elapsed_avg);
+	LDtimeAvg=(float)LDtimeTot/LDcnt; printf("LD count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", LDcnt, (LDtimeTot/(float)1000), LDtimeAvg);
+	FFtimeAvg=(float)FFtimeTot/FFcnt; printf("FF count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", FFcnt, (FFtimeTot/(float)1000), FFtimeAvg);
+	BPtimeAvg=(float)BPtimeTot/LDcnt; printf("BP count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", BPcnt, (BPtimeTot/(float)1000), BPtimeAvg);
 
 	//-- !!! TODO: Proper LogSaveMSE() !!!
 	//dumpArray(epoch-1, mse, "C:/temp/mse.log");
 
 	return 0;
 }
-int sNN::run(int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast) {
+int sNN::run(numtype* runW, int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast) {
 	return 0;
 }

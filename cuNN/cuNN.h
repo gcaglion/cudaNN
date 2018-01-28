@@ -11,6 +11,9 @@
 #define FAIL_CUDAMALLOC "CUDA malloc failed. \n"
 #define FAIL_MALLOC_N "Neurons memory allocation failed. \n"
 #define FAIL_MALLOC_W "Weights memory allocation failed. \n"
+#define FAIL_FREE_N "Neurons memory free failed. \n"
+#define FAIL_FREE_S "Scalar memory free failed. \n"
+#define FAIL_FREE_W "Weights memory free failed. \n"
 #define FAIL_MALLOC_e "Errors memory allocation failed. \n"
 #define FAIL_MALLOC_u "Targets memory allocation failed. \n"
 #define FAIL_MALLOC_SCALAR "Scalars memory allocation failed. \n"
@@ -59,10 +62,6 @@ typedef struct sNN {
 	bool useContext;
 	bool useBias;
 
-//	int batchCnt;
-//	int inputSize;	// InputCount*FeaturesCount (# of neurons in layer 0 for single sample)
-//	int outputSize;	// OutputCount*FeaturesCount (# of neurons in output layer for single sample)
-
 	float levelRatio[MAX_LEVELS];
 	int levelsCnt;
 	int nodesCnt[MAX_LEVELS];
@@ -106,8 +105,8 @@ typedef struct sNN {
 	numtype* ss;	// device-side shared scalar value, to be used to calc any of the above
 	int ActualEpochs;
 
-	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], bool useContext_, bool useBias_);
-	~sNN();
+	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_);
+	EXPORT ~sNN();
 
 	void setLayout(char LevelRatioS[60]);
 
@@ -116,7 +115,7 @@ typedef struct sNN {
 	int sNN::calcErr();
 
 	EXPORT int train(numtype* sample, numtype* target);
-	EXPORT int run(int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast);
+	EXPORT int run(numtype* runW, int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast);
 
 } NN;
 
