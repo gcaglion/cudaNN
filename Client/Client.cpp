@@ -628,9 +628,9 @@ int main() {
 	//client6();
 	//client7();
 	//client8();
-	client9();
-	system("pause");
-	return -1;
+	//client9();
+	//system("pause");
+	//return -1;
 
 	//--
 	tDebugInfo* DebugParms=new tDebugInfo;
@@ -663,7 +663,7 @@ int main() {
 
 	myNN->setActivationFunction(NN_ACTIVATION_TANH);
 
-	myNN->MaxEpochs=100;
+	myNN->MaxEpochs=200;
 	myNN->TargetMSE=(float)0.0001;
 	myNN->BP_Algo=BP_STD;
 	myNN->LearningRate=(numtype)0.005;

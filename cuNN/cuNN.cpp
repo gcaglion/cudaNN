@@ -257,26 +257,14 @@ int sNN::train(numtype* sample, numtype* target) {
 		tse=0;
 
 		//-- 1.1. train one batch at a time
-		//batchCnt=2;
 		for (int b=0; b<batchCnt; b++) {
 
 			//-- 1.1.1.  load samples + targets onto GPU
 			if (loadBatchData(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype) )!=0) return -1;
 			if (loadBatchData(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype) )!=0) return -1;
-			//dumpArray(InputCount, &N[0], "C:/temp/F0.txt");
 		
 			//-- 1.1.2. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
 			for (l=0; l<(levelsCnt-1); l++) {
-/*				int W10y=nodesCnt[l+1]/batchSamplesCnt;
-				int W10x=nodesCnt[l]/batchSamplesCnt;
-				int W10start= levelFirstWeight[l];
-				int N0y=W10x;
-				int N0x=batchSamplesCnt;
-				int N0start= levelFirstNode[l];
-				int N1start= levelFirstNode[l+1];
-				//-- a[l+1]=F[l]*W[l]
-				if (MbyM(cublasH, W10y, W10x, 1, false, &W[W10start], N0y, N0x, 1, false, &F[N0start], &a[N1start], TMP ) !=0) return -1;
-*/
 				int Ay=nodesCnt[l+1]/sc;
 				int Ax=nodesCnt[l]/sc;
 				numtype* A=&W[levelFirstWeight[l]];
@@ -285,7 +273,6 @@ int sNN::train(numtype* sample, numtype* target) {
 				numtype* B=&F[levelFirstNode[l]];
 				numtype* C=&a[levelFirstNode[l+1]];
 				if (MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, false, B, C, TMP)!=0) return -1;
-				//if (MbyMcompare(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, false, B, C, TMP)!=0) return -1;
 
 				//-- activation sets F[l+1] and dF[l+1]
 				if(Activate(l+1)!=0) return -1;
@@ -295,28 +282,9 @@ int sNN::train(numtype* sample, numtype* target) {
 					Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
 				}
 			}
-/*#ifdef USE_GPU
-			sprintf(fname, "C:/temp/a_batch%d_gpu.txt", b);
-#else
-			sprintf(fname, "C:/temp/a_batch%d_cpu.txt", b);
-#endif
-			dumpArray(nodesCntTotal, a, fname);
-#ifdef USE_GPU
-			sprintf(fname, "C:/temp/F_batch%d_gpu.txt", b);
-#else
-			sprintf(fname, "C:/temp/F_batch%d_cpu.txt", b);
-#endif
-			dumpArray(nodesCntTotal, F, fname);
-*/
+
 			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
 			if (calcErr()!=0) return -1;
-/*#ifdef USE_GPU
-			sprintf(fname, "C:/temp/e_e%db%d_gpu.txt", epoch, b);
-#else
-			sprintf(fname, "C:/temp/e_e%db%d_cpu.txt", epoch, b);
-#endif
-			dumpArray(nodesCnt[levelsCnt-1], e, fname);
-*/
 
 			//-- 1.1.4. BackPropagate, calc dJdW for the whole batch
 			for (l = levelsCnt-1; l>0; l--) {
@@ -364,12 +332,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C, TMP) !=0) return -1;
 
 			}
-/*#ifdef USE_GPU
-			sprintf(fname, "C:/temp/dJdW_e%db%d_gpu.txt", epoch, b); dumpArray(weightsCntTotal, dJdW, fname);
-#else
-			sprintf(fname, "C:/temp/dJdW_e%db%d_cpu.txt", epoch, b); dumpArray(weightsCntTotal, dJdW, fname);
-#endif
-*/
+
 			//-- 1.1.5. update weights for the whole batch
 			//-- W = W - LR * dJdW
 			//if (Vadd(weightsCntTotal, W, 1, dJdW, -LearningRate, W)!=0) return -1;
