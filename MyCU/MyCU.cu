@@ -101,37 +101,28 @@ EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numt
 
 	cublasOperation_t Aop=CUBLAS_OP_N;
 	cublasOperation_t Bop=CUBLAS_OP_N;
-
-	int Cx=(Btr) ? By : Bx;
-
 	int m=Bx;
 	int n=Ay;
 	int k=Ax;
 	int ldA=Ax;
 	int ldB=Bx;
-	int ldC=Cx;
+	int ldC=Bx;
 
 	numtype* vA = A;
 	numtype* vB = B;
 
 	if (Atr) {
-		if (cuMtr_cublas(cublasH, Ay, Ax, A, T)!=0) return -1;
-		vA=T;
+		Aop=CUBLAS_OP_T;
 		n=Ax; k=Ay;
-		ldA=Ay;
 	}
 	if (Btr) {
-		if (cuMtr_cublas(cublasH, By, Bx, B, T)!=0) return -1;
-		vB=T;
+		Bop=CUBLAS_OP_T;
 		m=By;
-		ldB=By;
+		ldC=By;
 	}
 
 	if (Vinit_cu(m*n, C, 0, 0)!=0) return -1;
-	//dumpArray_cu(m*k, vB, "C:/temp/vB.txt");
-	//dumpArray_cu(n*k, vA, "C:/temp/vA.txt");
 	if (cublasSgemm((*(cublasHandle_t*)cublasH), Bop, Aop, m, n, k, alpha, vB, ldB, vA, ldA, beta, C, ldC)!=CUBLAS_STATUS_SUCCESS) return -1;
-	//dumpArray_cu(m*n, C, "C:/temp/vC.txt");
 
 	return 0;
 }

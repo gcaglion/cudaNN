@@ -577,8 +577,8 @@ int client9() {
 
 	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
 
-	int Ay=2, Ax=3; bool trA=true;
-	int By=2, Bx=4; bool trB=false;
+	int Ay=3, Ax=2; bool trA=false;
+	int By=4, Bx=2; bool trB=true;
 
 	int Cy=(trA) ? Ax : Ay;
 	int Cx=(trB) ? By : Bx;
