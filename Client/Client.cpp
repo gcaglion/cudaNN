@@ -69,11 +69,12 @@ int client1(NN* myNN) {
 	printf("b[%dx%d], full\n", by, bx);
 	Mprint(by, bx, b);
 
+	Algebra* Alg=new Algebra();
 	printf("(full) C=AxB using MbM():\n");
-	MbyM_std(ay, ax, 1, false, a, by, bx, 1, false, b, c);
+	Alg->MbyM(ay, ax, 1, false, a, by, bx, 1, false, b, c, true);
 	Mprint(cy, cx, c);
 	printf("(full) C=AxB using cublasSgem():\n");
-	if (cublasSgemm((*((cublasHandle_t*)myNN->cublasH)), CUBLAS_OP_N, CUBLAS_OP_N, bx, ay, ax, &alpha, b_d, bx, a_d, ax, &beta, c_d, cx)!=CUBLAS_STATUS_SUCCESS) return -1;
+	if (cublasSgemm((*((cublasHandle_t*)myNN->Alg->cublasH)), CUBLAS_OP_N, CUBLAS_OP_N, bx, ay, ax, &alpha, b_d, bx, a_d, ax, &beta, c_d, cx)!=CUBLAS_STATUS_SUCCESS) return -1;
 	if (cudaMemcpy(c, c_d, cy*cx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
 	Mprint(cy, cx, c);
 
@@ -83,7 +84,7 @@ int client1(NN* myNN) {
 	printf("b[%dx%d], start at[%dx%d], size [%dx%d] (finite submatrix)\n", by, bx, sby0, sbx0, sby, sbx);
 	Mprint(sby, sbx, sb);
 	printf("(sub) C=AxB using MbM() on finite submatrices:\n");
-	MbyM_std(say, sax, 1, false, sa, sby, sbx, 1, false, sb, sc);
+	Alg->MbyM(say, sax, 1, false, sa, sby, sbx, 1, false, sb, sc, true);
 	Mprint(scy, scx, sc);
 	printf("------------------------------------------------------------------------------------------------------\n");
 	printf("a[%dx%d], start at[%dx%d], size [%dx%d] (vector math)\n", ay, ax, say0, sax0, say, sax);
@@ -92,7 +93,7 @@ int client1(NN* myNN) {
 	Mprint(by, bx, &b[sbx0+bx*sby0], nullptr, sby0, sbx0, sby, sbx);
 
 	printf("(sub) C=AxB using cublasSgem():\n");
-	if (cublasSgemm((*(cublasHandle_t*)myNN->cublasH), CUBLAS_OP_N, CUBLAS_OP_N, sbx, say, sax, &alpha, &b_d[sbx0+bx*sby0], bx, &a_d[sax0+ax*say0], ax, &beta, c_d, cx)!=CUBLAS_STATUS_SUCCESS) return -1;
+	if (cublasSgemm((*(cublasHandle_t*)myNN->Alg->cublasH), CUBLAS_OP_N, CUBLAS_OP_N, sbx, say, sax, &alpha, &b_d[sbx0+bx*sby0], bx, &a_d[sax0+ax*say0], ax, &beta, c_d, cx)!=CUBLAS_STATUS_SUCCESS) return -1;
 	if (cudaMemcpy(c, c_d, cy*cx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
 	Mprint(cy, cx, c, 0, 0, scy, scx);
 
@@ -152,10 +153,11 @@ int client2(NN* pNN) {
 	}
 
 	//-- MbyM_std(), multiplication on finite submatrices, into finite submatrix
+	Algebra* Alg=new Algebra();
 	printf("\n------------------------------------------------------------------------------------------------------\n");
 	for (sm=0; sm<(levelsCnt-2); sm++) {
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_std() - (finite subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, false, sw[sm+1], nodesCnt[sm+1], nodesCnt[sm], 1, false, sw[sm], sw_mres[sm]);
+		Alg->MbyM(nodesCnt[sm+2], nodesCnt[sm+1], 1, false, sw[sm+1], nodesCnt[sm+1], nodesCnt[sm], 1, false, sw[sm], sw_mres[sm], true);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
@@ -166,7 +168,7 @@ int client2(NN* pNN) {
 		int s1w0=levelFirstWeight[sm+1];
 		int s0w0=levelFirstWeight[sm];
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_std() - (pointer subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM_std(nodesCnt[sm+2], nodesCnt[sm+1], 1, false, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, false, &w[s0w0], sw_mres[sm]);
+		Alg->MbyM(nodesCnt[sm+2], nodesCnt[sm+1], 1, false, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, false, &w[s0w0], sw_mres[sm], true);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
@@ -178,7 +180,7 @@ int client2(NN* pNN) {
 		int s1w0=levelFirstWeight[sm+1];
 		int s0w0=levelFirstWeight[sm];
 		printf("sw[%d] X sw[%d] => sw%d%d ( [%dx%d] X [%dx%d] ) => [%dx%d] MbyM_cu() - (pointer subs into finite sub)\n", sm+1, sm, sm+1, sm, nodesCnt[sm+2], nodesCnt[sm+1], nodesCnt[sm+1], nodesCnt[sm], nodesCnt[sm+2], nodesCnt[sm]);
-		MbyM(pNN->cublasH, nodesCnt[sm+2], nodesCnt[sm+1], 1, false, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, false, &w[s0w0], sw_mres[sm], nullptr);
+		Alg->MbyM(nodesCnt[sm+2], nodesCnt[sm+1], 1, false, &w[s1w0], nodesCnt[sm+1], nodesCnt[sm], 1, false, &w[s0w0], sw_mres[sm]);
 		Mprint(nodesCnt[sm+2], nodesCnt[sm], sw_mres[sm]);
 		printf("\n");
 	}
@@ -270,17 +272,18 @@ void client3() {
 }
 
 void client4() {
+	Algebra* Alg=new Algebra();
 	matrix* A=new matrix(8, 5, true, 0.1f, 0.1f);
 	A->print("A");
 	matrix* B=new matrix(5, 12, true, -0.1f, -0.1f);
 	B->print("B");
 	matrix* C=new matrix(8, 12);
-	MbyM(nullptr, A->my, A->mx, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m, nullptr);
+	Alg->MbyM(A->my, A->mx, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m);
 	C->print("C");
 
 	matrix* Bt=new matrix(12, 5, true, -0.1, -0.1);
 	Bt->print("Bt");
-	MbyM(nullptr, A->my, A->mx, 1, false, A->m, Bt->my, Bt->mx, 1, true, Bt->m, C->m, nullptr);
+	Alg->MbyM(A->my, A->mx, 1, false, A->m, Bt->my, Bt->mx, 1, true, Bt->m, C->m);
 	C->print("C");
 }
 
@@ -325,14 +328,9 @@ void client5() {
 	//b->transpose(); b->print(" b after transpose()");
 	//MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, false, b->m, c->m); c->print("C-false");
 	//b->transpose(); b->print(" b reset");
-	MbyM_std(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, true, b->m, c->m); c->print("C-true");
+	Algebra* Alg=new Algebra();
+	Alg->MbyM(a->my, a->mx, 1, false, a->m, b->my, b->mx, 1, true, b->m, c->m, true); c->print("C-true");
 
-	//-- 0. init CUDA/BLAS
-	void* cublasH=new void*;
-	void* cuRandH=new void*;
-	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
-
-	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
 #ifdef USE_GPU
 	//-- load a,b,c onto gpu
 	numtype* da; if (cudaMalloc(&da, 3*unitsize*2*unitsize*sizeof(numtype))!=0) return;
@@ -342,7 +340,7 @@ void client5() {
 	if (cudaMemcpy(db, b->m, 4*unitsize*2*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
 
 	numtype* dtmp; if (cudaMalloc(&dtmp, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
-	if (MbyM(cublasH, 3*unitsize, 2*unitsize, 1, false, da, 4*unitsize, 2*unitsize, 1, true, db, dc, dtmp)!=0) return;
+	if (Alg->MbyM(3*unitsize, 2*unitsize, 1, false, da, 4*unitsize, 2*unitsize, 1, true, db, dc)!=0) return;
 	if (cudaMemcpy(c->m, dc, 3*unitsize*4*unitsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
 	c->print("C from cublas");
 #endif
@@ -373,15 +371,8 @@ int client6() {
 	DWORD start;
 	DWORD end;
 
-	void* cublasH=new void*;
-	void* cuRandH=new void*;
-	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
+	Algebra* Alg=new Algebra();
 
-	start=timeGetTime();
-	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
-	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
-
-	
 	numtype* v;
 	numtype s;
 	numtype* sd; if (cudaMalloc(&sd, sizeof(numtype))!=cudaSuccess) return -1;
@@ -393,23 +384,18 @@ int client6() {
 	Vinit(vsize, v, 0.0f, 1.0f);
 	printf("Vinit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 	start=timeGetTime();
-	if (Vssum(cublasH, vsize, v, &s, sd)!=0) return -1;
+	if (Vssum(vsize, v, &s)!=0) return -1;
 	printf("Vssum(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 	return(myFree(v));
 }
 
 int client7() {
-	void* cublasH=new void*;
-	void* cuRandH=new void*;
-	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
 	DWORD start, end;
 	bool success=true;
 	numtype diff1, diff2;
 
-	start=timeGetTime();
-	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
-	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+	Algebra* Alg=new Algebra();
 
 	int vsize= (1024*10000);
 	//-- malloc host
@@ -429,8 +415,8 @@ int client7() {
 		
 		//-- init dev
 		start=timeGetTime();
-		if (VinitRnd(vsize, v1d, -1, 1, cuRandH)!=0) return -1;
-		if (VinitRnd(vsize, v2d, -1, 1, cuRandH)!=0) return -1;
+		if (VinitRnd(vsize, v1d, -1, 1, Alg->cuRandH)!=0) return -1;
+		if (VinitRnd(vsize, v2d, -1, 1, Alg->cuRandH)!=0) return -1;
 		printf("Init dev; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 		//-- copy dev->host
@@ -474,6 +460,7 @@ int client7() {
 		printf("Result: %s\n", (success) ? "SUCCESS" : "FAILURE");
 
 	}
+	return 0;
 }
 void mprint(int my, int mx, numtype* m, char* msg=nullptr, int smy0=-1, int smx0=-1, int smy=-1, int smx=-1) {
 	if (smy==-1) smy=my;
@@ -491,15 +478,10 @@ void mprint(int my, int mx, numtype* m, char* msg=nullptr, int smy0=-1, int smx0
 
 }
 int client8() {
-	void* cublasH=new void*;
-	void* cuRandH=new void*;
-	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
 	DWORD start, end;
 	bool success=true;
 
-	start=timeGetTime();
-	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
-	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
+	Algebra* Alg=new Algebra();
 
 	int Ay=3, Ax=2; bool trA=false;
 	int By=4, Bx=2; bool trB=true;
@@ -527,8 +509,8 @@ int client8() {
 
 		//-- init dev
 		start=timeGetTime();
-		if (VinitRnd(Ay*Ax, Ad, -1, 1, cuRandH)!=0) return -1;
-		if (VinitRnd(By*Bx, Bd, -1, 1, cuRandH)!=0) return -1;
+		if (VinitRnd(Ay*Ax, Ad, -1, 1, Alg->cuRandH)!=0) return -1;
+		if (VinitRnd(By*Bx, Bd, -1, 1, Alg->cuRandH)!=0) return -1;
 		if (Vinit(Cy*Cx, Cd, 0, 0)!=0) return -1;
 		printf("Init dev; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
@@ -541,13 +523,13 @@ int client8() {
 
 		//-- cpu run
 		start=timeGetTime();
-		if (MbyMcomp(cublasH, Ay, Ax, 1, trA, Ah, By, Bx, 1, trB, Bh, Ch, Th, false)!=0) return -1;
+		if (MbyMcomp(Alg->cublasH, Ay, Ax, 1, trA, Ah, By, Bx, 1, trB, Bh, Ch, Th, false)!=0) return -1;
 		printf("CPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 		//mprint(Ay, Ax, Ah, "Ah"); mprint(By, Bx, Bh, "Bh"); mprint(Cy, Cx, Ch, "Ch");
 
 		//-- gpu run
 		start=timeGetTime();
-		if (MbyMcomp(cublasH, Ay, Ax, 1, trA, Ad, By, Bx, 1, trB, Bd, Cd, Td, true)!=0) return -1;
+		if (MbyMcomp(Alg->cublasH, Ay, Ax, 1, trA, Ad, By, Bx, 1, trB, Bd, Cd, Td, true)!=0) return -1;
 		printf("GPU run; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 		//-- copy results dev->host, and compare
@@ -575,14 +557,12 @@ int client8() {
 		printf("Result: %s\n", (success) ? "SUCCESS" : "FAILURE");
 
 	}
+	return 0;
 }
 int client9() {
-	void* cublasH=new void*;
-	void* cuRandH=new void*;
-	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
 	DWORD start, end;
 
-	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
+	Algebra* Alg=new Algebra();
 
 	int Ay=3, Ax=2; bool trA=false;
 	int By=4, Bx=2; bool trB=true;
@@ -606,12 +586,12 @@ int client9() {
 	for (int test=0; test<10; test++) {
 
 		//-- init dev
-		if (VinitRnd(Ay*Ax, Ad, -1, 1, cuRandH)!=0) return -1;
-		if (VinitRnd(By*Bx, Bd, -1, 1, cuRandH)!=0) return -1;
+		if (VinitRnd(Ay*Ax, Ad, -1, 1, Alg->cuRandH)!=0) return -1;
+		if (VinitRnd(By*Bx, Bd, -1, 1, Alg->cuRandH)!=0) return -1;
 
 		start=timeGetTime();
 		//-- run test
-		ret = MbyMcompare(cublasH, Ay, Ax, 1, trA, Ad, By, Bx, 1, trB, Bd, Cy, Cx, Cd, Td);
+		ret = MbyMcompare(Alg->cublasH, Ay, Ax, 1, trA, Ad, By, Bx, 1, trB, Bd, Cy, Cx, Cd, Td);
 		printf("Test %d %s\n", test, (ret==0) ? "SUCCESS" : "FAILURE");
 
 	}
@@ -644,7 +624,7 @@ int runNN(tDebugInfo* DebugParms, int NetPid, int NetTid, int NetEpoch, int samp
 	numtype* runWh=(numtype*)malloc(ruNN->weightsCntTotal*sizeof(numtype));
 	if( LogLoadW(DebugParms, NetPid, NetTid, NetEpoch, ruNN->weightsCntTotal, runWh) !=0) return -1;
 	ruNN->run(runWh, samplesCnt, runSample, runTarget, Oforecast);
-
+	return -1;
 }
 int main() {
 

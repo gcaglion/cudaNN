@@ -6,6 +6,24 @@
 #include <time.h>
 #include <math.h>
 
+#ifdef USE_GPU
+#include "../MyCU/MyCU.h"
+#endif
+
+//-- Exceptions
+#define FAIL_INITCUDA "CUDA Initialization Failed. \n"
+#define FAIL_INITCUBLAS "CUBLAS Initialization Failed. \n"
+#define FAIL_INITCU "CUDA/CUBLAS Initialization Failed. \n"
+#define FAIL_CUDAMALLOC "CUDA malloc failed. \n"
+#define FAIL_MALLOC_N "Neurons memory allocation failed. \n"
+#define FAIL_MALLOC_W "Weights memory allocation failed. \n"
+#define FAIL_FREE_N "Neurons memory free failed. \n"
+#define FAIL_FREE_S "Scalar memory free failed. \n"
+#define FAIL_FREE_W "Weights memory free failed. \n"
+#define FAIL_MALLOC_e "Errors memory allocation failed. \n"
+#define FAIL_MALLOC_u "Targets memory allocation failed. \n"
+#define FAIL_MALLOC_SCALAR "Scalars memory allocation failed. \n"
+
 typedef struct s_matrix {
 	int my;
 	int mx;
@@ -120,17 +138,12 @@ EXPORT int Vsum(int Vlen, int* V);
 EXPORT void Vscale(int Vlen, int* V, float s);
 //--
 
-//-- scalar functions
-EXPORT int Sadd(numtype* s1, numtype* s2, numtype* ssum);
-
 //-- vector functions
 EXPORT int Vscale(int vlen, numtype* v, numtype s);
 EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2);
 EXPORT int Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
 EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
-EXPORT int Vsum(int Vlen, numtype* V, numtype* oSum, numtype* ss_d);
-EXPORT int Vssum(void* cublasH, int Vlen, numtype* V, numtype* osSum, numtype* ss_d=nullptr);
-EXPORT int Vnorm(void* cublasH, int Vlen, numtype* V, numtype* oVnorm, numtype* ss_d);
+EXPORT int Vssum(int vlen, numtype* v, numtype* ovssum);
 EXPORT int Vinit(int size, numtype* v, numtype start, numtype inc);
 EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH=NULL);
 EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV);
@@ -138,14 +151,9 @@ EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV);
 
 //-- matrix functions
 EXPORT int Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm);
-EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T=nullptr);
-EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T=nullptr);
 
-EXPORT int myMemInit(void* cublasH, void* cuRandH, void* cuStream[]);
 EXPORT int myMalloc(numtype** var, int size);
 EXPORT int myFree(numtype* var);
-
-EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
 
 EXPORT int dumpArray(int vlen, numtype* v, const char* fname);
 EXPORT int loadArray(int vlen, numtype* v, const char* fname);
@@ -160,7 +168,24 @@ EXPORT int SoftPlus(int Vlen, numtype* in, numtype* out);
 EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out);
 
 EXPORT int VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu);
-EXPORT int Vssumcomp(void* cublasH, int Vlen, numtype* V, numtype* osSum, numtype* ss_d, bool usegpu);
 EXPORT int Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtype scale2, numtype* oV, bool usegpu);
 EXPORT int MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu);
 EXPORT int MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T);
+
+typedef struct s_Algebra {
+	void* cublasH;
+	void* cuRandH;
+	void* cuStream[MAX_STREAMS];
+	numtype* ss;	// shared scalar
+
+	//-- class constructor/destructor
+	EXPORT s_Algebra();
+	~s_Algebra();
+
+	//-- class methods
+	EXPORT int MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);
+	//-- CPU<->GPU transfer functions
+	EXPORT int h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
+	EXPORT int d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
+} Algebra;
+

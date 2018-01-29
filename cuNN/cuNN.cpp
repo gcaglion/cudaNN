@@ -62,11 +62,8 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	InputCount=sampleLen_*featuresCnt_*batchSamplesCnt;
 	OutputCount=predictionLen_*featuresCnt_*batchSamplesCnt;
 
-	//-- 0. init CUDA/BLAS
-	cublasH=new void*;
-	cuRandH=new void*;
-	for (int i=0; i<CUDA_MAX_STREAMS; i++) cuStream[i]=new void*;
-	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
+	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
+	Alg=new Algebra();
 
 	//-- x. set Activation function (also sets scaleMin / scaleMax)
 	setActivationFunction(ActivationFunction_);
@@ -82,32 +79,30 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	if (myMalloc(&W, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&dW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&dJdW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
-	if (myMalloc(&TMP, weightsCnt[0])!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_e;
 	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_u;
 
 	//-- device-based scalar value, to be used by reduction functions (sum, ssum, ...)
-	if (myMalloc(&ss, 1)!=0) throw FAIL_MALLOC_SCALAR;
+	if (myMalloc(&se,  1)!=0) throw FAIL_MALLOC_SCALAR;
+	if (myMalloc(&tse, 1)!=0) throw FAIL_MALLOC_SCALAR;
 
 }
 sNN::~sNN() {
-	if (myFree(a)!=0) throw FAIL_FREE_N;
-	if (myFree(F)!=0) throw FAIL_FREE_N;
-	if (myFree(dF)!=0) throw FAIL_FREE_N;
-	if (myFree(edF)!=0) throw FAIL_FREE_N;
-	if (myFree(W)!=0) throw FAIL_FREE_W;
-	if (myFree(dW)!=0) throw FAIL_FREE_W;
-	if (myFree(dJdW)!=0) throw FAIL_FREE_W;
-	if (myFree(TMP)!=0) throw FAIL_FREE_W;
-	if (myFree(e)!=0) throw FAIL_FREE_N;
-	if (myFree(u)!=0) throw FAIL_FREE_N;
-	if(myFree(ss)!=0) throw FAIL_FREE_S;
+	myFree(a);
+	myFree(F);
+	myFree(dF);
+	myFree(edF);
+	myFree(W);
+	myFree(dW);
+	myFree(dJdW);
+	myFree(e);
+	myFree(u);
+	myFree(se);
+	myFree(tse);
 
 	//free(weightsCnt);
 	//free(a);  free(F); free(dF); free(edF);
 	//free(W);
-	//.....
-	// free cublasH, cuRandH, curanddestroygenerator...
 	free(mseT); free(mseV);
 
 }
@@ -223,8 +218,9 @@ int sNN::Activate(int level) {
 int sNN:: calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
 	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
-	if (Vssum(cublasH, nodesCnt[levelsCnt-1], e, &se, ss)!=0) return -1;							// se=ssum(e) 
-	tse+=se;
+	if (Vssum(nodesCnt[levelsCnt-1], e, se)!=0) return -1;											// se=ssum(e) 
+	if (Vadd(1, tse, 1, se, 1, tse)!=0) return -1;													// tse+=se;
+	
 	return 0;
 }
 int sNN::train(numtype* sample, numtype* target) {
@@ -266,16 +262,12 @@ int sNN::train(numtype* sample, numtype* target) {
 	if (Vinit(weightsCntTotal, dJdW, 0, 0)!=0) return -1;
 
 	//---- 0.2. Init W
-	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), cuRandH);
+	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
 	//dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
 	//loadArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
 
-
 	//---- 0.3. Init dW
 	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
-
-	//-- temp . TO BE DELETED!!!
-	numtype* eh=(numtype*)malloc(nodesCnt[levelsCnt-1]*sizeof(numtype));
 
 	//-- 1. for every epoch, calc and display MSE
 	for(epoch=0; epoch<MaxEpochs; epoch++) {
@@ -284,15 +276,15 @@ int sNN::train(numtype* sample, numtype* target) {
 		epoch_starttime=timeGetTime();
 
 		//-- 1.0. reset epoch tse
-		tse=0;
+		if(Vinit(1, tse, 0, 0)!=0) return -1;
 
 		//-- 1.1. train one batch at a time
 		for (int b=0; b<batchCnt; b++) {
 
 			//-- 1.1.1.  load samples + targets onto GPU
 			LDstart=timeGetTime(); LDcnt++;
-			if (loadBatchData(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype), cuStream )!=0) return -1;
-			if (loadBatchData(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype), cuStream )!=0) return -1;
+			if (Alg->h2d(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype), true )!=0) return -1;
+			if (Alg->h2d(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype), true )!=0) return -1;
 			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
 			//-- 1.1.2. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
@@ -305,7 +297,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				int Bx=sc;
 				numtype* B=&F[levelFirstNode[l]];
 				numtype* C=&a[levelFirstNode[l+1]];
-				if (MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, false, B, C, TMP)!=0) return -1;
+				if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C)!=0) return -1;
 
 				//-- activation sets F[l+1] and dF[l+1]
 				if(Activate(l+1)!=0) return -1;
@@ -321,10 +313,11 @@ int sNN::train(numtype* sample, numtype* target) {
 			VDstart=timeGetTime(); VDcnt++;
 			if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
 			VDtimeTot+=((DWORD)(timeGetTime()-VDstart));
+
 			VSstart=timeGetTime(); VScnt++;
-			if (Vssum(cublasH, nodesCnt[levelsCnt-1], e, &se, ss)!=0) return -1;							// se=ssum(e) 
+			if (Vssum(nodesCnt[levelsCnt-1], e, se)!=0) return -1;											// se=ssum(e) 
+			if (Vadd(1, tse, 1, se, 1, tse)!=0) return -1;													// tse+=se;
 			VStimeTot+=((DWORD)(timeGetTime()-VSstart));
-			tse+=se;
 
 			//CEstart=timeGetTime(); CEcnt++;
 			//if (calcErr()!=0) return -1;
@@ -351,7 +344,7 @@ int sNN::train(numtype* sample, numtype* target) {
 					Cstart=levelFirstNode[l];
 					C=&edF[Cstart];
 
-					if (MbyM(cublasH, Ay, Ax, 1, true, A, By, Bx, 1, false, B, C, TMP)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
+					if (Alg->MbyM(Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
 					if( VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]) !=0) return -1;	// edF(l) = edF(l) * dF(l)
 				}
 				
@@ -370,7 +363,7 @@ int sNN::train(numtype* sample, numtype* target) {
 				C=&dJdW[Cstart];
 
 				// dJdW(l-1) = edF(l) * F(l-1)
-				if( MbyM(cublasH, Ay, Ax, 1, false, A, By, Bx, 1, true, B, C, TMP) !=0) return -1;
+				if(Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, true, B, C) !=0) return -1;
 
 			}
 			BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
@@ -391,7 +384,9 @@ int sNN::train(numtype* sample, numtype* target) {
 
 
 		//-- 1.1. calc and display MSE
-		mseT[epoch]=tse/batchCnt/nodesCnt[levelsCnt-1];
+		numtype tse_h;
+		Alg->d2h(&tse_h, tse, sizeof(numtype));
+		mseT[epoch]=tse_h/batchCnt/nodesCnt[levelsCnt-1];
 		mseV[epoch]=0;	// TO DO !
 		printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, Validation MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], mseV[epoch], (timeGetTime()-epoch_starttime));
 		if (mseT[epoch]<TargetMSE) break;

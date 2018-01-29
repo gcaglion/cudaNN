@@ -40,11 +40,46 @@ EXPORT int initCUstreams(void* cuStream[]) {
 	}
 	return 0;
 }
+
 EXPORT int Malloc_cu(numtype** var, int size) {
 	return ((cudaMalloc(var, size*sizeof(numtype))==cudaSuccess) ? 0 : -1);
 }
 EXPORT int Free_cu(numtype* var) {
 	return (cudaFree(var));
+}
+
+//-- CPU<->GPU transfer functions
+EXPORT int h2d_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
+	if(cuStream==nullptr) {
+		return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyHostToDevice)==cudaSuccess)?0:-1);
+	} else {
+		int streamSize=size/sizeof(numtype)/MAX_STREAMS;
+		size_t streamBytes=streamSize*sizeof(numtype);
+		for (int s=0; s<MAX_STREAMS; s++) {
+			int offset=s*streamSize;
+			if (cudaMemcpyAsync(&destAddr[offset], &srcAddr[offset], streamBytes, cudaMemcpyHostToDevice, (*(cudaStream_t*)cuStream[s]))!=cudaSuccess) {
+				printf("s=%d ; CUDA error %d\n", s, cudaGetLastError());
+				return -1;
+			}
+		}
+		return 0;
+	}
+}
+EXPORT int d2h_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
+	if (cuStream==nullptr) {
+		return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyDeviceToHost)==cudaSuccess) ? 0 : -1);
+	} else {
+		int streamSize=size/sizeof(numtype)/MAX_STREAMS;
+		size_t streamBytes=streamSize*sizeof(numtype);
+		for (int s=0; s<MAX_STREAMS; s++) {
+			int offset=s*streamSize;
+			if (cudaMemcpyAsync(&destAddr[offset], &srcAddr[offset], streamBytes, cudaMemcpyDeviceToHost, (*(cudaStream_t*)cuStream[s]))!=cudaSuccess) {
+				printf("s=%d ; CUDA error %d\n", s, cudaGetLastError());
+				return -1;
+			}
+		}
+		return 0;
+	}
 }
 
 __global__	void initGPUData_ker(float *data, int numElements, float value) {
@@ -109,7 +144,7 @@ EXPORT int cuMtr_cublas(void* cublasH, int my, int mx, numtype* m, numtype* otm)
 	return 0;
 }
 
-EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T) {
+EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C) {
 
 	float *alpha = &Ascale;
 	float *beta = &Bscale;
@@ -284,15 +319,13 @@ EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum, numtype* ss_d) {
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
 
-EXPORT int Vssum_cu(void* cublasH, int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
+EXPORT int Vssum_cu(int vlen, numtype* v, numtype* ovssum) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
 	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
 
-	cuVssum_ker<<< gridDim, blockDim>>> (vlen, v, ss_d);
-
-	if (cudaMemcpy(ovssum, ss_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+	cuVssum_ker<<< gridDim, blockDim>>> (vlen, v, ovssum);
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
@@ -301,13 +334,7 @@ EXPORT int Vssum_cu_cublas(void* cublasH, int Vlen, numtype* V, numtype* oVssum,
 	(*oVssum)=(*oVssum)*(*oVssum);
 	return 0;
 }
-EXPORT int Vssum_cu_host(void* cublasH, int Vlen, numtype* V, numtype* oVssum, numtype* ss_d) {
-	numtype* eh=ss_d;
-	if (cudaMemcpy(eh, V, Vlen*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
-	(*oVssum)=0;
-	for (int i=0; i<Vlen; i++) (*oVssum)+=eh[i]*eh[i];
-	return 0;
-}
+
 EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm, numtype* ss_d) {
 	if (cublasSnrm2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVnorm)!=CUBLAS_STATUS_SUCCESS) return -1;
 	if (cudaMemcpy(oVnorm, ss_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;

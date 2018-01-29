@@ -4,20 +4,6 @@
 #include "../MyUtils/MyUtils.h"
 #include "../MyAlgebra/MyAlgebra.h"
 
-//-- Exceptions
-#define FAIL_INITCUDA "CUDA Initialization Failed. \n"
-#define FAIL_INITCUBLAS "CUBLAS Initialization Failed. \n"
-#define FAIL_INITCU "CUDA/CUBLAS Initialization Failed. \n"
-#define FAIL_CUDAMALLOC "CUDA malloc failed. \n"
-#define FAIL_MALLOC_N "Neurons memory allocation failed. \n"
-#define FAIL_MALLOC_W "Weights memory allocation failed. \n"
-#define FAIL_FREE_N "Neurons memory free failed. \n"
-#define FAIL_FREE_S "Scalar memory free failed. \n"
-#define FAIL_FREE_W "Weights memory free failed. \n"
-#define FAIL_MALLOC_e "Errors memory allocation failed. \n"
-#define FAIL_MALLOC_u "Targets memory allocation failed. \n"
-#define FAIL_MALLOC_SCALAR "Scalars memory allocation failed. \n"
-
 #define MLP 0
 #define RNN 1
 #define MAX_LEVELS 8
@@ -41,12 +27,10 @@
 #define BP_SCGD			4 // Scaled Conjugate Gradient Descent
 #define BP_LM			5 // Levenberg-Marquardt
 
-#define CUDA_MAX_STREAMS 32	// need to reconcile with MAX_STREAMS in MyCU.h!!
-
 typedef struct sNN {
-	void* cublasH;
-	void* cuRandH;
-	void* cuStream[CUDA_MAX_STREAMS];
+
+	//-- MyAlgebra common structures
+	Algebra* Alg;
 
 	//-- every instantiation has 1 process id and 1 thread id (TO BE CONFIRMED)
 	int pid;
@@ -82,6 +66,7 @@ typedef struct sNN {
 	//-- NNParms
 	int ActivationFunction;
 	int MaxEpochs;
+	int ActualEpochs;
 	float TargetMSE;
 	bool StopOnReverse;	// stops training if MSE turns upwards
 	int NetSaveFreq;	// saves network weights every <n> epochs
@@ -98,15 +83,13 @@ typedef struct sNN {
 	numtype* dJdW;
 	numtype* e;
 	numtype* u;
-	numtype* TMP;	// used to transpose matrices before multiplication. sized as weightsCnt[0]
 
 	//-- error measuring
-	numtype tse;	// total squared error
-	numtype se;		// squared sum e
+	numtype* tse;	// total squared error.	Scalar. On GPU (if used)
+	numtype* se;	// squared sum error.	Scalar. On GPU (if used)
+	//--
 	numtype* mseT;	// Training mean squared error, array indexed by epoch, always on host
 	numtype* mseV;	// Validation mean squared error, array indexed by epoch, always on host
-	numtype* ss;	// device-side shared scalar value, to be used to calc any of the above
-	int ActualEpochs;
 
 	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_);
 	EXPORT ~sNN();

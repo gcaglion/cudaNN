@@ -17,8 +17,12 @@ EXPORT int initCUstreams(void* cuStream[]);
 EXPORT int Malloc_cu(numtype** var, int size);
 EXPORT int Free_cu(numtype* var);
 
+//-- CPU<->GPU transfer functions
+EXPORT int h2d_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
+EXPORT int d2h_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
+
 EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
-EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T);
+EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C);
 
 //-- scalar functions
 EXPORT int Sadd_cu(numtype* s1, numtype* s2, numtype* ssum);
@@ -29,8 +33,7 @@ EXPORT int Vcopy_cu(int vlen, numtype* v1, numtype* v2);
 EXPORT int Vadd_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
 EXPORT int Vdiff_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
 EXPORT int Vsum_cu(int Vlen, numtype* V, numtype* oSum, numtype* ss_d);
-EXPORT int Vssum_cu(void* cublasH, int Vlen, numtype* V, numtype* oVssum, numtype* ss_d);
-EXPORT int Vssum_cu_orig(int vlen, numtype* v, numtype* ovssum, numtype* ss_d);
+EXPORT int Vssum_cu(int Vlen, numtype* V, numtype* oVssum);
 EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V, numtype* oVnorm, numtype* ss_d);
 EXPORT int Vinit_cu(int vlen, numtype* v, numtype start, numtype inc);
 EXPORT int VbyV2V_cu(int vlen, numtype* v1, numtype* v2, numtype* ov);
