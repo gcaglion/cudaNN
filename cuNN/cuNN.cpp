@@ -65,7 +65,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	//-- 0. init CUDA/BLAS
 	cublasH=new void*;
 	cuRandH=new void*;
-	for (int i=0; i<4; i++) cuStream[i]=new void*;
+	for (int i=0; i<CUDA_MAX_STREAMS; i++) cuStream[i]=new void*;
 	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
 
 	//-- x. set Activation function (also sets scaleMin / scaleMax)
@@ -233,6 +233,9 @@ int sNN::train(numtype* sample, numtype* target) {
 	DWORD batch_starttime, epoch_starttime;
 	DWORD LDstart, LDtimeTot=0, LDcnt=0; float LDtimeAvg;
 	DWORD FFstart, FFtimeTot=0, FFcnt=0; float FFtimeAvg;
+	DWORD CEstart, CEtimeTot=0, CEcnt=0; float CEtimeAvg;
+	DWORD VDstart, VDtimeTot=0, VDcnt=0; float VDtimeAvg;
+	DWORD VSstart, VStimeTot=0, VScnt=0; float VStimeAvg;
 	DWORD BPstart, BPtimeTot=0, BPcnt=0; float BPtimeAvg;
 
 	DWORD training_starttime=timeGetTime();
@@ -271,6 +274,8 @@ int sNN::train(numtype* sample, numtype* target) {
 	//---- 0.3. Init dW
 	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
 
+	//-- temp . TO BE DELETED!!!
+	numtype* eh=(numtype*)malloc(nodesCnt[levelsCnt-1]*sizeof(numtype));
 
 	//-- 1. for every epoch, calc and display MSE
 	for(epoch=0; epoch<MaxEpochs; epoch++) {
@@ -313,7 +318,17 @@ int sNN::train(numtype* sample, numtype* target) {
 			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
 			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
-			if (calcErr()!=0) return -1;
+			VDstart=timeGetTime(); VDcnt++;
+			if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
+			VDtimeTot+=((DWORD)(timeGetTime()-VDstart));
+			VSstart=timeGetTime(); VScnt++;
+			if (Vssum(cublasH, nodesCnt[levelsCnt-1], e, &se, ss)!=0) return -1;							// se=ssum(e) 
+			VStimeTot+=((DWORD)(timeGetTime()-VSstart));
+			tse+=se;
+
+			//CEstart=timeGetTime(); CEcnt++;
+			//if (calcErr()!=0) return -1;
+			//CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
 
 			//-- 1.1.4. BackPropagate, calc dJdW for the whole batch
 			BPstart=timeGetTime(); BPcnt++;
@@ -392,6 +407,9 @@ int sNN::train(numtype* sample, numtype* target) {
 	printf("\nTraining complete. Elapsed time: %0.1f seconds. Epoch average=%0.0f ms.\n", (elapsed_tot/(float)1000), elapsed_avg);
 	LDtimeAvg=(float)LDtimeTot/LDcnt; printf("LD count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", LDcnt, (LDtimeTot/(float)1000), LDtimeAvg);
 	FFtimeAvg=(float)FFtimeTot/FFcnt; printf("FF count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", FFcnt, (FFtimeTot/(float)1000), FFtimeAvg);
+	//CEtimeAvg=(float)CEtimeTot/CEcnt; printf("CE count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", CEcnt, (CEtimeTot/(float)1000), CEtimeAvg);
+	VDtimeAvg=(float)VDtimeTot/VDcnt; printf("VD count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VDcnt, (VDtimeTot/(float)1000), VDtimeAvg);
+	VStimeAvg=(float)VStimeTot/VScnt; printf("VS count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VScnt, (VStimeTot/(float)1000), VStimeAvg);
 	BPtimeAvg=(float)BPtimeTot/LDcnt; printf("BP count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", BPcnt, (BPtimeTot/(float)1000), BPtimeAvg);
 
 	//-- !!! TODO: Proper LogSaveMSE() !!!

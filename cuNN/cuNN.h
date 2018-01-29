@@ -41,10 +41,12 @@
 #define BP_SCGD			4 // Scaled Conjugate Gradient Descent
 #define BP_LM			5 // Levenberg-Marquardt
 
+#define CUDA_MAX_STREAMS 32	// need to reconcile with MAX_STREAMS in MyCU.h!!
+
 typedef struct sNN {
 	void* cublasH;
 	void* cuRandH;
-	void* cuStream[4];
+	void* cuStream[CUDA_MAX_STREAMS];
 
 	//-- every instantiation has 1 process id and 1 thread id (TO BE CONFIRMED)
 	int pid;

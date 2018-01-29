@@ -64,7 +64,7 @@ EXPORT		void initGPUData(float *data, int numElements, float value) {
 }
 
 EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
-	int streamSize=size/MAX_STREAMS;
+	int streamSize=size/sizeof(numtype)/MAX_STREAMS;
 	size_t streamBytes=streamSize*sizeof(numtype);
 	for (int s=0; s<MAX_STREAMS; s++) {
 		int offset=s*streamSize;
@@ -283,7 +283,8 @@ EXPORT int Vsum_cu(int vlen, numtype* v, numtype* ovsum, numtype* ss_d) {
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-EXPORT int Vssum_cu_orig(int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
+
+EXPORT int Vssum_cu(void* cublasH, int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -295,10 +296,16 @@ EXPORT int Vssum_cu_orig(int vlen, numtype* v, numtype* ovssum, numtype* ss_d) {
 
 	return ((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
-
-EXPORT int Vssum_cu(void* cublasH, int Vlen, numtype* V, numtype* oVssum, numtype* ss_d) {
+EXPORT int Vssum_cu_cublas(void* cublasH, int Vlen, numtype* V, numtype* oVssum, numtype* ss_d) {
 	if (cublasSnrm2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVssum)!=CUBLAS_STATUS_SUCCESS) return -1;
 	(*oVssum)=(*oVssum)*(*oVssum);
+	return 0;
+}
+EXPORT int Vssum_cu_host(void* cublasH, int Vlen, numtype* V, numtype* oVssum, numtype* ss_d) {
+	numtype* eh=ss_d;
+	if (cudaMemcpy(eh, V, Vlen*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+	(*oVssum)=0;
+	for (int i=0; i<Vlen; i++) (*oVssum)+=eh[i]*eh[i];
 	return 0;
 }
 EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm, numtype* ss_d) {
