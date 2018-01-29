@@ -6,8 +6,9 @@
 #include <curand.h>
 #include <stdio.h>
 
-#define CUDA_BLOCK_SIZE 256
-#define MAX_STREAMS 32
+#define CUDA_BLOCK_SIZE 64
+
+#define MAX_STREAMS 2
 
 EXPORT int initCUDA();
 EXPORT int initCUBLAS(void* cublasH);

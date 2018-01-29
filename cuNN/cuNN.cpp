@@ -191,7 +191,7 @@ void sNN::setActivationFunction(int func_) {
 
 }
 int sNN::Activate(int level) {
-	// sets dN
+	// sets F, dF
 	int ret, retd;
 	switch (ActivationFunction) {
 	case NN_ACTIVATION_TANH:
@@ -229,6 +229,11 @@ int sNN::train(numtype* sample, numtype* target) {
 	DWORD batch_starttime, epoch_starttime;
 	DWORD LDstart, LDtimeTot=0, LDcnt=0; float LDtimeAvg;
 	DWORD FFstart, FFtimeTot=0, FFcnt=0; float FFtimeAvg;
+	DWORD FF0start, FF0timeTot=0, FF0cnt=0; float FF0timeAvg;
+	DWORD FF1start, FF1timeTot=0, FF1cnt=0; float FF1timeAvg;
+	DWORD FF1astart, FF1atimeTot=0, FF1acnt=0; float FF1atimeAvg;
+	DWORD FF1bstart, FF1btimeTot=0, FF1bcnt=0; float FF1btimeAvg;
+	DWORD FF2start, FF2timeTot=0, FF2cnt=0; float FF2timeAvg;
 	DWORD CEstart, CEtimeTot=0, CEcnt=0; float CEtimeAvg;
 	DWORD VDstart, VDtimeTot=0, VDcnt=0; float VDtimeAvg;
 	DWORD VSstart, VStimeTot=0, VScnt=0; float VStimeAvg;
@@ -243,7 +248,6 @@ int sNN::train(numtype* sample, numtype* target) {
 
 	//-- Change the leading dimension in sample and target, from [Sample][Bar][Feature] to [Bar][Feature][Sample]
 	int sampleCnt=batchCnt*batchSamplesCnt;	// 94
-
 	SBF2BFS(batchCnt, batchSamplesCnt, sampleLen,  featuresCnt, sample);
 	SBF2BFS(batchCnt, batchSamplesCnt, predictionLen, featuresCnt, target);
 
@@ -297,31 +301,29 @@ int sNN::train(numtype* sample, numtype* target) {
 				int Bx=sc;
 				numtype* B=&F[levelFirstNode[l]];
 				numtype* C=&a[levelFirstNode[l+1]];
+
+				FF0start=timeGetTime(); FF0cnt++;
 				if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C)!=0) return -1;
+				FF0timeTot+=((DWORD)(timeGetTime()-FF0start));
 
 				//-- activation sets F[l+1] and dF[l+1]
+				FF1start=timeGetTime(); FF1cnt++;
 				if(Activate(l+1)!=0) return -1;
+				FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
 
 				//-- feed back to context neurons
+				//FF2start=timeGetTime(); FF2cnt++;
 				if (useContext) {
 					Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
 				}
+				//FF2timeTot+=((DWORD)(timeGetTime()-FF2start));
 			}
 			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
 			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
-			VDstart=timeGetTime(); VDcnt++;
-			if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
-			VDtimeTot+=((DWORD)(timeGetTime()-VDstart));
-
-			VSstart=timeGetTime(); VScnt++;
-			if (Vssum(nodesCnt[levelsCnt-1], e, se)!=0) return -1;											// se=ssum(e) 
-			if (Vadd(1, tse, 1, se, 1, tse)!=0) return -1;													// tse+=se;
-			VStimeTot+=((DWORD)(timeGetTime()-VSstart));
-
-			//CEstart=timeGetTime(); CEcnt++;
-			//if (calcErr()!=0) return -1;
-			//CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
+			CEstart=timeGetTime(); CEcnt++;
+			if (calcErr()!=0) return -1;
+			CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
 
 			//-- 1.1.4. BackPropagate, calc dJdW for the whole batch
 			BPstart=timeGetTime(); BPcnt++;
@@ -388,7 +390,8 @@ int sNN::train(numtype* sample, numtype* target) {
 		Alg->d2h(&tse_h, tse, sizeof(numtype));
 		mseT[epoch]=tse_h/batchCnt/nodesCnt[levelsCnt-1];
 		mseV[epoch]=0;	// TO DO !
-		printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, Validation MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], mseV[epoch], (timeGetTime()-epoch_starttime));
+		//printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, Validation MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], mseV[epoch], (timeGetTime()-epoch_starttime));
+		printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], (timeGetTime()-epoch_starttime));
 		if (mseT[epoch]<TargetMSE) break;
 		if((StopOnReverse && epoch>0 && mseT[epoch]>mseT[epoch-1]) ) break;
 		if ((epoch%NetSaveFreq)==0) {
@@ -402,9 +405,14 @@ int sNN::train(numtype* sample, numtype* target) {
 	printf("\nTraining complete. Elapsed time: %0.1f seconds. Epoch average=%0.0f ms.\n", (elapsed_tot/(float)1000), elapsed_avg);
 	LDtimeAvg=(float)LDtimeTot/LDcnt; printf("LD count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", LDcnt, (LDtimeTot/(float)1000), LDtimeAvg);
 	FFtimeAvg=(float)FFtimeTot/FFcnt; printf("FF count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", FFcnt, (FFtimeTot/(float)1000), FFtimeAvg);
-	//CEtimeAvg=(float)CEtimeTot/CEcnt; printf("CE count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", CEcnt, (CEtimeTot/(float)1000), CEtimeAvg);
-	VDtimeAvg=(float)VDtimeTot/VDcnt; printf("VD count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VDcnt, (VDtimeTot/(float)1000), VDtimeAvg);
-	VStimeAvg=(float)VStimeTot/VScnt; printf("VS count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VScnt, (VStimeTot/(float)1000), VStimeAvg);
+	FF0timeAvg=(float)FF0timeTot/FF0cnt; printf("FF0 count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", FF0cnt, (FF0timeTot/(float)1000), FF0timeAvg);
+	FF1timeAvg=(float)FF1timeTot/FF1cnt; printf("FF1 count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", FF1cnt, (FF1timeTot/(float)1000), FF1timeAvg);
+	//FF1atimeAvg=(float)FF1atimeTot/FF1acnt; printf("FF1a count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", FF1acnt, (FF1atimeTot/(float)1000), FF1atimeAvg);
+	//FF1btimeAvg=(float)FF1btimeTot/FF1bcnt; printf("FF1b count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", FF1bcnt, (FF1btimeTot/(float)1000), FF1btimeAvg);
+	//FF2timeAvg=(float)FF2timeTot/FF2cnt; printf("FF2 count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", FF2cnt, (FF2timeTot/(float)1000), FF2timeAvg);
+	CEtimeAvg=(float)CEtimeTot/CEcnt; printf("CE count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", CEcnt, (CEtimeTot/(float)1000), CEtimeAvg);
+	//VDtimeAvg=(float)VDtimeTot/VDcnt; printf("VD count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VDcnt, (VDtimeTot/(float)1000), VDtimeAvg);
+	//VStimeAvg=(float)VStimeTot/VScnt; printf("VS count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VScnt, (VStimeTot/(float)1000), VStimeAvg);
 	BPtimeAvg=(float)BPtimeTot/LDcnt; printf("BP count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", BPcnt, (BPtimeTot/(float)1000), BPtimeAvg);
 
 	//-- !!! TODO: Proper LogSaveMSE() !!!

@@ -386,39 +386,55 @@ EXPORT int VinitRnd_cu(int vlen, numtype* v, numtype rndmin, numtype rndmax, voi
 }
 
 __global__ void cuTanh_ker(int vlen, numtype* in, numtype* out) {
-	int i = blockIdx.x*blockDim.x+threadIdx.x;
-	if (i<vlen) out[i] = tanh(in[i]);
+	int i = threadIdx.x+blockIdx.x * blockDim.x;
+	out[i] = tanhf(in[i]);
 }
 __global__ void cudTanh_ker(int vlen, numtype* in, numtype* out) {
+	int i = threadIdx.x+blockIdx.x * blockDim.x;
+	out[i] = 1-tanhf(in[i])*tanhf(in[i]);
+}
+__global__ void ORIG_cuTanh_ker(int vlen, numtype* in, numtype* out) {
 	int i = blockIdx.x*blockDim.x+threadIdx.x;
-	if (i<vlen) out[i] = 1-tanh(in[i])*tanh(in[i]);
+	if (i<vlen) out[i] = tanhf(in[i]);
+}
+__global__ void ORIG_cudTanh_ker(int vlen, numtype* in, numtype* out) {
+	int i = blockIdx.x*blockDim.x+threadIdx.x;
+	if (i<vlen) out[i] = 1-tanhf(in[i])*tanhf(in[i]);
 }
 __global__ void cuExp4_ker(int vlen, numtype* in, numtype* out) {
-	int i = blockIdx.x*blockDim.x+threadIdx.x;
-	if (i<vlen) out[i] = 1/(1+exp(-4*in[i]));
+	int i = threadIdx.x+blockIdx.x * blockDim.x;
+	out[i] = 1/(1+exp(-4*in[i]));
 }
 __global__ void cudExp4_ker(int vlen, numtype* in, numtype* out) {
-	int i = blockIdx.x*blockDim.x+threadIdx.x;
-	if (i<vlen) out[i] = 4*exp(4*in[i])/(pow(exp(4*in[i])+1, 2));
+	int i = threadIdx.x+blockIdx.x * blockDim.x;
+	out[i] = 4*exp(4*in[i])/(pow(exp(4*in[i])+1, 2));
 }
 __global__ void cuRelu_ker(int vlen, numtype* in, numtype* out) {
-	int i = blockIdx.x*blockDim.x+threadIdx.x;
-	if (i<vlen) out[i] = ((in[i] > 0) ? 1 : 0);
+	int i = threadIdx.x+blockIdx.x * blockDim.x;
+	out[i] = ((in[i] > 0) ? 1 : 0);
 }
 __global__ void cudRelu_ker(int vlen, numtype* in, numtype* out) {
-	int i = blockIdx.x*blockDim.x+threadIdx.x;
-	if (i<vlen) out[i] = ((in[i] > 0) ? in[i] : 0);
+	int i = threadIdx.x+blockIdx.x * blockDim.x;
+	out[i] = ((in[i] > 0) ? in[i] : 0);
 }
 __global__ void cuSoftPlus_ker(int vlen, numtype* in, numtype* out) {
-	int i = blockIdx.x*blockDim.x+threadIdx.x;
-	if (i<vlen) out[i] = log(1+exp(in[i]));
+	int i = threadIdx.x+blockIdx.x * blockDim.x;
+	out[i] = log(1+exp(in[i]));
 }
 __global__ void cudSoftPlus_ker(int vlen, numtype* in, numtype* out) {
-	int i = blockIdx.x*blockDim.x+threadIdx.x;
-	if (i<vlen) out[i] = 1/(1+exp(-in[i]));
+	int i = threadIdx.x+blockIdx.x * blockDim.x;
+	out[i] = 1/(1+exp(-in[i]));
 }
 
 EXPORT int Tanh_cu(int vlen, numtype* in, numtype* out) {
+	/*	int blockSize=64; // The launch configurator returned block size
+	int minGridSize; // The minimum grid size needed to achieve the // maximum occupancy for a full device
+	int gridSize; // The actual grid size needed, based on input // size
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, (void*)cudTanh_ker, 0, vlen);
+	// Round up according to array size
+	gridSize = (vlen+blockSize-1)/blockSize;
+	cudTanh_ker<<< gridSize, blockSize>>> (vlen, in, out);
+	*/
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -429,6 +445,14 @@ EXPORT int Tanh_cu(int vlen, numtype* in, numtype* out) {
 	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
 }
 EXPORT int dTanh_cu(int vlen, numtype* in, numtype* out) {
+/*	int blockSize=64; // The launch configurator returned block size
+	int minGridSize; // The minimum grid size needed to achieve the // maximum occupancy for a full device 
+	int gridSize; // The actual grid size needed, based on input // size 
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, (void*)cudTanh_ker, 0, vlen);
+	// Round up according to array size 
+	gridSize = (vlen+blockSize-1)/blockSize;
+	cudTanh_ker<<< gridSize, blockSize>>> (vlen, in, out);
+*/
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -443,7 +467,6 @@ EXPORT int Exp4_cu(int vlen, numtype* in, numtype* out) {
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
 	gridDim.x = (vlen+blockDim.x-1)/blockDim.x;
-
 	cuExp4_ker<<< gridDim, blockDim>>> (vlen, in, out);
 
 	return((cudaGetLastError()==cudaSuccess) ? 0 : -1);
