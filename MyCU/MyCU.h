@@ -7,15 +7,17 @@
 #include <stdio.h>
 
 #define CUDA_BLOCK_SIZE 1024
+#define MAX_STREAMS 4
 
 EXPORT int initCUDA();
 EXPORT int initCUBLAS(void* cublasH);
 EXPORT int initCURand(void* cuRandH);
+EXPORT int initCUstreams(void* cuStream[]);
 
 EXPORT int Malloc_cu(numtype** var, int size);
 EXPORT int Free_cu(numtype* var);
 
-EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size);
+EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
 EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T);
 
 //-- scalar functions

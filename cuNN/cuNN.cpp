@@ -65,7 +65,8 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	//-- 0. init CUDA/BLAS
 	cublasH=new void*;
 	cuRandH=new void*;
-	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+	for (int i=0; i<4; i++) cuStream[i]=new void*;
+	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
 
 	//-- x. set Activation function (also sets scaleMin / scaleMax)
 	setActivationFunction(ActivationFunction_);
@@ -285,8 +286,8 @@ int sNN::train(numtype* sample, numtype* target) {
 
 			//-- 1.1.1.  load samples + targets onto GPU
 			LDstart=timeGetTime(); LDcnt++;
-			if (loadBatchData(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype) )!=0) return -1;
-			if (loadBatchData(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype) )!=0) return -1;
+			if (loadBatchData(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype), cuStream )!=0) return -1;
+			if (loadBatchData(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype), cuStream )!=0) return -1;
 			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
 			//-- 1.1.2. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )

@@ -34,7 +34,12 @@ EXPORT int initCURand(void* cuRandH) {
 	if (curandSetPseudoRandomGeneratorSeed((*(curandGenerator_t*)cuRandH), 1234ULL)!=CURAND_STATUS_SUCCESS) return -1;
 	return 0;
 }
-
+EXPORT int initCUstreams(void* cuStream[]) {
+	for (int s=0; s<MAX_STREAMS; s++) {
+		if (cudaStreamCreate((cudaStream_t*)cuStream[s])!=cudaSuccess) return -1;
+	}
+	return 0;
+}
 EXPORT int Malloc_cu(numtype** var, int size) {
 	return ((cudaMalloc(var, size*sizeof(numtype))==cudaSuccess) ? 0 : -1);
 }
@@ -58,8 +63,18 @@ EXPORT		void initGPUData(float *data, int numElements, float value) {
 	initGPUData_ker<<< gridDim, blockDim>>> (data, numElements, value);
 }
 
-EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size) {
-	return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyHostToDevice)==cudaSuccess) ? 0 : -1);
+EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
+	int streamSize=size/MAX_STREAMS;
+	size_t streamBytes=streamSize*sizeof(numtype);
+	for (int s=0; s<MAX_STREAMS; s++) {
+		int offset=s*streamSize;
+		if (cudaMemcpyAsync(&destAddr[offset], &srcAddr[offset], streamBytes, cudaMemcpyHostToDevice, (*(cudaStream_t*)cuStream[s]))!=cudaSuccess) {
+			printf("s=%d ; CUDA error %d\n", s, cudaGetLastError());
+			return -1;
+		}
+	}
+	return 0;
+	//return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyHostToDevice)==cudaSuccess) ? 0 : -1);
 }
 EXPORT int dumpArray_cu(int vlen, numtype* v, const char* fname) {
 	numtype* hw=(numtype*)malloc(vlen*sizeof(numtype));

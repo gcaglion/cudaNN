@@ -330,7 +330,9 @@ void client5() {
 	//-- 0. init CUDA/BLAS
 	void* cublasH=new void*;
 	void* cuRandH=new void*;
-	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
+
+	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
 #ifdef USE_GPU
 	//-- load a,b,c onto gpu
 	numtype* da; if (cudaMalloc(&da, 3*unitsize*2*unitsize*sizeof(numtype))!=0) return;
@@ -373,9 +375,10 @@ int client6() {
 
 	void* cublasH=new void*;
 	void* cuRandH=new void*;
-	
+	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
+
 	start=timeGetTime();
-	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
 	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 	
@@ -399,12 +402,13 @@ int client6() {
 int client7() {
 	void* cublasH=new void*;
 	void* cuRandH=new void*;
+	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
 	DWORD start, end;
 	bool success=true;
 	numtype diff1, diff2;
 
 	start=timeGetTime();
-	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
 	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 	int vsize= (1024*10000);
@@ -489,11 +493,12 @@ void mprint(int my, int mx, numtype* m, char* msg=nullptr, int smy0=-1, int smx0
 int client8() {
 	void* cublasH=new void*;
 	void* cuRandH=new void*;
+	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
 	DWORD start, end;
 	bool success=true;
 
 	start=timeGetTime();
-	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
 	printf("memInit(); elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 	int Ay=3, Ax=2; bool trA=false;
@@ -574,9 +579,10 @@ int client8() {
 int client9() {
 	void* cublasH=new void*;
 	void* cuRandH=new void*;
+	void* cuStream[8]; for (int i=0; i<8; i++) cuStream[i]=new void*;
 	DWORD start, end;
 
-	if (myMemInit(cublasH, cuRandH)!=0) throw FAIL_INITCU;
+	if (myMemInit(cublasH, cuRandH, cuStream)!=0) throw FAIL_INITCU;
 
 	int Ay=3, Ax=2; bool trA=false;
 	int By=4, Bx=2; bool trB=true;

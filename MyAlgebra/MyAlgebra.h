@@ -141,11 +141,11 @@ EXPORT int Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm);
 EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T=nullptr);
 EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T=nullptr);
 
-EXPORT int myMemInit(void* cublasH, void* cuRandH);
+EXPORT int myMemInit(void* cublasH, void* cuRandH, void* cuStream[]);
 EXPORT int myMalloc(numtype** var, int size);
 EXPORT int myFree(numtype* var);
 
-EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size);
+EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
 
 EXPORT int dumpArray(int vlen, numtype* v, const char* fname);
 EXPORT int loadArray(int vlen, numtype* v, const char* fname);

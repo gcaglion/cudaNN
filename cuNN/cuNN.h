@@ -44,6 +44,7 @@
 typedef struct sNN {
 	void* cublasH;
 	void* cuRandH;
+	void* cuStream[4];
 
 	//-- every instantiation has 1 process id and 1 thread id (TO BE CONFIRMED)
 	int pid;

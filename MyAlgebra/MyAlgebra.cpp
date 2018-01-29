@@ -276,11 +276,12 @@ EXPORT int MbyM(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype
 }
 
 //-- memory initialization
-EXPORT int myMemInit(void* cublasH, void* cuRandH) {
+EXPORT int myMemInit(void* cublasH, void* cuRandH, void* cuStream[]) {
 #ifdef USE_GPU
 	if (initCUDA()!=0) return -1;
 	if (initCUBLAS(cublasH)!=0) return -1;
 	if (initCURand(cuRandH)!=0) return -1;
+	if (initCUstreams(cuStream)!=0) return -1;
 	return 0;
 #else
 	return 0;
@@ -302,9 +303,9 @@ EXPORT int myFree(numtype* var) {
 		return 0;
 	#endif
 }
-EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size) {
+EXPORT int loadBatchData(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
 #ifdef USE_GPU
-	return(loadBatchData_cu(destAddr, srcAddr, size));
+	return(loadBatchData_cu(destAddr, srcAddr, size, cuStream));
 #else
 	memcpy(destAddr, srcAddr, size);
 	return 0;
