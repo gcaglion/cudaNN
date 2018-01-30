@@ -1,8 +1,10 @@
 #include "..\CommonEnv.h"
 #include "../MyDebug/mydebug.h"
-#include "../MyTimeSeries/MyTimeSeries.h"
+//#include "../MyTimeSeries/MyTimeSeries.h"
+#include "../TimeSerie/TimeSerie.h"
 #include "..\cuNN\cuNN.h"
 #include "../Logger/Logger.h"
+
 
 #ifdef USE_GPU
 #include <cuda_runtime.h>
@@ -607,32 +609,6 @@ int client9() {
 
 #endif
 
-void SBF2BFS(int db, int ds, int dbar, int df, numtype* iSBFv, numtype* oBFSv) {
-	int i=0;
-	for (int b=0; b<db; b++) {
-		for (int bar=0; bar<dbar; bar++) {
-			for (int f=0; f<df; f++) {
-				for (int s=0; s<ds; s++) {
-					oBFSv[i]=iSBFv[b* ds*dbar*df+s*dbar*df+bar*df+f];
-					i++;
-				}
-			}
-		}
-	}
-}
-void BFS2SBF(int db, int ds, int dbar, int df, numtype* iBFSv, numtype* oSBFv) {
-	int i=0;
-	for (int b=0; b<db; b++) {
-		for (int s=0; s<ds; s++) {
-			for (int bar=0; bar<dbar; bar++) {
-				for (int f=0; f<df; f++) {
-					oSBFv[i]=iBFSv[b* dbar*df*ds+bar*df*ds+f*ds+s];
-					i++;
-				}
-			}
-		}
-	}
-}
 int client10() {
 	int batchCnt=7;
 	int sampleCnt=15;
@@ -644,9 +620,14 @@ int client10() {
 	numtype* BFSv=(numtype*)malloc(vsize*sizeof(numtype));
 	if (Vinit(vsize, SBFv, 0, 1)!=0) return -1;
 
-	SBF2BFS(batchCnt, sampleCnt, barCnt, featuresCnt, SBFv, BFSv);
-	BFS2SBF(batchCnt, sampleCnt, barCnt, featuresCnt, BFSv, SBFv);
+//	SBF2BFS(batchCnt, sampleCnt, barCnt, featuresCnt, SBFv, BFSv);
+//	BFS2SBF(batchCnt, sampleCnt, barCnt, featuresCnt, BFSv, SBFv);
 
+	return 0;
+}
+int client11(){
+	TS* ts1=new TS(1000, 5);
+	if(ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
 	return 0;
 }
 int main() {
@@ -658,7 +639,7 @@ int main() {
 	//client7();
 	//client8();
 	//client9();
-	client10();
+	client11();
 	system("pause");
 	return -1;
 
@@ -713,7 +694,7 @@ int main() {
 	numtype* fTrainSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
 	numtype* fTrainTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
 	numtype* fTrainForecast=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
-
+/*
 	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
 	start=timeGetTime();
 	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201612300000", historyLen, historyData, baseData)<0) return -1;
@@ -726,7 +707,7 @@ int main() {
 	start=timeGetTime();
 	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fTrainSample, predictionLen*featuresCnt, fTrainTarget, 0);
 	printf("fSlideArrayF() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-
+*/
 	//-- Train
 	trNN->train(fTrainSample, fTrainTarget);
 

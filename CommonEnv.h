@@ -9,4 +9,6 @@ typedef float numtype;
 #define EXPORT __declspec(dllexport)
 #endif
 
-//#define USE_GPU
+#define USE_ORCL
+#define USE_GPU
+

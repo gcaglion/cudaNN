@@ -10,6 +10,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cuNN", "cuNN\cuNN.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "Client\Client.vcxproj", "{52C10A87-0476-481B-9E90-2DA4F56B84C9}"
 	ProjectSection(ProjectDependencies) = postProject
+		{579C5067-0D60-4B9B-93C2-532C49483F34} = {579C5067-0D60-4B9B-93C2-532C49483F34}
 		{5E6F766E-BD52-43B1-B006-B2845C9F0947} = {5E6F766E-BD52-43B1-B006-B2845C9F0947}
 		{4579EEB8-1D8C-40D7-9641-1F78E9DDD32E} = {4579EEB8-1D8C-40D7-9641-1F78E9DDD32E}
 		{EDE1D4BF-A838-40B5-B022-FF99CA0A93E2} = {EDE1D4BF-A838-40B5-B022-FF99CA0A93E2}
@@ -33,6 +34,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		DBConnection.h = DBConnection.h
 		filedata.h = filedata.h
 		fxdata.h = fxdata.h
+		MT4data.h = MT4data.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OraUtils", "OraUtils\OraUtils.vcxproj", "{0C5B056C-F33D-4BA0-8572-AC1E3DEF3FBD}"
@@ -50,6 +52,11 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MyUtils", "MyUtils\MyUtils.vcxproj", "{DD0F0A37-4355-417A-B021-FDDC57924F54}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Logger", "Logger\Logger.vcxproj", "{2FA796DB-3BDD-4EBB-8CE1-8E165395264A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TimeSerie", "TimeSerie\TimeSerie.vcxproj", "{579C5067-0D60-4B9B-93C2-532C49483F34}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0C5B056C-F33D-4BA0-8572-AC1E3DEF3FBD} = {0C5B056C-F33D-4BA0-8572-AC1E3DEF3FBD}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -167,6 +174,18 @@ Global
 		{2FA796DB-3BDD-4EBB-8CE1-8E165395264A}.Release|x64.Build.0 = Release|x64
 		{2FA796DB-3BDD-4EBB-8CE1-8E165395264A}.Release|x86.ActiveCfg = Release|Win32
 		{2FA796DB-3BDD-4EBB-8CE1-8E165395264A}.Release|x86.Build.0 = Release|Win32
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.Debug|x64.ActiveCfg = Debug|x64
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.Debug|x64.Build.0 = Debug|x64
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.Debug|x86.ActiveCfg = Debug|Win32
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.Debug|x86.Build.0 = Debug|Win32
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.No_Orcl|x64.ActiveCfg = Release|x64
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.No_Orcl|x64.Build.0 = Release|x64
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.No_Orcl|x86.ActiveCfg = Release|Win32
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.No_Orcl|x86.Build.0 = Release|Win32
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.Release|x64.ActiveCfg = Release|x64
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.Release|x64.Build.0 = Release|x64
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.Release|x86.ActiveCfg = Release|Win32
+		{579C5067-0D60-4B9B-93C2-532C49483F34}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -11,11 +11,14 @@
 #define VOLUME 4
 #define OTHER  5
 
+#define FX_SYMBOL_MAX_LEN 12
+#define FX_TIMEFRAME_MAX_LEN 4
+
 // Database retrieval properties
 typedef struct sFXData {
 	tDBConnection* FXDB;
-	char Symbol[12];
-	char TimeFrame[4];
+	char Symbol[FX_SYMBOL_MAX_LEN];
+	char TimeFrame[FX_TIMEFRAME_MAX_LEN];
 	int IsFilled;
 	int BarDataTypeCount;
 	//int BarDataType[MAXBARDATATYPES];
@@ -24,6 +27,14 @@ typedef struct sFXData {
 	sFXData() {
 		FXDB = new tDBConnection();
 		BarDataType = (int*)malloc(MAXBARDATATYPES*sizeof(int));
+	}
+	sFXData(char* FXDBusername, char* FXDBpassword, char* FXDBconnstring, char* symbol_, char* tf_, int isFilled_) {
+		FXDB = new tDBConnection(FXDBusername, FXDBpassword, FXDBconnstring);
+		//BarDataType = (int*)malloc(MAXBARDATATYPES*sizeof(int));
+		BarDataTypeCount=5; BarDataType= new int [5] { OPEN, HIGH, LOW, CLOSE, VOLUME };
+		strcpy_s(Symbol, FX_SYMBOL_MAX_LEN, symbol_);
+		strcpy_s(TimeFrame, FX_TIMEFRAME_MAX_LEN, tf_);
+		IsFilled=isFilled_;
 	}
 
 	~sFXData() {

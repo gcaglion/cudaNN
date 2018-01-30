@@ -7,8 +7,13 @@
 #include <stdio.h>
 
 #define CUDA_BLOCK_SIZE 64
-
 #define MAX_STREAMS 2
+
+//-- CUDA Exceptions
+#define FAIL_INITCUDA "CUDA Initialization Failed. \n"
+#define FAIL_INITCUBLAS "CUBLAS Initialization Failed. \n"
+#define FAIL_INITCU "CUDA/CUBLAS Initialization Failed. \n"
+#define FAIL_CUDAMALLOC "CUDA malloc failed. \n"
 
 EXPORT int initCUDA();
 EXPORT int initCUBLAS(void* cublasH);

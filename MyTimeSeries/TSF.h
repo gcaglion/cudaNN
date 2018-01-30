@@ -2,7 +2,6 @@
 
 //-- TimeSeries Statistical Features
 #define MAX_TSFCOUNT 12
-
 #define TSF_MEAN 0
 #define TSF_MAD 1
 #define TSF_VARIANCE 2

@@ -18,6 +18,8 @@ EXPORT void OraCommit(void* pCtx);
 
 //=== Retrieval functions
 EXPORT int GetFlatBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, float* oBarData, float* oBaseBar);
+EXPORT int Ora_GetFlatOHLCV(tDebugInfo* DebugParms, sql_context pCtx, char* pSymbol, char* pTF, char* pDate0, int pRecCount, float* oBarData, float* oBaseBar);
+
 EXPORT int GetBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, int pSkipFirstN, tBar* oBar);
 EXPORT int GetCharPFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, char* oRet);
 EXPORT int GetStringArrayFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int ArrLen, char** oRet);

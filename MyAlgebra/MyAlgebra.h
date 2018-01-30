@@ -13,10 +13,6 @@
 #endif
 
 //-- Exceptions
-#define FAIL_INITCUDA "CUDA Initialization Failed. \n"
-#define FAIL_INITCUBLAS "CUBLAS Initialization Failed. \n"
-#define FAIL_INITCU "CUDA/CUBLAS Initialization Failed. \n"
-#define FAIL_CUDAMALLOC "CUDA malloc failed. \n"
 #define FAIL_MALLOC_N "Neurons memory allocation failed. \n"
 #define FAIL_MALLOC_W "Weights memory allocation failed. \n"
 #define FAIL_FREE_N "Neurons memory free failed. \n"
