@@ -211,6 +211,7 @@ EXPORT int loadArray(int vlen, numtype* v, const char* fname) {
 		v[i]=fh;
 	}
 	fclose(f);
+	return 0;
 #endif
 }
 

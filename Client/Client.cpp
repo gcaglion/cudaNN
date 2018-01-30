@@ -607,24 +607,47 @@ int client9() {
 
 #endif
 
-int runNN(tDebugInfo* DebugParms, int NetPid, int NetTid, int NetEpoch, int sampleLen, int predictionLen, int featuresCnt, int samplesCnt, numtype* runSample, numtype* runTarget, numtype* Oforecast, char* levelRatioS, int ActivationFunction, bool useContext, bool useBias ){
-	//-- 
-	int batchSamplesCount=1;
-	int batchCount=samplesCnt;
-	//--
-
-	NN* ruNN=nullptr;
-	try {
-		ruNN=new NN(sampleLen, predictionLen, featuresCnt, batchCount, batchSamplesCount, levelRatioS, ActivationFunction, useContext, useBias);
+void SBF2BFS(int db, int ds, int dbar, int df, numtype* iSBFv, numtype* oBFSv) {
+	int i=0;
+	for (int b=0; b<db; b++) {
+		for (int bar=0; bar<dbar; bar++) {
+			for (int f=0; f<df; f++) {
+				for (int s=0; s<ds; s++) {
+					oBFSv[i]=iSBFv[b* ds*dbar*df+s*dbar*df+bar*df+f];
+					i++;
+				}
+			}
+		}
 	}
-	catch (const char* e) {
-		LogWrite(DebugParms, LOG_ERROR, "ruNN creation failed. (%s)\n", 1, e);
+}
+void BFS2SBF(int db, int ds, int dbar, int df, numtype* iBFSv, numtype* oSBFv) {
+	int i=0;
+	for (int b=0; b<db; b++) {
+		for (int s=0; s<ds; s++) {
+			for (int bar=0; bar<dbar; bar++) {
+				for (int f=0; f<df; f++) {
+					oSBFv[i]=iBFSv[b* dbar*df*ds+bar*df*ds+f*ds+s];
+					i++;
+				}
+			}
+		}
 	}
+}
+int client10() {
+	int batchCnt=7;
+	int sampleCnt=15;
+	int barCnt=6;
+	int featuresCnt=4;
 
-	numtype* runWh=(numtype*)malloc(ruNN->weightsCntTotal*sizeof(numtype));
-	if( LogLoadW(DebugParms, NetPid, NetTid, NetEpoch, ruNN->weightsCntTotal, runWh) !=0) return -1;
-	ruNN->run(runWh, samplesCnt, runSample, runTarget, Oforecast);
-	return -1;
+	int vsize=batchCnt*sampleCnt*barCnt*featuresCnt;
+	numtype* SBFv=(numtype*)malloc(vsize*sizeof(numtype));
+	numtype* BFSv=(numtype*)malloc(vsize*sizeof(numtype));
+	if (Vinit(vsize, SBFv, 0, 1)!=0) return -1;
+
+	SBF2BFS(batchCnt, sampleCnt, barCnt, featuresCnt, SBFv, BFSv);
+	BFS2SBF(batchCnt, sampleCnt, barCnt, featuresCnt, BFSv, SBFv);
+
+	return 0;
 }
 int main() {
 
@@ -635,8 +658,9 @@ int main() {
 	//client7();
 	//client8();
 	//client9();
-	//system("pause");
-	//return -1;
+	client10();
+	system("pause");
+	return -1;
 
 	//--
 	tDBConnection* LogDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO");
