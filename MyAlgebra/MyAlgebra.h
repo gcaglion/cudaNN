@@ -8,6 +8,8 @@
 
 #ifdef USE_GPU
 #include "../MyCU/MyCU.h"
+#else
+#define MAX_STREAMS 1
 #endif
 
 //-- Exceptions
