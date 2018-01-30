@@ -91,17 +91,31 @@ typedef struct sNN {
 	numtype* mseT;	// Training mean squared error, array indexed by epoch, always on host
 	numtype* mseV;	// Validation mean squared error, array indexed by epoch, always on host
 
+	//-- performance counters
+	DWORD LDstart, LDtimeTot=0, LDcnt=0; float LDtimeAvg;
+	DWORD FFstart, FFtimeTot=0, FFcnt=0; float FFtimeAvg;
+	DWORD FF0start, FF0timeTot=0, FF0cnt=0; float FF0timeAvg;
+	DWORD FF1start, FF1timeTot=0, FF1cnt=0; float FF1timeAvg;
+	DWORD FF1astart, FF1atimeTot=0, FF1acnt=0; float FF1atimeAvg;
+	DWORD FF1bstart, FF1btimeTot=0, FF1bcnt=0; float FF1btimeAvg;
+	DWORD FF2start, FF2timeTot=0, FF2cnt=0; float FF2timeAvg;
+	DWORD CEstart, CEtimeTot=0, CEcnt=0; float CEtimeAvg;
+	DWORD VDstart, VDtimeTot=0, VDcnt=0; float VDtimeAvg;
+	DWORD VSstart, VStimeTot=0, VScnt=0; float VStimeAvg;
+	DWORD BPstart, BPtimeTot=0, BPcnt=0; float BPtimeAvg;
+
 	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_);
 	EXPORT ~sNN();
 
-	void setLayout(char LevelRatioS[60]);
+	void setLayout(char LevelRatioS[60], int batchSamplesCnt_);
 
 	EXPORT void setActivationFunction(int func_);
-	int sNN::Activate(int level);
-	int sNN::calcErr();
+	int FF();
+	int Activate(int level);
+	int calcErr();
 
 	EXPORT int train(numtype* sample, numtype* target);
 	EXPORT int run(numtype* runW, int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast);
-
+	int infer(numtype* sample, numtype* prediction);
 } NN;
 

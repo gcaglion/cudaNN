@@ -674,7 +674,7 @@ int main() {
 	}
 
 	//-- these should be relevant for training only.
-	trNN->MaxEpochs=50;
+	trNN->MaxEpochs=20;
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;
@@ -688,6 +688,7 @@ int main() {
 
 	numtype* fTrainSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
 	numtype* fTrainTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
+	numtype* fTrainForecast=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
 
 	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
 	start=timeGetTime();
@@ -720,11 +721,17 @@ int main() {
 	Commit(DebugParms);
 */
 
+	//-- Run (on training data)
+	trNN->run(nullptr, totSamplesCount, fTrainSample, fTrainTarget, fTrainForecast);
+	FILE* ff=fopen("C:/temp/forecast.csv", "w");
+	for (int i=0; i<totSamplesCount; i++) {
+		fprintf(ff, "%f, %f \n", fTrainTarget[i], fTrainForecast[i]);
+
+	}
+	fclose(ff);
+
 	//-- destroy training NN
 	delete trNN;
-
-	//-- Run (on training data)
-	//trNN->run();
 
 
 	system("pause");

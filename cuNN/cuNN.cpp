@@ -1,35 +1,5 @@
 #include "cuNN.h"
 
-void D012_120(int d0, int d1, int d2, numtype* v) {
-	numtype* newv=(numtype*)malloc(d0*d1*d2*sizeof(numtype));
-	int i120, i012=0;
-	for (int id0=0; id0<d0; id0++) {
-		for (int id1=0; id1<d1; id1++) {
-			for (int id2=0; id2<d2; id2++) {
-				i120=id1*d2*d0+id2*d0+id0;
-				newv[i120]=v[i012];
-				i012++;
-			}
-		}
-	}
-	memcpy(v, newv, d0*d1*d2*sizeof(numtype));
-	free(newv);
-}
-void D012_102(int d0, int d1, int d2, numtype* v) {
-	numtype* newv=(numtype*)malloc(d0*d1*d2*sizeof(numtype));
-	int i102, i012=0;
-	for (int id0=0; id0<d0; id0++) {
-		for (int id1=0; id1<d1; id1++) {
-			for (int id2=0; id2<d2; id2++) {
-				i102=id1*d0*d2+id0*d2+id2;
-				newv[i102]=v[i012];
-				i012++;
-			}
-		}
-	}
-	memcpy(v, newv, d0*d1*d2*sizeof(numtype));
-	free(newv);
-}
 void SBF2BFS(int db, int ds, int dbar, int df, numtype* v) {
 	numtype* newv=(numtype*)malloc(db*ds*dbar*df*sizeof(numtype));
 	int i=0;
@@ -59,9 +29,6 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	useContext=useContext_;
 	useBias=useBias_;
 
-	InputCount=sampleLen_*featuresCnt_*batchSamplesCnt;
-	OutputCount=predictionLen_*featuresCnt_*batchSamplesCnt;
-
 	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
 	Alg=new Algebra();
 
@@ -69,7 +36,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	setActivationFunction(ActivationFunction_);
 
 	//-- 1. set Layout
-	setLayout(LevelRatioS_);
+	setLayout(LevelRatioS_, batchSamplesCnt);
 
 	//-- 2. malloc neurons and weights on GPU
 	if (myMalloc(&a, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
@@ -107,17 +74,23 @@ sNN::~sNN() {
 
 }
 
-void sNN::setLayout(char LevelRatioS[60]) {
+void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {
 	int i, l, nl;
-	int Levcnt;	// Levels count
 	char** DescList=(char**)malloc(MAX_LEVELS*sizeof(char*)); for (i=0; i<MAX_LEVELS; i++) DescList[i]=(char*)malloc(256);
 
 	//-- 0.1. levels and nodes count
-	Levcnt = cslToArray(LevelRatioS, ',', DescList);
+	if (strlen(LevelRatioS)>0) {
+		int Levcnt = cslToArray(LevelRatioS, ',', DescList);
+		for (i = 0; i<=Levcnt; i++) levelRatio[i] = (numtype)atof(DescList[i]);
+		levelsCnt = (Levcnt+2);
+	}
 
-	for (i = 0; i<=Levcnt; i++) levelRatio[i] = (numtype)atof(DescList[i]);
-	levelsCnt = (Levcnt+2);
-	// set nodesCnt (single sample)
+	//-- 0.2. Input-OutputCount moved here, so can be reset when called by run()
+	batchSamplesCnt=batchSamplesCnt_;
+	InputCount=sampleLen*featuresCnt*batchSamplesCnt;
+	OutputCount=predictionLen*featuresCnt*batchSamplesCnt;
+
+	//-- 0.3. set nodesCnt (single sample)
 	nodesCnt[0] = InputCount;
 	nodesCnt[levelsCnt-1] = OutputCount;
 	for (nl = 0; nl<(levelsCnt-2); nl++) nodesCnt[nl+1] = (int)floor(nodesCnt[nl]*levelRatio[nl]);
@@ -215,7 +188,7 @@ int sNN::Activate(int level) {
 	}
 	return((ret==0&&retd==0)?0:-1);
 }
-int sNN:: calcErr() {
+int sNN::calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
 	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
 	if (Vssum(nodesCnt[levelsCnt-1], e, se)!=0) return -1;											// se=ssum(e) 
@@ -223,25 +196,40 @@ int sNN:: calcErr() {
 	
 	return 0;
 }
+int sNN::FF() {
+	for (int l=0; l<(levelsCnt-1); l++) {
+		int Ay=nodesCnt[l+1]/batchSamplesCnt;
+		int Ax=nodesCnt[l]/batchSamplesCnt;
+		numtype* A=&W[levelFirstWeight[l]];
+		int By=nodesCnt[l]/batchSamplesCnt;
+		int Bx=batchSamplesCnt;
+		numtype* B=&F[levelFirstNode[l]];
+		numtype* C=&a[levelFirstNode[l+1]];
+
+		//-- actual feed forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
+		FF0start=timeGetTime(); FF0cnt++;
+		if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C)!=0) return -1;
+		FF0timeTot+=((DWORD)(timeGetTime()-FF0start));
+
+		//-- activation sets F[l+1] and dF[l+1]
+		FF1start=timeGetTime(); FF1cnt++;
+		if (Activate(l+1)!=0) return -1;
+		FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
+
+		//-- feed back to context neurons
+		//FF2start=timeGetTime(); FF2cnt++;
+		if (useContext) {
+			Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
+		}
+		//FF2timeTot+=((DWORD)(timeGetTime()-FF2start));
+	}
+	return 0;
+}
 int sNN::train(numtype* sample, numtype* target) {
 	int l;
-	char fname[MAX_PATH];
-	DWORD batch_starttime, epoch_starttime;
-	DWORD LDstart, LDtimeTot=0, LDcnt=0; float LDtimeAvg;
-	DWORD FFstart, FFtimeTot=0, FFcnt=0; float FFtimeAvg;
-	DWORD FF0start, FF0timeTot=0, FF0cnt=0; float FF0timeAvg;
-	DWORD FF1start, FF1timeTot=0, FF1cnt=0; float FF1timeAvg;
-	DWORD FF1astart, FF1atimeTot=0, FF1acnt=0; float FF1atimeAvg;
-	DWORD FF1bstart, FF1btimeTot=0, FF1bcnt=0; float FF1btimeAvg;
-	DWORD FF2start, FF2timeTot=0, FF2cnt=0; float FF2timeAvg;
-	DWORD CEstart, CEtimeTot=0, CEcnt=0; float CEtimeAvg;
-	DWORD VDstart, VDtimeTot=0, VDcnt=0; float VDtimeAvg;
-	DWORD VSstart, VStimeTot=0, VScnt=0; float VStimeAvg;
-	DWORD BPstart, BPtimeTot=0, BPcnt=0; float BPtimeAvg;
-
+	DWORD epoch_starttime;
 	DWORD training_starttime=timeGetTime();
 	int epoch;
-	int sc=batchSamplesCnt;
 
 	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
 	numtype* A; numtype* B; numtype* C;
@@ -291,33 +279,9 @@ int sNN::train(numtype* sample, numtype* target) {
 			if (Alg->h2d(&u[0], &target[b*OutputCount], OutputCount*sizeof(numtype), true )!=0) return -1;
 			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
-			//-- 1.1.2. Feed Forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
+			//-- 1.1.2. Feed Forward (  )
 			FFstart=timeGetTime(); FFcnt++;
-			for (l=0; l<(levelsCnt-1); l++) {
-				int Ay=nodesCnt[l+1]/sc;
-				int Ax=nodesCnt[l]/sc;
-				numtype* A=&W[levelFirstWeight[l]];
-				int By=nodesCnt[l]/sc;
-				int Bx=sc;
-				numtype* B=&F[levelFirstNode[l]];
-				numtype* C=&a[levelFirstNode[l+1]];
-
-				FF0start=timeGetTime(); FF0cnt++;
-				if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C)!=0) return -1;
-				FF0timeTot+=((DWORD)(timeGetTime()-FF0start));
-
-				//-- activation sets F[l+1] and dF[l+1]
-				FF1start=timeGetTime(); FF1cnt++;
-				if(Activate(l+1)!=0) return -1;
-				FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
-
-				//-- feed back to context neurons
-				//FF2start=timeGetTime(); FF2cnt++;
-				if (useContext) {
-					Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
-				}
-				//FF2timeTot+=((DWORD)(timeGetTime()-FF2start));
-			}
+			if (FF()!=0) return -1;
 			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
 			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
@@ -333,12 +297,12 @@ int sNN::train(numtype* sample, numtype* target) {
 					if( VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]) !=0) return -1;	// edF(l) = e * dF(l)
 				} else {
 					//-- lower levels
-					Ay=nodesCnt[l+1]/sc;
-					Ax=nodesCnt[l]/sc;
+					Ay=nodesCnt[l+1]/batchSamplesCnt;
+					Ax=nodesCnt[l]/batchSamplesCnt;
 					Astart=levelFirstWeight[l];
 					A=&W[Astart];
-					By=nodesCnt[l+1]/sc;
-					Bx=sc;
+					By=nodesCnt[l+1]/batchSamplesCnt;
+					Bx=batchSamplesCnt;
 					Bstart=levelFirstNode[l+1];
 					B=&edF[Bstart];
 					Cy=Ax;	// because A gets transposed
@@ -351,12 +315,12 @@ int sNN::train(numtype* sample, numtype* target) {
 				}
 				
 				//-- common	
-				Ay=nodesCnt[l]/sc;
-				Ax=sc;
+				Ay=nodesCnt[l]/batchSamplesCnt;
+				Ax=batchSamplesCnt;
 				Astart=levelFirstNode[l];
 				A=&edF[Astart];
-				By=nodesCnt[l-1]/sc;
-				Bx=sc;
+				By=nodesCnt[l-1]/batchSamplesCnt;
+				Bx=batchSamplesCnt;
 				Bstart=levelFirstNode[l-1];
 				B=&F[Bstart];
 				Cy=Ay;
@@ -420,6 +384,54 @@ int sNN::train(numtype* sample, numtype* target) {
 
 	return 0;
 }
+int sNN::infer(numtype* sample, numtype* Oprediction) {
+	//-- Oprediction gets filled with prediction for ONE sample
+	//-- sample must point to the start of the first (and only) sample to put through the network
+	//-- weights must be already loaded
+/*
+	//-- 1. load neurons in L0 with SINGLE sample (no BATCH)
+	if (Alg->h2d(&F[0], sample, InputCount*sizeof(numtype), false)!=0) return -1;
+	//-- 2. Feed Forward, and copy last layer neurons (on dev) to prediction (on host)
+	if (FF()!=0) return -1;
+	if (Alg->d2h(Oprediction, &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
+*/
+
+	return 0;
+}
 int sNN::run(numtype* runW, int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast) {
+	//-- Oforecast gets filled with predictions for ALL samples
+
+	//-- 1. set batchSampleCount=1, and rebuild network layout
+	//setLayout("", 1);
+	//-- 1b. WE ALSO NEED TO CONVERT sample/target back to SBF format!
+
+	//-- 2. load weights (if needed)
+	if (runW!=nullptr) {
+
+	}
+
+	//-- 3. infer prediction for every sample
+/*	for (int s=0; s<runSampleCnt; s++) {
+		infer(&sample[s*InputCount], &Oforecast[s*OutputCount]);
+
+		//-- !!!!! TEMPORARY : WRITE AS-IS !!!
+
+	}
+*/
+	//-- batch version
+	//-- 1.1. infer one batch at a time
+	for (int b=0; b<batchCnt; b++) {
+
+		//-- 1.1.1.  load samples onto GPU
+		if (Alg->h2d(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
+
+		//-- 1.1.2. Feed Forward
+		if (FF()!=0) return -1;
+
+		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
+		if (Alg->d2h(&Oforecast[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
+
+	}
+
 	return 0;
 }
