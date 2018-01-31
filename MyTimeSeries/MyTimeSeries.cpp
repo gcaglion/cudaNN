@@ -60,7 +60,7 @@ EXPORT void fSlideArrayF(int iWholeSetLen, numtype* iWholeSet, int featuresCnt, 
 	FILE* LogFile=NULL;
 
 	if (pWriteLog>0) {
-		sprintf(LogFileName, "C:/temp/SlideArray.log");
+		sprintf(LogFileName, "C:/temp/SlideArray-old.log");
 		LogFile = fopen(LogFileName, "w");
 		fprintf(LogFile, "SampleId\t");
 		for (int b=0; b<(iSampleSize/featuresCnt); b++) {

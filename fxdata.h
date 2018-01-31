@@ -31,7 +31,7 @@ typedef struct sFXData {
 	sFXData(char* FXDBusername, char* FXDBpassword, char* FXDBconnstring, char* symbol_, char* tf_, int isFilled_) {
 		FXDB = new tDBConnection(FXDBusername, FXDBpassword, FXDBconnstring);
 		//BarDataType = (int*)malloc(MAXBARDATATYPES*sizeof(int));
-		BarDataTypeCount=5; BarDataType= new int [5] { OPEN, HIGH, LOW, CLOSE, VOLUME };
+		BarDataTypeCount=5; BarDataType= new int [MAXBARDATATYPES] { OPEN, HIGH, LOW, CLOSE, VOLUME };
 		strcpy_s(Symbol, FX_SYMBOL_MAX_LEN, symbol_);
 		strcpy_s(TimeFrame, FX_TIMEFRAME_MAX_LEN, tf_);
 		IsFilled=isFilled_;

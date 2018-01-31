@@ -1,7 +1,7 @@
 #include "..\CommonEnv.h"
 #include "../MyDebug/mydebug.h"
-//#include "../MyTimeSeries/MyTimeSeries.h"
 #include "../TimeSerie/TimeSerie.h"
+#include "../MyTimeSeries/MyTimeSeries.h"
 #include "..\cuNN\cuNN.h"
 #include "../Logger/Logger.h"
 
@@ -28,7 +28,6 @@ void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
 		for (int ll=0; ll<l; ll++) oVsumPrevs[l]+=V[ll];
 	}
 }
-
 
 #ifdef USE_GPU
 int client1(NN* myNN) {
@@ -626,10 +625,16 @@ int client10() {
 	return 0;
 }
 int client11(){
-	TS* ts1=new TS(1000, 5);
+	TS* ts1=new TS(20, 5);
 	if(ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
+
+	if (ts1->TrS(DT_DELTA, -1, 1)!=0) return -1;
+	trainSet* trainSet1=new trainSet();
+	trainSet1->buildFromTS(ts1, 5, 2);
+
 	return 0;
 }
+
 int main() {
 
 	//client3();	
@@ -658,8 +663,8 @@ int main() {
 
 	float scaleM, scaleP;
 
-	int historyLen=50000;
-	int sampleLen=200;
+	int historyLen=20;// 500;
+	int sampleLen=5;// 200;
 	int predictionLen=2;
 	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
 	int batchSamplesCount=100;
@@ -695,9 +700,16 @@ int main() {
 	numtype* fTrainTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
 	numtype* fTrainForecast=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
 /*
+	TS* ts1=new TS(historyLen, featuresCnt+1, DebugParms);
+	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
+	if (ts1->TrS(DT_DELTA, trNN->scaleMin, trNN->scaleMax)!=0) return -1;
+	trainSet* tr1=new trainSet();
+	tr1->buildFromTS(ts1, sampleLen, predictionLen);
+*/
+
 	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
 	start=timeGetTime();
-	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201612300000", historyLen, historyData, baseData)<0) return -1;
+	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201612010000", historyLen, historyData, baseData)<0) return -1;
 	printf("LoadFXdata() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	start=timeGetTime();
@@ -705,26 +717,25 @@ int main() {
 	printf("dataTrS() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	start=timeGetTime();
-	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fTrainSample, predictionLen*featuresCnt, fTrainTarget, 0);
+	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fTrainSample, predictionLen*featuresCnt, fTrainTarget, 2);
 	printf("fSlideArrayF() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-*/
+
 	//-- Train
 	trNN->train(fTrainSample, fTrainTarget);
 
 	//-- Persist MSE and final W
-/*	start=timeGetTime();
-	if (LogSaveMSE(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV)!=0) return -1;
-	printf("LogSaveMSE() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	start=timeGetTime();
-	if (LogSaveW(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W)!=0) return -1;
-	printf("LogSaveW() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	//-- Persist network structure
+//	start=timeGetTime();
+//	if (LogSaveMSE(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV)!=0) return -1;
+//	printf("LogSaveMSE() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+//	start=timeGetTime();
+//	if (LogSaveW(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W)!=0) return -1;
+//	printf("LogSaveW() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+//	//-- Persist network structure
 //	if (LogSaveStruct(DebugParms, trNN->pid, trNN->tid, trNN->InputCount, trNN->OutputCount, trNN->featuresCnt, trNN->sampleLen, trNN->predictionLen, trNN->batchCnt, batchSamplesCount, trNN->useContext, trNN->useBias,
 //		trNN->ActivationFunction, trNN->MaxEpochs, trNN->ActualEpochs, trNN->TargetMSE, trNN->StopOnReverse, trNN->NetSaveFreq, trNN->BP_Algo, trNN->LearningRate, trNN->LearningMomentum)!=0) return -1;
 
 //-- DB commit
 	Commit(DebugParms);
-*/
 
 	//-- Run (on training data)
 	trNN->run(nullptr, totSamplesCount, fTrainSample, fTrainTarget, fTrainForecast);

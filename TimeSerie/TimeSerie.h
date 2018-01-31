@@ -48,11 +48,16 @@ typedef struct sTS {
 	int steps;
 	int featuresCnt;
 	int len;
-	int dt;			// data transformation
-	numtype* hd;	//-- host   data ( steps X featuresCnt )
-	numtype* dd;	//-- device data ( steps X featuresCnt )
-	numtype* hbd;	//-- host   base data ( 1 X featuresCnt )
-	numtype* dbd;	//-- device base data ( 1 X featuresCnt )
+	int dt;						// data transformation
+	// data scaling: different parameters for each feature
+	numtype *scaleM, *scaleP;
+	numtype *dmin, *dmax;
+
+	numtype* d;		//-- host   data ( steps X featuresCnt )
+	char** dtime;	//-- may always be useful...
+	numtype* bd;	//-- host   base data ( 1 X featuresCnt )
+	char* bdtime;
+	numtype* d_trs;
 
 	//-- constructor / destructor
 	sTS(int steps_, int featuresCnt_, tDebugInfo* DebugParms_=nullptr) {
@@ -68,34 +73,38 @@ typedef struct sTS {
 		steps=steps_;
 		featuresCnt=featuresCnt_;
 		len=steps*featuresCnt;
-		hd=(numtype*)malloc(len*sizeof(numtype));
-		hbd=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		#ifdef USE_GPU
-		if (cudaMalloc(&dd, len*sizeof(numtype)!=cudaSuccess)) throw FAIL_CUDAMALLOC;
-		if (cudaMalloc(&dbd, featuresCnt*sizeof(numtype)!=cudaSuccess)) throw FAIL_CUDAMALLOC;
-		#endif
+		dmin=(numtype*)malloc(featuresCnt*sizeof(numtype));
+		dmax=(numtype*)malloc(featuresCnt*sizeof(numtype));
+		for (int f=0; f<featuresCnt; f++) {
+			dmin[f]=1e8; dmax[f]=-1e8;
+		}
+		scaleM=(numtype*)malloc(featuresCnt*sizeof(numtype));
+		scaleP=(numtype*)malloc(featuresCnt*sizeof(numtype));
+		dtime=(char**)malloc(len*sizeof(char*)); for (int i=0; i<len; i++) dtime[i]=(char*)malloc(12+1);
+		bdtime=(char*)malloc(12+1);
+		d=(numtype*)malloc(len*sizeof(numtype));
+		bd=(numtype*)malloc(featuresCnt*sizeof(numtype));
+		d_trs=(numtype*)malloc(len*sizeof(numtype));
 	}
+
 	~sTS() {
-		free(hd);
-		free(hbd);
-		#ifdef USE_GPU
-		cudaFree(dd);
-		cudaFree(dbd);
-		#endif
+		free(d);
+		free(bd);
+		free(d_trs);
+		for (int i=0; i<len; i++) free(dtime[i]);
+		free(dtime); free(bdtime);
 	}
 	
 	EXPORT int load(tFXData* tsFXData, char* pDate0);
 	EXPORT int load(tFileData* tsFileData, char* pDate0);
 	EXPORT int load(tMT4Data* tsMT4Data, char* pDate0);
 
-	EXPORT int transform();
-	EXPORT int untransform();
-	EXPORT int scale();
-	EXPORT int unscale();
+	EXPORT int TrS(int dt_, numtype scaleMin_, numtype scaleMax_);
+	EXPORT int unTrS(numtype scaleMin_, numtype scaleMax_);
+
 	EXPORT int calcTSF();
 	EXPORT int createFromTS(sTS* sourceTS, int* feature);
 
-	EXPORT int buildTrainData();
 	EXPORT int buildRunData();
 
 	EXPORT void SBF2BFS(int db, int ds, int dbar, int df, numtype* iSBFv, numtype* oBFSv);
@@ -104,5 +113,26 @@ typedef struct sTS {
 private:
 	int LoadOHLCVdata(char* date0);
 
-
 } TS;
+
+typedef struct sTrainSet {
+	int sampleCnt;
+	int featuresCnt;
+	int sampleLen;
+	int sampleSize;
+	int targetLen;
+	int targetSize;
+	int len;
+	numtype* sample;
+	numtype* target;
+
+	sTrainSet() {
+	}
+	~sTrainSet() {
+		free(sample);
+		free(target);
+	}
+
+	EXPORT int buildFromTS(sTS* ts, int sampleLen_, int targetLen_, char* outFileName=nullptr);
+
+} trainSet;
