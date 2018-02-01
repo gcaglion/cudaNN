@@ -112,16 +112,24 @@ private:
 
 } TS;
 
-typedef struct sTrainSet {
+typedef struct sDataSet {
+	sTS* sourceTS;
 	int sampleCnt;
-	int featuresCnt;
+	int sampleLen;
+	int targetLen;
+	int sampleSize;
+	int targetSize;
+
+	/*
+	featuresCnt must be the same as the ts used for training
+	*/
+
+/*	int featuresCnt;
 	int* Feature;
 	int sampleLen;
-	int sampleSize;
 	int targetLen;
-	int targetSize;
 	int len;
-
+*/
 	//-- sample, target, prediction are stored in  order (Sample-Bar-Feature)
 	numtype* sample=nullptr;
 	numtype* target=nullptr;
@@ -132,19 +140,33 @@ typedef struct sTrainSet {
 	numtype* predictionBFS=nullptr;
 
 
-	sTrainSet() {
+	sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, char* outFileName=NULL) {
+		sourceTS=sourceTS_;
+		sampleLen=sampleLen_; targetLen=targetLen_;
+		sampleSize=sampleLen*sourceTS->featuresCnt;
+		targetSize=targetLen*sourceTS->featuresCnt;
+		sampleCnt=sourceTS->steps-sampleLen;
+		sample=(numtype*)malloc(sampleCnt*sampleLen*sourceTS->featuresCnt*sizeof(numtype));
+		target=(numtype*)malloc(sampleCnt*targetLen*sourceTS->featuresCnt*sizeof(numtype));
+		sampleBFS=(numtype*)malloc(sampleCnt*sampleLen*sourceTS->featuresCnt*sizeof(numtype));
+		targetBFS=(numtype*)malloc(sampleCnt*targetLen*sourceTS->featuresCnt*sizeof(numtype));
+
+		//-- fill data right at creation time
+		if( buildFromTS(sourceTS, sampleLen, targetLen)!=0) throw "buildFromTS() failed\n";
+
 	}
-	~sTrainSet() {
-		if (sample!=nullptr) free(sample);
+	~sDataSet() {
+		free(sample);
 		if (target!=nullptr) free(target);
-		if (prediction!=nullptr) free(prediction);
-		if (sampleBFS!=nullptr) free(sampleBFS);
-		if (targetBFS!=nullptr) free(targetBFS);
-		if (predictionBFS!=nullptr) free(predictionBFS);
+		free(prediction);
+		free(sampleBFS);
+		free(targetBFS);
+		free(predictionBFS);
 	}
 
-	EXPORT int buildFromTS(sTS* ts, int sampleLen_, int targetLen_, int intputFeature_[]=NULL, char* outFileName=NULL);
-	EXPORT void SBF2BFS(int batchCount_);
-	EXPORT void BFS2SBF(int batchCount_);
+private:
+	int buildFromTS(sTS* ts, int sampleLen_, int targetLen_, char* outFileName=NULL);
+	void SBF2BFS(int batchCount_);
+	void BFS2SBF(int batchCount_);
 
-} trainSet;
+} DataSet;

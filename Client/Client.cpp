@@ -1,7 +1,6 @@
 #include "..\CommonEnv.h"
 #include "../MyDebug/mydebug.h"
 #include "../TimeSerie/TimeSerie.h"
-#include "../MyTimeSeries/MyTimeSeries.h"
 #include "..\cuNN\cuNN.h"
 #include "../Logger/Logger.h"
 
@@ -628,8 +627,8 @@ int client11(){
 	TS* ts1=new TS(20, 5);
 	if(ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
 	if (ts1->TrS(DT_DELTA, -1, 1)!=0) return -1;
-	trainSet* trainSet1=new trainSet();
-	trainSet1->buildFromTS(ts1, 5, 2);
+	DataSet* DataSet1=new DataSet();
+	DataSet1->buildFromTS(ts1, 5, 2);
 
 	return 0;
 }
@@ -699,9 +698,8 @@ int main() {
 	if (ts1->TrS(DT_DELTA, trNN->scaleMin, trNN->scaleMax)!=0) return -1;
 	printf("ts1 transform+scale, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 	start=timeGetTime();
-	trainSet* tr1=new trainSet();
-	tr1->buildFromTS(ts1, sampleLen, predictionLen);
-	printf("build trainset from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	DataSet* trainSet=new DataSet(ts1, sampleLen, predictionLen);
+	printf("build DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 
 /*
@@ -728,7 +726,7 @@ int main() {
 */
 	//-- Train
 	//trNN->train(fTrainSample, fTrainTarget);
-	trNN->train(tr1);
+	trNN->train(trainSet);
 
 	//-- Persist MSE and final W
 //	start=timeGetTime();
@@ -744,11 +742,14 @@ int main() {
 //-- DB commit
 	Commit(DebugParms);
 
-	//-- Run (on training data)
-	trNN->run(nullptr, totSamplesCount, tr1->sample, tr1->target, tr1->prediction);
+	//-- Run 
+	DataSet* runSet=new DataSet();
+	runSet->buildFromTS(ts1, sampleLen, predictionLen);
+
+	trNN->run(nullptr, runSet);
 	FILE* ff=fopen("C:/temp/forecast.csv", "w");
 	for (int i=0; i<totSamplesCount; i++) {
-		fprintf(ff, "%f, %f \n", tr1->target[i], tr1->prediction[i]);
+		fprintf(ff, "%f, %f \n", runSet->target[i], runSet->prediction[i]);
 
 	}
 	fclose(ff);

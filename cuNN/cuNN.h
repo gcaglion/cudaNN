@@ -115,8 +115,8 @@ typedef struct sNN {
 	int Activate(int level);
 	int calcErr();
 
-	EXPORT int train(trainSet* trs);
-	EXPORT int run(numtype* runW, int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast);
+	EXPORT int train(DataSet* trs);
+	EXPORT int run(numtype* runW, DataSet* runSet);
 	int infer(numtype* sample, numtype* prediction);
 } NN;
 

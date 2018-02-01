@@ -92,36 +92,25 @@ int sTS::unTrS(numtype scaleMin_, numtype scaleMax_) {
 	return 0;
 }
 
-int sTrainSet::buildFromTS(sTS* ts, int sampleLen_, int targetLen_, int intputFeature_[], char* outFileName) {
+int sDataSet::buildFromTS(sTS* ts, int sampleLen_, int targetLen_, char* outFileName) {
 
 	int s, i, b, f;
 	char LogFileName[MAX_PATH];
 	FILE* LogFile=NULL;
 
-	sampleLen=sampleLen_; targetLen=targetLen_;
-	//-- THIS NEEDS TO CHANGE. We need to be able to create a training set with a subset of features for samples and a yet different one for targets
-	featuresCnt=ts->featuresCnt;
-	//--
-	sampleSize=sampleLen*featuresCnt;
-	targetSize=targetLen*featuresCnt;
-	sampleCnt=ts->steps-sampleLen;
-	sample=(numtype*)malloc(sampleCnt*sampleLen*featuresCnt*sizeof(numtype));
-	target=(numtype*)malloc(sampleCnt*targetLen*featuresCnt*sizeof(numtype));
-	sampleBFS=(numtype*)malloc(sampleCnt*sampleLen*featuresCnt*sizeof(numtype));
-	targetBFS=(numtype*)malloc(sampleCnt*targetLen*featuresCnt*sizeof(numtype));
 
 	if (ts->DebugParms->DebugLevel>0) {
 		sprintf(LogFileName, ((outFileName==NULL)?"C:/temp/SlideArray.log":outFileName));
 		LogFile = fopen(LogFileName, "w");
 		fprintf(LogFile, "SampleId\t");
-		for (int b=0; b<(sampleSize/featuresCnt); b++) {
-			for (int f=0; f<featuresCnt; f++) {
+		for (int b=0; b<(sampleSize/ts->featuresCnt); b++) {
+			for (int f=0; f<ts->featuresCnt; f++) {
 				fprintf(LogFile, "  Bar%dF%d\t", b, f);
 			}
 		}
 		fprintf(LogFile, "\t");
-		for (int b=0; b<(targetSize/featuresCnt); b++) {
-			for (int f=0; f<featuresCnt; f++) {
+		for (int b=0; b<(targetSize/ts->featuresCnt); b++) {
+			for (int f=0; f<ts->featuresCnt; f++) {
 				fprintf(LogFile, "  Prd%dF%d\t", b, f);
 			}
 		}
@@ -136,11 +125,11 @@ int sTrainSet::buildFromTS(sTS* ts, int sampleLen_, int targetLen_, int intputFe
 	si=0; ti=0;
 	for (s=0; s<sampleCnt; s++) {
 		//-- samples
-		sidx=s*featuresCnt;
+		sidx=s*ts->featuresCnt;
 		if (ts->DebugParms->DebugLevel>0) fprintf(LogFile, "%d\t\t\t", s);
 		//printf("\ns[%d] sidx=%d\n", s, sidx);
 		for (b=0; b<sampleLen; b++) {
-			for (f=0; f<featuresCnt; f++) {
+			for (f=0; f<ts->featuresCnt; f++) {
 				sample[si]=ts->d_trs[sidx];
 				if (ts->DebugParms->DebugLevel>0) fprintf(LogFile, "%f\t", sample[si]);
 				//printf("bar%df%d=%1.5f\n", b, f, ts->d[sidx]);
@@ -154,9 +143,9 @@ int sTrainSet::buildFromTS(sTS* ts, int sampleLen_, int targetLen_, int intputFe
 		tidx=sidx;
 		//printf("\nt[%d] tidx=%d:\n", s, tidx);
 		for (b=0; b<targetLen; b++) {
-			for (f=0; f<featuresCnt; f++) {
+			for (f=0; f<ts->featuresCnt; f++) {
 				if (tidx==ts->len) {
-					tidx-=featuresCnt;
+					tidx-=ts->featuresCnt;
 				}
 				target[ti]=ts->d_trs[tidx];
 				if (ts->DebugParms->DebugLevel>0) fprintf(LogFile, "%f\t", target[ti]);
@@ -172,27 +161,27 @@ int sTrainSet::buildFromTS(sTS* ts, int sampleLen_, int targetLen_, int intputFe
 
 	return 0;
 }
-void sTrainSet::SBF2BFS(int batchCount_) {
+void sDataSet::SBF2BFS(int batchCount_) {
 	int i=0;
 	for (int b=0; batchCount_; b++) {
 		for (int bar=0; bar<sampleLen; bar++) {
-			for (int f=0; f<featuresCnt; f++) {
+			for (int f=0; f<sourceTS->featuresCnt; f++) {
 				for (int s=0; s<sampleCnt; s++) {
-					sampleBFS[i]=sample[b*sampleCnt*sampleLen*featuresCnt+s*sampleLen*featuresCnt+bar*featuresCnt+f];
-					targetBFS[i]=target[b*sampleCnt*targetLen*featuresCnt+s*targetLen*featuresCnt+bar*featuresCnt+f];
+					sampleBFS[i]=sample[b*sampleCnt*sampleLen*sourceTS->featuresCnt+s*sampleLen*sourceTS->featuresCnt+bar*sourceTS->featuresCnt+f];
+					targetBFS[i]=target[b*sampleCnt*targetLen*sourceTS->featuresCnt+s*targetLen*sourceTS->featuresCnt+bar*sourceTS->featuresCnt+f];
 					i++;
 				}
 			}
 		}
 	}
 }
-void sTrainSet::BFS2SBF(int batchCount_) {
+void sDataSet::BFS2SBF(int batchCount_) {
 	int i=0;
 	for (int b=0; b<batchCount_; b++) {
 		for (int s=0; s<sampleCnt; s++) {
 			for (int bar=0; bar<sampleLen; bar++) {
-				for (int f=0; f<featuresCnt; f++) {
-					sample[i]=sampleBFS[b* sampleLen*featuresCnt*sampleCnt+bar*featuresCnt*sampleCnt+f*sampleCnt+s];
+				for (int f=0; f<sourceTS->featuresCnt; f++) {
+					sample[i]=sampleBFS[b* sampleLen*sourceTS->featuresCnt*sampleCnt+bar*sourceTS->featuresCnt*sampleCnt+f*sampleCnt+s];
 					i++;
 				}
 			}

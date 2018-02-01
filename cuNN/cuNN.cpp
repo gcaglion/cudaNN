@@ -226,7 +226,7 @@ int sNN::FF() {
 	}
 	return 0;
 }
-int sNN::train(trainSet* trs) {
+int sNN::train(DataSet* trs) {
 	int l;
 	DWORD epoch_starttime;
 	DWORD training_starttime=timeGetTime();
@@ -400,7 +400,7 @@ int sNN::infer(numtype* sample, numtype* Oprediction) {
 
 	return 0;
 }
-int sNN::run(numtype* runW, int runSampleCnt, numtype* sample, numtype* target, numtype* Oprediction) {
+int sNN::run(numtype* runW, DataSet* runSet) {
 	//-- Oprediction gets filled with predictions for ALL samples
 
 	//-- 1. set batchSampleCount=1, and rebuild network layout
