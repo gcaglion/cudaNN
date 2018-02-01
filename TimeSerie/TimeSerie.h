@@ -107,9 +107,6 @@ typedef struct sTS {
 
 	EXPORT int buildRunData();
 
-	EXPORT void SBF2BFS(int db, int ds, int dbar, int df, numtype* iSBFv, numtype* oBFSv);
-	EXPORT void BFS2SBF(int db, int ds, int dbar, int df, numtype* iBFSv, numtype* oSBFv);
-
 private:
 	int LoadOHLCVdata(char* date0);
 
@@ -118,21 +115,36 @@ private:
 typedef struct sTrainSet {
 	int sampleCnt;
 	int featuresCnt;
+	int* Feature;
 	int sampleLen;
 	int sampleSize;
 	int targetLen;
 	int targetSize;
 	int len;
-	numtype* sample;
-	numtype* target;
+
+	//-- sample, target, prediction are stored in  order (Sample-Bar-Feature)
+	numtype* sample=nullptr;
+	numtype* target=nullptr;
+	numtype* prediction=nullptr;
+	//-- network training requires BFS ordering
+	numtype* sampleBFS=nullptr;
+	numtype* targetBFS=nullptr;
+	numtype* predictionBFS=nullptr;
+
 
 	sTrainSet() {
 	}
 	~sTrainSet() {
-		free(sample);
-		free(target);
+		if (sample!=nullptr) free(sample);
+		if (target!=nullptr) free(target);
+		if (prediction!=nullptr) free(prediction);
+		if (sampleBFS!=nullptr) free(sampleBFS);
+		if (targetBFS!=nullptr) free(targetBFS);
+		if (predictionBFS!=nullptr) free(predictionBFS);
 	}
 
-	EXPORT int buildFromTS(sTS* ts, int sampleLen_, int targetLen_, char* outFileName=nullptr);
+	EXPORT int buildFromTS(sTS* ts, int sampleLen_, int targetLen_, int intputFeature_[]=NULL, char* outFileName=NULL);
+	EXPORT void SBF2BFS(int batchCount_);
+	EXPORT void BFS2SBF(int batchCount_);
 
 } trainSet;

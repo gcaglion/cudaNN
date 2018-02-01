@@ -627,7 +627,6 @@ int client10() {
 int client11(){
 	TS* ts1=new TS(20, 5);
 	if(ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
-
 	if (ts1->TrS(DT_DELTA, -1, 1)!=0) return -1;
 	trainSet* trainSet1=new trainSet();
 	trainSet1->buildFromTS(ts1, 5, 2);
@@ -644,15 +643,15 @@ int main() {
 	//client7();
 	//client8();
 	//client9();
-	client11();
-	system("pause");
-	return -1;
+	//client11();
+	//system("pause");
+	//return -1;
 
 	//--
 	tDBConnection* LogDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO");
 
 	tDebugInfo* DebugParms=new tDebugInfo;
-	DebugParms->DebugLevel = 2;
+	DebugParms->DebugLevel = 0;
 	DebugParms->DebugDest = LOG_TO_ORCL;
 	DebugParms->DebugDB=LogDB;
 	strcpy(DebugParms->fPath, "C:/temp");
@@ -663,10 +662,10 @@ int main() {
 
 	float scaleM, scaleP;
 
-	int historyLen=20;// 500;
-	int sampleLen=5;// 200;
+	int historyLen=5000;// 20;// 500;
+	int sampleLen=100;// 200;
 	int predictionLen=2;
-	int featuresCnt=4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
+	int featuresCnt=5;	// 4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
 	int batchSamplesCount=100;
 
 	int totSamplesCount=historyLen-sampleLen;
@@ -692,6 +691,20 @@ int main() {
 	trNN->LearningMomentum=(numtype)0.2;
 	trNN->StopOnReverse=true;
 
+	start=timeGetTime();
+	TS* ts1=new TS(historyLen, featuresCnt+1, DebugParms);
+	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
+	printf("ts1 create+load, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	start=timeGetTime();
+	if (ts1->TrS(DT_DELTA, trNN->scaleMin, trNN->scaleMax)!=0) return -1;
+	printf("ts1 transform+scale, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	start=timeGetTime();
+	trainSet* tr1=new trainSet();
+	tr1->buildFromTS(ts1, sampleLen, predictionLen);
+	printf("build trainset from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+
+
+/*
 	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
 	numtype* historyData=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
 	numtype* hd_trs=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
@@ -699,13 +712,6 @@ int main() {
 	numtype* fTrainSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
 	numtype* fTrainTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
 	numtype* fTrainForecast=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
-/*
-	TS* ts1=new TS(historyLen, featuresCnt+1, DebugParms);
-	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
-	if (ts1->TrS(DT_DELTA, trNN->scaleMin, trNN->scaleMax)!=0) return -1;
-	trainSet* tr1=new trainSet();
-	tr1->buildFromTS(ts1, sampleLen, predictionLen);
-*/
 
 	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
 	start=timeGetTime();
@@ -719,9 +725,10 @@ int main() {
 	start=timeGetTime();
 	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fTrainSample, predictionLen*featuresCnt, fTrainTarget, 2);
 	printf("fSlideArrayF() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-
+*/
 	//-- Train
-	trNN->train(fTrainSample, fTrainTarget);
+	//trNN->train(fTrainSample, fTrainTarget);
+	trNN->train(tr1);
 
 	//-- Persist MSE and final W
 //	start=timeGetTime();
@@ -738,10 +745,10 @@ int main() {
 	Commit(DebugParms);
 
 	//-- Run (on training data)
-	trNN->run(nullptr, totSamplesCount, fTrainSample, fTrainTarget, fTrainForecast);
+	trNN->run(nullptr, totSamplesCount, tr1->sample, tr1->target, tr1->prediction);
 	FILE* ff=fopen("C:/temp/forecast.csv", "w");
 	for (int i=0; i<totSamplesCount; i++) {
-		fprintf(ff, "%f, %f \n", fTrainTarget[i], fTrainForecast[i]);
+		fprintf(ff, "%f, %f \n", tr1->target[i], tr1->prediction[i]);
 
 	}
 	fclose(ff);

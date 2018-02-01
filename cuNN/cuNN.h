@@ -3,6 +3,7 @@
 #include "..\CommonEnv.h"
 #include "../MyUtils/MyUtils.h"
 #include "../MyAlgebra/MyAlgebra.h"
+#include "../TimeSerie/TimeSerie.h"
 
 #define MLP 0
 #define RNN 1
@@ -114,7 +115,7 @@ typedef struct sNN {
 	int Activate(int level);
 	int calcErr();
 
-	EXPORT int train(numtype* sample, numtype* target);
+	EXPORT int train(trainSet* trs);
 	EXPORT int run(numtype* runW, int runSampleCnt, numtype* sample, numtype* target, numtype* Oforecast);
 	int infer(numtype* sample, numtype* prediction);
 } NN;
