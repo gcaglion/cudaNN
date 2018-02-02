@@ -36,6 +36,8 @@
 #define TSF_SHE 6
 #define TSF_HISTVOL 7
 
+EXPORT void SBF2BFS_orig(int db, int ds, int dbar, int df, numtype* iv, numtype* ov);
+
 typedef struct sTS {
 
 	tDebugInfo* DebugParms;
@@ -114,11 +116,13 @@ private:
 
 typedef struct sDataSet {
 	sTS* sourceTS;
-	int sampleCnt;
 	int sampleLen;
 	int targetLen;
+	int sampleCnt;
 	int sampleSize;
 	int targetSize;
+	int batchSamplesCnt;
+	int batchCnt;
 
 	/*
 	featuresCnt must be the same as the ts used for training
@@ -140,19 +144,24 @@ typedef struct sDataSet {
 	numtype* predictionBFS=nullptr;
 
 
-	sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, char* outFileName=NULL) {
+	sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int batchSampleCnt_, char* outFileName=NULL) {
 		sourceTS=sourceTS_;
-		sampleLen=sampleLen_; targetLen=targetLen_;
-		sampleSize=sampleLen*sourceTS->featuresCnt;
-		targetSize=targetLen*sourceTS->featuresCnt;
+		sampleLen=sampleLen_; sampleSize=sampleLen*sourceTS->featuresCnt;
+		targetLen=targetLen_; targetSize=targetLen*sourceTS->featuresCnt;
 		sampleCnt=sourceTS->steps-sampleLen;
-		sample=(numtype*)malloc(sampleCnt*sampleLen*sourceTS->featuresCnt*sizeof(numtype));
-		target=(numtype*)malloc(sampleCnt*targetLen*sourceTS->featuresCnt*sizeof(numtype));
-		sampleBFS=(numtype*)malloc(sampleCnt*sampleLen*sourceTS->featuresCnt*sizeof(numtype));
-		targetBFS=(numtype*)malloc(sampleCnt*targetLen*sourceTS->featuresCnt*sizeof(numtype));
+		batchSamplesCnt=batchSampleCnt_;
+		batchCnt=(int)floor(sampleCnt/batchSamplesCnt);
 
-		//-- fill data right at creation time
-		if( buildFromTS(sourceTS, sampleLen, targetLen)!=0) throw "buildFromTS() failed\n";
+		sample=(numtype*)malloc(sampleCnt*sampleSize*sizeof(numtype));
+		target=(numtype*)malloc(sampleCnt*targetSize*sizeof(numtype));
+		sampleBFS=(numtype*)malloc(sampleCnt*sampleSize*sizeof(numtype));
+		targetBFS=(numtype*)malloc(sampleCnt*targetSize*sizeof(numtype));
+
+		//-- fill sample/target data right at creation time. TS has data in SBF format
+		if( buildFromTS(sourceTS, outFileName)!=0) throw "buildFromTS() failed\n";
+		//-- populate BFS sample/target, too
+		SBF2BFS();
+
 
 	}
 	~sDataSet() {
@@ -165,8 +174,8 @@ typedef struct sDataSet {
 	}
 
 private:
-	int buildFromTS(sTS* ts, int sampleLen_, int targetLen_, char* outFileName=NULL);
-	void SBF2BFS(int batchCount_);
-	void BFS2SBF(int batchCount_);
+	EXPORT int buildFromTS(sTS* ts, char* outFileName=NULL);
+	EXPORT void SBF2BFS();	//-- fills sampleBFS/targetBFS from sample/target
+	EXPORT void BFS2SBF();	//-- fills sample/target from sampleBFS/targetBFS
 
 } DataSet;

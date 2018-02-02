@@ -1,6 +1,20 @@
 //#include <vld.h>
 #include "TimeSerie.h"
 
+void SBF2BFScommon(int db, int ds, int dbar, int df, numtype* iv, numtype* ov) {
+	int i=0;
+	for (int b=0; b<db; b++) {
+		for (int bar=0; bar<dbar; bar++) {
+			for (int f=0; f<df; f++) {
+				for (int s=0; s<ds; s++) {
+					ov[i]=iv[b*ds*dbar*df+s*dbar*df+bar*df+f];
+					i++;
+				}
+			}
+		}
+	}
+}
+
 int sTS::LoadOHLCVdata(char* date0) {
 
 	if (OraConnect(DebugParms, FXData->FXDB)!=0) return -1;
@@ -92,7 +106,7 @@ int sTS::unTrS(numtype scaleMin_, numtype scaleMax_) {
 	return 0;
 }
 
-int sDataSet::buildFromTS(sTS* ts, int sampleLen_, int targetLen_, char* outFileName) {
+int sDataSet::buildFromTS(sTS* ts, char* outFileName) {
 
 	int s, i, b, f;
 	char LogFileName[MAX_PATH];
@@ -161,30 +175,34 @@ int sDataSet::buildFromTS(sTS* ts, int sampleLen_, int targetLen_, char* outFile
 
 	return 0;
 }
-void sDataSet::SBF2BFS(int batchCount_) {
-	int i=0;
-	for (int b=0; batchCount_; b++) {
-		for (int bar=0; bar<sampleLen; bar++) {
-			for (int f=0; f<sourceTS->featuresCnt; f++) {
-				for (int s=0; s<sampleCnt; s++) {
-					sampleBFS[i]=sample[b*sampleCnt*sampleLen*sourceTS->featuresCnt+s*sampleLen*sourceTS->featuresCnt+bar*sourceTS->featuresCnt+f];
-					targetBFS[i]=target[b*sampleCnt*targetLen*sourceTS->featuresCnt+s*targetLen*sourceTS->featuresCnt+bar*sourceTS->featuresCnt+f];
-					i++;
-				}
-			}
-		}
-	}
+void sDataSet::SBF2BFS() {
+
+	//-- common dimensions
+	int db=batchCnt;
+	int ds=batchSamplesCnt;
+	int df=sourceTS->featuresCnt;
+
+	int barCnt;
+	//-- first, sample
+	barCnt=sampleLen;
+	SBF2BFScommon(batchCnt, batchSamplesCnt, barCnt, sourceTS->featuresCnt, sample, sampleBFS);
+	//-- then, target
+	barCnt=targetLen;
+	SBF2BFScommon(batchCnt, batchSamplesCnt, barCnt, sourceTS->featuresCnt, target, targetBFS);
+
 }
-void sDataSet::BFS2SBF(int batchCount_) {
+
+void sDataSet::BFS2SBF() {
 	int i=0;
-	for (int b=0; b<batchCount_; b++) {
-		for (int s=0; s<sampleCnt; s++) {
+	for (int b=0; b<batchCnt; b++) {
+		for (int s=0; s<batchSamplesCnt; s++) {
 			for (int bar=0; bar<sampleLen; bar++) {
 				for (int f=0; f<sourceTS->featuresCnt; f++) {
-					sample[i]=sampleBFS[b* sampleLen*sourceTS->featuresCnt*sampleCnt+bar*sourceTS->featuresCnt*sampleCnt+f*sampleCnt+s];
+					sample[i]=sampleBFS[b* sampleLen*sourceTS->featuresCnt*batchSamplesCnt+bar*sourceTS->featuresCnt*batchSamplesCnt+f*batchSamplesCnt+s];
 					i++;
 				}
 			}
 		}
 	}
 }
+

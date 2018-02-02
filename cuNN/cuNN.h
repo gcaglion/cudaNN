@@ -105,7 +105,7 @@ typedef struct sNN {
 	DWORD VSstart, VStimeTot=0, VScnt=0; float VStimeAvg;
 	DWORD BPstart, BPtimeTot=0, BPcnt=0; float BPtimeAvg;
 
-	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_);
+	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_);
 	EXPORT ~sNN();
 
 	void setLayout(char LevelRatioS[60], int batchSamplesCnt_);
@@ -116,7 +116,7 @@ typedef struct sNN {
 	int calcErr();
 
 	EXPORT int train(DataSet* trs);
-	EXPORT int run(numtype* runW, DataSet* runSet);
+	EXPORT int run(DataSet* runSet, numtype* runW);
 	int infer(numtype* sample, numtype* prediction);
 } NN;
 

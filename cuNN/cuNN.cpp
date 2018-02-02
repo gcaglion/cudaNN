@@ -1,34 +1,22 @@
 #include "cuNN.h"
 
-
-void SBF2BFS(int db, int ds, int dbar, int df, numtype* iv, numtype* ov) {
-	//numtype* newv=(numtype*)malloc(db*ds*dbar*df*sizeof(numtype));
-	int i=0;
-	for (int b=0; b<db; b++) {
-		for (int bar=0; bar<dbar; bar++) {
-			for (int f=0; f<df; f++) {
-				for (int s=0; s<ds; s++) {
-					ov[i]=iv[b*ds*dbar*df+s*dbar*df+bar*df+f];
-					i++;
-				}
-			}
-		}
-	}
-	//memcpy(v, newv, db*ds*dbar*df*sizeof(numtype));
-	//free(newv);
-}
-
-sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, int batchSamplesCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_) {
+sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_) {
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
 
-	batchCnt=batchCnt_;
-	batchSamplesCnt=batchSamplesCnt_;
+	// this two should be set by train() and run(), separately
+	//batchCnt=batchCnt_; 
+	//batchSamplesCnt=batchSamplesCnt_;
+
+	//-- set input and output basic dimensions (batchsize not considered yet)
 	sampleLen=sampleLen_;
 	predictionLen=predictionLen_;
 	featuresCnt=featuresCnt_;
 	useContext=useContext_;
 	useBias=useBias_;
+
+	//-- set Weights Layout. We don't have batchSampleCnt, so we set it at 1. train() and run() will set it later
+	setLayout(LevelRatioS_, 1);
 
 	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
 	Alg=new Algebra();
@@ -36,35 +24,20 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, int batchCnt_, in
 	//-- x. set Activation function (also sets scaleMin / scaleMax)
 	setActivationFunction(ActivationFunction_);
 
-	//-- 1. set Layout
-	setLayout(LevelRatioS_, batchSamplesCnt);
-
-	//-- 2. malloc neurons and weights on GPU
-	if (myMalloc(&a, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(&F, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(&dF, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(&edF, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	//-- 2. malloc weights (on either CPU or GPU)
 	if (myMalloc(&W, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&dW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
 	if (myMalloc(&dJdW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
-	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_e;
-	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_u;
 
-	//-- device-based scalar value, to be used by reduction functions (sum, ssum, ...)
+	//-- 3. malloc device-based scalar value, to be used by reduction functions (sum, ssum, ...)
 	if (myMalloc(&se,  1)!=0) throw FAIL_MALLOC_SCALAR;
 	if (myMalloc(&tse, 1)!=0) throw FAIL_MALLOC_SCALAR;
 
 }
 sNN::~sNN() {
-	myFree(a);
-	myFree(F);
-	myFree(dF);
-	myFree(edF);
 	myFree(W);
 	myFree(dW);
 	myFree(dJdW);
-	myFree(e);
-	myFree(u);
 	myFree(se);
 	myFree(tse);
 
@@ -235,17 +208,24 @@ int sNN::train(DataSet* trs) {
 	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
 	numtype* A; numtype* B; numtype* C;
 
-	//-- Change the leading dimension in sample and target, from [Sample][Bar][Feature] to [Bar][Feature][Sample]
-	int sampleCnt=batchCnt*batchSamplesCnt;
-	//trs->SBF2BFS(batchCnt);
-	SBF2BFS(batchCnt, batchSamplesCnt, sampleLen,  featuresCnt, trs->sample, trs->sampleBFS);
-	SBF2BFS(batchCnt, batchSamplesCnt, predictionLen, featuresCnt, trs->target, trs->targetBFS);
+	//-- set batch count and batchSampleCnt for the network from dataset
+	batchSamplesCnt=trs->batchSamplesCnt;
+	batchCnt=trs->batchCnt; 
+	//-- set Layout. This should not change weightsCnt[] at all, just nodesCnt[]
+	setLayout("", batchSamplesCnt);
 
 	//-- 0. Init
 	
 	//-- malloc mse[maxepochs], always host-side
 	mseT=(numtype*)malloc(MaxEpochs*sizeof(numtype));
 	mseV=(numtype*)malloc(MaxEpochs*sizeof(numtype));
+	//-- malloc neurons (on either CPU or GPU)
+	if (myMalloc(&a, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&F, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&dF, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&edF, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
+	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_e;
+	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_u;
 
 	//---- 0.1. Init Neurons (must set context neurons=0, at least for layer 0)
 	if( Vinit(nodesCntTotal, F, 0, 0) !=0) return -1;
@@ -384,6 +364,14 @@ int sNN::train(DataSet* trs) {
 	//-- !!! TODO: Proper LogSaveMSE() !!!
 	//dumpArray(epoch-1, mse, "C:/temp/mse.log");
 
+	//-- feee neurons()
+	myFree(a);
+	myFree(F);
+	myFree(dF);
+	myFree(edF);
+	myFree(e);
+	myFree(u);
+
 	return 0;
 }
 int sNN::infer(numtype* sample, numtype* Oprediction) {
@@ -400,7 +388,12 @@ int sNN::infer(numtype* sample, numtype* Oprediction) {
 
 	return 0;
 }
-int sNN::run(numtype* runW, DataSet* runSet) {
+int sNN::run(DataSet* runSet, numtype* runW) {
+
+	//-- set Neurons Layout based on batchSampleCount of training set
+	setLayout("", runSet->batchSamplesCnt);
+
+
 	//-- Oprediction gets filled with predictions for ALL samples
 
 	//-- 1. set batchSampleCount=1, and rebuild network layout
@@ -425,13 +418,13 @@ int sNN::run(numtype* runW, DataSet* runSet) {
 	for (int b=0; b<batchCnt; b++) {
 
 		//-- 1.1.1.  load samples onto GPU
-		if (Alg->h2d(&F[0], &sample[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
+		if (Alg->h2d(&F[0], &runSet->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
 
 		//-- 1.1.2. Feed Forward
 		if (FF()!=0) return -1;
 
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
-		if (Alg->d2h(&Oprediction[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
+		if (Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
 
 	}
 
