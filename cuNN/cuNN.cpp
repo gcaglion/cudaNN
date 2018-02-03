@@ -433,29 +433,11 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 	//-- malloc + init neurons
 	if (createNeurons()!=0) return -1;
 
-
-
-	//-- Oprediction gets filled with predictions for ALL samples
-
-	//-- 1. set batchSampleCount=1, and rebuild network layout
-	//setLayout("", 1);
-	//-- 1b. WE ALSO NEED TO CONVERT sample/target back to SBF format!
-
-	//-- 2. load weights (if needed)
+	//-- load weights (if needed)
 	if (runW!=nullptr) {
-
 	}
 
-	//-- 3. infer prediction for every sample
-/*	for (int s=0; s<runSampleCnt; s++) {
-		infer(&sample[s*InputCount], &Oprediction[s*OutputCount]);
-
-		//-- !!!!! TEMPORARY : WRITE AS-IS !!!
-
-	}
-*/
-	//-- batch version
-	//-- 1.1. infer one batch at a time
+	//-- batch run
 	for (int b=0; b<batchCnt; b++) {
 
 		//-- 1.1.1.  load samples onto GPU

@@ -676,7 +676,7 @@ int main() {
 
 	//-- batchSize can be different between train and run
 	int batchsamplesCnt_T=100;
-	int batchsamplesCnt_R=2;
+	int batchsamplesCnt_R=100;
 
 	//-- Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 	NN* trNN=nullptr;
@@ -751,8 +751,13 @@ int main() {
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	trNN->run(runSet, nullptr);
+
+
+	Commit(DebugParms);
+
+
 	FILE* ff=fopen("C:/temp/forecast.csv", "w");
-	for (int i=0; i<runSet->samplesCnt; i++) {
+	for (int i=0; i<(runSet->samplesCnt*runSet->targetSize); i++) {
 		fprintf(ff, "%f, %f \n", runSet->target[i], runSet->prediction[i]);
 
 	}
