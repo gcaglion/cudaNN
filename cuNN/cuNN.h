@@ -7,7 +7,6 @@
 
 #define MLP 0
 #define RNN 1
-#define MAX_LEVELS 8
 
 //-- Training Protocols
 #define TP_STOCHASTIC	0
@@ -50,22 +49,23 @@ typedef struct sNN {
 	bool useContext;
 	bool useBias;
 
-	float levelRatio[MAX_LEVELS];
+	float* levelRatio;
 	int levelsCnt;
-	int nodesCnt[MAX_LEVELS];
-	int levelFirstNode[MAX_LEVELS];
-	int ctxStart[MAX_LEVELS];
+	int* nodesCnt;
+	int* levelFirstNode;
+	int* ctxStart;
 
 	int nodesCntTotal;
-	int weightsCnt[MAX_LEVELS-1];
+	int* weightsCnt;
 	int weightsCntTotal;
-	int levelFirstWeight[MAX_LEVELS-1];
+	int* levelFirstWeight;
 
-	float scaleMin;
-	float scaleMax;
+	//-- set at each level according to ActivationFunction
+	float* scaleMin;	
+	float* scaleMax;
 
 	//-- NNParms
-	int ActivationFunction;
+	int* ActivationFunction;	// can be different for each level
 	int MaxEpochs;
 	int ActualEpochs;
 	float TargetMSE;
@@ -105,18 +105,29 @@ typedef struct sNN {
 	DWORD VSstart, VStimeTot=0, VScnt=0; float VStimeAvg;
 	DWORD BPstart, BPtimeTot=0, BPcnt=0; float BPtimeAvg;
 
-	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_);
+	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction, bool useContext_, bool useBias_);
 	EXPORT ~sNN();
 
-	void setLayout(char LevelRatioS[60], int batchSamplesCnt_);
+	void setLayout(char LevelRatioS_[60], int batchSamplesCnt_);
 
-	EXPORT void setActivationFunction(int func_);
+	EXPORT void setActivationFunction(int* func_);
 	int FF();
 	int Activate(int level);
 	int calcErr();
 
 	EXPORT int train(DataSet* trs);
 	EXPORT int run(DataSet* runSet, numtype* runW);
+
+private:
+	//-- malloc + init
+	int createNeurons();
+	int createWeights();
+	//-- free
+	void destroyNeurons();
+	void destroyWeights();
+
 	int infer(numtype* sample, numtype* prediction);
+
+
 } NN;
 

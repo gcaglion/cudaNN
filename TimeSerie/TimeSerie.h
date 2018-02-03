@@ -59,6 +59,9 @@ typedef struct sTS {
 	char** dtime;	//-- may always be useful...
 	numtype* bd;	//-- host   base data ( 1 X featuresCnt )
 	char* bdtime;
+	bool hasTR=false;
+	numtype* d_tr;
+	bool hasTRS=false;
 	numtype* d_trs;
 
 	//-- constructor / destructor
@@ -86,6 +89,7 @@ typedef struct sTS {
 		bdtime=(char*)malloc(12+1);
 		d=(numtype*)malloc(len*sizeof(numtype));
 		bd=(numtype*)malloc(featuresCnt*sizeof(numtype));
+		d_tr=(numtype*)malloc(len*sizeof(numtype));
 		d_trs=(numtype*)malloc(len*sizeof(numtype));
 	}
 
@@ -93,6 +97,7 @@ typedef struct sTS {
 		free(d);
 		free(bd);
 		free(d_trs);
+		free(d_tr);
 		for (int i=0; i<len; i++) free(dtime[i]);
 		free(dtime); free(bdtime);
 	}
@@ -101,8 +106,13 @@ typedef struct sTS {
 	EXPORT int load(tFileData* tsFileData, char* pDate0);
 	EXPORT int load(tMT4Data* tsMT4Data, char* pDate0);
 
+	EXPORT int transform(int dt_);
+	EXPORT int scale(numtype scaleMin_, numtype scaleMax_);
+
 	EXPORT int TrS(int dt_, numtype scaleMin_, numtype scaleMax_);
 	EXPORT int unTrS(numtype scaleMin_, numtype scaleMax_);
+
+	EXPORT int dump(char* dumpFileName="C:/temp/TSdump.csv");
 
 	EXPORT int calcTSF();
 	EXPORT int createFromTS(sTS* sourceTS, int* feature);
@@ -115,18 +125,15 @@ private:
 } TS;
 
 typedef struct sDataSet {
-	sTS* sourceTS;
+	TS* sourceTS;
 	int sampleLen;
 	int targetLen;
-	int sampleCnt;
-	int sampleSize;
-	int targetSize;
-
-	//-- features selection
 	int selectedFeaturesCnt;
 	int* selectedFeature;
 
-	//-- batch size and count
+	int samplesCnt;
+	int sampleSize;
+	int targetSize;
 	int batchSamplesCnt;
 	int batchCnt;
 
@@ -139,29 +146,26 @@ typedef struct sDataSet {
 	numtype* targetBFS=nullptr;
 	numtype* predictionBFS=nullptr;
 
-
-	sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_) {
+	sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_){
 		sourceTS=sourceTS_;
 		selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
 		sampleLen=sampleLen_; sampleSize=sampleLen*selectedFeaturesCnt;
 		targetLen=targetLen_; targetSize=targetLen*selectedFeaturesCnt;
-		sampleCnt=sourceTS->steps-sampleLen;
+		samplesCnt=sourceTS->steps-sampleLen;
 		batchSamplesCnt=batchSamplesCnt_;
-		batchCnt=(int)floor(sampleCnt/batchSamplesCnt);
+		batchCnt=(int)floor(samplesCnt/batchSamplesCnt);
 
-		sample=(numtype*)malloc(sampleCnt*sampleSize*sizeof(numtype));
-		target=(numtype*)malloc(sampleCnt*targetSize*sizeof(numtype));
-		prediction=(numtype*)malloc(sampleCnt*targetSize*sizeof(numtype));
-		sampleBFS=(numtype*)malloc(sampleCnt*sampleSize*sizeof(numtype));
-		targetBFS=(numtype*)malloc(sampleCnt*targetSize*sizeof(numtype));
-		predictionBFS=(numtype*)malloc(sampleCnt*targetSize*sizeof(numtype));
+		sample=(numtype*)malloc(samplesCnt*sampleSize*sizeof(numtype));
+		target=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
+		prediction=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
+		sampleBFS=(numtype*)malloc(samplesCnt*sampleSize*sizeof(numtype));
+		targetBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
+		predictionBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
 
 		//-- fill sample/target data right at creation time. TS has data in SBF format
-		if( buildFromTS(sourceTS)!=0) throw "buildFromTS() failed\n";
+		if (buildFromTS(sourceTS)!=0) throw "buildFromTS() failed\n";
 		//-- populate BFS sample/target, too
 		SBF2BFS();
-		
-
 
 	}
 	~sDataSet() {
@@ -173,12 +177,10 @@ typedef struct sDataSet {
 		free(predictionBFS);
 	}
 
-	EXPORT void dump(char* filename=nullptr);
-
-private:
 	bool isSelected(int ts_f);
 	EXPORT int buildFromTS(sTS* ts);
 	EXPORT void SBF2BFS();	//-- fills sampleBFS/targetBFS from sample/target
-	EXPORT void BFS2SBF();	//-- fills sample/target from sampleBFS/targetBFS
+	EXPORT void BFS2SBF(int vlen, numtype* fromBFS, numtype* toSBF);	//-- fills sample/target from sampleBFS/targetBFS
+	EXPORT void dump(char* filename=nullptr);
 
 } DataSet;

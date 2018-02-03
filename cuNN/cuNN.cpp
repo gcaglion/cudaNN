@@ -1,12 +1,8 @@
 #include "cuNN.h"
 
-sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int ActivationFunction_, bool useContext_, bool useBias_) {
+sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction_, bool useContext_, bool useBias_) {
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
-
-	// this two should be set by train() and run(), separately
-	//batchCnt=batchCnt_; 
-	//batchSamplesCnt=batchSamplesCnt_;
 
 	//-- set input and output basic dimensions (batchsize not considered yet)
 	sampleLen=sampleLen_;
@@ -15,19 +11,21 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 	useContext=useContext_;
 	useBias=useBias_;
 
-	//-- set Weights Layout. We don't have batchSampleCnt, so we set it at 1. train() and run() will set it later
+	//-- set Layout. We don't have batchSampleCnt, so we set it at 1. train() and run() will set it later
+	levelRatio=(float*)malloc(60*sizeof(float));
 	setLayout(LevelRatioS_, 1);
+	
+	//-- weights can be set now, as they are not affected by batchSampleCnt
+	if (createWeights()!=0) throw FAIL_MALLOC_W;
 
 	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
 	Alg=new Algebra();
 
-	//-- x. set Activation function (also sets scaleMin / scaleMax)
+	//-- x. malloc and set Activation function and scale parameters (also sets scaleMin / scaleMax)
+	ActivationFunction=(int*)malloc(levelsCnt*sizeof(int));
+	scaleMin=(numtype*)malloc(levelsCnt*sizeof(int));
+	scaleMax=(numtype*)malloc(levelsCnt*sizeof(int));
 	setActivationFunction(ActivationFunction_);
-
-	//-- 2. malloc weights (on either CPU or GPU)
-	if (myMalloc(&W, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
-	if (myMalloc(&dW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
-	if (myMalloc(&dJdW, weightsCntTotal)!=0) throw FAIL_MALLOC_W;
 
 	//-- 3. malloc device-based scalar value, to be used by reduction functions (sum, ssum, ...)
 	if (myMalloc(&se,  1)!=0) throw FAIL_MALLOC_SCALAR;
@@ -35,9 +33,6 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 
 }
 sNN::~sNN() {
-	myFree(W);
-	myFree(dW);
-	myFree(dJdW);
 	myFree(se);
 	myFree(tse);
 
@@ -45,12 +40,21 @@ sNN::~sNN() {
 	//free(a);  free(F); free(dF); free(edF);
 	//free(W);
 	free(mseT); free(mseV);
+	free(ActivationFunction);
+	free(scaleMin); free(scaleMax);
 
+	free(levelRatio);
+	free(nodesCnt);
+	free(levelFirstNode);
+	free(ctxStart);
+	free(weightsCnt);
+	free(levelFirstWeight);
+	free(ActivationFunction);
 }
 
 void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {
 	int i, l, nl;
-	char** DescList=(char**)malloc(MAX_LEVELS*sizeof(char*)); for (i=0; i<MAX_LEVELS; i++) DescList[i]=(char*)malloc(256);
+	char** DescList=(char**)malloc(60*sizeof(char*)); for (i=0; i<60; i++) DescList[i]=(char*)malloc(256);
 
 	//-- 0.1. levels and nodes count
 	if (strlen(LevelRatioS)>0) {
@@ -59,10 +63,18 @@ void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {
 		levelsCnt = (Levcnt+2);
 	}
 
+	//-- allocate level-specific parameters
+	nodesCnt=(int*)malloc(levelsCnt*sizeof(int));
+	levelFirstNode=(int*)malloc(levelsCnt*sizeof(int));
+	ctxStart=(int*)malloc(levelsCnt*sizeof(int));
+	weightsCnt=(int*)malloc((levelsCnt-1)*sizeof(int));
+	levelFirstWeight=(int*)malloc((levelsCnt-1)*sizeof(int));
+
 	//-- 0.2. Input-OutputCount moved here, so can be reset when called by run()
 	batchSamplesCnt=batchSamplesCnt_;
 	InputCount=sampleLen*featuresCnt*batchSamplesCnt;
 	OutputCount=predictionLen*featuresCnt*batchSamplesCnt;
+
 
 	//-- 0.3. set nodesCnt (single sample)
 	nodesCnt[0] = InputCount;
@@ -107,40 +119,41 @@ void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {
 		}
 	}
 
-	for (i=0; i<MAX_LEVELS; i++) free(DescList[i]);	free(DescList);
+	for (i=0; i<60; i++) free(DescList[i]);	free(DescList);
 
 }
 
-void sNN::setActivationFunction(int func_) {
-	ActivationFunction=func_;
-	switch (ActivationFunction) {
-	case NN_ACTIVATION_TANH:
-		scaleMin = -1;
-		scaleMax = 1;
-		break;
-	case NN_ACTIVATION_EXP4:
-		scaleMin = 0;
-		scaleMax = 1;
-		break;
-	case NN_ACTIVATION_RELU:
-		scaleMin = 0;
-		scaleMax = 1;
-		break;
-	case NN_ACTIVATION_SOFTPLUS:
-		scaleMin = 0;
-		scaleMax = 1;
-		break;
-	default:
-		scaleMin = -1;
-		scaleMax = 1;
-		break;
+void sNN::setActivationFunction(int* func_) {
+	for (int l=0; l<levelsCnt; l++) {
+		ActivationFunction[l]=func_[l];
+		switch (ActivationFunction[l]) {
+		case NN_ACTIVATION_TANH:
+			scaleMin[l] = -1;
+			scaleMax[l] = 1;
+			break;
+		case NN_ACTIVATION_EXP4:
+			scaleMin[l] = 0;
+			scaleMax[l] = 1;
+			break;
+		case NN_ACTIVATION_RELU:
+			scaleMin[l] = 0;
+			scaleMax[l] = 1;
+			break;
+		case NN_ACTIVATION_SOFTPLUS:
+			scaleMin[l] = 0;
+			scaleMax[l] = 1;
+			break;
+		default:
+			scaleMin[l] = -1;
+			scaleMax[l] = 1;
+			break;
+		}
 	}
-
 }
 int sNN::Activate(int level) {
 	// sets F, dF
 	int ret, retd;
-	switch (ActivationFunction) {
+	switch (ActivationFunction[level]) {
 	case NN_ACTIVATION_TANH:
 		ret=Tanh(nodesCnt[level], &a[levelFirstNode[level]], &F[levelFirstNode[level]]);
 		retd=dTanh(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
@@ -158,6 +171,7 @@ int sNN::Activate(int level) {
 		retd=dSoftPlus(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
 		break;
 	default:
+		ret=-1;
 		break;
 	}
 	return((ret==0&&retd==0)?0:-1);
@@ -199,6 +213,43 @@ int sNN::FF() {
 	}
 	return 0;
 }
+
+int sNN::createNeurons() {
+	//-- malloc neurons (on either CPU or GPU)
+	if (myMalloc(&a, nodesCntTotal)!=0) return -1;
+	if (myMalloc(&F, nodesCntTotal)!=0) return -1;
+	if (myMalloc(&dF, nodesCntTotal)!=0) return -1;
+	if (myMalloc(&edF, nodesCntTotal)!=0) return -1;
+	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) return -1;
+	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) return -1;
+	//--
+	if (Vinit(nodesCntTotal, F, 0, 0)!=0) return -1;
+	//---- the following are needed by cublas version of MbyM
+	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return -1;
+	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return -1;
+	if (Vinit(nodesCntTotal, edF, 0, 0)!=0) return -1;
+}
+void sNN::destroyNeurons() {
+	myFree(a);
+	myFree(F);
+	myFree(dF);
+	myFree(edF);
+	myFree(e);
+	myFree(u);
+}
+int sNN::createWeights() {
+	//-- malloc weights (on either CPU or GPU)
+	if (myMalloc(&W, weightsCntTotal)!=0) return -1;
+	if (myMalloc(&dW, weightsCntTotal)!=0) return -1;
+	if (myMalloc(&dJdW, weightsCntTotal)!=0) return -1;
+
+}
+void sNN::destroyWeights() {
+	myFree(W);
+	myFree(dW);
+	myFree(dJdW);
+}
+
 int sNN::train(DataSet* trs) {
 	int l;
 	DWORD epoch_starttime;
@@ -214,25 +265,14 @@ int sNN::train(DataSet* trs) {
 	//-- set Layout. This should not change weightsCnt[] at all, just nodesCnt[]
 	setLayout("", batchSamplesCnt);
 
-	//-- 0. Init
-	
+	//-- 0. malloc + init neurons
+	if (createNeurons()!=0) return -1;
+
 	//-- malloc mse[maxepochs], always host-side
 	mseT=(numtype*)malloc(MaxEpochs*sizeof(numtype));
 	mseV=(numtype*)malloc(MaxEpochs*sizeof(numtype));
-	//-- malloc neurons (on either CPU or GPU)
-	if (myMalloc(&a, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(&F, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(&dF, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(&edF, nodesCntTotal)!=0) throw FAIL_MALLOC_N;
-	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_e;
-	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) throw FAIL_MALLOC_u;
 
 	//---- 0.1. Init Neurons (must set context neurons=0, at least for layer 0)
-	if( Vinit(nodesCntTotal, F, 0, 0) !=0) return -1;
-	//---- the following are needed by cublas version of MbyM
-	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return -1;
-	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return -1;
-	if (Vinit(nodesCntTotal, edF, 0, 0)!=0) return -1;
 	if (Vinit(weightsCntTotal, dJdW, 0, 0)!=0) return -1;
 
 	//---- 0.2. Init W
@@ -367,12 +407,7 @@ int sNN::train(DataSet* trs) {
 	//dumpArray(epoch-1, mse, "C:/temp/mse.log");
 
 	//-- feee neurons()
-	myFree(a);
-	myFree(F);
-	myFree(dF);
-	myFree(edF);
-	myFree(e);
-	myFree(u);
+	destroyNeurons();
 
 	return 0;
 }
@@ -394,6 +429,10 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 
 	//-- set Neurons Layout based on batchSampleCount of training set
 	setLayout("", runSet->batchSamplesCnt);
+	
+	//-- malloc + init neurons
+	if (createNeurons()!=0) return -1;
+
 
 
 	//-- Oprediction gets filled with predictions for ALL samples
@@ -429,6 +468,11 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 		if (Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
 
 	}
+	//-- finally, convert prediction from BFS to FSB before returning
+	runSet->BFS2SBF(predictionLen, runSet->predictionBFS, runSet->prediction);
 
+	//-- feee neurons()
+	destroyNeurons();
+	
 	return 0;
 }
