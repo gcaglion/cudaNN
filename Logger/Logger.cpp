@@ -7,6 +7,13 @@ EXPORT int LogSaveMSE(tDebugInfo* DebugParms, int pid, int tid, int mseCnt, numt
 		return 0;
 	}
 }
+EXPORT int LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual) {
+	if (DebugParms->DebugDest==LOG_TO_ORCL) {
+		return (Ora_LogSaveRun(DebugParms, pid, tid, runCnt, featuresCnt, prediction, actual));
+	} else {
+		return 0;
+	}
+	}
 EXPORT int LogSaveW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	numtype* hW;
 	#ifdef USE_GPU

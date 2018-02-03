@@ -249,16 +249,17 @@ create table MyLog_Run(
 	NetProcessId number,
 	NetThreadId number,
 	Pos number,
+	FeatureId number,
 	Actual number,
 	Predicted number,
 	Error number,
-	ActualC number,
-	PredictedC number,
-	ErrorC number,
+	ActualTRS number,
+	PredictedTRS number,
+	ErrorTRS number,
 	BarWidth number,
 	ErrorP number
 ) storage (initial 1024M minextents 8 pctincrease 0);
-alter table MyLog_Run add constraint MyLog_Run_PK primary key( ProcessId, ThreadId, Pos ) using index tablespace LogIdx;
+alter table MyLog_Run add constraint MyLog_Run_PK primary key( ProcessId, ThreadId, Pos, FeatureId ) using index tablespace LogIdx;
 
 drop table CoreLogs_GA purge;
 create table CoreLogs_GA(

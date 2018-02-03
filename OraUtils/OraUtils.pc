@@ -500,6 +500,99 @@ EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int
 
 	return sqlca.sqlcode;
 }
+EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	int i;
+	int vInsertCount;
+	int vFeaturesCnt;
+	sql_context vCtx = DebugParms->DebugDB->DBCtx;
+	char stmt[1000];
+	//--
+	int* vProcessId;
+	int* vThreadId;
+	int* vStep;
+	int* vFeatureId;
+	double* vPredictionTRS;
+	double* vActualTRS;
+	double* vErrorTRS;
+	//--
+	int dbl_type = 22;	// Oracle SQLT_BDOUBLE
+	int int_type = 3;	// 
+	unsigned int dbl_len = sizeof(double);
+	unsigned int vchar_type = 96;
+	unsigned int vchar_len = 12+1;
+
+	EXEC SQL END   DECLARE SECTION;
+
+	//-- Connects to DB only once
+	if (vCtx==NULL) {
+		if (OraConnect(DebugParms, DebugParms->DebugDB)!=0) {
+			LogWrite(DebugParms, LOG_ERROR, "%s() could not connect to Log Database...\n", 1, __func__);
+			return -1;
+		}
+		vCtx = DebugParms->DebugDB->DBCtx;
+	}
+	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, DebugParms->DebugDB->DBCtx, vCtx);
+
+	vInsertCount=runCnt;
+	vFeaturesCnt=featuresCnt;
+	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
+	vThreadId=(int*)malloc(vInsertCount*sizeof(int));
+	vStep = (int*)malloc(vInsertCount*sizeof(int));
+	vFeatureId = (int*)malloc(vInsertCount*sizeof(int));
+	vPredictionTRS=(double*)malloc(vInsertCount*sizeof(double));
+	vActualTRS=(double*)malloc(vInsertCount*sizeof(double));
+	vErrorTRS=(double*)malloc(vInsertCount*sizeof(double));
+
+	for (i = 0; i < vInsertCount; i++) {
+		vProcessId[i]=pid;
+		vThreadId[i]=tid;
+		vStep[i] = (int)floor(i/vFeaturesCnt);
+		vFeatureId[i]=i%vFeaturesCnt;
+		vPredictionTRS[i]=prediction[i];
+		vActualTRS[i]=actual[i];
+		vErrorTRS[i]=fabs(actual[i]-prediction[i]);
+	}
+
+	//-- Then, Build the Insert statement
+	sprintf(&stmt[0], "insert into MyLog_Run (ProcessId, ThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07)");
+	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
+
+	EXEC SQL CONTEXT USE :vCtx;
+	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
+	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
+	EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inRun';
+	EXEC SQL SET DESCRIPTOR 'inRun' COUNT = 7;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 1 DATA = :vProcessId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 2 DATA = :vThreadId;
+	EXEC SQL FOR : vInsertCount SET DESCRIPTOR 'inRun' VALUE 3 DATA = : vStep;
+	EXEC SQL FOR : vInsertCount SET DESCRIPTOR 'inRun' VALUE 4 DATA = : vFeatureId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 5 DATA = :vPredictionTRS;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 6 DATA = :vActualTRS;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE  7 DATA = :vErrorTRS;
+	EXEC SQL PREPARE DynIns FROM :stmt;
+	EXEC SQL FOR :vInsertCount EXECUTE DynIns USING DESCRIPTOR 'inRun';
+	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
+
+	//pInsertCount[vNetLevel] = sqlca.sqlerrd[2];
+	LogWrite(DebugParms, LOG_INFO, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
+	if (sqlca.sqlcode!=0) {
+		if (sqlca.sqlcode!=1) LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		return sqlca.sqlcode;
+	}
+	EXEC SQL DEALLOCATE DESCRIPTOR 'inRun';
+
+	//-- free()s
+	free(vProcessId);
+	free(vThreadId);
+	free(vStep);
+	free(vFeatureId);
+	free(vPredictionTRS);
+	free(vActualTRS);
+	free(vErrorTRS);
+
+	return sqlca.sqlcode;
+}
 
 EXPORT int Ora_LogLoadW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
 	EXEC SQL BEGIN DECLARE SECTION;

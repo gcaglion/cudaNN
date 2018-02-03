@@ -750,18 +750,18 @@ int main() {
 	DataSet* runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
+	start=timeGetTime();
 	trNN->run(runSet, nullptr);
+	printf("run() , elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
+	//-- persist run
+	start=timeGetTime();
+	int runLogCnt=(runSet->samplesCnt*runSet->targetSize);
+//	if (LogSaveRun(DebugParms, trNN->pid, trNN->tid, runLogCnt, modelFeaturesCnt, runSet->prediction, runSet->target)!=0) return -1;
+	printf("LogSaveRun(), elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	Commit(DebugParms);
 
-
-	FILE* ff=fopen("C:/temp/forecast.csv", "w");
-	for (int i=0; i<(runSet->samplesCnt*runSet->targetSize); i++) {
-		fprintf(ff, "%f, %f \n", runSet->target[i], runSet->prediction[i]);
-
-	}
-	fclose(ff);
 
 	//-- destroy training NN
 	delete trNN;

@@ -47,9 +47,9 @@ sNN::~sNN() {
 	free(nodesCnt);
 	free(levelFirstNode);
 	free(ctxStart);
-	free(weightsCnt);
-	free(levelFirstWeight);
-	free(ActivationFunction);
+//	free(weightsCnt);
+//	free(levelFirstWeight);
+//	free(ActivationFunction);
 }
 
 void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {

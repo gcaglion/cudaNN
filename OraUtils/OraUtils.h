@@ -5,6 +5,7 @@ typedef void * sql_context;
 
 #include "../fxdata.h"
 #include "../MyDebug/mydebug.h"
+#include <math.h>
 
 #ifdef __cplusplus
 #undef EXPORT
@@ -26,6 +27,8 @@ EXPORT int GetStringArrayFromQuery(tDebugInfo* DebugParms, sql_context pCtx, cha
 
 //=== Logging functions
 EXPORT int Ora_LogSaveMSE(tDebugInfo* DebugParms, int pid, int tid, int mseCnt, float* mseT, float* mseV);
+EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual);
+
 EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* W);
 
 EXPORT int Ora_LogLoadW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* W);
