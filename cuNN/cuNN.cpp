@@ -259,6 +259,8 @@ int sNN::train(DataSet* trs) {
 			LDstart=timeGetTime(); LDcnt++;
 			if (Alg->h2d(&F[0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true )!=0) return -1;
 			if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true )!=0) return -1;
+			//dumpArray(nodesCnt[0], &F[0], "c:/temp/F0.txt");
+			//dumpArray(nodesCnt[levelsCnt-1], u, "C:/temp/u.txt");
 			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
 			//-- 1.1.2. Feed Forward (  )

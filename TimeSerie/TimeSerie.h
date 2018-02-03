@@ -172,10 +172,11 @@ typedef struct sDataSet {
 		free(predictionBFS);
 	}
 
+	EXPORT void dump(char* filename=nullptr);
+
 private:
 	bool isSelected(int ts_f);
 	EXPORT int buildFromTS(sTS* ts);
-	EXPORT void dump(char* filename=nullptr);
 	EXPORT void SBF2BFS();	//-- fills sampleBFS/targetBFS from sample/target
 	EXPORT void BFS2SBF();	//-- fills sample/target from sampleBFS/targetBFS
 

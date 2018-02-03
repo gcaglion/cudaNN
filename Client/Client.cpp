@@ -649,7 +649,7 @@ int main() {
 	tDBConnection* LogDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO");
 
 	tDebugInfo* DebugParms=new tDebugInfo;
-	DebugParms->DebugLevel = 1;
+	DebugParms->DebugLevel = 0;
 	DebugParms->DebugDest = LOG_TO_ORCL;
 	DebugParms->DebugDB=LogDB;
 	strcpy(DebugParms->fPath, "C:/temp");
@@ -661,10 +661,10 @@ int main() {
 	float scaleM, scaleP;
 
 	int dt=DT_DELTA;
-	int historyLen=5000;// 50000;// 20;// 500;
-	int sampleLen=100;// 200;
+	int historyLen=20;// 50000;// 50000;// 20;// 500;
+	int sampleLen=6;// 200;// 200;
 	int predictionLen=2;
-	int trainBatchSize=100;
+	int trainBatchSize=2;// 100;
 	int runBatchSize=50;
 
 	char* levelRatioS="1, 0.5, 1";// "1, 0.5";
@@ -710,6 +710,8 @@ int main() {
 	//-- 3. create dataset from timeserie, defining data transformation, sample/target lens, features, and batch size. Only batch size can be different between train and run datasets
 	start=timeGetTime();
 	DataSet* trainSet=new DataSet(ts1, sampleLen, predictionLen, trainFeaturesCnt, trainFeatures, trainBatchSize);
+	trainSet->dump("C:/temp/trainSet.csv");
+
 	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	trNN->train(trainSet);
