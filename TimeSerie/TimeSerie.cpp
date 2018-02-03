@@ -102,96 +102,126 @@ int sTS::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
 
 	return 0;
 }
+
 int sTS::unTrS(numtype scaleMin_, numtype scaleMax_) {
 	return 0;
 }
 
-int sDataSet::buildFromTS(sTS* ts, char* outFileName) {
-
+void sDataSet::dump(char* filename) {
 	int s, i, b, f;
 	char LogFileName[MAX_PATH];
 	FILE* LogFile=NULL;
+	sprintf(LogFileName, ((filename==nullptr) ? "C:/temp/DataSet.log" : filename));
 
+	LogFile = fopen(LogFileName, "w");
+	fprintf(LogFile, "SampleId\t");
+	for ( b=0; b<(sampleLen); b++) {
+		for ( f=0; f<selectedFeaturesCnt; f++) {
+			fprintf(LogFile, "  Bar%dF%d\t", b, selectedFeature[f]);
+		}
+	}
+	fprintf(LogFile, "\t");
+	for ( b=0; b<(targetLen); b++) {
+		for ( f=0; f<selectedFeaturesCnt; f++) {
+			fprintf(LogFile, "  Prd%dF%d\t", b, selectedFeature[f]);
+		}
+	}
+	fprintf(LogFile, "\n");
+	for (i=0; i<(1+sampleSize); i++) fprintf(LogFile, "---------\t");
+	fprintf(LogFile, "\t");
+	for (i=0; i<targetSize; i++) fprintf(LogFile, "---------\t");
+	fprintf(LogFile, "\n");
 
-	if (ts->DebugParms->DebugLevel>0) {
-		sprintf(LogFileName, ((outFileName==NULL)?"C:/temp/SlideArray.log":outFileName));
-		LogFile = fopen(LogFileName, "w");
-		fprintf(LogFile, "SampleId\t");
-		for (int b=0; b<(sampleSize/ts->featuresCnt); b++) {
-			for (int f=0; f<ts->featuresCnt; f++) {
-				fprintf(LogFile, "  Bar%dF%d\t", b, f);
+	int si, ti, sidx, tidx;
+	si=0; ti=0;
+	for (s=0; s<sampleCnt; s++) {
+		//-- samples
+		sidx=s*sourceTS->featuresCnt;
+		fprintf(LogFile, "%d\t\t\t", s);
+		for (b=0; b<sampleLen; b++) {
+			for (f=0; f<sourceTS->featuresCnt; f++) {
+				if (isSelected(f)) {
+					fprintf(LogFile, "%f\t", sample[si]);
+					si++;
+				}
+				sidx++;
 			}
 		}
-		fprintf(LogFile, "\t");
-		for (int b=0; b<(targetSize/ts->featuresCnt); b++) {
-			for (int f=0; f<ts->featuresCnt; f++) {
-				fprintf(LogFile, "  Prd%dF%d\t", b, f);
+		fprintf(LogFile, "|\t");
+		
+		//-- targets
+		tidx=sidx;
+		for (b=0; b<targetLen; b++) {
+			for (f=0; f<sourceTS->featuresCnt; f++) {
+				if (isSelected(f)) {
+					if (tidx==sourceTS->len) {
+						tidx-=sourceTS->featuresCnt;
+					}
+					fprintf(LogFile, "%f\t", target[ti]);
+					ti++;
+				}
+				tidx++;
 			}
 		}
-		fprintf(LogFile, "\n");
-		for (i=0; i<(1+sampleSize); i++) fprintf(LogFile, "---------\t");
-		fprintf(LogFile, "\t");
-		for (i=0; i<targetSize; i++) fprintf(LogFile, "---------\t");
 		fprintf(LogFile, "\n");
 	}
+	fclose(LogFile);
+}
+
+bool sDataSet::isSelected(int ts_f) {
+	for (int ds_f=0; ds_f<selectedFeaturesCnt; ds_f++) {
+		if (selectedFeature[ds_f]=ts_f) return true;
+	}
+	return false;
+}
+int sDataSet::buildFromTS(sTS* ts) {
+
+	int s, i, b, f;
 
 	int si, ti, sidx, tidx;
 	si=0; ti=0;
 	for (s=0; s<sampleCnt; s++) {
 		//-- samples
 		sidx=s*ts->featuresCnt;
-		if (ts->DebugParms->DebugLevel>0) fprintf(LogFile, "%d\t\t\t", s);
-		//printf("\ns[%d] sidx=%d\n", s, sidx);
 		for (b=0; b<sampleLen; b++) {
 			for (f=0; f<ts->featuresCnt; f++) {
-				sample[si]=ts->d_trs[sidx];
-				if (ts->DebugParms->DebugLevel>0) fprintf(LogFile, "%f\t", sample[si]);
-				//printf("bar%df%d=%1.5f\n", b, f, ts->d[sidx]);
+				if (isSelected(f)) {
+					sample[si]=ts->d_trs[sidx];
+					si++;
+				}
 				sidx++;
-				si++;
 			}
 		}
-		if (ts->DebugParms->DebugLevel>0) fprintf(LogFile, "|\t");
-		
 		//-- targets
 		tidx=sidx;
-		//printf("\nt[%d] tidx=%d:\n", s, tidx);
 		for (b=0; b<targetLen; b++) {
 			for (f=0; f<ts->featuresCnt; f++) {
-				if (tidx==ts->len) {
-					tidx-=ts->featuresCnt;
+				if (isSelected(f)) {
+					if (tidx==ts->len) {
+						tidx-=ts->featuresCnt;
+					}
+					target[ti]=ts->d_trs[tidx];
+					ti++;
 				}
-				target[ti]=ts->d_trs[tidx];
-				if (ts->DebugParms->DebugLevel>0) fprintf(LogFile, "%f\t", target[ti]);
-				//printf("bar%df%d=%1.5f\n", b, f, ts->d[tidx]);
 				tidx++;
-				ti++;
 			}
 		}
-		if (ts->DebugParms->DebugLevel>0) fprintf(LogFile, "\n");
 	}
-
-	if (ts->DebugParms->DebugLevel>0) fclose(LogFile);
 
 	return 0;
 }
-void sDataSet::SBF2BFS() {
 
-	//-- common dimensions
-	int db=batchCnt;
-	int ds=batchSamplesCnt;
-	int df=sourceTS->featuresCnt;
+void sDataSet::SBF2BFS() {
 
 	int barCnt;
 	//-- first, sample
 	barCnt=sampleLen;
-	SBF2BFScommon(batchCnt, batchSamplesCnt, barCnt, sourceTS->featuresCnt, sample, sampleBFS);
+	SBF2BFScommon(batchCnt, batchSamplesCnt, barCnt, selectedFeaturesCnt, sample, sampleBFS);
 	//-- then, target
 	barCnt=targetLen;
-	SBF2BFScommon(batchCnt, batchSamplesCnt, barCnt, sourceTS->featuresCnt, target, targetBFS);
+	SBF2BFScommon(batchCnt, batchSamplesCnt, barCnt, selectedFeaturesCnt, target, targetBFS);
 
 }
-
 void sDataSet::BFS2SBF() {
 	int i=0;
 	for (int b=0; b<batchCnt; b++) {

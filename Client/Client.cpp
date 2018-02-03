@@ -627,7 +627,7 @@ int client11(){
 	TS* ts1=new TS(20, 5);
 	if(ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
 	if (ts1->TrS(DT_DELTA, -1, 1)!=0) return -1;
-	DataSet* DataSet1=new DataSet(ts1, 5, 2, 20);
+//	DataSet* DataSet1=new DataSet(ts1, 5, 2, 20);
 
 	return 0;
 }
@@ -660,10 +660,10 @@ int main() {
 
 	float scaleM, scaleP;
 
+	int dt=DT_DELTA;
 	int historyLen=5000;// 50000;// 20;// 500;
 	int sampleLen=100;// 200;
 	int predictionLen=2;
-	int featuresCnt=5;	// 4;	//OHLC !!! FIXED !!! (it's hard-coded in LoadFxData);
 	int trainBatchSize=100;
 	int runBatchSize=50;
 
@@ -672,13 +672,27 @@ int main() {
 	bool useContext=false;
 	bool useBias=false;
 
+	//-- 1. load timeserie
+	const int FXfeaturesCnt=5;	//-- OHLC, fixed by the query
+	start=timeGetTime();
+	TS* ts1=new TS(historyLen, FXfeaturesCnt, DebugParms);
+	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
+	printf("ts1 create+load, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+
+	//-- 2. apply data transformation
+
+
+	//-- 2. define subset of features to be extracted from timeserie for train and run
+	int trainFeatures[]={ 0,1,2,3 };
+	int trainFeaturesCnt=sizeof(trainFeatures)/sizeof(int);	
+
 	NN* trNN=nullptr;
 	try {
-		trNN=new NN(sampleLen, predictionLen, featuresCnt, levelRatioS, activationFunction, useContext, useBias);
-	} catch (const char* e) {
+		trNN=new NN(sampleLen, predictionLen, trainFeaturesCnt, levelRatioS, activationFunction, useContext, useBias);
+	}
+	catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
 	}
-
 	//-- these should be relevant for training only.
 	trNN->MaxEpochs=20;
 	trNN->NetSaveFreq=200;
@@ -688,43 +702,15 @@ int main() {
 	trNN->LearningMomentum=(numtype)0.2;
 	trNN->StopOnReverse=true;
 
-	start=timeGetTime();
-	TS* ts1=new TS(historyLen, featuresCnt, DebugParms);
-	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
-	printf("ts1 create+load, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+
 	start=timeGetTime();
 	if (ts1->TrS(DT_DELTA, trNN->scaleMin, trNN->scaleMax)!=0) return -1;
 	printf("ts1 transform+scale, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+
+	//-- 3. create dataset from timeserie, defining data transformation, sample/target lens, features, and batch size. Only batch size can be different between train and run datasets
 	start=timeGetTime();
-
-	DataSet* trainSet=new DataSet(ts1, sampleLen, predictionLen, trainBatchSize, "C:/temp/trainSet.txt");
-	printf("build DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-
-
-/*
-	numtype* baseData=(numtype*)malloc(featuresCnt*sizeof(numtype));
-	numtype* historyData=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
-	numtype* hd_trs=(numtype*)malloc(historyLen*featuresCnt*sizeof(numtype));
-
-	numtype* fTrainSample=MallocArray<numtype>(totSamplesCount * sampleLen*featuresCnt);
-	numtype* fTrainTarget=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
-	numtype* fTrainForecast=MallocArray<numtype>(totSamplesCount * predictionLen*featuresCnt);
-
-	//-- load data ; !!!! SHOULD SET A MAX BATCHSIZE HERE, TOO, AND CYCLE THROUGH BATCHES !!!
-	start=timeGetTime();
-	if (LoadFXdata(DebugParms, "EURUSD", "H1", "201612010000", historyLen, historyData, baseData)<0) return -1;
-	printf("LoadFXdata() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-
-	start=timeGetTime();
-	dataTrS(historyLen, featuresCnt, historyData, baseData, DT_DELTA, trNN->scaleMin, trNN->scaleMax, hd_trs, &scaleM, &scaleP);
-	printf("dataTrS() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-
-	start=timeGetTime();
-	fSlideArrayF(historyLen*featuresCnt, hd_trs, featuresCnt, totSamplesCount, sampleLen*featuresCnt, fTrainSample, predictionLen*featuresCnt, fTrainTarget, 2);
-	printf("fSlideArrayF() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-*/
-	//-- Train
-	//trNN->train(fTrainSample, fTrainTarget);
+	DataSet* trainSet=new DataSet(ts1, sampleLen, predictionLen, trainFeaturesCnt, trainFeatures, trainBatchSize);
+	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	trNN->train(trainSet);
 
@@ -740,10 +726,11 @@ int main() {
 //		trNN->ActivationFunction, trNN->MaxEpochs, trNN->ActualEpochs, trNN->TargetMSE, trNN->StopOnReverse, trNN->NetSaveFreq, trNN->BP_Algo, trNN->LearningRate, trNN->LearningMomentum)!=0) return -1;
 
 //-- DB commit
-	Commit(DebugParms);
+//	Commit(DebugParms);
 
-	//-- Run 
-	DataSet* runSet=new DataSet(ts1, sampleLen, predictionLen, runBatchSize, "C:/temp/runSet.txt");
+	start=timeGetTime();
+	DataSet* runSet=new DataSet(ts1, sampleLen, predictionLen, trainFeaturesCnt, trainFeatures, runBatchSize);
+	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	trNN->run(runSet, nullptr);
 	FILE* ff=fopen("C:/temp/forecast.csv", "w");
