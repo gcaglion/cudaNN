@@ -199,6 +199,13 @@ EXPORT int dumpArray(int vlen, numtype* v, const char* fname) {
 	return 0;
 #endif
 }
+EXPORT int dumpArrayH(int vlen, numtype* v, const char* fname) {
+	FILE* f=fopen(fname, "w");
+	if (f==nullptr) return -1;
+	for (int i=0; i<vlen; i++) fprintf(f, "%f\n", v[i]);
+	fclose(f);
+	return 0;
+}
 EXPORT int loadArray(int vlen, numtype* v, const char* fname) {
 #ifdef USE_GPU
 	return(loadArray_cu(vlen, v, fname));

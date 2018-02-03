@@ -154,6 +154,7 @@ EXPORT int myMalloc(numtype** var, int size);
 EXPORT int myFree(numtype* var);
 
 EXPORT int dumpArray(int vlen, numtype* v, const char* fname);
+EXPORT int dumpArrayH(int vlen, numtype* v, const char* fname);
 EXPORT int loadArray(int vlen, numtype* v, const char* fname);
 
 EXPORT int Tanh(int Vlen, numtype* in, numtype* out);

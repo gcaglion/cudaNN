@@ -706,11 +706,18 @@ int main() {
 	start=timeGetTime();
 	if (ts1->TrS(DT_DELTA, trNN->scaleMin, trNN->scaleMax)!=0) return -1;
 	printf("ts1 transform+scale, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	if (dumpArrayH(ts1->len, ts1->d, "C:/temp/ts1-Data.txt")!=0) return -1;
+	if (dumpArrayH(ts1->len, ts1->d_trs, "C:/temp/ts1-trsData.txt")!=0) return -1;
 
 	//-- 3. create dataset from timeserie, defining data transformation, sample/target lens, features, and batch size. Only batch size can be different between train and run datasets
 	start=timeGetTime();
 	DataSet* trainSet=new DataSet(ts1, sampleLen, predictionLen, trainFeaturesCnt, trainFeatures, trainBatchSize);
-	trainSet->dump("C:/temp/trainSet.csv");
+	trainSet->dump("c:/temp/trainSet-SlideArray.log");
+	if (dumpArrayH(trainSet->sampleCnt*trainSet->sampleSize, trainSet->sample, "C:/temp/trainSet-Sample.txt")!=0) return -1;
+	if (dumpArrayH(trainSet->sampleCnt*trainSet->targetSize, trainSet->target, "C:/temp/trainSet-target.txt")!=0) return -1;
+	if (dumpArrayH(trainSet->sampleCnt*trainSet->sampleSize, trainSet->sampleBFS, "C:/temp/trainSet-SampleBFS.txt")!=0) return -1;
+	if (dumpArrayH(trainSet->sampleCnt*trainSet->targetSize, trainSet->targetBFS, "C:/temp/trainSet-targetBFS.txt")!=0) return -1;
+
 
 	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
