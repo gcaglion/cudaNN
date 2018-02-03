@@ -661,11 +661,12 @@ int main() {
 	float scaleM, scaleP;
 
 	//-- data params
-	int modelFeature[]={ 0,1,2,3 };
+	//int modelFeature[]={ 0,1,2,3 };
+	int modelFeature[]={ 0,1 };
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 50000;// 50000;// 20;// 500;
-	int sampleLen= 200;// 200;
+	int historyLen= 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen= 6;// 200;// 200;
 	int predictionLen=2;
 
 	//-- net geometry
@@ -675,8 +676,8 @@ int main() {
 	bool useBias=false;
 
 	//-- batchSize can be different between train and run
-	int batchsamplesCnt_T=100;
-	int batchsamplesCnt_R=100;
+	int batchsamplesCnt_T=2;
+	int batchsamplesCnt_R=2;
 
 	//-- Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 	NN* trNN=nullptr;
@@ -747,7 +748,9 @@ int main() {
 //	Commit(DebugParms);
 
 	start=timeGetTime();
+	batchsamplesCnt_R=1;
 	DataSet* runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
+	runSet->dump("C:/temp/runSet.log");
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	start=timeGetTime();
@@ -756,8 +759,9 @@ int main() {
 
 	//-- persist run
 	start=timeGetTime();
-	int runLogCnt=(runSet->samplesCnt*runSet->targetSize);
-//	if (LogSaveRun(DebugParms, trNN->pid, trNN->tid, runLogCnt, modelFeaturesCnt, runSet->prediction, runSet->target)!=0) return -1;
+	//int runLogCnt=(runSet->samplesCnt*runSet->targetSize);
+	int runLogCnt=(runSet->samplesCnt);
+	if (LogSaveRun(DebugParms, trNN->pid, trNN->tid, runLogCnt, modelFeaturesCnt, runSet->prediction, runSet->target)!=0) return -1;
 	printf("LogSaveRun(), elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	Commit(DebugParms);

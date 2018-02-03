@@ -145,6 +145,9 @@ typedef struct sDataSet {
 	numtype* sampleBFS=nullptr;
 	numtype* targetBFS=nullptr;
 	numtype* predictionBFS=nullptr;
+	//-- one-step only target+prediction (required by run() ) ???????
+	numtype* target0=nullptr;
+	numtype* prediction0=nullptr;
 
 	sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_){
 		sourceTS=sourceTS_;
@@ -161,6 +164,9 @@ typedef struct sDataSet {
 		sampleBFS=(numtype*)malloc(samplesCnt*sampleSize*sizeof(numtype));
 		targetBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
 		predictionBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
+		//--
+		target0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
+		prediction0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
 
 		//-- fill sample/target data right at creation time. TS has data in SBF format
 		if (buildFromTS(sourceTS)!=0) throw "buildFromTS() failed\n";
@@ -175,6 +181,8 @@ typedef struct sDataSet {
 		free(sampleBFS);
 		free(targetBFS);
 		free(predictionBFS);
+		free(target0);
+		free(prediction0);
 	}
 
 	bool isSelected(int ts_f);

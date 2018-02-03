@@ -427,7 +427,9 @@ int sNN::infer(numtype* sample, numtype* Oprediction) {
 }
 int sNN::run(DataSet* runSet, numtype* runW) {
 
-	//-- set Neurons Layout based on batchSampleCount of training set
+	//-- set Neurons Layout based on batchSampleCount of run set
+	batchSamplesCnt=runSet->batchSamplesCnt;
+	batchCnt=runSet->batchCnt;
 	setLayout("", runSet->batchSamplesCnt);
 	
 	//-- malloc + init neurons
@@ -449,9 +451,17 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
 		if (Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
 
+		//-- 1.1.4 copy only first-step target/prediction into target0/prediction0	// THERE MUST BE A MUCH BETTER WAY!!!!!
+		for (int s=0; s<batchSamplesCnt; s++) {
+			for(int f=0; f<runSet->selectedFeaturesCnt; f++){
+				runSet->prediction0[b*batchSamplesCnt*runSet->selectedFeaturesCnt+s*runSet->selectedFeaturesCnt+f]=runSet->predictionBFS[b*OutputCount+f];
+				runSet->target0[b*batchSamplesCnt*runSet->selectedFeaturesCnt+s*runSet->selectedFeaturesCnt+f]=runSet->targetBFS[b*OutputCount+f];
+			}
+		}
+
 	}
 	//-- finally, convert prediction from BFS to FSB before returning
-	runSet->BFS2SBF(predictionLen, runSet->predictionBFS, runSet->prediction);
+	//runSet->BFS2SBF(predictionLen, runSet->predictionBFS, runSet->prediction);
 
 	//-- feee neurons()
 	destroyNeurons();
