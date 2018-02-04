@@ -281,7 +281,7 @@ void client4() {
 	Alg->MbyM(A->my, A->mx, 1, false, A->m, B->my, B->mx, 1, false, B->m, C->m);
 	C->print("C");
 
-	matrix* Bt=new matrix(12, 5, true, -0.1, -0.1);
+	matrix* Bt=new matrix(12, 5, true, -0.1f, -0.1f);
 	Bt->print("Bt");
 	Alg->MbyM(A->my, A->mx, 1, false, A->m, Bt->my, Bt->mx, 1, true, Bt->m, C->m);
 	C->print("C");
@@ -542,7 +542,7 @@ int client8() {
 		numtype diff;
 		success=true;
 		for (int i=0; i<(Cy*Cx); i++) {
-			diff=fabs(Cr[i]-Ch[i]);
+			diff=(numtype)fabs(Cr[i]-Ch[i]);
 			if (diff>1e-5) {
 				printf("test=%d: diff at [%d] = %f \n", test, i, diff);
 				success=false;

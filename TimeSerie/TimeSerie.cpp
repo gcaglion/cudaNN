@@ -263,7 +263,7 @@ bool sDataSet::isSelected(int ts_f) {
 }
 int sDataSet::buildFromTS(sTS* ts) {
 
-	int s, i, b, f;
+	int s, b, f;
 
 	int si, ti, sidx, tidx;
 	si=0; ti=0;

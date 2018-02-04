@@ -228,6 +228,7 @@ int sNN::createNeurons() {
 	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return -1;
 	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return -1;
 	if (Vinit(nodesCntTotal, edF, 0, 0)!=0) return -1;
+	return 0;
 }
 void sNN::destroyNeurons() {
 	myFree(a);
@@ -242,7 +243,7 @@ int sNN::createWeights() {
 	if (myMalloc(&W, weightsCntTotal)!=0) return -1;
 	if (myMalloc(&dW, weightsCntTotal)!=0) return -1;
 	if (myMalloc(&dJdW, weightsCntTotal)!=0) return -1;
-
+	return 0;
 }
 void sNN::destroyWeights() {
 	myFree(W);

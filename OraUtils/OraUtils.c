@@ -2847,7 +2847,7 @@ EXPORT int Ora_LogLoadW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int
 
 
 		if (sqlca.sqlcode==0) {
-			oW[i] = vW;
+			oW[i] = (numtype)vW;
 		} else if (sqlca.sqlcode==1403) {
 			break;
 		} else {
