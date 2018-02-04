@@ -657,6 +657,7 @@ int main() {
 	DebugParms->PauseOnError = 1;
 	//--
 	DWORD start, end;
+	DWORD mainStart=timeGetTime();
 
 	float scaleM, scaleP;
 
@@ -665,8 +666,8 @@ int main() {
 	int modelFeature[]={ 0,1,2,3 };
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 500;// 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 20; //6;// 200;// 200;
+	int historyLen= 5000;// 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen= 100; //6;// 200;// 200;
 	int predictionLen=2;
 
 	//-- net geometry
@@ -676,8 +677,8 @@ int main() {
 	bool useBias=false;
 
 	//-- batchSize can be different between train and run
-	int batchsamplesCnt_T=5;
-	int batchsamplesCnt_R=1;
+	int batchsamplesCnt_T=100;
+	int batchsamplesCnt_R=100;
 
 	//-- Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 	NN* trNN=nullptr;
@@ -722,7 +723,7 @@ int main() {
 	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- set training parameters
-	trNN->MaxEpochs=1000;
+	trNN->MaxEpochs=200;
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;
@@ -736,7 +737,7 @@ int main() {
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- logging parameters
-	bool saveMSE=false;
+	bool saveMSE=true;
 	bool saveRun=true;
 	bool saveW=false;
 	bool saveNet=false;
@@ -780,6 +781,7 @@ int main() {
 	//-- destroy training NN
 	delete trNN;
 
+	printf("Finished. Total elapsed time=%ld \n", (DWORD)(timeGetTime()-mainStart));
 
 	system("pause");
 	return 0;

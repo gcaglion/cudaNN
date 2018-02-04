@@ -403,8 +403,26 @@ int sNN::train(DataSet* trs) {
 	//VStimeAvg=(float)VStimeTot/VScnt; printf("VS count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VScnt, (VStimeTot/(float)1000), VStimeAvg);
 	BPtimeAvg=(float)BPtimeTot/LDcnt; printf("BP count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", BPcnt, (BPtimeTot/(float)1000), BPtimeAvg);
 
-	//-- !!! TODO: Proper LogSaveMSE() !!!
-	//dumpArray(epoch-1, mse, "C:/temp/mse.log");
+	//-- test run
+	if (Vinit(1, tse, 0, 0)!=0) return -1;
+	for (int b=0; b<batchCnt; b++) {
+
+		//-- load samples + targets onto GPU
+		if (Alg->h2d(&F[0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
+		if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
+
+		//-- Feed Forward (  )
+		if (FF()!=0) return -1;
+
+		//-- Calc Error (sets e[], te, updates tse) for the whole batch
+		if (calcErr()!=0) return -1;
+
+	}
+	//-- calc and display MSE
+	numtype tse_h, mse_h;
+	Alg->d2h(&tse_h, tse, sizeof(numtype));
+	mse_h=tse_h/batchCnt/nodesCnt[levelsCnt-1];
+	printf("\nTest Run MSE=%f \n", mse_h);
 
 	//-- feee neurons()
 	destroyNeurons();
@@ -434,6 +452,9 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 	
 	//-- malloc + init neurons
 	if (createNeurons()!=0) return -1;
+
+	//-- reset tse=0
+	if (Vinit(1, tse, 0, 0)!=0) return -1;
 
 	//-- load weights (if needed)
 	if (runW!=nullptr) {
