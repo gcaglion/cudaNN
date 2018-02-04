@@ -676,7 +676,7 @@ int main() {
 	bool useBias=false;
 
 	//-- batchSize can be different between train and run
-	int batchsamplesCnt_T=1;
+	int batchsamplesCnt_T=5;
 	int batchsamplesCnt_R=1;
 
 	//-- Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
@@ -722,7 +722,7 @@ int main() {
 	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- set training parameters
-	trNN->MaxEpochs=2000;
+	trNN->MaxEpochs=1000;
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;
@@ -730,41 +730,50 @@ int main() {
 	trNN->LearningMomentum=(numtype)0.5;
 	trNN->StopOnReverse=false;
 
-	//-- train with training Set, which specifies batch size and features list (not count)
-	if(trNN->train(trainSet)!=0) return -1;
-
-	//-- persist MSE 
 	start=timeGetTime();
-	if (LogSaveMSE(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV)!=0) return -1;
-	printf("LogSaveMSE() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	
-	//-- persist final W
-//	start=timeGetTime();
-//	if (LogSaveW(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W)!=0) return -1;
-//	printf("LogSaveW() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-//	//-- Persist network structure
-//	if (LogSaveStruct(DebugParms, trNN->pid, trNN->tid, trNN->InputCount, trNN->OutputCount, trNN->featuresCnt, trNN->sampleLen, trNN->predictionLen, trNN->batchCnt, batchSamplesCount, trNN->useContext, trNN->useBias,
-//		trNN->ActivationFunction, trNN->MaxEpochs, trNN->ActualEpochs, trNN->TargetMSE, trNN->StopOnReverse, trNN->NetSaveFreq, trNN->BP_Algo, trNN->LearningRate, trNN->LearningMomentum)!=0) return -1;
-
-//-- DB commit
-//	Commit(DebugParms);
-
-	start=timeGetTime();
-	batchsamplesCnt_R=1;
 	DataSet* runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
 	//runSet->dump("C:/temp/runSet.log");
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
+	//-- logging parameters
+	bool saveMSE=false;
+	bool saveRun=true;
+	bool saveW=false;
+	bool saveNet=false;
+
+	//-- train with training Set, which specifies batch size and features list (not count)
+	if(trNN->train(trainSet)!=0) return -1;
+
+	//-- persist MSE 
+	if(saveMSE){
+		start=timeGetTime();
+		if (LogSaveMSE(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV)!=0) return -1;
+		printf("LogSaveMSE() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	}
+	//-- persist final W
+	if (saveW) {
+		start=timeGetTime();
+		if (LogSaveW(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W)!=0) return -1;
+		printf("LogSaveW() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	}
+	//-- Persist network structure
+	if (saveNet) {
+		//if (LogSaveStruct(DebugParms, trNN->pid, trNN->tid, trNN->InputCount, trNN->OutputCount, trNN->featuresCnt, trNN->sampleLen, trNN->predictionLen, trNN->batchCnt, batchSamplesCount, trNN->useContext, trNN->useBias, trNN->ActivationFunction, trNN->MaxEpochs, trNN->ActualEpochs, trNN->TargetMSE, trNN->StopOnReverse, trNN->NetSaveFreq, trNN->BP_Algo, trNN->LearningRate, trNN->LearningMomentum)!=0) return -1;
+	}
+
+	//-- run
 	start=timeGetTime();
 	trNN->run(runSet, nullptr);
 	printf("run() , elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-
+	
 	//-- persist run
-	start=timeGetTime();
-	//int runLogCnt=(runSet->samplesCnt*runSet->targetSize);
-	if (LogSaveRun(DebugParms, trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0)!=0) return -1;
-	printf("LogSaveRun(), elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	if (saveRun) {
+		start=timeGetTime();
+		if (LogSaveRun(DebugParms, trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0)!=0) return -1;
+		printf("LogSaveRun(), elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	}
 
+	//-- final Commit
 	Commit(DebugParms);
 
 
