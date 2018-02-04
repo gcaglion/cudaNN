@@ -185,22 +185,22 @@ static const short sqlcud0[] =
 956,0,0,10,0,0,17,483,0,0,1,1,0,1,0,1,97,0,0,
 975,0,0,10,0,0,23,484,0,64,0,0,6,105,110,67,73,78,78,1,0,
 996,0,0,0,0,0,91,492,0,64,0,0,6,105,110,67,73,78,78,1,0,
-1017,0,0,0,0,0,90,564,0,64,0,0,5,105,110,82,117,110,1,0,
-1037,0,0,0,0,0,93,565,0,64,0,0,5,105,110,82,117,110,1,0,
-1057,0,0,0,0,0,93,566,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-1081,0,0,0,0,0,93,567,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-1105,0,0,0,0,0,93,568,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-1129,0,0,0,0,0,93,569,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-1153,0,0,0,0,0,93,570,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-1177,0,0,0,0,0,93,571,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-1201,0,0,0,0,0,93,572,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-1225,0,0,10,0,0,17,573,0,0,1,1,0,1,0,1,97,0,0,
-1244,0,0,10,0,0,23,574,0,64,0,0,5,105,110,82,117,110,1,0,
-1264,0,0,0,0,0,91,583,0,64,0,0,5,105,110,82,117,110,1,0,
-1284,0,0,11,0,0,17,617,0,0,1,1,0,1,0,1,97,0,0,
-1303,0,0,11,0,0,45,619,0,0,0,0,0,1,0,
-1318,0,0,11,0,0,13,621,0,0,2,0,0,1,0,2,3,0,0,2,4,0,0,
-1341,0,0,11,0,0,15,632,0,0,0,0,0,1,0,
+1017,0,0,0,0,0,90,569,0,64,0,0,5,105,110,82,117,110,1,0,
+1037,0,0,0,0,0,93,570,0,64,0,0,5,105,110,82,117,110,1,0,
+1057,0,0,0,0,0,93,571,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+1081,0,0,0,0,0,93,572,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+1105,0,0,0,0,0,93,573,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+1129,0,0,0,0,0,93,574,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+1153,0,0,0,0,0,93,575,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+1177,0,0,0,0,0,93,576,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+1201,0,0,0,0,0,93,577,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+1225,0,0,10,0,0,17,578,0,0,1,1,0,1,0,1,97,0,0,
+1244,0,0,10,0,0,23,579,0,64,0,0,5,105,110,82,117,110,1,0,
+1264,0,0,0,0,0,91,588,0,64,0,0,5,105,110,82,117,110,1,0,
+1284,0,0,11,0,0,17,622,0,0,1,1,0,1,0,1,97,0,0,
+1303,0,0,11,0,0,45,624,0,0,0,0,0,1,0,
+1318,0,0,11,0,0,13,626,0,0,2,0,0,1,0,2,3,0,0,2,4,0,0,
+1341,0,0,11,0,0,15,637,0,0,0,0,0,1,0,
 };
 
 
@@ -2261,10 +2261,10 @@ EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int
 
 	return sqlca.sqlcode;
 }
-EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual) {
+EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
-	int i;
+	int i, b, f;
 	int vInsertCount;
 	int vFeaturesCnt;
 	sql_context vCtx = DebugParms->DebugDB->DBCtx;
@@ -2297,8 +2297,8 @@ EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, 
 	}
 	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, DebugParms->DebugDB->DBCtx, vCtx);
 
-	vInsertCount=runCnt;
 	vFeaturesCnt=featuresCnt;
+	vInsertCount=barCnt*featuresCnt;
 	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
 	vThreadId=(int*)malloc(vInsertCount*sizeof(int));
 	vStep = (int*)malloc(vInsertCount*sizeof(int));
@@ -2307,14 +2307,19 @@ EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, 
 	vActualTRS=(double*)malloc(vInsertCount*sizeof(double));
 	vErrorTRS=(double*)malloc(vInsertCount*sizeof(double));
 
-	for (i = 0; i < vInsertCount; i++) {
-		vProcessId[i]=pid;
-		vThreadId[i]=tid;
-		vStep[i] = (int)floor(i/vFeaturesCnt);
-		vFeatureId[i]=i%vFeaturesCnt;
-		vPredictionTRS[i]=prediction[i];
-		vActualTRS[i]=actual[i];
-		vErrorTRS[i]=fabs(actual[i]-prediction[i]);
+	i=0;
+	for (b=0; b<barCnt; b++) {
+		for (f=0; f<featuresCnt; f++) {
+			vProcessId[i]=pid;
+			vThreadId[i]=tid;
+			vStep[i] = b;
+			vFeatureId[i]=f;
+			vPredictionTRS[i]=prediction[i];
+			vActualTRS[i]=actual[i];
+			vErrorTRS[i]=fabs(actual[i]-prediction[i]);
+
+			i++;
+		}
 	}
 
 	//-- Then, Build the Insert statement

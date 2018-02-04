@@ -500,9 +500,9 @@ EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int
 
 	return sqlca.sqlcode;
 }
-EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual) {
+EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
 	EXEC SQL BEGIN DECLARE SECTION;
-	int i;
+	int i, b, f;
 	int vInsertCount;
 	int vFeaturesCnt;
 	sql_context vCtx = DebugParms->DebugDB->DBCtx;
@@ -534,8 +534,8 @@ EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, 
 	}
 	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, DebugParms->DebugDB->DBCtx, vCtx);
 
-	vInsertCount=runCnt;
 	vFeaturesCnt=featuresCnt;
+	vInsertCount=barCnt*featuresCnt;
 	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
 	vThreadId=(int*)malloc(vInsertCount*sizeof(int));
 	vStep = (int*)malloc(vInsertCount*sizeof(int));
@@ -544,14 +544,19 @@ EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, 
 	vActualTRS=(double*)malloc(vInsertCount*sizeof(double));
 	vErrorTRS=(double*)malloc(vInsertCount*sizeof(double));
 
-	for (i = 0; i < vInsertCount; i++) {
-		vProcessId[i]=pid;
-		vThreadId[i]=tid;
-		vStep[i] = (int)floor(i/vFeaturesCnt);
-		vFeatureId[i]=i%vFeaturesCnt;
-		vPredictionTRS[i]=prediction[i];
-		vActualTRS[i]=actual[i];
-		vErrorTRS[i]=fabs(actual[i]-prediction[i]);
+	i=0;
+	for (b=0; b<barCnt; b++) {
+		for (f=0; f<featuresCnt; f++) {
+			vProcessId[i]=pid;
+			vThreadId[i]=tid;
+			vStep[i] = b;
+			vFeatureId[i]=f;
+			vPredictionTRS[i]=prediction[i];
+			vActualTRS[i]=actual[i];
+			vErrorTRS[i]=fabs(actual[i]-prediction[i]);
+
+			i++;
+		}
 	}
 
 	//-- Then, Build the Insert statement

@@ -662,11 +662,11 @@ int main() {
 
 	//-- data params
 	//int modelFeature[]={ 0,1,2,3 };
-	int modelFeature[]={ 0,1 };
+	int modelFeature[]={ 0,1,2,3 };
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 6;// 200;// 200;
+	int historyLen= 500;// 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen= 20; //6;// 200;// 200;
 	int predictionLen=2;
 
 	//-- net geometry
@@ -676,8 +676,8 @@ int main() {
 	bool useBias=false;
 
 	//-- batchSize can be different between train and run
-	int batchsamplesCnt_T=2;
-	int batchsamplesCnt_R=2;
+	int batchsamplesCnt_T=1;
+	int batchsamplesCnt_R=1;
 
 	//-- Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 	NN* trNN=nullptr;
@@ -722,21 +722,23 @@ int main() {
 	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- set training parameters
-	trNN->MaxEpochs=20;
+	trNN->MaxEpochs=2000;
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;
-	trNN->LearningRate=(numtype)0.005;
-	trNN->LearningMomentum=(numtype)0.2;
-	trNN->StopOnReverse=true;
+	trNN->LearningRate=(numtype)0.01;
+	trNN->LearningMomentum=(numtype)0.5;
+	trNN->StopOnReverse=false;
 
 	//-- train with training Set, which specifies batch size and features list (not count)
 	if(trNN->train(trainSet)!=0) return -1;
 
-	//-- Persist MSE and final W
-//	start=timeGetTime();
-//	if (LogSaveMSE(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV)!=0) return -1;
-//	printf("LogSaveMSE() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	//-- persist MSE 
+	start=timeGetTime();
+	if (LogSaveMSE(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV)!=0) return -1;
+	printf("LogSaveMSE() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+	
+	//-- persist final W
 //	start=timeGetTime();
 //	if (LogSaveW(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W)!=0) return -1;
 //	printf("LogSaveW() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
@@ -750,7 +752,7 @@ int main() {
 	start=timeGetTime();
 	batchsamplesCnt_R=1;
 	DataSet* runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
-	runSet->dump("C:/temp/runSet.log");
+	//runSet->dump("C:/temp/runSet.log");
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	start=timeGetTime();
@@ -760,8 +762,7 @@ int main() {
 	//-- persist run
 	start=timeGetTime();
 	//int runLogCnt=(runSet->samplesCnt*runSet->targetSize);
-	int runLogCnt=(runSet->samplesCnt);
-	if (LogSaveRun(DebugParms, trNN->pid, trNN->tid, runLogCnt, modelFeaturesCnt, runSet->prediction, runSet->target)!=0) return -1;
+	if (LogSaveRun(DebugParms, trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0)!=0) return -1;
 	printf("LogSaveRun(), elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	Commit(DebugParms);
