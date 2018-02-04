@@ -34,7 +34,7 @@ EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numt
 EXPORT int Sadd_cu(numtype* s1, numtype* s2, numtype* ssum);
 
 //-- vector functions;
-EXPORT int getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, numtype* oCol);
+EXPORT int getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, int col, numtype* oCol);
 EXPORT int Vscale_cu(int vlen, numtype* v, numtype s);
 EXPORT int Vcopy_cu(int vlen, numtype* v1, numtype* v2);
 EXPORT int Vadd_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);

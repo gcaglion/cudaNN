@@ -482,10 +482,11 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 		}
 		*/
 	}
-	//-- 1.1.4 copy only first-step target/prediction into target0/prediction0	// THERE MUST BE A MUCH BETTER WAY!!!!!
-	if (Alg->getMcol(runSet->samplesCnt, runSet->targetSize, runSet->predictionBFS, 1, runSet->prediction0)!=0) return -1;
-	if (Alg->getMcol(runSet->samplesCnt, runSet->targetSize, runSet->prediction, 1, runSet->prediction0)!=0) return -1;
-
+	//-- 1.1.4 copy only first-step target/prediction into target0/prediction0	- slightly better way - still room to improve
+	for (int f=0; f<runSet->selectedFeaturesCnt; f++) {
+		if (Alg->getMcol(runSet->samplesCnt, runSet->targetSize, runSet->targetBFS, f, &runSet->target0[f*runSet->samplesCnt], true)!=0) return -1;
+		if (Alg->getMcol(runSet->samplesCnt, runSet->targetSize, runSet->predictionBFS, f, &runSet->prediction0[f*runSet->samplesCnt], true)!=0) return -1;
+	}
 	//-- finally, convert prediction from BFS to FSB before returning
 	//runSet->BFS2SBF(predictionLen, runSet->predictionBFS, runSet->prediction);
 

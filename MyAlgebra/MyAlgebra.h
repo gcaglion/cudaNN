@@ -201,7 +201,7 @@ typedef struct s_Algebra {
 
 	//-- class methods
 	EXPORT int MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);
-	EXPORT int getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol);
+	EXPORT int getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool forceCPU);
 	//-- CPU<->GPU transfer functions
 	EXPORT int h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
 	EXPORT int d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);

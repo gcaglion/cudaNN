@@ -298,9 +298,9 @@ EXPORT int Sadd_cu(numtype* s1, numtype* s2, numtype* ssum) {
 }
 
 //-- vector functions;
-EXPORT int getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, numtype* oCol) {
+EXPORT int getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 	cublasStatus_t err=cublasScopy((*((cublasHandle_t*)cublasH)), Ax, A, Ax, oCol, 1);
-	if(err!=CUBLAS_STATUS_SUCCESS){
+	if (err!=CUBLAS_STATUS_SUCCESS) {
 		printf("getMcol_cu() CUBLAS error %d\n", cudaGetErrorEnum(err));
 		return -1;
 	}

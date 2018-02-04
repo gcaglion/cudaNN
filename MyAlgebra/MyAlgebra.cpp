@@ -402,6 +402,21 @@ s_Algebra::~s_Algebra() {
 	// destroy cublasH, cuRandH, streams, curanddestroygenerator...
 }
 //-- class methods
+int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
+	for (int y=0; y<Ay; y++) oCol[y]=A[y*Ax+col];
+	return 0;
+}
+int s_Algebra::getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool forceCPU) {
+#ifdef USE_GPU
+	if (forceCPU) {
+		return(getMcol_cpu(Ay, Ax, A, col, oCol));
+	} else {
+		return getMcol_cu(cublasH, Ay, Ax, A, col, oCol);
+	}
+#else
+	return(CPUgetMcol(Ay, Ax, A, col, oCol));
+#endif
+}
 int s_Algebra::MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU) {
 #ifdef USE_GPU
 	if(forceCPU) {
@@ -411,13 +426,6 @@ int s_Algebra::MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By
 	}
 #else
 	return(MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
-#endif
-}
-int s_Algebra::getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
-#ifdef USE_GPU
-	return getMcol_cu(cublasH, Ay, Ax, A, oCol);
-#else
-	return(CPUgetMcol(Ay, Ax, A, oCol));
 #endif
 }
 int s_Algebra::h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams) {
