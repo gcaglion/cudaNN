@@ -377,7 +377,7 @@ int sNN::train(DataSet* trs) {
 		//-- 1.1. calc and display MSE
 		numtype tse_h;
 		Alg->d2h(&tse_h, tse, sizeof(numtype));
-		mseT[epoch]=tse_h/batchCnt/nodesCnt[levelsCnt-1];
+		mseT[epoch]=tse_h/nodesCnt[levelsCnt-1];
 		mseV[epoch]=0;	// TO DO !
 		//printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, Validation MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], mseV[epoch], (timeGetTime()-epoch_starttime));
 		printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], (timeGetTime()-epoch_starttime));
@@ -422,7 +422,7 @@ int sNN::train(DataSet* trs) {
 	//-- calc and display MSE
 	numtype tse_h, mse_h;
 	Alg->d2h(&tse_h, tse, sizeof(numtype));
-	mse_h=tse_h/batchCnt/nodesCnt[levelsCnt-1];
+	mse_h=tse_h/nodesCnt[levelsCnt-1];
 	printf("\nTest Run MSE=%f \n", mse_h);
 
 	//-- feee neurons()
@@ -474,14 +474,18 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 		if (Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
 
 		//-- 1.1.4 copy only first-step target/prediction into target0/prediction0	// THERE MUST BE A MUCH BETTER WAY!!!!!
-		for (int s=0; s<batchSamplesCnt; s++) {
+		/*for (int s=0; s<batchSamplesCnt; s++) {
 			for(int f=0; f<runSet->selectedFeaturesCnt; f++){
 				runSet->prediction0[b*batchSamplesCnt*runSet->selectedFeaturesCnt+s*runSet->selectedFeaturesCnt+f]=runSet->predictionBFS[b*OutputCount+f];
 				runSet->target0[b*batchSamplesCnt*runSet->selectedFeaturesCnt+s*runSet->selectedFeaturesCnt+f]=runSet->targetBFS[b*OutputCount+f];
 			}
 		}
-
+		*/
 	}
+	//-- 1.1.4 copy only first-step target/prediction into target0/prediction0	// THERE MUST BE A MUCH BETTER WAY!!!!!
+	if (Alg->getMcol(runSet->samplesCnt, runSet->targetSize, runSet->predictionBFS, 1, runSet->prediction0)!=0) return -1;
+	if (Alg->getMcol(runSet->samplesCnt, runSet->targetSize, runSet->prediction, 1, runSet->prediction0)!=0) return -1;
+
 	//-- finally, convert prediction from BFS to FSB before returning
 	//runSet->BFS2SBF(predictionLen, runSet->predictionBFS, runSet->prediction);
 

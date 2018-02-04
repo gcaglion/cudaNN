@@ -71,6 +71,22 @@ typedef struct s_matrix {
 	void fill(numtype start, numtype inc) {
 		for (int i=0; i<(my*mx); i++) m[i]=start+i*inc;
 	}
+	int setDiag(int diag, numtype val) {
+		// diag=0 -> [0,0] to [my,mx]
+		// diag=1 -> [0,mx] to [my,0]
+		if (my!=mx) return -1;
+		int i=0;
+		for (int y=0; y<my; y++) {
+			for (int x=0; x<mx; x++) {
+				if(diag==0){
+					m[i]=((y==x)?1:0);
+				} else {
+					m[i]=((y==(mx-x-1))?1:0);
+				}
+				i++;
+			}
+		}
+	}
 	void scale(float s) {
 		for (int i=0; i<(my*mx); i++) m[i]*=s;
 	}
@@ -146,6 +162,8 @@ EXPORT int Vinit(int size, numtype* v, numtype start, numtype inc);
 EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH=NULL);
 EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV);
 
+//-- TODO: CUDA version!
+EXPORT void MbyV(int my, int mx, numtype* m, bool Transpose, numtype* v, numtype* ov);
 
 //-- matrix functions
 EXPORT int Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm);
@@ -183,6 +201,7 @@ typedef struct s_Algebra {
 
 	//-- class methods
 	EXPORT int MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);
+	EXPORT int getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol);
 	//-- CPU<->GPU transfer functions
 	EXPORT int h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
 	EXPORT int d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);

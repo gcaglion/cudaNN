@@ -48,7 +48,13 @@ EXPORT int LogLoadW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcn
 	free(hW);
 #endif
 }
-
+EXPORT int LogSaveClient(tDebugInfo* DebugParms, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
+	if (DebugParms->DebugDest==LOG_TO_ORCL) {
+		return (Ora_LogSaveClient(DebugParms, pid, clientName, startTime, duration, simulLen, simulStart, doTraining, doRun));
+	} else {
+		return 0;
+	}
+}
 EXPORT void Commit(tDebugInfo* DebugParms) {
 	if (DebugParms->DebugDest==LOG_TO_ORCL) {
 		OraCommit(DebugParms->DebugDB->DBCtx);

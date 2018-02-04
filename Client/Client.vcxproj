@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="clientTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\CommonDefs.h" />

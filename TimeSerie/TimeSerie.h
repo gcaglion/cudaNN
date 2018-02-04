@@ -36,8 +36,6 @@
 #define TSF_SHE 6
 #define TSF_HISTVOL 7
 
-EXPORT void SBF2BFS_orig(int db, int ds, int dbar, int df, numtype* iv, numtype* ov);
-
 typedef struct sTS {
 
 	tDebugInfo* DebugParms;

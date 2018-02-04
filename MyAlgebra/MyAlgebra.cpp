@@ -413,6 +413,13 @@ int s_Algebra::MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By
 	return(MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
 #endif
 }
+int s_Algebra::getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
+#ifdef USE_GPU
+	return getMcol_cu(cublasH, Ay, Ax, A, oCol);
+#else
+	return(CPUgetMcol(Ay, Ax, A, oCol));
+#endif
+}
 int s_Algebra::h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams) {
 #ifdef USE_GPU
 	return(h2d_cu(destAddr, srcAddr, size, ((useStreams)?cuStream:nullptr)) );

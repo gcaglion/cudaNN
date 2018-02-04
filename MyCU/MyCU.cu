@@ -6,6 +6,38 @@ void swap(int* v1, int* v2) {
 	(*v2)=tmp;
 }
 
+static const char *cudaGetErrorEnum(cublasStatus_t error)
+{
+	switch (error)
+	{
+	case CUBLAS_STATUS_SUCCESS:
+		return "CUBLAS_STATUS_SUCCESS";
+
+	case CUBLAS_STATUS_NOT_INITIALIZED:
+		return "CUBLAS_STATUS_NOT_INITIALIZED";
+
+	case CUBLAS_STATUS_ALLOC_FAILED:
+		return "CUBLAS_STATUS_ALLOC_FAILED";
+
+	case CUBLAS_STATUS_INVALID_VALUE:
+		return "CUBLAS_STATUS_INVALID_VALUE";
+
+	case CUBLAS_STATUS_ARCH_MISMATCH:
+		return "CUBLAS_STATUS_ARCH_MISMATCH";
+
+	case CUBLAS_STATUS_MAPPING_ERROR:
+		return "CUBLAS_STATUS_MAPPING_ERROR";
+
+	case CUBLAS_STATUS_EXECUTION_FAILED:
+		return "CUBLAS_STATUS_EXECUTION_FAILED";
+
+	case CUBLAS_STATUS_INTERNAL_ERROR:
+		return "CUBLAS_STATUS_INTERNAL_ERROR";
+	}
+
+	return "<unknown>";
+}
+
 EXPORT int initCUDA() {
 	// init CUDA GPU
 	if (cudaSetDevice(0)!=cudaSuccess) {
@@ -31,7 +63,7 @@ EXPORT int initCURand(void* cuRandH) {
 		return -1;
 	}
 	/* Set seed */
-	if (curandSetPseudoRandomGeneratorSeed((*(curandGenerator_t*)cuRandH), 1234ULL)!=CURAND_STATUS_SUCCESS) return -1;
+	if (curandSetPseudoRandomGeneratorSeed((*(curandGenerator_t*)cuRandH), timeGetTime())!=CURAND_STATUS_SUCCESS) return -1;
 	return 0;
 }
 EXPORT int initCUstreams(void* cuStream[]) {
@@ -266,6 +298,14 @@ EXPORT int Sadd_cu(numtype* s1, numtype* s2, numtype* ssum) {
 }
 
 //-- vector functions;
+EXPORT int getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, numtype* oCol) {
+	cublasStatus_t err=cublasScopy((*((cublasHandle_t*)cublasH)), Ax, A, Ax, oCol, 1);
+	if(err!=CUBLAS_STATUS_SUCCESS){
+		printf("getMcol_cu() CUBLAS error %d\n", cudaGetErrorEnum(err));
+		return -1;
+	}
+	return 0;
+}
 EXPORT int Vscale_cu(int vlen, numtype* v, numtype s){
 	dim3 gridDim;
 	dim3 blockDim;

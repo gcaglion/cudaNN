@@ -28,9 +28,8 @@ EXPORT int GetStringArrayFromQuery(tDebugInfo* DebugParms, sql_context pCtx, cha
 //=== Logging functions
 EXPORT int Ora_LogSaveMSE(tDebugInfo* DebugParms, int pid, int tid, int mseCnt, float* mseT, float* mseV);
 EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual);
-
 EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* W);
-
+EXPORT int Ora_LogSaveClient(tDebugInfo* DebugParms, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun);
 EXPORT int Ora_LogLoadW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* W);
 
 #ifdef __cplusplus

@@ -500,6 +500,31 @@ EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int
 
 	return sqlca.sqlcode;
 }
+EXPORT int Ora_LogSaveClient(tDebugInfo* DebugParms, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
+	EXEC SQL BEGIN DECLARE SECTION;
+	sql_context vCtx = DebugParms->DebugDB->DBCtx;
+	char stmt[1000];
+	EXEC SQL END DECLARE SECTION;
+
+	//-- Connects to DB only once
+	if (vCtx==NULL) {
+		if (OraConnect(DebugParms, DebugParms->DebugDB)!=0) {
+			printf("%s() could not connect to Log Database...\n", __func__);
+			return -1;
+		}
+		vCtx = DebugParms->DebugDB->DBCtx;
+	}
+	//-- Builds Insert statement
+	sprintf(&stmt[0], "insert into ClientInfo(ProcessId, ClientName, ClientStart, SimulationLen, Duration, SimulationStart, DoTraining, DoRun) values(%d, '%s', sysdate, %d, %ld, to_date('%s','YYYYMMDDHH24MI'), %d, %d)", pid, clientName, simulLen, (DWORD)(duration/1000), simulStart, doTraining, doRun);
+	//-- Executes Insert statement
+	EXEC SQL CONTEXT USE : vCtx;
+	EXEC SQL EXECUTE IMMEDIATE : stmt;
+	if (sqlca.sqlcode!=0) {
+		LogWrite(DebugParms, LOG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		return sqlca.sqlcode;
+	}
+	return 0;
+}
 EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	int i, b, f;
