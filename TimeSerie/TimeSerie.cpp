@@ -1,20 +1,6 @@
 //#include <vld.h>
 #include "TimeSerie.h"
 
-void SBF2BFScommon(int db, int ds, int dbar, int df, numtype* iv, numtype* ov) {
-	int i=0;
-	for (int b=0; b<db; b++) {
-		for (int bar=0; bar<dbar; bar++) {
-			for (int f=0; f<df; f++) {
-				for (int s=0; s<ds; s++) {
-					ov[i]=iv[b*ds*dbar*df+s*dbar*df+bar*df+f];
-					i++;
-				}
-			}
-		}
-	}
-}
-
 int sTS::LoadOHLCVdata(char* date0) {
 
 	if (OraConnect(DebugParms, FXData->FXDB)!=0) return -1;
@@ -194,6 +180,43 @@ int sTS::unTrS(numtype scaleMin_, numtype scaleMax_) {
 	return 0;
 }
 
+
+sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_) {
+	sourceTS=sourceTS_;
+	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
+	sampleLen=sampleLen_; sampleSize=sampleLen*selectedFeaturesCnt;
+	targetLen=targetLen_; targetSize=targetLen*selectedFeaturesCnt;
+	samplesCnt=sourceTS->steps-sampleLen;
+	batchSamplesCnt=batchSamplesCnt_;
+	batchCnt=(int)floor(samplesCnt/batchSamplesCnt);
+
+	sample=(numtype*)malloc(samplesCnt*sampleSize*sizeof(numtype));
+	target=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
+	prediction=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
+	sampleBFS=(numtype*)malloc(samplesCnt*sampleSize*sizeof(numtype));
+	targetBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
+	predictionBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
+	//--
+	target0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
+	prediction0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
+
+	//-- fill sample/target data right at creation time. TS has data in SBF format
+	if (buildFromTS(sourceTS)!=0) throw "buildFromTS() failed\n";
+	//-- populate BFS sample/target, too
+	SBF2BFS(sampleLen, sample, sampleBFS);
+	SBF2BFS(targetLen, target, targetBFS);
+
+	dump("C:/temp/ds0.txt");
+	//-- 
+	BFS2SBF(sampleLen, sampleBFS, sample);
+	BFS2SBF(targetLen, targetBFS, target);
+	//--
+	SBF2BFS(sampleLen, sample, sampleBFS);
+	SBF2BFS(targetLen, target, targetBFS);
+	dump("C:/temp/ds1.txt");
+
+}
+
 void sDataSet::dump(char* filename) {
 	int s, i, b, f;
 	char LogFileName[MAX_PATH];
@@ -298,28 +321,31 @@ int sDataSet::buildFromTS(sTS* ts) {
 	return 0;
 }
 
-void sDataSet::SBF2BFS() {
-
-	int barCnt;
-	//-- first, sample
-	barCnt=sampleLen;
-	SBF2BFScommon(batchCnt, batchSamplesCnt, barCnt, selectedFeaturesCnt, sample, sampleBFS);
-	//-- then, target
-	barCnt=targetLen;
-	SBF2BFScommon(batchCnt, batchSamplesCnt, barCnt, selectedFeaturesCnt, target, targetBFS);
-
-}
-void sDataSet::BFS2SBF(int vlen, numtype* fromBFS, numtype* toSBF) {
+void sDataSet::SBF2BFS(int vlen, numtype* fromSBF, numtype* toBFS) {
 	int i=0;
 	for (int b=0; b<batchCnt; b++) {
-		for (int s=0; s<batchSamplesCnt; s++) {
-			for (int bar=0; bar<vlen; bar++) {
-				for (int f=0; f<selectedFeaturesCnt; f++) {
-					toSBF[i]=fromBFS[b* vlen*selectedFeaturesCnt*batchSamplesCnt+bar*selectedFeaturesCnt*batchSamplesCnt+f*batchSamplesCnt+s];
+		for (int bar=0; bar<vlen; bar++) {
+			for (int f=0; f<selectedFeaturesCnt; f++) {
+				for (int s=0; s<batchSamplesCnt; s++) {
+					toBFS[i]=fromSBF[b*batchSamplesCnt*vlen*selectedFeaturesCnt+s*vlen*selectedFeaturesCnt+bar*selectedFeaturesCnt+f];
 					i++;
 				}
 			}
 		}
 	}
 }
-
+void sDataSet::BFS2SBF(int vlen, numtype* fromBFS, numtype* toSBF) {
+	int idx;
+	int i=0;
+	for (int b=0; b<batchCnt; b++) {
+		for (int s=0; s<batchSamplesCnt; s++) {
+			for (int bar=0; bar<vlen; bar++) {
+				for (int f=0; f<selectedFeaturesCnt; f++) {
+					idx=b* vlen*selectedFeaturesCnt*batchSamplesCnt+bar*selectedFeaturesCnt*batchSamplesCnt+f*batchSamplesCnt+s;
+					toSBF[i]=fromBFS[idx];
+					i++;
+				}
+			}
+		}
+	}
+}

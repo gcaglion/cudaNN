@@ -80,8 +80,8 @@ int main() {
 	int modelFeature[]={ 0,1,2,3 };
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 50000;// 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 200; //6;// 200;// 200;
+	int historyLen= 20;// 50000;// 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen= 6;// 200; //6;// 200;// 200;
 	int predictionLen=2;
 
 	//-- net geometry
@@ -91,7 +91,7 @@ int main() {
 	bool useBias=false;
 
 	//-- batchSize can be different between train and run
-	int batchsamplesCnt_T=100;
+	int batchsamplesCnt_T=2;
 	int batchsamplesCnt_R=2;
 
 	//-- logging parameters
@@ -117,15 +117,15 @@ int main() {
 	TS* ts1=new TS(historyLen, FXfeaturesCnt, DebugParms);
 	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), tsDate0)!=0) return -1;
 	printf("ts1 create+load, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));	
-	//ts1->dump("C:/temp/ts1.orig.csv");
+	ts1->dump("C:/temp/ts1.orig.csv");
 
 	//-- 2. apply data transformation
 	if (ts1->transform(dataTransformation)!=0) return -1;
-	//ts1->dump("C:/temp/ts1.tr.csv");
+	ts1->dump("C:/temp/ts1.tr.csv");
 
 	//-- scale according to activation at network level 0 
 	ts1->scale(trNN->scaleMin[0], trNN->scaleMax[0]);
-	//ts1->dump("C:/temp/ts1.trs.csv");
+	ts1->dump("C:/temp/ts1.trs.csv");
 
 	//-- 3. create dataset from timeserie
 	//-- sampleLen/predictionLen is taken from nn
@@ -135,8 +135,8 @@ int main() {
 
 	start=timeGetTime();
 	DataSet* trainSet=new DataSet(ts1, trNN->sampleLen, trNN->predictionLen, trNN->featuresCnt, modelFeature, batchsamplesCnt_T);
+	trainSet->dump("c:/temp/trainSet.log");
 	/*
-	trainSet->dump("c:/temp/trainSet-SlideArray.log");
 	if (dumpArrayH(trainSet->samplesCnt*trainSet->sampleSize, trainSet->sample, "C:/temp/trainSet-Sample.txt")!=0) return -1;
 	if (dumpArrayH(trainSet->samplesCnt*trainSet->targetSize, trainSet->target, "C:/temp/trainSet-target.txt")!=0) return -1;
 	if (dumpArrayH(trainSet->samplesCnt*trainSet->sampleSize, trainSet->sampleBFS, "C:/temp/trainSet-SampleBFS.txt")!=0) return -1;

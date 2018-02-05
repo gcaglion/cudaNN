@@ -147,31 +147,8 @@ typedef struct sDataSet {
 	numtype* target0=nullptr;
 	numtype* prediction0=nullptr;
 
-	sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_){
-		sourceTS=sourceTS_;
-		selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
-		sampleLen=sampleLen_; sampleSize=sampleLen*selectedFeaturesCnt;
-		targetLen=targetLen_; targetSize=targetLen*selectedFeaturesCnt;
-		samplesCnt=sourceTS->steps-sampleLen;
-		batchSamplesCnt=batchSamplesCnt_;
-		batchCnt=(int)floor(samplesCnt/batchSamplesCnt);
-
-		sample=(numtype*)malloc(samplesCnt*sampleSize*sizeof(numtype));
-		target=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
-		prediction=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
-		sampleBFS=(numtype*)malloc(samplesCnt*sampleSize*sizeof(numtype));
-		targetBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
-		predictionBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
-		//--
-		target0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
-		prediction0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
-
-		//-- fill sample/target data right at creation time. TS has data in SBF format
-		if (buildFromTS(sourceTS)!=0) throw "buildFromTS() failed\n";
-		//-- populate BFS sample/target, too
-		SBF2BFS();
-
-	}
+	//-- constructor / destructor
+	EXPORT sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_);
 	~sDataSet() {
 		free(sample);
 		if (target!=nullptr) free(target);
@@ -185,7 +162,7 @@ typedef struct sDataSet {
 
 	bool isSelected(int ts_f);
 	EXPORT int buildFromTS(sTS* ts);
-	EXPORT void SBF2BFS();	//-- fills sampleBFS/targetBFS from sample/target
+	EXPORT void SBF2BFS(int vlen, numtype* fromSBF, numtype* toBFS);	//-- fills sampleBFS/targetBFS from sample/target
 	EXPORT void BFS2SBF(int vlen, numtype* fromBFS, numtype* toSBF);	//-- fills sample/target from sampleBFS/targetBFS
 	EXPORT void dump(char* filename=nullptr);
 
