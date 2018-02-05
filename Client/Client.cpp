@@ -80,8 +80,8 @@ int main() {
 	int modelFeature[]={ 0,1,2,3 };
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 20;// 50000;// 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 6;// 100; //6;// 200;// 200;
+	int historyLen= 50000;// 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen= 200; //6;// 200;// 200;
 	int predictionLen=2;
 
 	//-- net geometry
@@ -91,13 +91,13 @@ int main() {
 	bool useBias=false;
 
 	//-- batchSize can be different between train and run
-	int batchsamplesCnt_T=2;
+	int batchsamplesCnt_T=100;
 	int batchsamplesCnt_R=2;
 
 	//-- logging parameters
 	bool saveClient=true;
-	bool saveMSE=true;
-	bool saveRun=true;
+	bool saveMSE=false;
+	bool saveRun=false;
 	bool saveW=false;
 	bool saveNet=false;
 
@@ -149,13 +149,13 @@ int main() {
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;
-	trNN->LearningRate=(numtype)0.005;
-	trNN->LearningMomentum=(numtype)0.5;
+	trNN->LearningRate=(numtype)0.003;
+	trNN->LearningMomentum=(numtype)0.2;
 	trNN->StopOnReverse=true;
 
 	start=timeGetTime();
 	DataSet* runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
-	runSet->dump("C:/temp/runSet.log");
+	//runSet->dump("C:/temp/runSet.log");
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- train with training Set, which specifies batch size and features list (not count)
