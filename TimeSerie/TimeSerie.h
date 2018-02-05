@@ -130,8 +130,6 @@ typedef struct sDataSet {
 	int* selectedFeature;
 
 	int samplesCnt;
-	int sampleSize;
-	int targetSize;
 	int batchSamplesCnt;
 	int batchCnt;
 
@@ -143,6 +141,9 @@ typedef struct sDataSet {
 	numtype* sampleBFS=nullptr;
 	numtype* targetBFS=nullptr;
 	numtype* predictionBFS=nullptr;
+	//-- network inference requires SFB ordering to get first-step prediction
+	numtype* targetSFB=nullptr;
+	numtype* predictionSFB=nullptr;
 	//-- one-step only target+prediction (required by run() ) ???????
 	numtype* target0=nullptr;
 	numtype* prediction0=nullptr;
@@ -162,8 +163,9 @@ typedef struct sDataSet {
 
 	bool isSelected(int ts_f);
 	EXPORT int buildFromTS(sTS* ts);
-	EXPORT void SBF2BFS(int vlen, numtype* fromSBF, numtype* toBFS);	//-- fills sampleBFS/targetBFS from sample/target
-	EXPORT void BFS2SBF(int vlen, numtype* fromBFS, numtype* toSBF);	//-- fills sample/target from sampleBFS/targetBFS
+	EXPORT void SBF2BFS(int vlen, numtype* fromSBF, numtype* toBFS);	
+	EXPORT void BFS2SBF(int vlen, numtype* fromBFS, numtype* toSBF);	
+	EXPORT void BFS2SFB(int vlen, numtype* fromBFS, numtype* toSFB);	
 	EXPORT void dump(char* filename=nullptr);
 
 } DataSet;

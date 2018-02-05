@@ -464,7 +464,7 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 	//-- batch run
 	for (int b=0; b<batchCnt; b++) {
 
-		//-- 1.1.1.  load samples onto GPU
+		//-- 1.1.1.  load samples/targets onto GPU
 		if (Alg->h2d(&F[0], &runSet->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
 
 		//-- 1.1.2. Feed Forward
@@ -481,14 +481,15 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 			}
 		}
 		*/
+
+		//-- target and prediction must be converted one batch at a time
+		runSet->BFS2SFB(OutputCount, &runSet->targetBFS[b*OutputCount], &runSet->targetSFB[b*OutputCount]);
+		runSet->BFS2SFB(OutputCount, &runSet->predictionBFS[b*OutputCount], &runSet->predictionSFB[b*OutputCount]);
+		//-- 1.1.4 copy only first-step target/prediction into target0/prediction0	- slightly better way - still room to improve
+		if (Alg->getMcol(runSet->targetLen*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->targetSFB, 0, runSet->target0, true)!=0) return -1;
+		if (Alg->getMcol(runSet->sampleLen*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->predictionSFB, 0, runSet->prediction0, true)!=0) return -1;
 	}
-	//-- 1.1.4 copy only first-step target/prediction into target0/prediction0	- slightly better way - still room to improve
-	for (int f=0; f<runSet->selectedFeaturesCnt; f++) {
-		if (Alg->getMcol(runSet->samplesCnt, runSet->targetSize, runSet->targetBFS, f, &runSet->target0[f*runSet->samplesCnt], true)!=0) return -1;
-		if (Alg->getMcol(runSet->samplesCnt, runSet->targetSize, runSet->predictionBFS, f, &runSet->prediction0[f*runSet->samplesCnt], true)!=0) return -1;
-	}
-	//-- finally, convert prediction from BFS to FSB before returning
-	//runSet->BFS2SBF(predictionLen, runSet->predictionBFS, runSet->prediction);
+
 
 	//-- feee neurons()
 	destroyNeurons();

@@ -180,22 +180,29 @@ int sTS::unTrS(numtype scaleMin_, numtype scaleMax_) {
 	return 0;
 }
 
+int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
+	for (int y=0; y<Ay; y++) oCol[y]=A[y*Ax+col];
+	return 0;
+}
 
 sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_) {
 	sourceTS=sourceTS_;
 	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
-	sampleLen=sampleLen_; sampleSize=sampleLen*selectedFeaturesCnt;
-	targetLen=targetLen_; targetSize=targetLen*selectedFeaturesCnt;
+	sampleLen=sampleLen_; 
+	targetLen=targetLen_; 
 	samplesCnt=sourceTS->steps-sampleLen;
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=(int)floor(samplesCnt/batchSamplesCnt);
 
-	sample=(numtype*)malloc(samplesCnt*sampleSize*sizeof(numtype));
-	target=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
-	prediction=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
-	sampleBFS=(numtype*)malloc(samplesCnt*sampleSize*sizeof(numtype));
-	targetBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
-	predictionBFS=(numtype*)malloc(samplesCnt*targetSize*sizeof(numtype));
+	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
+	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
+	prediction=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
+	sampleBFS=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
+	targetBFS=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
+	predictionBFS=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
+	//--
+	targetSFB=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
+	predictionSFB=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
 	//--
 	target0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
 	prediction0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
@@ -205,15 +212,6 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	//-- populate BFS sample/target, too
 	SBF2BFS(sampleLen, sample, sampleBFS);
 	SBF2BFS(targetLen, target, targetBFS);
-
-	dump("C:/temp/ds0.txt");
-	//-- 
-	BFS2SBF(sampleLen, sampleBFS, sample);
-	BFS2SBF(targetLen, targetBFS, target);
-	//--
-	SBF2BFS(sampleLen, sample, sampleBFS);
-	SBF2BFS(targetLen, target, targetBFS);
-	dump("C:/temp/ds1.txt");
 
 }
 
@@ -237,9 +235,9 @@ void sDataSet::dump(char* filename) {
 		}
 	}
 	fprintf(LogFile, "\n");
-	for (i=0; i<(1+sampleSize); i++) fprintf(LogFile, "---------\t");
+	for (i=0; i<(1+(sampleLen*selectedFeaturesCnt)); i++) fprintf(LogFile, "---------\t");
 	fprintf(LogFile, "\t");
-	for (i=0; i<targetSize; i++) fprintf(LogFile, "---------\t");
+	for (i=0; i<(targetLen*selectedFeaturesCnt); i++) fprintf(LogFile, "---------\t");
 	fprintf(LogFile, "\n");
 
 	int si, ti, sidx, tidx;
@@ -321,28 +319,49 @@ int sDataSet::buildFromTS(sTS* ts) {
 	return 0;
 }
 
-void sDataSet::SBF2BFS(int vlen, numtype* fromSBF, numtype* toBFS) {
+void sDataSet::SBF2BFS(int barCnt, numtype* fromSBF, numtype* toBFS) {
+	int S=batchSamplesCnt;
+	int F=selectedFeaturesCnt;
+	int B=barCnt;
+
+	int idx;
 	int i=0;
-	for (int b=0; b<batchCnt; b++) {
-		for (int bar=0; bar<vlen; bar++) {
-			for (int f=0; f<selectedFeaturesCnt; f++) {
-				for (int s=0; s<batchSamplesCnt; s++) {
-					toBFS[i]=fromSBF[b*batchSamplesCnt*vlen*selectedFeaturesCnt+s*vlen*selectedFeaturesCnt+bar*selectedFeaturesCnt+f];
+	for (int b=0; b<batchCnt; b++) {														// i0=b		l0=batchCnt
+		for (int bar=0; bar<barCnt; bar++) {												// i1=bar	l1=barCnt
+			for (int f=0; f<selectedFeaturesCnt; f++) {										// i2=f		l2=selectedFeaturesCnt
+				for (int s=0; s<batchSamplesCnt; s++) {										// i3=s		l3=batchSamplesCnt
+					idx=b*barCnt*selectedFeaturesCnt*batchSamplesCnt +s*selectedFeaturesCnt*barCnt +bar*selectedFeaturesCnt +f;
+					toBFS[i]=fromSBF[idx];
 					i++;
 				}
 			}
 		}
 	}
 }
-void sDataSet::BFS2SBF(int vlen, numtype* fromBFS, numtype* toSBF) {
+void sDataSet::BFS2SBF(int barCnt, numtype* fromBFS, numtype* toSBF) {
 	int idx;
 	int i=0;
-	for (int b=0; b<batchCnt; b++) {
-		for (int s=0; s<batchSamplesCnt; s++) {
-			for (int bar=0; bar<vlen; bar++) {
-				for (int f=0; f<selectedFeaturesCnt; f++) {
-					idx=b* vlen*selectedFeaturesCnt*batchSamplesCnt+bar*selectedFeaturesCnt*batchSamplesCnt+f*batchSamplesCnt+s;
+	for (int b=0; b<batchCnt; b++) {														// i0=b		l0=batchCnt
+		for (int s=0; s<batchSamplesCnt; s++) {												// i1=s		l1=batchSamplesCnt
+			for (int bar=0; bar<barCnt; bar++) {											// i2=bar	l1=barCnt
+				for (int f=0; f<selectedFeaturesCnt; f++) {									// i3=f		l3=selectedFeaturesCnt
+					idx=b*barCnt*selectedFeaturesCnt*batchSamplesCnt +bar*selectedFeaturesCnt*batchSamplesCnt+f*batchSamplesCnt +s;
 					toSBF[i]=fromBFS[idx];
+					i++;
+				}
+			}
+		}
+	}
+}
+void sDataSet::BFS2SFB(int barCnt, numtype* fromBFS, numtype* toSFB) {
+	int idx;
+	int i=0;
+	for (int b=0; b<batchCnt; b++) {														// i0=b		l0=batchCnt
+		for (int s=0; s<batchSamplesCnt; s++) {												// i1=s		l1=batchSamplesCnt
+			for (int f=0; f<selectedFeaturesCnt; f++) {										// i2=f		l2=selectedFeaturesCnt
+				for (int bar=0; bar<barCnt; bar++) {										// i3=bar	l3=barCnt
+					idx=b*barCnt*selectedFeaturesCnt*batchSamplesCnt +bar*batchSamplesCnt*selectedFeaturesCnt+s*selectedFeaturesCnt +f;
+					toSFB[i]=fromBFS[idx];
 					i++;
 				}
 			}
