@@ -414,7 +414,7 @@ int s_Algebra::getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool 
 		return getMcol_cu(cublasH, Ay, Ax, A, col, oCol);
 	}
 #else
-	return(CPUgetMcol(Ay, Ax, A, col, oCol));
+	return(getMcol_cpu(Ay, Ax, A, col, oCol));
 #endif
 }
 int s_Algebra::MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU) {

@@ -256,6 +256,7 @@ int sNN::train(DataSet* trs) {
 	DWORD epoch_starttime;
 	DWORD training_starttime=timeGetTime();
 	int epoch;
+	numtype tse_h;	// total squared error copid on host at the end of each eopch
 
 	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
 	numtype* A; numtype* B; numtype* C;
@@ -375,7 +376,6 @@ int sNN::train(DataSet* trs) {
 
 
 		//-- 1.1. calc and display MSE
-		numtype tse_h;
 		Alg->d2h(&tse_h, tse, sizeof(numtype));
 		mseT[epoch]=tse_h/nodesCnt[levelsCnt-1];
 		mseV[epoch]=0;	// TO DO !
@@ -420,7 +420,7 @@ int sNN::train(DataSet* trs) {
 
 	}
 	//-- calc and display MSE
-	numtype tse_h, mse_h;
+	numtype mse_h;
 	Alg->d2h(&tse_h, tse, sizeof(numtype));
 	mse_h=tse_h/nodesCnt[levelsCnt-1];
 	printf("\nTest Run MSE=%f \n", mse_h);

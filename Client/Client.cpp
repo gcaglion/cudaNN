@@ -5,45 +5,6 @@
 #include "../Logger/Logger.h"
 #include "../MyAlgebra/MyAlgebra.h"
 
-int client12() {
-	Algebra* alg=new Algebra();
-
-	int ay=5, ax=8;
-	matrix* A=new matrix(ay, ax, true, 1, 1); A->print("A");
-	matrix* At=new matrix(ax, ay);
-	matrix* B=new matrix(ax, ax); 
-	B->setDiag(1, 1);
-
-	B->print("B");
-
-	matrix* C=new matrix(ay, 1); 
-	alg->MbyM(ay, ax, 1, false, A->m, ax, ax, 1, false, B->m, C->m, true);
-	C->print("C");
-
-	return 0;
-
-}
-
-int client13() {
-	Algebra* alg=new Algebra();
-
-	int ay=5, ax=8;
-	matrix* ah=new matrix(ay, ax, true, 1, 1); ah->print("ah");
-
-	numtype* ad; if (cudaMalloc(&ad, ay*ax*sizeof(numtype))!=cudaSuccess) return -1;
-	if (cudaMemcpy(ad, ah->m, ay*ax*sizeof(numtype), cudaMemcpyHostToDevice)!=cudaSuccess) return -1;
-	
-	numtype* vd; if (cudaMalloc(&vd, ay*sizeof(numtype))!=cudaSuccess) return -1;
-	if (Vinit(ax*ay, vd, 0, 0)!=0) return -1;
-
-	numtype* vh=(numtype*)malloc(ay*sizeof(numtype));
-
-	if (cublasScopy((*((cublasHandle_t*)alg->cublasH)), ax, ad, ax, vd, 1)!=CUBLAS_STATUS_SUCCESS) return -1;
-	if (cudaMemcpy(vh, vd, ay*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
-
-	return 0;
-
-}
 
 int main() {
 
@@ -80,8 +41,8 @@ int main() {
 	int modelFeature[]={ 0,1,2,3 };
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 50000;// 20;// 50000;// 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 200; //6;// 200; //6;// 200;// 200;
+	int historyLen= 50000;// 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen= 200; //6;// 200;// 200;
 	int predictionLen=2;
 
 	//-- net geometry
@@ -156,7 +117,7 @@ int main() {
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;
-	trNN->LearningRate=(numtype)0.005;
+	trNN->LearningRate=(numtype)0.01;
 	trNN->LearningMomentum=(numtype)0.3;
 	trNN->StopOnDivergence=true;
 

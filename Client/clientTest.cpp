@@ -28,6 +28,44 @@ void VsumPrevs(int Vlen, int* V, int* oVsumPrevs) {
 }
 
 #ifdef USE_GPU
+int client12() {
+	Algebra* alg=new Algebra();
+
+	int ay=5, ax=8;
+	matrix* A=new matrix(ay, ax, true, 1, 1); A->print("A");
+	matrix* At=new matrix(ax, ay);
+	matrix* B=new matrix(ax, ax);
+	B->setDiag(1, 1);
+
+	B->print("B");
+
+	matrix* C=new matrix(ay, 1);
+	alg->MbyM(ay, ax, 1, false, A->m, ax, ax, 1, false, B->m, C->m, true);
+	C->print("C");
+
+	return 0;
+
+}
+int client13() {
+	Algebra* alg=new Algebra();
+
+	int ay=5, ax=8;
+	matrix* ah=new matrix(ay, ax, true, 1, 1); ah->print("ah");
+
+	numtype* ad; if (cudaMalloc(&ad, ay*ax*sizeof(numtype))!=cudaSuccess) return -1;
+	if (cudaMemcpy(ad, ah->m, ay*ax*sizeof(numtype), cudaMemcpyHostToDevice)!=cudaSuccess) return -1;
+
+	numtype* vd; if (cudaMalloc(&vd, ay*sizeof(numtype))!=cudaSuccess) return -1;
+	if (Vinit(ax*ay, vd, 0, 0)!=0) return -1;
+
+	numtype* vh=(numtype*)malloc(ay*sizeof(numtype));
+
+	if (cublasScopy((*((cublasHandle_t*)alg->cublasH)), ax, ad, ax, vd, 1)!=CUBLAS_STATUS_SUCCESS) return -1;
+	if (cudaMemcpy(vh, vd, ay*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+
+	return 0;
+
+}
 int client1(NN* myNN) {
 	float alpha=1, beta=0;
 
