@@ -69,7 +69,7 @@ typedef struct sNN {
 	int MaxEpochs;
 	int ActualEpochs;
 	float TargetMSE;
-	bool StopOnReverse;	// stops training if MSE turns upwards
+	bool StopOnDivergence;	// stops training if MSE turns upwards
 	int NetSaveFreq;	// saves network weights every <n> epochs
 	int BP_Algo;
 	float LearningRate;

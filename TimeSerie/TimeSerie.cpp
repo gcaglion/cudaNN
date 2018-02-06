@@ -192,7 +192,8 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	targetLen=targetLen_; 
 	samplesCnt=sourceTS->steps-sampleLen;
 	batchSamplesCnt=batchSamplesCnt_;
-	batchCnt=(int)floor(samplesCnt/batchSamplesCnt);
+	batchCnt=samplesCnt/batchSamplesCnt;// (int)floor(samplesCnt/batchSamplesCnt);
+	if ((batchCnt*batchSamplesCnt)!=samplesCnt) throw WRONG_BATCH_SIZE;
 
 	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
 	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
@@ -209,10 +210,14 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 
 	//-- fill sample/target data right at creation time. TS has data in SBF format
 	if (buildFromTS(sourceTS)!=0) throw "buildFromTS() failed\n";
-	//-- populate BFS sample/target, too
-	SBF2BFS(sampleLen, sample, sampleBFS);
-	SBF2BFS(targetLen, target, targetBFS);
 
+	for (int b=0; b<batchCnt; b++) {
+		//-- populate BFS sample/target for every batch
+		SBF2BFS(b, sampleLen, sample, sampleBFS);
+		SBF2BFS(b, targetLen, target, targetBFS);
+		//-- populate SFB targets, too
+		BFS2SFB(b, targetLen, targetBFS, targetSFB);
+	}
 }
 
 void sDataSet::dump(char* filename) {
@@ -319,52 +324,56 @@ int sDataSet::buildFromTS(sTS* ts) {
 	return 0;
 }
 
-void sDataSet::SBF2BFS(int barCnt, numtype* fromSBF, numtype* toBFS) {
+void sDataSet::SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS) {
 	int S=batchSamplesCnt;
 	int F=selectedFeaturesCnt;
 	int B=barCnt;
+	int idx;
+	int idx0=batchId*B*F*S;
+	int i=idx0;
+	for (int bar=0; bar<B; bar++) {												// i1=bar	l1=B
+		for (int f=0; f<F; f++) {										// i2=f		l2=F
+			for (int s=0; s<S; s++) {										// i3=s		l3=S
+				idx=idx0 +s*F*B +bar*F +f;
+				toBFS[i]=fromSBF[idx];
+				i++;
+			}
+		}
+	}
+}
+void sDataSet::BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF) {
+	int S=batchSamplesCnt;
+	int F=selectedFeaturesCnt;
+	int B=barCnt;
+	int idx;
+	int idx0=batchId*B*F*S;
+	int i=idx0;
+	for (int s=0; s<S; s++) {												// i1=s		l1=S
+		for (int bar=0; bar<B; bar++) {											// i2=bar	l1=B
+			for (int f=0; f<F; f++) {									// i3=f		l3=F
+				idx=idx0 +bar*F*S +f*S +s;
+				toSBF[i]=fromBFS[idx];
+				i++;
+			}
+		}
+	}
 
-	int idx;
-	int i=0;
-	for (int b=0; b<batchCnt; b++) {														// i0=b		l0=batchCnt
-		for (int bar=0; bar<barCnt; bar++) {												// i1=bar	l1=barCnt
-			for (int f=0; f<selectedFeaturesCnt; f++) {										// i2=f		l2=selectedFeaturesCnt
-				for (int s=0; s<batchSamplesCnt; s++) {										// i3=s		l3=batchSamplesCnt
-					idx=b*barCnt*selectedFeaturesCnt*batchSamplesCnt +s*selectedFeaturesCnt*barCnt +bar*selectedFeaturesCnt +f;
-					toBFS[i]=fromSBF[idx];
-					i++;
-				}
-			}
-		}
-	}
 }
-void sDataSet::BFS2SBF(int barCnt, numtype* fromBFS, numtype* toSBF) {
+void sDataSet::BFS2SFB(int batchId, int barCnt, numtype* fromBFS, numtype* toSFB) {
+	int S=batchSamplesCnt;
+	int F=selectedFeaturesCnt;
+	int B=barCnt;
 	int idx;
-	int i=0;
-	for (int b=0; b<batchCnt; b++) {														// i0=b		l0=batchCnt
-		for (int s=0; s<batchSamplesCnt; s++) {												// i1=s		l1=batchSamplesCnt
-			for (int bar=0; bar<barCnt; bar++) {											// i2=bar	l1=barCnt
-				for (int f=0; f<selectedFeaturesCnt; f++) {									// i3=f		l3=selectedFeaturesCnt
-					idx=b*barCnt*selectedFeaturesCnt*batchSamplesCnt +bar*selectedFeaturesCnt*batchSamplesCnt+f*batchSamplesCnt +s;
-					toSBF[i]=fromBFS[idx];
-					i++;
-				}
+	int idx0=batchId*B*F*S;
+	int i=idx0;
+	for (int s=0; s<S; s++) {												// i1=s		l1=S
+		for (int f=0; f<F; f++) {										// i2=f		l2=F
+			for (int bar=0; bar<B; bar++) {										// i3=bar	l3=B
+				idx=idx0 +bar*F*S +f*S +s;
+				toSFB[i]=fromBFS[idx];
+				i++;
 			}
 		}
 	}
-}
-void sDataSet::BFS2SFB(int barCnt, numtype* fromBFS, numtype* toSFB) {
-	int idx;
-	int i=0;
-	for (int b=0; b<batchCnt; b++) {														// i0=b		l0=batchCnt
-		for (int s=0; s<batchSamplesCnt; s++) {												// i1=s		l1=batchSamplesCnt
-			for (int f=0; f<selectedFeaturesCnt; f++) {										// i2=f		l2=selectedFeaturesCnt
-				for (int bar=0; bar<barCnt; bar++) {										// i3=bar	l3=barCnt
-					idx=b*barCnt*selectedFeaturesCnt*batchSamplesCnt +bar*batchSamplesCnt*selectedFeaturesCnt+s*selectedFeaturesCnt +f;
-					toSFB[i]=fromBFS[idx];
-					i++;
-				}
-			}
-		}
-	}
+
 }

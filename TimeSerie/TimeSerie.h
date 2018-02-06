@@ -36,6 +36,9 @@
 #define TSF_SHE 6
 #define TSF_HISTVOL 7
 
+//-- Exceptions
+#define WRONG_BATCH_SIZE "SamplesCnt is not a multiple of batchSampleCnt"
+
 typedef struct sTS {
 
 	tDebugInfo* DebugParms;
@@ -163,9 +166,9 @@ typedef struct sDataSet {
 
 	bool isSelected(int ts_f);
 	EXPORT int buildFromTS(sTS* ts);
-	EXPORT void SBF2BFS(int vlen, numtype* fromSBF, numtype* toBFS);	
-	EXPORT void BFS2SBF(int vlen, numtype* fromBFS, numtype* toSBF);	
-	EXPORT void BFS2SFB(int vlen, numtype* fromBFS, numtype* toSFB);	
+	EXPORT void SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS);
+	EXPORT void BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF);
+	EXPORT void BFS2SFB(int batchId, int barCnt, numtype* fromBFS, numtype* toSFB);
 	EXPORT void dump(char* filename=nullptr);
 
 } DataSet;

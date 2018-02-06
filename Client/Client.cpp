@@ -80,24 +80,24 @@ int main() {
 	int modelFeature[]={ 0,1,2,3 };
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 20;// 50000;// 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 6;// 200; //6;// 200;// 200;
+	int historyLen= 50000;// 20;// 50000;// 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen= 200; //6;// 200; //6;// 200;// 200;
 	int predictionLen=2;
 
 	//-- net geometry
 	char* levelRatioS="1, 0.5, 1";// "1, 0.5";
 	int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
-	bool useContext=true;
+	bool useContext=false;
 	bool useBias=false;
 
-	//-- batchSize can be different between train and run
-	int batchsamplesCnt_T=2;
-	int batchsamplesCnt_R=2;
-
+	//-- DataSets for train and run. batchSize can be different between the two
+	DataSet* trainSet;	int batchsamplesCnt_T=100;
+	DataSet* runSet;	int batchsamplesCnt_R=100;
+	
 	//-- logging parameters
 	bool saveClient=true;
-	bool saveMSE=false;
-	bool saveRun=false;
+	bool saveMSE=true;
+	bool saveRun=true;
 	bool saveW=false;
 	bool saveNet=false;
 
@@ -108,6 +108,7 @@ int main() {
 	}
 	catch (const char* e) {
 		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
+		return -1;
 	}
 
 	//-- 1. load timeserie, transform, and scale it according to level 0 activation
@@ -117,25 +118,31 @@ int main() {
 	TS* ts1=new TS(historyLen, FXfeaturesCnt, DebugParms);
 	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), tsDate0)!=0) return -1;
 	printf("ts1 create+load, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));	
-	ts1->dump("C:/temp/ts1.orig.csv");
+	//ts1->dump("C:/temp/ts1.orig.csv");
 
 	//-- 2. apply data transformation
 	if (ts1->transform(dataTransformation)!=0) return -1;
-	ts1->dump("C:/temp/ts1.tr.csv");
+	//ts1->dump("C:/temp/ts1.tr.csv");
 
 	//-- scale according to activation at network level 0 
 	ts1->scale(trNN->scaleMin[0], trNN->scaleMax[0]);
-	ts1->dump("C:/temp/ts1.trs.csv");
+	//ts1->dump("C:/temp/ts1.trs.csv");
 
-	//-- 3. create dataset from timeserie
+	//-- 3. create training dataset from timeserie
 	//-- sampleLen/predictionLen is taken from nn
 	//-- model features cnt must be taken from nn
 	//-- model features list is defined here.
 	//-- batch size is defined here, and can be different between train and run datasets
 
 	start=timeGetTime();
-	DataSet* trainSet=new DataSet(ts1, trNN->sampleLen, trNN->predictionLen, trNN->featuresCnt, modelFeature, batchsamplesCnt_T);
-	trainSet->dump("c:/temp/trainSet.log");
+	try {
+		trainSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_T);
+	}
+	catch (const char* e) {
+		LogWrite(DebugParms, LOG_ERROR, "TRAIN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_T);
+		return -1;
+	}
+	//trainSet->dump("c:/temp/trainSet.log");
 	/*
 	if (dumpArrayH(trainSet->samplesCnt*trainSet->sampleSize, trainSet->sample, "C:/temp/trainSet-Sample.txt")!=0) return -1;
 	if (dumpArrayH(trainSet->samplesCnt*trainSet->targetSize, trainSet->target, "C:/temp/trainSet-target.txt")!=0) return -1;
@@ -145,16 +152,21 @@ int main() {
 	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- set training parameters
-	trNN->MaxEpochs=200;
+	trNN->MaxEpochs=500;
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;
-	trNN->LearningRate=(numtype)0.003;
-	trNN->LearningMomentum=(numtype)0.2;
-	trNN->StopOnReverse=true;
+	trNN->LearningRate=(numtype)0.005;
+	trNN->LearningMomentum=(numtype)0.3;
+	trNN->StopOnDivergence=true;
 
 	start=timeGetTime();
-	DataSet* runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
+	try {
+		runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
+	} catch (const char* e) {
+		LogWrite(DebugParms, LOG_ERROR, "RUN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_R);
+		return -1;
+	}
 	//runSet->dump("C:/temp/runSet.log");
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
@@ -175,7 +187,7 @@ int main() {
 	}
 	//-- Persist network structure
 	if (saveNet) {
-		//if (LogSaveStruct(DebugParms, trNN->pid, trNN->tid, trNN->InputCount, trNN->OutputCount, trNN->featuresCnt, trNN->sampleLen, trNN->predictionLen, trNN->batchCnt, batchSamplesCount, trNN->useContext, trNN->useBias, trNN->ActivationFunction, trNN->MaxEpochs, trNN->ActualEpochs, trNN->TargetMSE, trNN->StopOnReverse, trNN->NetSaveFreq, trNN->BP_Algo, trNN->LearningRate, trNN->LearningMomentum)!=0) return -1;
+		//if (LogSaveStruct(DebugParms, trNN->pid, trNN->tid, trNN->InputCount, trNN->OutputCount, trNN->featuresCnt, trNN->sampleLen, trNN->predictionLen, trNN->batchCnt, batchSamplesCount, trNN->useContext, trNN->useBias, trNN->ActivationFunction, trNN->MaxEpochs, trNN->ActualEpochs, trNN->TargetMSE, trNN->StopOnDivergence, trNN->NetSaveFreq, trNN->BP_Algo, trNN->LearningRate, trNN->LearningMomentum)!=0) return -1;
 	}
 
 	//-- run

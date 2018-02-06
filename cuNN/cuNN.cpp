@@ -382,7 +382,7 @@ int sNN::train(DataSet* trs) {
 		//printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, Validation MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], mseV[epoch], (timeGetTime()-epoch_starttime));
 		printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], (timeGetTime()-epoch_starttime));
 		if (mseT[epoch]<TargetMSE) break;
-		if((StopOnReverse && epoch>0 && mseT[epoch]>mseT[epoch-1]) ) break;
+		if((StopOnDivergence && epoch>0 && mseT[epoch]>mseT[epoch-1]) ) break;
 		if ((epoch%NetSaveFreq)==0) {
 			//-- TO DO ! (callback?)
 		}
@@ -473,21 +473,13 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
 		if (Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
 
-		//-- 1.1.4 copy only first-step target/prediction into target0/prediction0	// THERE MUST BE A MUCH BETTER WAY!!!!!
-		/*for (int s=0; s<batchSamplesCnt; s++) {
-			for(int f=0; f<runSet->selectedFeaturesCnt; f++){
-				runSet->prediction0[b*batchSamplesCnt*runSet->selectedFeaturesCnt+s*runSet->selectedFeaturesCnt+f]=runSet->predictionBFS[b*OutputCount+f];
-				runSet->target0[b*batchSamplesCnt*runSet->selectedFeaturesCnt+s*runSet->selectedFeaturesCnt+f]=runSet->targetBFS[b*OutputCount+f];
-			}
-		}
-		*/
+		//-- 1.1.4. prediction must be converted one batch at a time
+		runSet->BFS2SFB(b, runSet->targetLen, runSet->targetBFS, runSet->targetSFB);
+		runSet->BFS2SFB(b, runSet->targetLen, runSet->predictionBFS, runSet->predictionSFB);
 
-		//-- target and prediction must be converted one batch at a time
-		runSet->BFS2SFB(OutputCount, &runSet->targetBFS[b*OutputCount], &runSet->targetSFB[b*OutputCount]);
-		runSet->BFS2SFB(OutputCount, &runSet->predictionBFS[b*OutputCount], &runSet->predictionSFB[b*OutputCount]);
-		//-- 1.1.4 copy only first-step target/prediction into target0/prediction0	- slightly better way - still room to improve
-		if (Alg->getMcol(runSet->targetLen*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->targetSFB, 0, runSet->target0, true)!=0) return -1;
-		if (Alg->getMcol(runSet->sampleLen*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->predictionSFB, 0, runSet->prediction0, true)!=0) return -1;
+		//-- 1.1.5 copy only first-step target/prediction into target0/prediction0	- slightly better way - still room to improve
+		if (Alg->getMcol(runSet->selectedFeaturesCnt, runSet->targetLen, &runSet->targetSFB[b*runSet->selectedFeaturesCnt*runSet->targetLen], 0, &runSet->target0[b*runSet->selectedFeaturesCnt], true)!=0) return -1;
+		if (Alg->getMcol(runSet->selectedFeaturesCnt, runSet->targetLen, &runSet->predictionSFB[b*runSet->selectedFeaturesCnt*runSet->targetLen], 0, &runSet->prediction0[b*runSet->selectedFeaturesCnt], true)!=0) return -1;
 	}
 
 
