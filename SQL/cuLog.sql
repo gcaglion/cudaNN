@@ -1,7 +1,9 @@
---connect system/manager@Algo
---create user cuLogUser identified by LogPwd default tablespace LogData;
---grant dba to cuLogUser;
+connect system/manager@Algo
+create user cuLogUser identified by LogPwd default tablespace LogData;
+grant dba to cuLogUser;
 
+
+connect cuLogUser/LogPwd;
 
 drop table ClientInfo purge;
 create table ClientInfo(

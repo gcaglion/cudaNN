@@ -40,8 +40,8 @@ int main() {
 	int modelFeature[]={ 0,1,2,3};
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 140;// 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 20; //6;// 200;// 200;
+	int historyLen= 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen= 200;// 20; //6;// 200;// 200;
 	int predictionLen=2;
 
 	//-- net geometry
@@ -51,8 +51,8 @@ int main() {
 	bool useBias=false;
 
 	//-- DataSets for train and run. batchSize can be different between the two
-	DataSet* trainSet;	int batchsamplesCnt_T=10;
-	DataSet* runSet;	int batchsamplesCnt_R=10;
+	DataSet* trainSet;	int batchsamplesCnt_T=100;// 10;
+	DataSet* runSet;	int batchsamplesCnt_R=100;// 10;
 	
 	//-- logging parameters
 	bool saveClient=true;
@@ -102,13 +102,7 @@ int main() {
 		LogWrite(DebugParms, LOG_ERROR, "TRAIN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_T);
 		return -1;
 	}
-	trainSet->dump("c:/temp/trainSet.log");
-	/*
-	if (dumpArrayH(trainSet->samplesCnt*trainSet->sampleSize, trainSet->sample, "C:/temp/trainSet-Sample.txt")!=0) return -1;
-	if (dumpArrayH(trainSet->samplesCnt*trainSet->targetSize, trainSet->target, "C:/temp/trainSet-target.txt")!=0) return -1;
-	if (dumpArrayH(trainSet->samplesCnt*trainSet->sampleSize, trainSet->sampleBFS, "C:/temp/trainSet-SampleBFS.txt")!=0) return -1;
-	if (dumpArrayH(trainSet->samplesCnt*trainSet->targetSize, trainSet->targetBFS, "C:/temp/trainSet-targetBFS.txt")!=0) return -1;
-	*/
+	//trainSet->dump("c:/temp/trainSet.log");
 	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	start=timeGetTime();
@@ -119,12 +113,12 @@ int main() {
 		LogWrite(DebugParms, LOG_ERROR, "RUN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_R);
 		return -1;
 	}
-	runSet->dump("C:/temp/runSet.log");
+	//runSet->dump("C:/temp/runSet.log");
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 
 	//-- set training parameters
-	trNN->MaxEpochs=500;
+	trNN->MaxEpochs=100;
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;

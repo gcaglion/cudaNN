@@ -10,5 +10,5 @@ typedef float numtype;
 #endif
 
 #define USE_ORCL
-//#define USE_GPU
+#define USE_GPU
 
