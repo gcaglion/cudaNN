@@ -430,20 +430,7 @@ int sNN::train(DataSet* trs) {
 
 	return 0;
 }
-int sNN::infer(numtype* sample, numtype* Oprediction) {
-	//-- Oprediction gets filled with prediction for ONE sample
-	//-- sample must point to the start of the first (and only) sample to put through the network
-	//-- weights must be already loaded
-/*
-	//-- 1. load neurons in L0 with SINGLE sample (no BATCH)
-	if (Alg->h2d(&F[0], sample, InputCount*sizeof(numtype), false)!=0) return -1;
-	//-- 2. Feed Forward, and copy last layer neurons (on dev) to prediction (on host)
-	if (FF()!=0) return -1;
-	if (Alg->d2h(Oprediction, &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
-*/
 
-	return 0;
-}
 int sNN::run(DataSet* runSet, numtype* runW) {
 
 	//-- set Neurons Layout based on batchSampleCount of run set
@@ -473,14 +460,12 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
 		if (Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
 
-		//-- 1.1.4. prediction must be converted one batch at a time
-		runSet->BFS2SFB(b, runSet->targetLen, runSet->targetBFS, runSet->targetSFB);
-		runSet->BFS2SFB(b, runSet->targetLen, runSet->predictionBFS, runSet->predictionSFB);
-
-		//-- 1.1.5 copy only first-step target/prediction into target0/prediction0	- slightly better way - still room to improve
-		if (Alg->getMcol(runSet->selectedFeaturesCnt, runSet->targetLen, &runSet->targetSFB[b*runSet->selectedFeaturesCnt*runSet->targetLen], 0, &runSet->target0[b*runSet->selectedFeaturesCnt], true)!=0) return -1;
-		if (Alg->getMcol(runSet->selectedFeaturesCnt, runSet->targetLen, &runSet->predictionSFB[b*runSet->selectedFeaturesCnt*runSet->targetLen], 0, &runSet->prediction0[b*runSet->selectedFeaturesCnt], true)!=0) return -1;
 	}
+	//-- convert prediction from BFS to SFB (fol all batches at once)
+	runSet->BFS2SFBfull(runSet->targetLen, runSet->predictionBFS, runSet->predictionSFB);
+	//-- extract first bar only from target/prediction SFB
+	if (Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->targetSFB, 0, runSet->target0, true)!=0) return -1;
+	if (Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->predictionSFB, 0, runSet->prediction0, true)!=0) return -1;
 
 
 	//-- feee neurons()

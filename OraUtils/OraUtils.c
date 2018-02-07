@@ -1580,7 +1580,7 @@ EXPORT int Ora_LogSaveMSE(tDebugInfo* DebugParms, int pid, int tid, int mseCnt, 
 	}
 
 	//-- Then, Build the Insert statement
-	sprintf(&stmt[0], "insert into MyLog_MSE (ProcessId, ThreadId, Epoch, MSE_T, MSE_V) values(:P01, :P02, :P03, :P04, :P05)");
+	sprintf(&stmt[0], "insert into TrainLog(ProcessId, ThreadId, Epoch, MSE_T, MSE_V) values(:P01, :P02, :P03, :P04, :P05)");
 	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
@@ -2387,7 +2387,7 @@ EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int barCnt, 
 	}
 
 	//-- Then, Build the Insert statement
-	sprintf(&stmt[0], "insert into MyLog_Run (ProcessId, ThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07)");
+	sprintf(&stmt[0], "insert into RunLog (ProcessId, ThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07)");
 	LogWrite(DebugParms, LOG_INFO, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 

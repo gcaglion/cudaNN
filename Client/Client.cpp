@@ -37,12 +37,11 @@ int main() {
 	float scaleM, scaleP;
 
 	//-- data params
-	//int modelFeature[]={ 0,1,2,3 };
 	int modelFeature[]={ 0,1,2,3 };
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 50000;// 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 200; //6;// 200;// 200;
+	int historyLen= 140;// 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen= 20; //6;// 200;// 200;
 	int predictionLen=2;
 
 	//-- net geometry
@@ -52,14 +51,14 @@ int main() {
 	bool useBias=false;
 
 	//-- DataSets for train and run. batchSize can be different between the two
-	DataSet* trainSet;	int batchsamplesCnt_T=100;
-	DataSet* runSet;	int batchsamplesCnt_R=100;
+	DataSet* trainSet;	int batchsamplesCnt_T=10;
+	DataSet* runSet;	int batchsamplesCnt_R=10;
 	
 	//-- logging parameters
 	bool saveClient=true;
 	bool saveMSE=true;
 	bool saveRun=true;
-	bool saveW=false;
+	bool saveW=true;
 	bool saveNet=false;
 
 	//-- Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
@@ -103,7 +102,7 @@ int main() {
 		LogWrite(DebugParms, LOG_ERROR, "TRAIN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_T);
 		return -1;
 	}
-	//trainSet->dump("c:/temp/trainSet.log");
+	trainSet->dump("c:/temp/trainSet.log");
 	/*
 	if (dumpArrayH(trainSet->samplesCnt*trainSet->sampleSize, trainSet->sample, "C:/temp/trainSet-Sample.txt")!=0) return -1;
 	if (dumpArrayH(trainSet->samplesCnt*trainSet->targetSize, trainSet->target, "C:/temp/trainSet-target.txt")!=0) return -1;
@@ -118,7 +117,7 @@ int main() {
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;
 	trNN->LearningRate=(numtype)0.01;
-	trNN->LearningMomentum=(numtype)0.3;
+	trNN->LearningMomentum=(numtype)0.5;
 	trNN->StopOnDivergence=true;
 
 	start=timeGetTime();
@@ -128,7 +127,7 @@ int main() {
 		LogWrite(DebugParms, LOG_ERROR, "RUN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_R);
 		return -1;
 	}
-	//runSet->dump("C:/temp/runSet.log");
+	runSet->dump("C:/temp/runSet.log");
 	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- train with training Set, which specifies batch size and features list (not count)

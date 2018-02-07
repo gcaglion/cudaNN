@@ -359,6 +359,27 @@ void sDataSet::BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF
 	}
 
 }
+
+void sDataSet::BFS2SFBfull(int barCnt, numtype* fromBFS, numtype* toSFB) {
+	int S=batchSamplesCnt;
+	int F=selectedFeaturesCnt;
+	int B=barCnt;
+	int i, idx, idx0;
+	for(int batchId=0; batchId<batchCnt; batchId++) {
+		idx0=batchId*B*F*S;
+		i=idx0;
+		for (int s=0; s<S; s++) {												// i1=s		l1=S
+			for (int f=0; f<F; f++) {										// i2=f		l2=F
+				for (int bar=0; bar<B; bar++) {										// i3=bar	l3=B
+					idx=idx0+bar*F*S+f*S+s;
+					toSFB[i]=fromBFS[idx];
+					i++;
+				}
+			}
+		}
+	}
+
+}
 void sDataSet::BFS2SFB(int batchId, int barCnt, numtype* fromBFS, numtype* toSFB) {
 	int S=batchSamplesCnt;
 	int F=selectedFeaturesCnt;
@@ -369,7 +390,7 @@ void sDataSet::BFS2SFB(int batchId, int barCnt, numtype* fromBFS, numtype* toSFB
 	for (int s=0; s<S; s++) {												// i1=s		l1=S
 		for (int f=0; f<F; f++) {										// i2=f		l2=F
 			for (int bar=0; bar<B; bar++) {										// i3=bar	l3=B
-				idx=idx0 +bar*F*S +f*S +s;
+				idx=idx0+bar*F*S+f*S+s;
 				toSFB[i]=fromBFS[idx];
 				i++;
 			}

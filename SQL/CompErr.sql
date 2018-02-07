@@ -1,5 +1,6 @@
 
-select mse_t from mylog_mse where processid=&&1 and epoch=(
-select max(epoch) from mylog_mse where processid=&&1
+select mse_t from trainlog where processid=&&1 and epoch=(
+select max(epoch) from trainlog where processid=&&1
 );
-select avg(errortrs*errortrs) from mylog_run where processid=&&1;
+select sum(errortrs*errortrs) SE, avg(errortrs*errortrs) MSE from runlog where processid=&&1;
+select featureid, sum(errortrs*errortrs) SE, avg(errortrs*errortrs) MSE from runlog where processid=&&1 group by featureid order by 1;

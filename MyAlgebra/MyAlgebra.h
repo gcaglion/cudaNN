@@ -79,9 +79,9 @@ typedef struct s_matrix {
 		for (int y=0; y<my; y++) {
 			for (int x=0; x<mx; x++) {
 				if(diag==0){
-					m[i]=((y==x)?1:0);
+					m[i]=((y==x)?1.0f:0.0f);
 				} else {
-					m[i]=((y==(mx-x-1))?1:0);
+					m[i]=((y==(mx-x-1))?1.0f:0.0f);
 				}
 				i++;
 			}

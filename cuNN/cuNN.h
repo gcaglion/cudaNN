@@ -126,8 +126,5 @@ private:
 	void destroyNeurons();
 	void destroyWeights();
 
-	int infer(numtype* sample, numtype* prediction);
-
-
 } NN;
 
