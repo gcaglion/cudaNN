@@ -37,7 +37,7 @@ int main() {
 	float scaleM, scaleP;
 
 	//-- data params
-	int modelFeature[]={ 0,1,2,3 };
+	int modelFeature[]={ 0,1,2,3};
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
 	int historyLen= 140;// 20;// 50000;// 50000;// 20;// 500;
@@ -111,6 +111,18 @@ int main() {
 	*/
 	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
+	start=timeGetTime();
+	try {
+		runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
+	}
+	catch (const char* e) {
+		LogWrite(DebugParms, LOG_ERROR, "RUN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_R);
+		return -1;
+	}
+	runSet->dump("C:/temp/runSet.log");
+	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
+
+
 	//-- set training parameters
 	trNN->MaxEpochs=500;
 	trNN->NetSaveFreq=200;
@@ -119,16 +131,6 @@ int main() {
 	trNN->LearningRate=(numtype)0.01;
 	trNN->LearningMomentum=(numtype)0.5;
 	trNN->StopOnDivergence=true;
-
-	start=timeGetTime();
-	try {
-		runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
-	} catch (const char* e) {
-		LogWrite(DebugParms, LOG_ERROR, "RUN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_R);
-		return -1;
-	}
-	runSet->dump("C:/temp/runSet.log");
-	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- train with training Set, which specifies batch size and features list (not count)
 	if(trNN->train(trainSet)!=0) return -1;

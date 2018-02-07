@@ -1,3 +1,8 @@
+--connect system/manager@Algo
+--create user cuLogUser identified by LogPwd default tablespace LogData;
+--grant dba to cuLogUser;
+
+
 drop table ClientInfo purge;
 create table ClientInfo(
 	ProcessId number,

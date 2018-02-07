@@ -18,27 +18,14 @@ alter table CoreImage_SVM drop constraint CoreImage_SVM_FK_EngineThreads;
 --alter table CoreParms_GA drop constraint CoreParms_GA_FK_EngineThreads;
 --alter table CoreParms_SOM drop constraint CoreParms_SOM_FK_EngineThreads;
 --alter table CoreParms_SVM drop constraint CoreParms_SVM_FK_EngineThreads;
-alter table MyLog_MSE drop constraint MyLog_MSE_FK_EngineThreads;
-alter table MyLog_Run drop constraint MyLog_Run_FK_EngineThreads;
+alter table MSELog drop constraint MSELog_FK_EngineThreads;
+alter table RunLog drop constraint RunLog_FK_EngineThreads;
 alter table CoreLogs_NN drop constraint CoreLogs_NN_FK_EngineThreads;
 alter table CoreLogs_NN_SCGD drop constraint CoreLogs_NN_SCGD_FK_ET;
 alter table CoreLogs_GA drop constraint CoreLogs_GA_FK_EngineThreads;
 alter table CoreLogs_SVM drop constraint CoreLogs_SVM_FK_EngineThreads;
 alter table CoreLogs_SOM drop constraint CoreLogs_SOM_FK_EngineThreads;
 ----------------------------------------------------------------------------
-
-drop table ClientInfo purge;
-create table ClientInfo(
-	ProcessId number,
-	ClientName varchar2(60),
-	ClientStart date,
-	Duration number,
-	SimulationLen number,
-	SimulationStart date,
-	DoTraining number,
-	DoRun number
-);
-alter table ClientInfo add constraint ClientInfo_PK primary key( ProcessId ) using index tablespace LogIdx;
 
 drop table TradeInfo purge;
 create table TradeInfo(
@@ -113,16 +100,6 @@ create table EngineThreads(
 alter table EngineThreads add constraint EngineThreads_PK primary key (ProcessId, TestId, LayerId, CoreId, DatasetId) using index tablespace LogIdx;
 alter table EngineThreads add constraint EngineThreads_UK1 unique (ProcessId, ThreadId) using index tablespace LogIdx;
 --alter table EngineThreads add constraint EngineThreads_UK2 unique (ProcessId, LayerId, CoreId) using index tablespace LogIdx;
-
-drop table CoreImage_NN purge;
-create table CoreImage_NN(
-	ProcessId number,
-	ThreadId number,
-	Epoch number,
-	WId number,
-	W number
-) storage (freelists 8);
-alter table CoreImage_NN add constraint CoreImage_NN_PK primary key( ProcessId, ThreadId, Epoch, WId ) using index tablespace LogIdx;
 
 drop table CoreImage_SOM purge;
 create table CoreImage_SOM(
@@ -231,35 +208,7 @@ create table CoreParms_SVM(
 );
 alter table CoreParms_SVM add  constraint CoreParms_SVM_PK primary key( AdderId, ProcessId, LayerId, CoreId ) using index tablespace LogIdx;
 
-drop table MyLog_MSE purge;
-create table MyLog_MSE(
-	ProcessId number,
-	ThreadId number,
-	Epoch number,
-	MSE_T number,
-	MSE_V number
-) storage (initial 100m next 100m freelists 8);
-alter table MyLog_MSE add constraint MyLog_MSE_PK primary key( ProcessId, ThreadId, Epoch ) using index tablespace LogIdx;
---alter table MyLog_MSE add constraint MyLog_MSE_AdderId_NN check(AdderId is not null);
-
-drop table MyLog_Run purge;
-create table MyLog_Run(
-	ProcessId number,
-	ThreadId number,
-	NetProcessId number,
-	NetThreadId number,
-	Pos number,
-	FeatureId number,
-	Actual number,
-	Predicted number,
-	Error number,
-	ActualTRS number,
-	PredictedTRS number,
-	ErrorTRS number,
-	BarWidth number,
-	ErrorP number
-) storage (initial 1024M minextents 8 pctincrease 0);
-alter table MyLog_Run add constraint MyLog_Run_PK primary key( ProcessId, ThreadId, Pos, FeatureId ) using index tablespace LogIdx;
+--alter table MSELog add constraint MSELog_AdderId_NN check(AdderId is not null);
 
 drop table CoreLogs_GA purge;
 create table CoreLogs_GA(
@@ -335,8 +284,8 @@ alter table CoreImage_SVM add constraint CoreImage_SVM_FK_EngineThreads foreign 
 --alter table CoreParms_GA add constraint CoreParms_GA_FK_EngineThreads foreign key(ProcessId, LayerId, CoreId) references EngineThreads(ProcessId, LayerId, CoreId);
 --alter table CoreParms_SOM add constraint CoreParms_SOM_FK_EngineThreads foreign key(ProcessId, LayerId, CoreId) references EngineThreads(ProcessId, LayerId, CoreId);
 --alter table CoreParms_SVM add constraint CoreParms_SVM_FK_EngineThreads foreign key(ProcessId, LayerId, CoreId) references EngineThreads(ProcessId, LayerId, CoreId);
-alter table MyLog_MSE add constraint MyLog_MSE_FK_EngineThreads foreign key(ProcessId, ThreadId) references EngineThreads(ProcessId, ThreadId);
-alter table MyLog_Run add constraint MyLog_Run_FK_EngineThreads foreign key(ProcessId, ThreadId) references EngineThreads(ProcessId, ThreadId);
+alter table MSELog add constraint MSELog_FK_EngineThreads foreign key(ProcessId, ThreadId) references EngineThreads(ProcessId, ThreadId);
+alter table RunLog add constraint RunLog_FK_EngineThreads foreign key(ProcessId, ThreadId) references EngineThreads(ProcessId, ThreadId);
 alter table CoreLogs_GA add constraint CoreLogs_GA_FK_EngineThreads foreign key(ProcessId, ThreadId) references EngineThreads(ProcessId, ThreadId);
 alter table CoreLogs_NN add constraint CoreLogs_NN_FK_EngineThreads foreign key(ProcessId, ThreadId) references EngineThreads(ProcessId, ThreadId);
 alter table CoreLogs_NN_SCGD add constraint CoreLogs_NN_SCGD_FK_ET foreign key(ProcessId, ThreadId) references EngineThreads(ProcessId, ThreadId);
