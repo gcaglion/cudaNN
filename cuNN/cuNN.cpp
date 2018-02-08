@@ -375,20 +375,44 @@ int sNN::train(DataSet* trs) {
 		}
 
 
-		//-- 1.1. calc and display MSE
+		//-- 1.1. calc and display epoch MSE
 		Alg->d2h(&tse_h, tse, sizeof(numtype));
-		mseT[epoch]=tse_h/nodesCnt[levelsCnt-1];
-		mseV[epoch]=0;	// TO DO !
-		//printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, Validation MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], mseV[epoch], (timeGetTime()-epoch_starttime));
-		printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, epoch, mseT[epoch], (timeGetTime()-epoch_starttime));
-		if (mseT[epoch]<TargetMSE) break;
-		if((StopOnDivergence && epoch>0 && mseT[epoch]>mseT[epoch-1]) ) break;
-		if ((epoch%NetSaveFreq)==0) {
-			//-- TO DO ! (callback?)
+		if (epoch>0) {
+			mseT[epoch-1]=tse_h/nodesCnt[levelsCnt-1];
+			mseV[epoch-1]=0;	// TO DO !
+			printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, epoch-1, mseT[epoch-1], (timeGetTime()-epoch_starttime));
+			if (mseT[epoch-1]<TargetMSE) break;
+			if ((StopOnDivergence && epoch>1&&mseT[epoch-1]>mseT[epoch-2])) break;
+			if ((epoch%NetSaveFreq)==0) {
+				//-- TO DO ! (callback?)
+			}
 		}
-		
 	}
-	ActualEpochs=epoch-((epoch>MaxEpochs)?1:0);
+	ActualEpochs=epoch-((epoch>MaxEpochs) ? 1 : 0);
+
+	//-- test run. need this to make sure all batches pass through the net with the latest weights
+	TRstart=timeGetTime(); TRcnt++;
+	if (Vinit(1, tse, 0, 0)!=0) return -1;
+	for (int b=0; b<batchCnt; b++) {
+
+		//-- load samples + targets onto GPU
+		if (Alg->h2d(&F[0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
+		if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
+
+		//-- Feed Forward ()
+		if (FF()!=0) return -1;
+
+		//-- Calc Error (sets e[], te, updates tse) for the whole batch
+		if (calcErr()!=0) return -1;
+
+	}
+	TRtimeTot+=((DWORD)(timeGetTime()-TRstart));
+
+	//-- calc and display final epoch MSE
+	Alg->d2h(&tse_h, tse, sizeof(numtype));
+	mseT[ActualEpochs-1]=tse_h/nodesCnt[levelsCnt-1];
+	printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, ActualEpochs-1, mseT[ActualEpochs-1], (timeGetTime()-epoch_starttime));
+
 	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;
 	float elapsed_avg=elapsed_tot/ActualEpochs;
 	printf("\nTraining complete. Elapsed time: %0.1f seconds. Epoch average=%0.0f ms.\n", (elapsed_tot/(float)1000), elapsed_avg);
@@ -403,27 +427,8 @@ int sNN::train(DataSet* trs) {
 	//VDtimeAvg=(float)VDtimeTot/VDcnt; printf("VD count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VDcnt, (VDtimeTot/(float)1000), VDtimeAvg);
 	//VStimeAvg=(float)VStimeTot/VScnt; printf("VS count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VScnt, (VStimeTot/(float)1000), VStimeAvg);
 	BPtimeAvg=(float)BPtimeTot/LDcnt; printf("BP count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", BPcnt, (BPtimeTot/(float)1000), BPtimeAvg);
+	TRtimeAvg=(float)TRtimeTot/LDcnt; printf("TR count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", TRcnt, (TRtimeTot/(float)1000), TRtimeAvg);
 
-	//-- test run
-	if (Vinit(1, tse, 0, 0)!=0) return -1;
-	for (int b=0; b<batchCnt; b++) {
-
-		//-- load samples + targets onto GPU
-		if (Alg->h2d(&F[0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
-		if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
-
-		//-- Feed Forward (  )
-		if (FF()!=0) return -1;
-
-		//-- Calc Error (sets e[], te, updates tse) for the whole batch
-		if (calcErr()!=0) return -1;
-
-	}
-	//-- calc and display MSE
-	numtype mse_h;
-	Alg->d2h(&tse_h, tse, sizeof(numtype));
-	mse_h=tse_h/nodesCnt[levelsCnt-1];
-	printf("\nTest Run MSE=%f \n", mse_h);
 
 	//-- feee neurons()
 	destroyNeurons();
@@ -432,6 +437,7 @@ int sNN::train(DataSet* trs) {
 }
 
 int sNN::run(DataSet* runSet, numtype* runW) {
+
 
 	//-- set Neurons Layout based on batchSampleCount of run set
 	batchSamplesCnt=runSet->batchSamplesCnt;
@@ -453,6 +459,7 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 
 		//-- 1.1.1.  load samples/targets onto GPU
 		if (Alg->h2d(&F[0], &runSet->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
+		//if (Alg->h2d(&u[0], &runSet->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
 
 		//-- 1.1.2. Feed Forward
 		if (FF()!=0) return -1;
@@ -460,7 +467,17 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
 		if (Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
 
+		//calcErr();
 	}
+
+	/*
+	//-- calc and display final epoch MSE
+	numtype tse_h;	// total squared error copid on host at the end of the run
+	Alg->d2h(&tse_h, tse, sizeof(numtype));
+	numtype mseR=tse_h/nodesCnt[levelsCnt-1];
+	printf("\npid=%d, tid=%d, Run final MSE=%f\n", pid, tid, mseR);
+	*/
+	
 	//-- convert prediction from BFS to SFB (fol all batches at once)
 	runSet->BFS2SFBfull(runSet->targetLen, runSet->predictionBFS, runSet->predictionSFB);
 	//-- extract first bar only from target/prediction SFB

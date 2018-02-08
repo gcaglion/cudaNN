@@ -58,7 +58,7 @@ int main() {
 	bool saveClient=true;
 	bool saveMSE=true;
 	bool saveRun=true;
-	bool saveW=true;
+	bool saveW=false;
 	bool saveNet=false;
 
 	//-- Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
@@ -118,7 +118,7 @@ int main() {
 
 
 	//-- set training parameters
-	trNN->MaxEpochs=100;
+	trNN->MaxEpochs=1000;
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;

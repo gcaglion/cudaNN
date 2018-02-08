@@ -104,6 +104,8 @@ typedef struct sNN {
 	DWORD VDstart, VDtimeTot=0, VDcnt=0; float VDtimeAvg;
 	DWORD VSstart, VStimeTot=0, VScnt=0; float VStimeAvg;
 	DWORD BPstart, BPtimeTot=0, BPcnt=0; float BPtimeAvg;
+	DWORD WUstart, WUtimeTot=0, WUcnt=0; float WUtimeAvg;
+	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
 	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction, bool useContext_, bool useBias_);
 	EXPORT ~sNN();
