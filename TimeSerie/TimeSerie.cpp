@@ -190,7 +190,7 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
 	sampleLen=sampleLen_; 
 	targetLen=targetLen_; 
-	samplesCnt=sourceTS->steps-sampleLen;
+	samplesCnt=sourceTS->steps-sampleLen-targetLen+1;
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;// (int)floor(samplesCnt/batchSamplesCnt);
 	if ((batchCnt*batchSamplesCnt)!=samplesCnt) throw WRONG_BATCH_SIZE;
@@ -310,9 +310,6 @@ int sDataSet::buildFromTS(sTS* ts) {
 		for (b=0; b<targetLen; b++) {
 			for (f=0; f<ts->featuresCnt; f++) {
 				if (isSelected(f)) {
-					if (tidx==ts->len) {
-						tidx-=ts->featuresCnt;
-					}
 					target[ti]=ts->d_trs[tidx];
 					ti++;
 				}
