@@ -53,7 +53,7 @@ int main() {
 	//-- DataSets for train and run. batchSize can be different between the two
 	DataSet* trainSet;	int batchsamplesCnt_T=100;// 10;
 	DataSet* runSet;	int batchsamplesCnt_R=100;// 10;
-	
+
 	//-- logging parameters
 	bool saveClient=true;
 	bool saveMSE=true;
@@ -124,11 +124,13 @@ int main() {
 	trNN->BP_Algo=BP_STD;
 	trNN->LearningRate=(numtype)0.01;
 	trNN->LearningMomentum=(numtype)0.5;
-	trNN->StopOnDivergence=true;
+	trNN->StopOnDivergence=false;
 
 	//-- train with training Set, which specifies batch size and features list (not count)
-	if(trNN->train(trainSet)!=0) return -1;
-
+	if (trNN->train(trainSet)!=0) {
+		LogWrite(DebugParms, LOG_ERROR, "Network Training failed\n", 0);
+		return -1;
+	}
 	//-- persist MSE 
 	if(saveMSE){
 		start=timeGetTime();
