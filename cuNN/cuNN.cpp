@@ -115,7 +115,7 @@ void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {
 	//-- ctxStart[] can only be defined after levelFirstNode has been defined.
 	if (useContext) {
 		for (nl=0; nl<(levelsCnt-1); nl++) {
-			ctxStart[nl]=levelFirstNode[nl+1]-nodesCnt[nl+1];
+			ctxStart[nl]=levelFirstNode[nl+1]-nodesCnt[nl+1] +(useBias)?1:0;
 		}
 	}
 
@@ -153,22 +153,27 @@ void sNN::setActivationFunction(int* func_) {
 int sNN::Activate(int level) {
 	// sets F, dF
 	int ret, retd;
+	int nc=nodesCnt[level];
+	numtype* va=&a[levelFirstNode[level]+(useBias)?1:0];
+	numtype* vF=&F[levelFirstNode[level]+(useBias)?1:0];
+	numtype* vdF=&dF[levelFirstNode[level]+(useBias)?1:0];
+
 	switch (ActivationFunction[level]) {
 	case NN_ACTIVATION_TANH:
-		ret=Tanh(nodesCnt[level], &a[levelFirstNode[level]], &F[levelFirstNode[level]]);
-		retd=dTanh(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
+		ret=Tanh(nc, va, vF);
+		retd=dTanh(nc, va, vdF);
 		break;
 	case NN_ACTIVATION_EXP4:
-		ret=Exp4(nodesCnt[level], &a[levelFirstNode[level]], &F[levelFirstNode[level]]);
-		retd=dExp4(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
+		ret=Exp4(nc, va, vF);
+		retd=dExp4(nc, va, vdF);
 		break;
 	case NN_ACTIVATION_RELU:
-		ret=Relu(nodesCnt[level], &a[levelFirstNode[level]], &F[levelFirstNode[level]]);
-		retd=dRelu(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
+		ret=Relu(nc, va, vF);
+		retd=dRelu(nc, va, vdF);
 		break;
 	case NN_ACTIVATION_SOFTPLUS:
-		ret=SoftPlus(nodesCnt[level], &a[levelFirstNode[level]], &F[levelFirstNode[level]]);
-		retd=dSoftPlus(nodesCnt[level], &a[levelFirstNode[level]], &dF[levelFirstNode[level]]);
+		ret=SoftPlus(nc, va, vF);
+		retd=dSoftPlus(nc, va, vdF);
 		break;
 	default:
 		ret=-1;
@@ -224,6 +229,16 @@ int sNN::createNeurons() {
 	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) return -1;
 	//--
 	if (Vinit(nodesCntTotal, F, 0, 0)!=0) return -1;
+	if(useBias) {
+		biasNode=(numtype**)malloc(levelsCnt*sizeof(numtype*));
+		numtype biasVal=1;
+		for(int l=0; l<(levelsCnt-1); l++) {
+			//-- set every bias node's F=1
+			if (Vinit(1, &F[levelFirstNode[l]], 1, 0)!=0) return -1;
+			//-- make biasnode[l] point to first node of this level
+			biasNode[l]=&F[levelFirstNode[l]];
+		}
+	}
 	//---- the following are needed by cublas version of MbyM
 	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return -1;
 	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return -1;
@@ -299,7 +314,7 @@ int sNN::train(DataSet* trs) {
 
 			//-- 1.1.1.  load samples + targets onto GPU
 			LDstart=timeGetTime(); LDcnt++;
-			if (Alg->h2d(&F[0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true )!=0) return -1;
+			if (Alg->h2d(&F[(useBias)?1:0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true )!=0) return -1;
 			if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true )!=0) return -1;
 			//dumpArray(nodesCnt[0], &F[0], "c:/temp/F0.txt");
 			//dumpArray(nodesCnt[levelsCnt-1], u, "C:/temp/u.txt");

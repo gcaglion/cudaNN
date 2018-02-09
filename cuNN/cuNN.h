@@ -5,9 +5,6 @@
 #include "../MyAlgebra/MyAlgebra.h"
 #include "../TimeSerie/TimeSerie.h"
 
-#define MLP 0
-#define RNN 1
-
 //-- Training Protocols
 #define TP_STOCHASTIC	0
 #define TP_BATCH		1
@@ -77,6 +74,7 @@ typedef struct sNN {
 
 	numtype* a;
 	numtype* F;
+	numtype** biasNode;	//-- array of pointers to the bias node of each level (except output)
 	numtype* dF;
 	numtype* edF;
 	numtype* W;

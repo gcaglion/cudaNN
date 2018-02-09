@@ -155,6 +155,7 @@ EXPORT void Vscale(int Vlen, int* V, float s);
 //-- vector functions
 EXPORT int Vscale(int vlen, numtype* v, numtype s);
 EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2);
+EXPORT int Vshadow(int vlen, numtype* v1, numtype* sv);
 EXPORT int Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
 EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
 EXPORT int Vssum(int vlen, numtype* v, numtype* ovssum);
