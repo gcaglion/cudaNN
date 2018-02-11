@@ -42,7 +42,7 @@ int main() {
 	int dataTransformation=DT_DELTA;
 	int historyLen= 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
 	int sampleLen= 50;//;// 20; //6;// 200;// 200;
-	int predictionLen=3;
+	int predictionLen=2;
 
 	//-- net geometry
 	char* levelRatioS= "1, 0.5";//"1, 0.5, 1";//
@@ -78,7 +78,7 @@ int main() {
 	TS* ts1=new TS(historyLen, FXfeaturesCnt, DebugParms);
 	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), tsDate0)!=0) return -1;
 	printf("ts1 create+load, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));	
-	ts1->dump("C:/temp/ts1.orig.csv");
+	//ts1->dump("C:/temp/ts1.orig.csv");
 
 	//-- 2. apply data transformation
 	if (ts1->transform(dataTransformation)!=0) return -1;
@@ -102,7 +102,7 @@ int main() {
 		LogWrite(DebugParms, LOG_ERROR, "TRAIN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_T);
 		return -1;
 	}
-	trainSet->dump("c:/temp/trainSet.log");
+	//trainSet->dump("c:/temp/trainSet.log");
 	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	start=timeGetTime();
