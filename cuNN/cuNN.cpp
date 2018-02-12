@@ -392,12 +392,12 @@ int sNN::train(DataSet* trs) {
 
 
 		//-- 1.1. calc and display epoch MSE
-		printf("epoch=%d , tse=%f\n", epoch, (*tse));
+		//printf("epoch=%d , tse=%f\n", epoch, (*tse));
 		Alg->d2h(&tse_h, tse, sizeof(numtype));
 		if (epoch>0) {
 			mseT[epoch-1]=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
 			mseV[epoch-1]=0;	// TO DO !
-			//printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, epoch-1, mseT[epoch-1], (timeGetTime()-epoch_starttime));
+			printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, epoch-1, mseT[epoch-1], (timeGetTime()-epoch_starttime));
 			if (mseT[epoch-1]<TargetMSE) break;
 			if ((StopOnDivergence && epoch>1&&mseT[epoch-1]>mseT[epoch-2])) break;
 			if ((epoch%NetSaveFreq)==0) {

@@ -301,7 +301,7 @@ EXPORT int Sadd_cu(numtype* s1, numtype* s2, numtype* ssum) {
 EXPORT int getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 	cublasStatus_t err=cublasScopy((*((cublasHandle_t*)cublasH)), Ax, A, Ax, oCol, 1);
 	if (err!=CUBLAS_STATUS_SUCCESS) {
-		printf("getMcol_cu() CUBLAS error %d\n", cudaGetErrorEnum(err));
+		printf("getMcol_cu() CUBLAS error %d: %s\n", err, cudaGetErrorEnum(err));
 		return -1;
 	}
 	return 0;

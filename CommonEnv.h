@@ -3,7 +3,7 @@
 
 typedef float numtype;
 
-#define FAILURE -1
+#define DEBUG_DEFAULT_PATH "C:/temp"
 
 #ifndef EXPORT
 #define EXPORT __declspec(dllexport)

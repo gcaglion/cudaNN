@@ -1,49 +1,58 @@
 #pragma once
 
 #include "..\CommonEnv.h"
-#include "..\DBConnection.h"
+#include "..\fileInfo.h"
 #include <stdio.h>
 #include <time.h>
 
 
-// Log Level
-#define LOG_INFO 0
-#define LOG_ERROR 1
-
-// Logs Destinations
-#define LOG_TO_TEXT   1
-#define LOG_TO_ORCL	  2
+// Debug Message Types
+#define DBG_INFO 0
+#define DBG_ERROR 1
 
 typedef struct sDebugInfo {
-	int DebugLevel;		//-- 0:Nothing ; 1:Screen-Only ; 2:File-Only ; 3:File+Screen
-	int DebugDest;		//-- ORCL | TEXT
+	int level;		//-- 0:Nothing ; 1:Screen-Only ; 2:File-Only ; 3:File+Screen
+	tFileInfo* outFile;
 	int PauseOnError;
-	tDBConnection* DebugDB;
-	char fPath[MAX_PATH];
-	char fName[MAX_PATH];
-	char FullfName[MAX_PATH];
-	FILE* fHandle;
-	int  fIsOpen;
-	void* DBCtx;
-	int ThreadSafeLogging;
-	int SaveNothing;
-	int SaveMSE;
-	int SaveRun;
-	int SaveInternals;
-	int SaveImages;
-	int DumpSampleData;
+	bool ThreadSafeLogging;
 	HANDLE Mtx;		// Mutex handle used by LogWrite()
-#ifdef __cplusplus
-	sDebugInfo() {
-		DebugDB = new tDBConnection();
-	}
 
-	~sDebugInfo() {
-		delete(DebugDB);
-	}
+	//--
+	bool timing;
+	DWORD startTime;
+	//--
+
+	//--
+	//--
+
+#ifdef __cplusplus
+
+	EXPORT sDebugInfo(int level_, char* fName_, char* fPath_=DEBUG_DEFAULT_PATH, bool timing_=false, bool append_=false);
+	EXPORT ~sDebugInfo();
+
+	EXPORT void write(int LogType, const char* msg, int argcount, ...);
+
 #endif
+
 } tDebugInfo;
 
 #ifdef __cplusplus
-EXPORT void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount, ...);
+//EXPORT void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount, ...);
 #endif
+
+#define safeCallE(desc, debugParms, block) \
+if(debugParms->timing) debugParms->startTime=timeGetTime(); \
+try {block;} catch (const char* e) { \
+	debugParms->write(DBG_ERROR, "%s failed. Exception %s \n", 2, desc, e); \
+	return -1; \
+} \
+if(debugParms->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-debugParms->startTime));
+
+#define safeCallR(desc, debugParms, block) \
+if(debugParms->timing) debugParms->startTime=timeGetTime(); \
+if((block)!=0){\
+	debugParms->write(DBG_ERROR, "%s failed. \n", 1, desc); \
+	return -1; \
+} else{\
+if(debugParms->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-debugParms->startTime));\
+}

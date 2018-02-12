@@ -5,7 +5,6 @@
 #include "../Logger/Logger.h"
 #include "../MyAlgebra/MyAlgebra.h"
 
-
 int main() {
 
 	//client3();	
@@ -20,21 +19,31 @@ int main() {
 	//system("pause");
 	//return -1;
 
-	//--
-	tDBConnection* LogDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO");
-
-	tDebugInfo* DebugParms=new tDebugInfo;
-	DebugParms->DebugLevel = 0;
-	DebugParms->DebugDest = LOG_TO_ORCL;
-	DebugParms->DebugDB=LogDB;
-	strcpy(DebugParms->fPath, "C:/temp");
-	strcpy(DebugParms->fName, "Client.log");
-	DebugParms->PauseOnError = 1;
-	//--
-	DWORD start, end;
 	DWORD mainStart=timeGetTime();
+	//--
+	int clientPid=GetCurrentProcessId();
+	int clientTid=GetCurrentThreadId();
 
-	float scaleM, scaleP;
+	//-- main objects
+	tDBConnection* FXDB=nullptr;
+	tDBConnection* persistDB=nullptr;
+	tLogger* persistor=nullptr;
+	NN* trNN=nullptr;
+	tFXData* eurusdH1= nullptr;
+	TS* fxTS=nullptr;
+
+	//-- debugger settings
+	tDebugInfo* clientDbg=new tDebugInfo(1, "Client.log", DEBUG_DEFAULT_PATH, true);
+	clientDbg->PauseOnError = 1;
+	tDebugInfo* persistorDbg=new tDebugInfo(2, "Persistor.log", DEBUG_DEFAULT_PATH);
+	//--
+
+	safeCallE("create DBConnection for FX History DB", clientDbg, FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));
+	safeCallE("create FXData for EURUSD H1", clientDbg, eurusdH1=new tFXData(FXDB, "EURUSD", "H1", false));
+	safeCallE("create DBConnection for Logger DB", clientDbg, persistDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO"));
+	safeCallE("create Logger from persistDB connection to save results data", clientDbg, persistor=new tLogger(persistorDbg, persistDB));
+	//-- logger parameters (when different from default settings
+	persistor->saveImage=true;
 
 	//-- data params
 	int modelFeature[]={ 1};
@@ -54,69 +63,9 @@ int main() {
 	DataSet* trainSet;	int batchsamplesCnt_T=1;// 10;
 	DataSet* runSet;	int batchsamplesCnt_R=1;// 10;
 
-	//-- logging parameters
-	bool saveClient=true;
-	bool saveMSE=true;
-	bool saveRun=true;
-	bool saveW=false;
-	bool saveNet=false;
 
-	//-- Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
-	NN* trNN=nullptr;
-	try {
-		trNN=new NN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias);
-	}
-	catch (const char* e) {
-		LogWrite(DebugParms, LOG_ERROR, "NN creation failed. (%s)\n", 1, e);
-		return -1;
-	}
-
-	//-- 1. load timeserie, transform, and scale it according to level 0 activation
-	const int FXfeaturesCnt=5;	//-- OHLC, fixed by the query
-	char* tsDate0="201612300000";
-	start=timeGetTime();
-	TS* ts1=new TS(historyLen, FXfeaturesCnt, DebugParms);
-	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), tsDate0)!=0) return -1;
-	printf("ts1 create+load, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));	
-	//ts1->dump("C:/temp/ts1.orig.csv");
-
-	//-- 2. apply data transformation
-	if (ts1->transform(dataTransformation)!=0) return -1;
-	//ts1->dump("C:/temp/ts1.tr.csv");
-
-	//-- scale according to activation at network level 0 
-	ts1->scale(trNN->scaleMin[0], trNN->scaleMax[0]);
-	//ts1->dump("C:/temp/ts1.trs.csv");
-
-	//-- 3. create training dataset from timeserie
-	//-- sampleLen/predictionLen is taken from nn
-	//-- model features cnt must be taken from nn
-	//-- model features list is defined here.
-	//-- batch size is defined here, and can be different between train and run datasets
-
-	start=timeGetTime();
-	try {
-		trainSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_T);
-	}
-	catch (const char* e) {
-		LogWrite(DebugParms, LOG_ERROR, "TRAIN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_T);
-		return -1;
-	}
-	//trainSet->dump("c:/temp/trainSet.log");
-	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-
-	start=timeGetTime();
-	try {
-		runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
-	}
-	catch (const char* e) {
-		LogWrite(DebugParms, LOG_ERROR, "RUN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_R);
-		return -1;
-	}
-	//runSet->dump("C:/temp/runSet.log");
-	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-
-
+	//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
+	safeCallE("NN creation", clientDbg, { trNN=new NN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias); });
 	//-- set training parameters
 	trNN->MaxEpochs=300;
 	trNN->NetSaveFreq=200;
@@ -126,51 +75,46 @@ int main() {
 	trNN->LearningMomentum=(numtype)0.5;
 	trNN->StopOnDivergence=false;
 
-	//-- train with training Set, which specifies batch size and features list (not count)
-	if (trNN->train(trainSet)!=0) {
-		LogWrite(DebugParms, LOG_ERROR, "Network Training failed\n", 0);
-		return -1;
-	}
-	//-- persist MSE 
-	if(saveMSE){
-		start=timeGetTime();
-		if (LogSaveMSE(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV)!=0) return -1;
-		printf("LogSaveMSE() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	}
-	//-- persist final W
-	if (saveW) {
-		start=timeGetTime();
-		if (LogSaveW(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W)!=0) return -1;
-		printf("LogSaveW() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	}
-	//-- Persist network structure
-	if (saveNet) {
-		//if (LogSaveStruct(DebugParms, trNN->pid, trNN->tid, trNN->InputCount, trNN->OutputCount, trNN->featuresCnt, trNN->sampleLen, trNN->predictionLen, trNN->batchCnt, batchSamplesCount, trNN->useContext, trNN->useBias, trNN->ActivationFunction, trNN->MaxEpochs, trNN->ActualEpochs, trNN->TargetMSE, trNN->StopOnDivergence, trNN->NetSaveFreq, trNN->BP_Algo, trNN->LearningRate, trNN->LearningMomentum)!=0) return -1;
-	}
+	//-- 1. create timeSerie, set len as the number of time steps, and set featuresCnt based on the expected data it will hold
+	const int FXfeaturesCnt=5;	//-- OHLC, fixed by the query
+	safeCallE("FX TimeSerie creation", clientDbg, fxTS=new TS(historyLen, FXfeaturesCnt); );
 
-	//-- run
-	start=timeGetTime();
-	trNN->run(runSet, nullptr);
-	printf("run() , elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	
-	//-- persist run
-	if (saveRun) {
-		start=timeGetTime();
-		if (LogSaveRun(DebugParms, trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0)!=0) return -1;
-		printf("LogSaveRun(), elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	}
+	//-- 3. load data into fxTS, using FXData info, and start date
+	char* tsDate0="201612300000";
+	safeCallR("TS load of FXData", clientDbg, fxTS->load(eurusdH1, tsDate0) );
+
+	//-- 4. apply data transformation
+	safeCallR("apply data transformation", clientDbg, fxTS->transform(dataTransformation) );
+
+	//-- 5. scale according to activation at network level 0 
+	safeCallR("scale data according to L0 activation", clientDbg, fxTS->scale(trNN->scaleMin[0], trNN->scaleMax[0]) );
+
+	//-- 6. create training dataset from timeserie
+	//-- sampleLen/predictionLen is taken from nn
+	//-- model features cnt must be taken from nn
+	//-- model features list is defined here.
+	//-- batch size is defined here, and can be different between train and run datasets
+	safeCallE("create train dataset from timeserie", clientDbg, trainSet=new DataSet(fxTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_T));
+	safeCallE("create run   dataset from timeserie", clientDbg,   runSet=new DataSet(fxTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R));
+
+	//-- 7. train with training Set, which specifies batch size and features list (not count)
+	safeCallR("train with train Set", clientDbg, trNN->train(trainSet));
+
+	//-- 7.1. persist training
+	safeCallR("persist MSE", clientDbg, persistor->SaveMSE(trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV));
+	safeCallR("persist final W", clientDbg, persistor->SaveW(trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W)); 
+
+	//-- 8. run on the network just trained with runing Set, which specifies batch size and features list (not count)
+	safeCallR("run with run Set", clientDbg, trNN->run(runSet, nullptr));
+
+	//-- 8.1. persist runing
+	safeCallR("persist run", clientDbg, persistor->SaveRun(trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0));
+
+	//-- final Commit
+	persistor->Commit();
 
 	//-- destroy training NN
 	delete trNN;
-
-	//-- persist client call
-	if (saveClient) {
-		if (LogSaveClient(DebugParms, GetCurrentProcessId(), "Client.cpp", mainStart, (DWORD)(timeGetTime()-mainStart), 1, tsDate0, 1, 1)!=0) return -1;
-	}
-
-	//-- final Commit
-	Commit(DebugParms);
-
 
 	printf("Finished. Total elapsed time=%ld \n", (DWORD)(timeGetTime()-mainStart));
 

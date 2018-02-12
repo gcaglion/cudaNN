@@ -4,7 +4,7 @@
 #include "../MyDebug/mydebug.h"
 #include "../DBConnection.h"
 #include "../fxdata.h"
-#include "../filedata.h"
+#include "../DataFile.h"
 #include "../MT4data.h"
 
 #ifdef USE_ORCL
@@ -37,7 +37,7 @@
 #define TSF_HISTVOL 7
 
 //-- Exceptions
-#define WRONG_BATCH_SIZE "SamplesCnt is not a multiple of batchSampleCnt"
+#define WRONG_BATCH_SIZE(sc,bsc) "SamplesCnt ((sc)) is not a multiple of batchSampleCnt ((bsc))"
 
 typedef struct sTS {
 
@@ -45,7 +45,7 @@ typedef struct sTS {
 
 	int sourceType;
 	tFXData* FXData;
-	tFileData* FileData;
+	tDataFile* FileData;
 	tMT4Data* MT4Data;
 
 	int steps;
@@ -68,11 +68,7 @@ typedef struct sTS {
 	//-- constructor / destructor
 	sTS(int steps_, int featuresCnt_, tDebugInfo* DebugParms_=nullptr) {
 		if(DebugParms_==nullptr){
-			DebugParms=new tDebugInfo;
-			DebugParms->DebugLevel = 2;
-			strcpy(DebugParms->fPath, "C:/temp");
-			strcpy(DebugParms->fName, "TimeSerie.log");
-			DebugParms->PauseOnError = 1;
+			DebugParms=new tDebugInfo(0, "Timeserie.log");
 		} else {
 			DebugParms=DebugParms_;
 		}
@@ -104,7 +100,7 @@ typedef struct sTS {
 	}
 	
 	EXPORT int load(tFXData* tsFXData, char* pDate0);
-	EXPORT int load(tFileData* tsFileData, char* pDate0);
+	EXPORT int load(tDataFile* tsFileData, char* pDate0);
 	EXPORT int load(tMT4Data* tsMT4Data, char* pDate0);
 
 	EXPORT int transform(int dt_);
@@ -126,6 +122,8 @@ private:
 } TS;
 
 typedef struct sDataSet {
+	tDebugInfo* DebugParms;
+
 	TS* sourceTS;
 	int sampleLen;
 	int targetLen;
@@ -152,7 +150,7 @@ typedef struct sDataSet {
 	numtype* prediction0=nullptr;
 
 	//-- constructor / destructor
-	EXPORT sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_);
+	EXPORT sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDebugInfo* DebugParms_=nullptr);
 	~sDataSet() {
 		free(sample);
 		if (target!=nullptr) free(target);

@@ -26,6 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		CommonEnv.h = CommonEnv.h
 		DBConnection.h = DBConnection.h
 		filedata.h = filedata.h
+		fileInfo.h = fileInfo.h
 		fxdata.h = fxdata.h
 		MT4data.h = MT4data.h
 	EndProjectSection

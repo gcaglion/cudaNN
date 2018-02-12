@@ -662,7 +662,7 @@ int client10() {
 }
 int client11() {
 	TS* ts1=new TS(20, 5);
-	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
+//	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
 	if (ts1->TrS(DT_DELTA, -1, 1)!=0) return -1;
 	//	DataSet* DataSet1=new DataSet(ts1, 5, 2, 20);
 

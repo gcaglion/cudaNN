@@ -3,8 +3,8 @@
 
 int sTS::LoadOHLCVdata(char* date0) {
 
-	if (OraConnect(DebugParms, FXData->FXDB)!=0) return -1;
-	if (Ora_GetFlatOHLCV(DebugParms, FXData->FXDB->DBCtx, FXData->Symbol, FXData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)!=0) return -1;
+	if (OraConnect(DebugParms, FXData->db)!=0) return -1;
+	if (Ora_GetFlatOHLCV(DebugParms, FXData->db, FXData->Symbol, FXData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)!=0) return -1;
 
 	return 0;
 }
@@ -14,7 +14,7 @@ int sTS::load(tFXData* tsFXData_, char* pDate0) {
 	sourceType=SOURCE_DATA_FROM_FXDB;
 	return (LoadOHLCVdata(pDate0));
 }
-int sTS::load(tFileData* tsFileData, char* pDate0) {
+int sTS::load(tDataFile* tsFileData, char* pDate0) {
 	return -1;
 }
 int sTS::load(tMT4Data* tsMT4Data, char* pDate0) {
@@ -131,7 +131,7 @@ int sTS::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
 	//-- first, transform
 	for (s=0; s<steps; s++) {
 		for (f=0; f<featuresCnt; f++) {
-			if (DebugParms->DebugLevel>1) fprintf(ftrs, ",%f", d[s*featuresCnt+f]);
+			if (DebugParms->level>1) fprintf(ftrs, ",%f", d[s*featuresCnt+f]);
 			switch (dt) {
 			case DT_NONE:
 				break;
@@ -168,11 +168,11 @@ int sTS::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
 	for (s=0; s<steps; s++) {
 		for (f=0; f<featuresCnt; f++) {
 			d_trs[s*featuresCnt+f]=d_tr[s*featuresCnt+f]*scaleM[f]+scaleP[f];
-			if (DebugParms->DebugLevel>1) fprintf(ftrs, "%d,%s,,,%f", s, dtime[s], d_trs[s*featuresCnt+f]);
+			if (DebugParms->level>1) fprintf(ftrs, "%d,%s,,,%f", s, dtime[s], d_trs[s*featuresCnt+f]);
 		}
-		if (DebugParms->DebugLevel>1) fprintf(ftrs, "\n");
+		if (DebugParms->level>1) fprintf(ftrs, "\n");
 	}
-	if (DebugParms->DebugLevel>1) fclose(ftrs);
+	if (DebugParms->level>1) fclose(ftrs);
 
 	return 0;
 }
@@ -185,7 +185,12 @@ int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 	return 0;
 }
 
-sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_) {
+sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDebugInfo* DebugParms_) {
+	if (DebugParms_==nullptr) {
+		DebugParms=new tDebugInfo(0, "DataSet.log");
+	} else {
+		DebugParms=DebugParms_;
+	}
 	sourceTS=sourceTS_;
 	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
 	sampleLen=sampleLen_; 
@@ -193,7 +198,7 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	samplesCnt=sourceTS->steps-sampleLen-targetLen+1;
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;// (int)floor(samplesCnt/batchSamplesCnt);
-	if ((batchCnt*batchSamplesCnt)!=samplesCnt) throw WRONG_BATCH_SIZE;
+	if ((batchCnt*batchSamplesCnt)!=samplesCnt) throw WRONG_BATCH_SIZE(samplesCnt, batchSamplesCnt);
 
 	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
 	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
