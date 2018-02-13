@@ -191,6 +191,7 @@ int sNN::calcErr() {
 	return 0;
 }
 int sNN::FF() {
+	char fname[MAX_PATH];
 	for (int l=0; l<(levelsCnt-1); l++) {
 		int Ay=nodesCnt[l+1]/batchSamplesCnt;
 		int Ax=nodesCnt[l]/batchSamplesCnt;
@@ -204,11 +205,13 @@ int sNN::FF() {
 		FF0start=timeGetTime(); FF0cnt++;
 		if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C)!=0) return -1;
 		FF0timeTot+=((DWORD)(timeGetTime()-FF0start));
-
+		//sprintf(fname, "C:/temp/a%d.log", l+1); dumpArray(nodesCnt[l+1], &a[levelFirstNode[l+1]], fname);
+		
 		//-- activation sets F[l+1] and dF[l+1]
 		FF1start=timeGetTime(); FF1cnt++;
 		if (Activate(l+1)!=0) return -1;
 		FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
+		//sprintf(fname, "C:/temp/F%d.log", l+1); dumpArray(nodesCnt[l+1], &F[levelFirstNode[l+1]], fname);
 
 		//-- feed back to context neurons
 		//FF2start=timeGetTime(); FF2cnt++;
@@ -313,72 +316,77 @@ int sNN::train(DataSet* trs) {
 		//-- 1.1. train one batch at a time
 		for (int b=0; b<batchCnt; b++) {
 
-//=========================================================================================================
-		if((epoch+b)!=0) {
-			//-- 1.1.4. BackPropagate, calc dJdW for for current batch
-			BPstart=timeGetTime(); BPcnt++;
-			for (l = levelsCnt-1; l>0; l--) {
-				if (l==(levelsCnt-1)) {
-					//-- top level only
-					if (VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return -1;	// edF(l) = e * dF(l)
-				} else {
-					//-- lower levels
-					Ay=nodesCnt[l+1]/batchSamplesCnt;
-					Ax=nodesCnt[l]/batchSamplesCnt;
-					Astart=levelFirstWeight[l];
-					A=&W[Astart];
-					By=nodesCnt[l+1]/batchSamplesCnt;
+			//-- 1.1.1. BackPropagation & Weights Update (only if at least one FF() has happened)
+			if((epoch+b)!=0) {
+				//-- 1.1.1.1. BackPropagate, calc dJdW for for current batch
+				BPstart=timeGetTime(); BPcnt++;
+				for (l = levelsCnt-1; l>0; l--) {
+					if (l==(levelsCnt-1)) {
+						//-- top level only
+						if (VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return -1;	// edF(l) = e * dF(l)
+					} else {
+						//-- lower levels
+						Ay=nodesCnt[l+1]/batchSamplesCnt;
+						Ax=nodesCnt[l]/batchSamplesCnt;
+						Astart=levelFirstWeight[l];
+						A=&W[Astart];
+						By=nodesCnt[l+1]/batchSamplesCnt;
+						Bx=batchSamplesCnt;
+						Bstart=levelFirstNode[l+1];
+						B=&edF[Bstart];
+						Cy=Ax;	// because A gets transposed
+						Cx=Bx;
+						Cstart=levelFirstNode[l];
+						C=&edF[Cstart];
+
+						if (Alg->MbyM(Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
+						if (VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return -1;	// edF(l) = edF(l) * dF(l)
+					}
+
+					//-- common	
+					Ay=nodesCnt[l]/batchSamplesCnt;
+					Ax=batchSamplesCnt;
+					Astart=levelFirstNode[l];
+					A=&edF[Astart];
+					By=nodesCnt[l-1]/batchSamplesCnt;
 					Bx=batchSamplesCnt;
-					Bstart=levelFirstNode[l+1];
-					B=&edF[Bstart];
-					Cy=Ax;	// because A gets transposed
-					Cx=Bx;
-					Cstart=levelFirstNode[l];
-					C=&edF[Cstart];
+					Bstart=levelFirstNode[l-1];
+					B=&F[Bstart];
+					Cy=Ay;
+					Cx=By;// because B gets transposed
+					Cstart=levelFirstWeight[l-1];
+					C=&dJdW[Cstart];
 
-					if (Alg->MbyM(Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
-					if (VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return -1;	// edF(l) = edF(l) * dF(l)
+					// dJdW(l-1) = edF(l) * F(l-1)
+					if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, true, B, C)!=0) return -1;
+
 				}
+				BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
 
-				//-- common	
-				Ay=nodesCnt[l]/batchSamplesCnt;
-				Ax=batchSamplesCnt;
-				Astart=levelFirstNode[l];
-				A=&edF[Astart];
-				By=nodesCnt[l-1]/batchSamplesCnt;
-				Bx=batchSamplesCnt;
-				Bstart=levelFirstNode[l-1];
-				B=&F[Bstart];
-				Cy=Ay;
-				Cx=By;// because B gets transposed
-				Cstart=levelFirstWeight[l-1];
-				C=&dJdW[Cstart];
-
-				// dJdW(l-1) = edF(l) * F(l-1)
-				if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, true, B, C)!=0) return -1;
-
+				//-- 1.1.1.2. calc dW = LM*dW - LR*dJdW
+				if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW)!=0) return -1;
+				//-- 1.1.1.3. update W = W + dW for current batch
+				if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
 			}
-			BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
 
-			//-- 1.1.5. calc dW = LM*dW - LR*dJdW
-			if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW)!=0) return -1;
-			//-- 1.1.6. update W = W + dW for current batch
-			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
-		}
-//=========================================================================================================
-
-			//-- 1.1.1.  load batch samples + targets onto GPU
+			//-- 1.1.2.  load batch samples + targets onto GPU
 			LDstart=timeGetTime(); LDcnt++;
 			if (Alg->h2d(&F[(useBias)?1:0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
 			if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
 			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
-			//-- 1.1.2. Feed Forward current batch
+			//-- 1.1.3. Feed Forward current batch
 			FFstart=timeGetTime(); FFcnt++;
 			if (FF()!=0) return -1;
 			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
-			//-- 1.1.3. Calc error (e[], se), and updates total error (tse) for current batch 
+			if (epoch==0&&b==0) {
+				dumpArray(nodesCnt[0], &F[levelFirstNode[0]], "C:/temp/train/F0.log");
+				dumpArray(nodesCnt[1], &a[levelFirstNode[1]], "C:/temp/train/a1.log");
+				dumpArray(nodesCnt[1], &F[levelFirstNode[1]], "C:/temp/train/F1.log");
+			}
+
+			//-- 1.1.4. Calc error (e[], se), and updates total error (tse) for current batch 
 			CEstart=timeGetTime(); CEcnt++;
 			if (calcErr()!=0) return -1;
 			CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
@@ -409,6 +417,12 @@ int sNN::train(DataSet* trs) {
 
 		//-- Feed Forward ()
 		if (FF()!=0) return -1;
+		
+		if (b==0) {
+			dumpArray(nodesCnt[0], &F[levelFirstNode[0]], "C:/temp/run/F0.log");
+			dumpArray(nodesCnt[1], &a[levelFirstNode[1]], "C:/temp/run/a1.log");
+			dumpArray(nodesCnt[1], &F[levelFirstNode[1]], "C:/temp/run/F1.log");
+		}
 
 		//-- Calc Error (sets e[], te, updates tse) for the whole batch
 		if (calcErr()!=0) return -1;
@@ -443,7 +457,6 @@ int sNN::train(DataSet* trs) {
 
 	return 0;
 }
-
 int sNN::run(DataSet* runSet, numtype* runW) {
 
 
@@ -467,6 +480,7 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 
 		//-- 1.1.1.  load samples/targets onto GPU
 		if (Alg->h2d(&F[(useBias)?1:0], &runSet->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
+		//dumpArray(nodesCnt[0], F, "C:/temp/run/F0.log");
 		if (Alg->h2d(&u[0], &runSet->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
 
 		//-- 1.1.2. Feed Forward
