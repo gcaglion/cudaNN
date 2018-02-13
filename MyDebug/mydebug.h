@@ -13,7 +13,7 @@
 typedef struct sDebugInfo {
 	int level;		//-- 0:Nothing ; 1:Screen-Only ; 2:File-Only ; 3:File+Screen
 	tFileInfo* outFile;
-	int PauseOnError;
+	bool PauseOnError;
 	bool ThreadSafeLogging;
 	HANDLE Mtx;		// Mutex handle used by LogWrite()
 
@@ -40,19 +40,19 @@ typedef struct sDebugInfo {
 //EXPORT void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount, ...);
 #endif
 
-#define safeCallE(desc, debugParms, block) \
-if(debugParms->timing) debugParms->startTime=timeGetTime(); \
+#define safeCallE(desc, block) \
+if(DBG->timing) DBG->startTime=timeGetTime(); \
 try {block;} catch (const char* e) { \
-	debugParms->write(DBG_ERROR, "%s failed. Exception %s \n", 2, desc, e); \
+	DBG->write(DBG_ERROR, "%s failed. Exception %s \n", 2, desc, e); \
 	return -1; \
 } \
-if(debugParms->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-debugParms->startTime));
+if(DBG->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-DBG->startTime));
 
-#define safeCallR(desc, debugParms, block) \
-if(debugParms->timing) debugParms->startTime=timeGetTime(); \
+#define safeCallR(desc, block) \
+if(DBG->timing) DBG->startTime=timeGetTime(); \
 if((block)!=0){\
-	debugParms->write(DBG_ERROR, "%s failed. \n", 1, desc); \
+	DBG->write(DBG_ERROR, "%s failed. \n", 1, desc); \
 	return -1; \
 } else{\
-if(debugParms->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-debugParms->startTime));\
+if(DBG->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-DBG->startTime));\
 }

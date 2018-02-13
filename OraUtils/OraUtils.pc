@@ -76,7 +76,7 @@ void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount
 	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
 	if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_ERROR) printf(submsg);
 	if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_ERROR) fprintf(DebugParms->outFile->handle, submsg);
-	if (LogType==DBG_ERROR && DebugParms->PauseOnError>0) { printf("Press any key..."); getchar(); }
+	if (LogType==DBG_ERROR && DebugParms->PauseOnError) { printf("Press any key..."); getchar(); }
 
 	va_end(arguments);
 
@@ -84,7 +84,7 @@ void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount
 }
 
 //=== DB common functions
-EXPORT int  OraConnect(tDebugInfo* DebugParms, tDBConnection* DBConnInfo) {
+EXPORT bool  OraConnect(tDebugInfo* DebugParms, tDBConnection* DBConnInfo) {
 
 	EXEC SQL BEGIN DECLARE SECTION;
 	char* username = DBConnInfo->DBUser;
@@ -139,7 +139,7 @@ EXPORT void OraCommit(tDBConnection* DBConnInfo) {
 }
 
 //=== Retrieval functions
-EXPORT int Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar) {
+EXPORT bool Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar) {
 	//-- 'Flat' bar means returning OHLC(V) values for each record as an array 
 	EXEC SQL BEGIN DECLARE SECTION;
 	sql_context vCtx = db->DBCtx;
@@ -190,157 +190,9 @@ EXPORT int Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pSy
 
 	return retval;
 }
-/*EXPORT int GetFlatBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, float* oBarData, float* oBaseBar) {
-	//-- 'Flat' bar means returning OHLC(V) values for each record as an array 
-	EXEC SQL BEGIN DECLARE SECTION;
-	int retval = 0;
-	int i;
-	char stmt[1000];
-	char vNDT[12+1];
-	float vOpen, vHigh, vLow, vClose;
-	EXEC SQL END   DECLARE SECTION;
-	strcpy(stmt, pSQL);
 
-	EXEC SQL CONTEXT USE : pCtx;
-	EXEC SQL PREPARE s4f FROM : stmt;
-	EXEC SQL DECLARE c4f CURSOR FOR s4f;
-	EXEC SQL OPEN c4f;
-	for (i = pRecCount-1; i>=0; i--) {
-		EXEC SQL FETCH c4f into : vNDT, : vOpen, : vHigh, : vLow, : vClose;
-		if (sqlca.sqlcode==0) {
-			oBarData[4*i+0] = vOpen;
-			oBarData[4*i+1] = vHigh;
-			oBarData[4*i+2] = vLow;
-			oBarData[4*i+3] = vClose;
-		} else if (sqlca.sqlcode==1403) {
-			break;
-		} else {
-			LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-			retval = sqlca.sqlcode;
-			break;
-		}
-	}
-	//-- one more fetch to get baseBar
-	EXEC SQL FETCH c4f into : vNDT, : vOpen, : vHigh, : vLow, : vClose;
-	if (sqlca.sqlcode==0) {
-		oBaseBar[0] = vOpen;
-		oBaseBar[1] = vHigh;
-		oBaseBar[2] = vLow;
-		oBaseBar[3] = vClose;
-	} else if (sqlca.sqlcode!=1403) {
-		LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		retval = sqlca.sqlcode;
-	}
-
-	EXEC SQL CLOSE c4f;
-
-	return retval;
-}
-EXPORT int GetBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, int pSkipFirstN, tBar* oBar) {
-	EXEC SQL BEGIN DECLARE SECTION;
-	int i = 0;  int j;
-	int retval = 0;
-	char vNDT[12+1];
-	//sql_context vCtx = pCtx;
-	struct sBar {
-		char NewDateTime[12+1];
-		double Open;
-		double High;
-		double Low;
-		double Close;
-		double OpenD;
-		double HighD;
-		double LowD;
-		double CloseD;
-		double Volume;
-		double VolumeD;
-	} *vBar;
-	char stmt[1000];
-	EXEC SQL END DECLARE SECTION;
-	vBar = (struct sBar*)malloc((pRecCount+pSkipFirstN)*sizeof(struct sBar));
-	strcpy(stmt, pSQL);
-
-	EXEC SQL CONTEXT USE : pCtx;
-	EXEC SQL PREPARE s4 FROM : stmt;
-	EXEC SQL DECLARE c4 CURSOR FOR s4;
-	EXEC SQL OPEN c4;
-	for (i = 0; i<(pRecCount+pSkipFirstN); i++) {
-		EXEC SQL FETCH c4 INTO : vNDT, : vBar[i].Open, : vBar[i].High, : vBar[i].Low, : vBar[i].Close, : vBar[i].Volume;
-		if (sqlca.sqlcode==0) {
-			strcpy(vBar[i].NewDateTime, vNDT);
-		} else if (sqlca.sqlcode==1403) {
-			break;
-		} else {
-			LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-			retval = sqlca.sqlcode;
-			break;
-		}
-	}
-	EXEC SQL CLOSE c4;
-
-	if (i > 0) {
-		for (j = 0; j < pRecCount; j++) {
-			memcpy(&oBar[j], &vBar[pSkipFirstN+j], sizeof(tBar));
-		}
-	}
-	free(vBar);
-	return retval;
-}
-EXPORT int GetCharPFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, char* oRet) {
-	EXEC SQL BEGIN DECLARE SECTION;
-	char stmt[1000];
-	char vRet[1000];
-	sql_context vCtx = pCtx;
-	EXEC SQL END   DECLARE SECTION;
-	strcpy(stmt, pSQL);
-
-	EXEC SQL CONTEXT USE : vCtx;
-	EXEC SQL PREPARE s8 FROM : stmt;
-	EXEC SQL DECLARE c8 CURSOR FOR s8;
-	EXEC SQL OPEN c8;
-	if (sqlca.sqlcode!=0) {
-		LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
-	}
-	EXEC SQL FETCH c8 INTO : vRet;
-	if (sqlca.sqlcode!=0) {
-		LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
-	}
-	Trim(vRet); strcpy(oRet, vRet);
-	EXEC SQL CLOSE c8;
-	return sqlca.sqlcode;
-}
-EXPORT int GetStringArrayFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int ArrLen, char** oRet) {
-	EXEC SQL BEGIN DECLARE SECTION;
-	char stmt[1000];
-	char vRet[1000];
-	sql_context vCtx = pCtx;
-	EXEC SQL END   DECLARE SECTION;
-	strcpy(stmt, pSQL);
-
-	EXEC SQL CONTEXT USE : vCtx;
-	EXEC SQL PREPARE s82 FROM : stmt;
-	EXEC SQL DECLARE c82 CURSOR FOR s82;
-	EXEC SQL OPEN c82;
-	if (sqlca.sqlcode!=0) {
-		LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
-	}
-	for (int i=0; i<ArrLen; i++) {
-		EXEC SQL FETCH c82 INTO : vRet;
-		if (sqlca.sqlcode!=0) {
-			LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-			return sqlca.sqlcode;
-		}
-		Trim(vRet); strcpy(oRet[i], vRet);
-	}
-	EXEC SQL CLOSE c82;
-	return sqlca.sqlcode;
-}
-*/
 //=== Logging functions
-EXPORT int Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV) {
+EXPORT bool Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	int i;
 	int vInsertCount;
@@ -421,7 +273,7 @@ EXPORT int Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, in
 
 	return sqlca.sqlcode;
 }
-EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W) {
+EXPORT bool Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	int i;
 	int vInsertCount;
@@ -501,7 +353,7 @@ EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int 
 
 	return sqlca.sqlcode;
 }
-EXPORT int Ora_LogSaveClient(tDebugInfo* DebugParms, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
+EXPORT bool Ora_LogSaveClient(tDebugInfo* DebugParms, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	sql_context vCtx = db->DBCtx;
 	char stmt[1000];
@@ -526,7 +378,7 @@ EXPORT int Ora_LogSaveClient(tDebugInfo* DebugParms, tDBConnection* db, int pid,
 	}
 	return 0;
 }
-EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
+EXPORT bool Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	int i, b, f;
 	int vInsertCount;
@@ -625,7 +477,7 @@ EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, in
 	return sqlca.sqlcode;
 }
 
-EXPORT int Ora_LogLoadW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
+EXPORT bool Ora_LogLoadW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	int i;
 	int retval = 0;

@@ -147,43 +147,43 @@ static const short sqlcud0[] =
 173,0,0,5,0,0,13,176,0,0,6,0,0,1,0,2,97,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,
 4,0,0,
 212,0,0,5,0,0,15,189,0,0,0,0,0,1,0,
-227,0,0,0,0,0,90,396,0,64,0,0,5,105,110,77,83,69,1,0,
-247,0,0,0,0,0,93,397,0,64,0,0,5,105,110,77,83,69,1,0,
-267,0,0,0,0,0,93,398,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
-291,0,0,0,0,0,93,399,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
-315,0,0,0,0,0,93,400,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
-339,0,0,0,0,0,93,401,0,64,1,1,5,105,110,77,83,69,1,0,3329,4,0,0,
-363,0,0,0,0,0,93,402,0,64,1,1,5,105,110,77,83,69,1,0,3329,4,0,0,
-387,0,0,6,0,0,17,403,0,0,1,1,0,1,0,1,97,0,0,
-406,0,0,6,0,0,23,404,0,64,0,0,5,105,110,77,83,69,1,0,
-426,0,0,0,0,0,91,413,0,64,0,0,5,105,110,77,83,69,1,0,
-446,0,0,0,0,0,90,477,0,64,0,0,6,105,110,67,73,78,78,1,0,
-467,0,0,0,0,0,93,478,0,64,0,0,6,105,110,67,73,78,78,1,0,
-488,0,0,0,0,0,93,479,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
-513,0,0,0,0,0,93,480,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
-538,0,0,0,0,0,93,481,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
-563,0,0,0,0,0,93,482,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
-588,0,0,0,0,0,93,483,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,4,0,0,
-613,0,0,6,0,0,17,484,0,0,1,1,0,1,0,1,97,0,0,
-632,0,0,6,0,0,23,485,0,64,0,0,6,105,110,67,73,78,78,1,0,
-653,0,0,0,0,0,91,493,0,64,0,0,6,105,110,67,73,78,78,1,0,
-674,0,0,7,0,0,24,522,0,0,1,1,0,1,0,1,97,0,0,
-693,0,0,0,0,0,90,595,0,64,0,0,5,105,110,82,117,110,1,0,
-713,0,0,0,0,0,93,596,0,64,0,0,5,105,110,82,117,110,1,0,
-733,0,0,0,0,0,93,597,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-757,0,0,0,0,0,93,598,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-781,0,0,0,0,0,93,599,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-805,0,0,0,0,0,93,600,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-829,0,0,0,0,0,93,601,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-853,0,0,0,0,0,93,602,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-877,0,0,0,0,0,93,603,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-901,0,0,6,0,0,17,604,0,0,1,1,0,1,0,1,97,0,0,
-920,0,0,6,0,0,23,605,0,64,0,0,5,105,110,82,117,110,1,0,
-940,0,0,0,0,0,91,614,0,64,0,0,5,105,110,82,117,110,1,0,
-960,0,0,8,0,0,17,648,0,0,1,1,0,1,0,1,97,0,0,
-979,0,0,8,0,0,45,650,0,0,0,0,0,1,0,
-994,0,0,8,0,0,13,652,0,0,2,0,0,1,0,2,3,0,0,2,4,0,0,
-1017,0,0,8,0,0,15,663,0,0,0,0,0,1,0,
+227,0,0,0,0,0,90,248,0,64,0,0,5,105,110,77,83,69,1,0,
+247,0,0,0,0,0,93,249,0,64,0,0,5,105,110,77,83,69,1,0,
+267,0,0,0,0,0,93,250,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
+291,0,0,0,0,0,93,251,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
+315,0,0,0,0,0,93,252,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
+339,0,0,0,0,0,93,253,0,64,1,1,5,105,110,77,83,69,1,0,3329,4,0,0,
+363,0,0,0,0,0,93,254,0,64,1,1,5,105,110,77,83,69,1,0,3329,4,0,0,
+387,0,0,6,0,0,17,255,0,0,1,1,0,1,0,1,97,0,0,
+406,0,0,6,0,0,23,256,0,64,0,0,5,105,110,77,83,69,1,0,
+426,0,0,0,0,0,91,265,0,64,0,0,5,105,110,77,83,69,1,0,
+446,0,0,0,0,0,90,329,0,64,0,0,6,105,110,67,73,78,78,1,0,
+467,0,0,0,0,0,93,330,0,64,0,0,6,105,110,67,73,78,78,1,0,
+488,0,0,0,0,0,93,331,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
+513,0,0,0,0,0,93,332,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
+538,0,0,0,0,0,93,333,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
+563,0,0,0,0,0,93,334,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
+588,0,0,0,0,0,93,335,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,4,0,0,
+613,0,0,6,0,0,17,336,0,0,1,1,0,1,0,1,97,0,0,
+632,0,0,6,0,0,23,337,0,64,0,0,6,105,110,67,73,78,78,1,0,
+653,0,0,0,0,0,91,345,0,64,0,0,6,105,110,67,73,78,78,1,0,
+674,0,0,7,0,0,24,374,0,0,1,1,0,1,0,1,97,0,0,
+693,0,0,0,0,0,90,447,0,64,0,0,5,105,110,82,117,110,1,0,
+713,0,0,0,0,0,93,448,0,64,0,0,5,105,110,82,117,110,1,0,
+733,0,0,0,0,0,93,449,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+757,0,0,0,0,0,93,450,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+781,0,0,0,0,0,93,451,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+805,0,0,0,0,0,93,452,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+829,0,0,0,0,0,93,453,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+853,0,0,0,0,0,93,454,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+877,0,0,0,0,0,93,455,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+901,0,0,6,0,0,17,456,0,0,1,1,0,1,0,1,97,0,0,
+920,0,0,6,0,0,23,457,0,64,0,0,5,105,110,82,117,110,1,0,
+940,0,0,0,0,0,91,466,0,64,0,0,5,105,110,82,117,110,1,0,
+960,0,0,8,0,0,17,500,0,0,1,1,0,1,0,1,97,0,0,
+979,0,0,8,0,0,45,502,0,0,0,0,0,1,0,
+994,0,0,8,0,0,13,504,0,0,2,0,0,1,0,2,3,0,0,2,4,0,0,
+1017,0,0,8,0,0,15,515,0,0,0,0,0,1,0,
 };
 
 
@@ -265,7 +265,7 @@ void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount
 	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
 	if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_ERROR) printf(submsg);
 	if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_ERROR) fprintf(DebugParms->outFile->handle, submsg);
-	if (LogType==DBG_ERROR && DebugParms->PauseOnError>0) { printf("Press any key..."); getchar(); }
+	if (LogType==DBG_ERROR && DebugParms->PauseOnError) { printf("Press any key..."); getchar(); }
 
 	va_end(arguments);
 
@@ -273,7 +273,7 @@ void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount
 }
 
 //=== DB common functions
-EXPORT int  OraConnect(tDebugInfo* DebugParms, tDBConnection* DBConnInfo) {
+EXPORT bool  OraConnect(tDebugInfo* DebugParms, tDBConnection* DBConnInfo) {
 
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
@@ -478,7 +478,7 @@ EXPORT void OraCommit(tDBConnection* DBConnInfo) {
 }
 
 //=== Retrieval functions
-EXPORT int Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar) {
+EXPORT bool Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar) {
 	//-- 'Flat' bar means returning OHLC(V) values for each record as an array 
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
@@ -762,157 +762,9 @@ EXPORT int Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pSy
 
 	return retval;
 }
-/*EXPORT int GetFlatBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, float* oBarData, float* oBaseBar) {
-	//-- 'Flat' bar means returning OHLC(V) values for each record as an array 
-	EXEC SQL BEGIN DECLARE SECTION;
-	int retval = 0;
-	int i;
-	char stmt[1000];
-	char vNDT[12+1];
-	float vOpen, vHigh, vLow, vClose;
-	EXEC SQL END   DECLARE SECTION;
-	strcpy(stmt, pSQL);
 
-	EXEC SQL CONTEXT USE : pCtx;
-	EXEC SQL PREPARE s4f FROM : stmt;
-	EXEC SQL DECLARE c4f CURSOR FOR s4f;
-	EXEC SQL OPEN c4f;
-	for (i = pRecCount-1; i>=0; i--) {
-		EXEC SQL FETCH c4f into : vNDT, : vOpen, : vHigh, : vLow, : vClose;
-		if (sqlca.sqlcode==0) {
-			oBarData[4*i+0] = vOpen;
-			oBarData[4*i+1] = vHigh;
-			oBarData[4*i+2] = vLow;
-			oBarData[4*i+3] = vClose;
-		} else if (sqlca.sqlcode==1403) {
-			break;
-		} else {
-			LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-			retval = sqlca.sqlcode;
-			break;
-		}
-	}
-	//-- one more fetch to get baseBar
-	EXEC SQL FETCH c4f into : vNDT, : vOpen, : vHigh, : vLow, : vClose;
-	if (sqlca.sqlcode==0) {
-		oBaseBar[0] = vOpen;
-		oBaseBar[1] = vHigh;
-		oBaseBar[2] = vLow;
-		oBaseBar[3] = vClose;
-	} else if (sqlca.sqlcode!=1403) {
-		LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		retval = sqlca.sqlcode;
-	}
-
-	EXEC SQL CLOSE c4f;
-
-	return retval;
-}
-EXPORT int GetBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, int pSkipFirstN, tBar* oBar) {
-	EXEC SQL BEGIN DECLARE SECTION;
-	int i = 0;  int j;
-	int retval = 0;
-	char vNDT[12+1];
-	//sql_context vCtx = pCtx;
-	struct sBar {
-		char NewDateTime[12+1];
-		double Open;
-		double High;
-		double Low;
-		double Close;
-		double OpenD;
-		double HighD;
-		double LowD;
-		double CloseD;
-		double Volume;
-		double VolumeD;
-	} *vBar;
-	char stmt[1000];
-	EXEC SQL END DECLARE SECTION;
-	vBar = (struct sBar*)malloc((pRecCount+pSkipFirstN)*sizeof(struct sBar));
-	strcpy(stmt, pSQL);
-
-	EXEC SQL CONTEXT USE : pCtx;
-	EXEC SQL PREPARE s4 FROM : stmt;
-	EXEC SQL DECLARE c4 CURSOR FOR s4;
-	EXEC SQL OPEN c4;
-	for (i = 0; i<(pRecCount+pSkipFirstN); i++) {
-		EXEC SQL FETCH c4 INTO : vNDT, : vBar[i].Open, : vBar[i].High, : vBar[i].Low, : vBar[i].Close, : vBar[i].Volume;
-		if (sqlca.sqlcode==0) {
-			strcpy(vBar[i].NewDateTime, vNDT);
-		} else if (sqlca.sqlcode==1403) {
-			break;
-		} else {
-			LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-			retval = sqlca.sqlcode;
-			break;
-		}
-	}
-	EXEC SQL CLOSE c4;
-
-	if (i > 0) {
-		for (j = 0; j < pRecCount; j++) {
-			memcpy(&oBar[j], &vBar[pSkipFirstN+j], sizeof(tBar));
-		}
-	}
-	free(vBar);
-	return retval;
-}
-EXPORT int GetCharPFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, char* oRet) {
-	EXEC SQL BEGIN DECLARE SECTION;
-	char stmt[1000];
-	char vRet[1000];
-	sql_context vCtx = pCtx;
-	EXEC SQL END   DECLARE SECTION;
-	strcpy(stmt, pSQL);
-
-	EXEC SQL CONTEXT USE : vCtx;
-	EXEC SQL PREPARE s8 FROM : stmt;
-	EXEC SQL DECLARE c8 CURSOR FOR s8;
-	EXEC SQL OPEN c8;
-	if (sqlca.sqlcode!=0) {
-		LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
-	}
-	EXEC SQL FETCH c8 INTO : vRet;
-	if (sqlca.sqlcode!=0) {
-		LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
-	}
-	Trim(vRet); strcpy(oRet, vRet);
-	EXEC SQL CLOSE c8;
-	return sqlca.sqlcode;
-}
-EXPORT int GetStringArrayFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int ArrLen, char** oRet) {
-	EXEC SQL BEGIN DECLARE SECTION;
-	char stmt[1000];
-	char vRet[1000];
-	sql_context vCtx = pCtx;
-	EXEC SQL END   DECLARE SECTION;
-	strcpy(stmt, pSQL);
-
-	EXEC SQL CONTEXT USE : vCtx;
-	EXEC SQL PREPARE s82 FROM : stmt;
-	EXEC SQL DECLARE c82 CURSOR FOR s82;
-	EXEC SQL OPEN c82;
-	if (sqlca.sqlcode!=0) {
-		LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
-	}
-	for (int i=0; i<ArrLen; i++) {
-		EXEC SQL FETCH c82 INTO : vRet;
-		if (sqlca.sqlcode!=0) {
-			LogWrite(DebugParms, DBG_ERROR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-			return sqlca.sqlcode;
-		}
-		Trim(vRet); strcpy(oRet[i], vRet);
-	}
-	EXEC SQL CLOSE c82;
-	return sqlca.sqlcode;
-}
-*/
 //=== Logging functions
-EXPORT int Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV) {
+EXPORT bool Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i;
@@ -1278,7 +1130,7 @@ EXPORT int Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, in
 
 	return sqlca.sqlcode;
 }
-EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W) {
+EXPORT bool Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i;
@@ -1643,7 +1495,7 @@ EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int 
 
 	return sqlca.sqlcode;
 }
-EXPORT int Ora_LogSaveClient(tDebugInfo* DebugParms, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
+EXPORT bool Ora_LogSaveClient(tDebugInfo* DebugParms, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	sql_context vCtx = db->DBCtx;
@@ -1706,7 +1558,7 @@ EXPORT int Ora_LogSaveClient(tDebugInfo* DebugParms, tDBConnection* db, int pid,
 	}
 	return 0;
 }
-EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
+EXPORT bool Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i, b, f;
@@ -2160,7 +2012,7 @@ EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, in
 	return sqlca.sqlcode;
 }
 
-EXPORT int Ora_LogLoadW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
+EXPORT bool Ora_LogLoadW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i;

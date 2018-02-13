@@ -53,7 +53,7 @@ void getCurrentTime(char* ot) {
 	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
 	if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_ERROR) printf(submsg);
 	if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_ERROR) fprintf(DebugParms->outFile->handle, submsg);
-	if (LogType==DBG_ERROR && DebugParms->PauseOnError>0) { printf("Press any key..."); getchar(); }
+	if (LogType==DBG_ERROR && DebugParms->PauseOnError) { printf("Press any key..."); getchar(); }
 
 	va_end(arguments);
 
@@ -109,7 +109,7 @@ void sDebugInfo::write(int LogType, const char* msg, int argcount, ...) {
 	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
 	if (level==1||level==3||LogType==DBG_ERROR) printf(submsg);
 	if (level==2||level==3||LogType==DBG_ERROR) fprintf(outFile->handle, submsg);
-	if (LogType==DBG_ERROR && PauseOnError>0) { printf("Press any key..."); getchar(); }
+	if (LogType==DBG_ERROR && PauseOnError) { printf("Press any key..."); getchar(); }
 
 	va_end(arguments);
 
@@ -118,7 +118,9 @@ void sDebugInfo::write(int LogType, const char* msg, int argcount, ...) {
 
 sDebugInfo::sDebugInfo(int level_, char* fName_, char* fPath_, bool timing_, bool append_) {
 	level=level_;  timing=timing_; 
+	//-- setting defaults when. 
 	ThreadSafeLogging=false;
+	PauseOnError=true;
 
 	if (level>0) {
 		try {

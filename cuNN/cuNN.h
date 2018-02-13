@@ -89,6 +89,9 @@ typedef struct sNN {
 	//--
 	numtype* mseT;	// Training mean squared error, array indexed by epoch, always on host
 	numtype* mseV;	// Validation mean squared error, array indexed by epoch, always on host
+	//--
+	numtype mseTfinal;	// MSE after all batches have passed through the net with final weights
+	numtype mseVfinal;	// MSE after all batches have passed through the net with final weights
 
 	//-- performance counters
 	DWORD LDstart, LDtimeTot=0, LDcnt=0; float LDtimeAvg;

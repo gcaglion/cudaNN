@@ -313,25 +313,9 @@ int sNN::train(DataSet* trs) {
 		//-- 1.1. train one batch at a time
 		for (int b=0; b<batchCnt; b++) {
 
-			//-- 1.1.1.  load samples + targets onto GPU
-			LDstart=timeGetTime(); LDcnt++;
-			if (Alg->h2d(&F[(useBias)?1:0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
-			if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
-			//dumpArray(nodesCnt[0], &F[0], "c:/temp/F0.txt");
-			//dumpArray(nodesCnt[levelsCnt-1], u, "C:/temp/u.txt");
-			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
-
-			//-- 1.1.2. Feed Forward (  )
-			FFstart=timeGetTime(); FFcnt++;
-			if (FF()!=0) return -1;
-			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
-
-			//-- 1.1.3. Calc Error (sets e[], te, updates tse) for the whole batch
-			CEstart=timeGetTime(); CEcnt++;
-			if (calcErr()!=0) return -1;
-			CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
-
-			//-- 1.1.4. BackPropagate, calc dJdW for the whole batch
+//=========================================================================================================
+		if((epoch+b)!=0) {
+			//-- 1.1.4. BackPropagate, calc dJdW for for current batch
 			BPstart=timeGetTime(); BPcnt++;
 			for (l = levelsCnt-1; l>0; l--) {
 				if (l==(levelsCnt-1)) {
@@ -376,33 +360,40 @@ int sNN::train(DataSet* trs) {
 			}
 			BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
 
-			//-- 1.1.5. update weights for the whole batch
-			//-- W = W - LR * dJdW
-			//if (Vadd(weightsCntTotal, W, 1, dJdW, -LearningRate, W)!=0) return -1;
-
-			//-- dW = LM*dW - LR*dJdW
+			//-- 1.1.5. calc dW = LM*dW - LR*dJdW
 			if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW)!=0) return -1;
-			//dumpArray(weightsCntTotal, dW, "C:/temp/dW.log");
-
-			//-- W = W + dW
+			//-- 1.1.6. update W = W + dW for current batch
 			if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
-			//dumpArray(weightsCntTotal, W, "C:/temp/W.log");
+		}
+//=========================================================================================================
+
+			//-- 1.1.1.  load batch samples + targets onto GPU
+			LDstart=timeGetTime(); LDcnt++;
+			if (Alg->h2d(&F[(useBias)?1:0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
+			if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
+			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
+
+			//-- 1.1.2. Feed Forward current batch
+			FFstart=timeGetTime(); FFcnt++;
+			if (FF()!=0) return -1;
+			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
+
+			//-- 1.1.3. Calc error (e[], se), and updates total error (tse) for current batch 
+			CEstart=timeGetTime(); CEcnt++;
+			if (calcErr()!=0) return -1;
+			CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
 
 		}
 
-
-		//-- 1.1. calc and display epoch MSE
-		//printf("epoch=%d , tse=%f\n", epoch, (*tse));
+		//-- 1.2. calc and display epoch MSE (for ALL batches)
 		Alg->d2h(&tse_h, tse, sizeof(numtype));
-		if (epoch>0) {
-			mseT[epoch-1]=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
-			mseV[epoch-1]=0;	// TO DO !
-			printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, epoch-1, mseT[epoch-1], (timeGetTime()-epoch_starttime));
-			if (mseT[epoch-1]<TargetMSE) break;
-			if ((StopOnDivergence && epoch>1&&mseT[epoch-1]>mseT[epoch-2])) break;
-			if ((epoch%NetSaveFreq)==0) {
-				//-- TO DO ! (callback?)
-			}
+		mseT[epoch]=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
+		mseV[epoch]=0;	// TO DO !
+		printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%1.10f, duration=%d ms", pid, tid, epoch, mseT[epoch], (timeGetTime()-epoch_starttime));
+		if (mseT[epoch]<TargetMSE) break;
+		if ((StopOnDivergence && epoch>1&&mseT[epoch]>mseT[epoch-2])) break;
+		if ((epoch%NetSaveFreq)==0) {
+			//-- TO DO ! (callback?)
 		}
 	}
 	ActualEpochs=epoch-((epoch>MaxEpochs) ? 1 : 0);
@@ -413,8 +404,8 @@ int sNN::train(DataSet* trs) {
 	for (int b=0; b<batchCnt; b++) {
 
 		//-- load samples + targets onto GPU
-			if (Alg->h2d(&F[(useBias)?1:0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
-			if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
+		if (Alg->h2d(&F[(useBias)?1:0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
+		if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
 
 		//-- Feed Forward ()
 		if (FF()!=0) return -1;
@@ -427,8 +418,8 @@ int sNN::train(DataSet* trs) {
 
 	//-- calc and display final epoch MSE
 	Alg->d2h(&tse_h, tse, sizeof(numtype));
-	mseT[ActualEpochs-1]=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
-	printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%f, duration=%d ms", pid, tid, ActualEpochs-1, mseT[ActualEpochs-1], (timeGetTime()-epoch_starttime));
+	mseTfinal=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
+	printf("\npid=%d, tid=%d, epoch %d, Training MSE-final=%1.10f, duration=%d ms", pid, tid, ActualEpochs-1, mseTfinal, (timeGetTime()-epoch_starttime));
 
 	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;
 	float elapsed_avg=elapsed_tot/ActualEpochs;
