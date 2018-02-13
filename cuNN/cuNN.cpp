@@ -205,20 +205,18 @@ int sNN::FF() {
 		FF0start=timeGetTime(); FF0cnt++;
 		if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C)!=0) return -1;
 		FF0timeTot+=((DWORD)(timeGetTime()-FF0start));
-		//sprintf(fname, "C:/temp/a%d.log", l+1); dumpArray(nodesCnt[l+1], &a[levelFirstNode[l+1]], fname);
 		
 		//-- activation sets F[l+1] and dF[l+1]
 		FF1start=timeGetTime(); FF1cnt++;
 		if (Activate(l+1)!=0) return -1;
 		FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
-		//sprintf(fname, "C:/temp/F%d.log", l+1); dumpArray(nodesCnt[l+1], &F[levelFirstNode[l+1]], fname);
 
 		//-- feed back to context neurons
-		//FF2start=timeGetTime(); FF2cnt++;
+		FF2start=timeGetTime(); FF2cnt++;
 		if (useContext) {
 			Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
 		}
-		//FF2timeTot+=((DWORD)(timeGetTime()-FF2start));
+		FF2timeTot+=((DWORD)(timeGetTime()-FF2start));
 	}
 	return 0;
 }
@@ -380,12 +378,6 @@ int sNN::train(DataSet* trs) {
 			if (FF()!=0) return -1;
 			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
-			if (epoch==0&&b==0) {
-				dumpArray(nodesCnt[0], &F[levelFirstNode[0]], "C:/temp/train/F0.log");
-				dumpArray(nodesCnt[1], &a[levelFirstNode[1]], "C:/temp/train/a1.log");
-				dumpArray(nodesCnt[1], &F[levelFirstNode[1]], "C:/temp/train/F1.log");
-			}
-
 			//-- 1.1.4. Calc error (e[], se), and updates total error (tse) for current batch 
 			CEstart=timeGetTime(); CEcnt++;
 			if (calcErr()!=0) return -1;
@@ -417,12 +409,6 @@ int sNN::train(DataSet* trs) {
 
 		//-- Feed Forward ()
 		if (FF()!=0) return -1;
-		
-		if (b==0) {
-			dumpArray(nodesCnt[0], &F[levelFirstNode[0]], "C:/temp/run/F0.log");
-			dumpArray(nodesCnt[1], &a[levelFirstNode[1]], "C:/temp/run/a1.log");
-			dumpArray(nodesCnt[1], &F[levelFirstNode[1]], "C:/temp/run/F1.log");
-		}
 
 		//-- Calc Error (sets e[], te, updates tse) for the whole batch
 		if (calcErr()!=0) return -1;
@@ -480,7 +466,6 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 
 		//-- 1.1.1.  load samples/targets onto GPU
 		if (Alg->h2d(&F[(useBias)?1:0], &runSet->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
-		//dumpArray(nodesCnt[0], F, "C:/temp/run/F0.log");
 		if (Alg->h2d(&u[0], &runSet->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
 
 		//-- 1.1.2. Feed Forward

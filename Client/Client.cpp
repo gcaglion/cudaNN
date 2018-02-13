@@ -7,15 +7,6 @@
 
 int main() {
 
-	//client3();	
-	//client4();
-	//client5();
-	//client6();
-	//client7();
-	//client8();
-	//client9();
-	//client11();
-	//if(client13()!=0) printf("CUDA last error=%d\n",cudaGetLastError());
 	//system("pause");
 	//return -1;
 
