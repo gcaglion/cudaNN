@@ -196,6 +196,7 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	sampleLen=sampleLen_; 
 	targetLen=targetLen_; 
 	samplesCnt=sourceTS->steps-sampleLen-targetLen+1;
+	if (samplesCnt<1) throw NOT_ENOUGH_DATA;
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;// (int)floor(samplesCnt/batchSamplesCnt);
 	if ((batchCnt*batchSamplesCnt)!=samplesCnt) throw WRONG_BATCH_SIZE(samplesCnt, batchSamplesCnt);

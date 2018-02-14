@@ -38,6 +38,7 @@
 
 //-- Exceptions
 #define WRONG_BATCH_SIZE(sc,bsc) "SamplesCnt ((sc)) is not a multiple of batchSampleCnt ((bsc))"
+#define NOT_ENOUGH_DATA "negative or zero number of samples. check TimeSerie steps, sampleLen, targetLen"
 
 typedef struct sTS {
 

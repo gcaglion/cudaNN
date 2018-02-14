@@ -24,7 +24,7 @@ int main() {
 	TS* fxTS=nullptr;
 
 	//-- debugger settings
-	tDebugInfo* clientDbg=new tDebugInfo(0, "Client.log", DEBUG_DEFAULT_PATH, false);
+	tDebugInfo* clientDbg=new tDebugInfo(1, "Client.log", DEBUG_DEFAULT_PATH, false);
 	tDebugInfo* DBG=clientDbg;	//-- sets clientDbg as default Debug settings used in macros
 	tDebugInfo* persistorDbg=new tDebugInfo(0, "Persistor.log", DEBUG_DEFAULT_PATH);
 	//--

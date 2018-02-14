@@ -368,12 +368,26 @@ bool sNN::BackwardPass(DataSet* ds, int batchId, bool updateWeights) {
 
 	return true;
 }
+bool sNN::epochMetCriteria(int epoch, DWORD starttime, bool displayProgress) {
+	numtype tse_h;	// total squared error copid on host at the end of each eopch
+
+	Alg->d2h(&tse_h, tse, sizeof(numtype));
+	mseT[epoch]=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
+	mseV[epoch]=0;	// TO DO !
+	if(displayProgress) printf("\rpid=%d, tid=%d, epoch %d, Training TSE=%f, MSE=%1.10f, duration=%d ms", pid, tid, epoch, tse_h, mseT[epoch], (timeGetTime()-starttime));
+	if (mseT[epoch]<TargetMSE) return true;
+	if ((StopOnDivergence && epoch>1&&mseT[epoch]>mseT[epoch-1])) return true;
+	if ((epoch%NetSaveFreq)==0) {
+		//-- TO DO ! (callback?)
+	}
+
+	return false;
+}
 int sNN::train(DataSet* trs) {
 	int l;
 	DWORD epoch_starttime;
 	DWORD training_starttime=timeGetTime();
-	int epoch;
-	numtype tse_h;	// total squared error copid on host at the end of each eopch
+	int epoch, b;
 
 	//-- set batch count and batchSampleCnt for the network from dataset
 	batchSamplesCnt=trs->batchSamplesCnt;
@@ -398,7 +412,7 @@ int sNN::train(DataSet* trs) {
 	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
 	if (Vinit(weightsCntTotal, dJdW, 0, 0)!=0) return -1;
 
-	//-- 1. for every epoch, calc and display MSE
+	//-- 1. for every epoch, train all batch with one Forward pass ( loadSamples(b)+FF()+calcErr() ), and one Backward pass (BP + calcdW + W update)
 	for (epoch=0; epoch<MaxEpochs; epoch++) {
 
 		//-- timing
@@ -408,51 +422,30 @@ int sNN::train(DataSet* trs) {
 		if (Vinit(1, tse, 0, 0)!=0) return -1;
 
 		//-- 1.1. train one batch at a time
-		for (int b=0; b<batchCnt; b++) {
+		for (b=0; b<batchCnt; b++) {
 
 			//-- forward pass, with targets
 			if (!ForwardPass(trs, b, true)) return -1;
-
-			//-- save previous weights (!!!! PERFORMANCE !!!!!!!!)
-			//if (Vcopy(weightsCntTotal, W, prevW)!=0) return -1;
 
 			//-- backward pass, with weights update
 			if (!BackwardPass(trs, b, true)) return -1;
 
 		}
 
-		//-- 1.2. calc and display epoch MSE (for ALL batches)		
-		Alg->d2h(&tse_h, tse, sizeof(numtype));
-		mseT[epoch]=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
-		mseV[epoch]=0;	// TO DO !
-		printf("\rpid=%d, tid=%d, epoch %d, Training TSE=%f, MSE=%1.10f, duration=%d ms", pid, tid, epoch, tse_h, mseT[epoch], (timeGetTime()-epoch_starttime));
-		if (mseT[epoch]<TargetMSE) break;
-		if ((StopOnDivergence && epoch>1&&mseT[epoch]>mseT[epoch-1])) break;
-		if ((epoch%NetSaveFreq)==0) {
-			//-- TO DO ! (callback?)
-		}
+		//-- 1.2. calc and display epoch MSE (for ALL batches), and check criteria for terminating training (targetMSE, Divergence)
+		if (epochMetCriteria(epoch, epoch_starttime)) break;
+
 	}
-	ActualEpochs=epoch-((epoch>MaxEpochs) ? 1 : 0);
+	ActualEpochs=epoch-((epoch>MaxEpochs)?1:0);
 
-	//-- get last weights back
-	//if (Vcopy(weightsCntTotal, prevW, W)!=0) return -1;
-
-	//-- 2. test run. need this to make sure all batches pass through the net with the latest weights
+	//-- 2. test run. need this to make sure all batches pass through the net with the latest weights, and training targets
 	TRstart=timeGetTime(); TRcnt++;
-
 	if (Vinit(1, tse, 0, 0)!=0) return -1;
-	for (int b=0; b<batchCnt; b++) {
-
-		//-- forward pass, with targets
-		if(!ForwardPass(trs, b, true)) return -1;
-
-	}
+	for (b=0; b<batchCnt; b++) if(!ForwardPass(trs, b, true)) return -1;
 	TRtimeTot+=((DWORD)(timeGetTime()-TRstart));
 
 	//-- calc and display final epoch MSE
-	Alg->d2h(&tse_h, tse, sizeof(numtype));
-	mseTfinal=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
-	printf("\npid=%d, tid=%d, epoch %d, Training TSE-final=%f, MSE-final=%1.10f, duration=%d ms", pid, tid, ActualEpochs-1, tse_h, mseTfinal, (timeGetTime()-epoch_starttime));
+	epochMetCriteria(ActualEpochs-1, epoch_starttime);
 
 
 	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;
