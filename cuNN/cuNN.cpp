@@ -16,7 +16,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 	setLayout(LevelRatioS_, 1);
 
 	//-- weights can be set now, as they are not affected by batchSampleCnt
-	if (createWeights()!=0) throw FAIL_MALLOC_W;
+	if (!createWeights()) throw FAIL_MALLOC_W;
 
 	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
 	Alg=new Algebra();
@@ -256,15 +256,17 @@ void sNN::destroyNeurons() {
 	myFree(e);
 	myFree(u);
 }
-int sNN::createWeights() {
+bool sNN::createWeights() {
 	//-- malloc weights (on either CPU or GPU)
-	if (myMalloc(&W, weightsCntTotal)!=0) return -1;
-	if (myMalloc(&dW, weightsCntTotal)!=0) return -1;
-	if (myMalloc(&dJdW, weightsCntTotal)!=0) return -1;
-	return 0;
+	if (myMalloc(&W, weightsCntTotal)!=0) return false;
+	if (myMalloc(&prevW, weightsCntTotal)!=0) return false;
+	if (myMalloc(&dW, weightsCntTotal)!=0) return false;
+	if (myMalloc(&dJdW, weightsCntTotal)!=0) return false;
+	return true;
 }
 void sNN::destroyWeights() {
 	myFree(W);
+	myFree(prevW);
 	myFree(dW);
 	myFree(dJdW);
 }
@@ -411,6 +413,9 @@ int sNN::train(DataSet* trs) {
 			//-- forward pass, with targets
 			if (!ForwardPass(trs, b, true)) return -1;
 
+			//-- save previous weights (!!!! PERFORMANCE !!!!!!!!)
+			//if (Vcopy(weightsCntTotal, W, prevW)!=0) return -1;
+
 			//-- backward pass, with weights update
 			if (!BackwardPass(trs, b, true)) return -1;
 
@@ -429,7 +434,10 @@ int sNN::train(DataSet* trs) {
 	}
 	ActualEpochs=epoch-((epoch>MaxEpochs) ? 1 : 0);
 
-	//-- test run. need this to make sure all batches pass through the net with the latest weights
+	//-- get last weights back
+	//if (Vcopy(weightsCntTotal, prevW, W)!=0) return -1;
+
+	//-- 2. test run. need this to make sure all batches pass through the net with the latest weights
 	TRstart=timeGetTime(); TRcnt++;
 
 	if (Vinit(1, tse, 0, 0)!=0) return -1;

@@ -77,6 +77,7 @@ typedef struct sNN {
 	numtype* dF;
 	numtype* edF;
 	numtype* W;
+	numtype* prevW;
 	numtype* dW;
 	numtype* dJdW;
 	numtype* e;
@@ -120,7 +121,6 @@ typedef struct sNN {
 	bool BP_std();
 	bool WU_std();
 	bool BackwardPass(DataSet* ds, int batchId, bool updateWeights);
-	bool stopTraining();
 
 	EXPORT int train(DataSet* trs);
 	EXPORT int run(DataSet* runSet, numtype* runW);
@@ -129,7 +129,7 @@ private:
 	//-- malloc + init
 	bool mallocNeurons();
 	bool initNeurons();
-	int createWeights();
+	bool createWeights();
 	//-- free
 	void destroyNeurons();
 	void destroyWeights();
