@@ -47,7 +47,6 @@ sNN::~sNN() {
 	free(nodesCnt);
 	free(levelFirstNode);
 	free(ctxStart);
-	free(biasNode);
 
 	//	free(weightsCnt);
 	//	free(levelFirstWeight);
@@ -327,6 +326,46 @@ bool sNN::WU_std(){
 
 	return true;
 }
+bool sNN::ForwardPass(DataSet* ds, int batchId, bool haveTargets) {
+
+	//-- 1. load samples (and targets, if passed) from single batch in dataset onto input layer
+	LDstart=timeGetTime(); LDcnt++;
+	if (Alg->h2d(&F[(useBias)?1:0], &ds->sampleBFS[batchId*InputCount], InputCount*sizeof(numtype), true)!=0) return false;
+	if (haveTargets) {
+		if (Alg->h2d(&u[0], &ds->targetBFS[batchId*OutputCount], OutputCount*sizeof(numtype), true)!=0) return false;
+	}
+	LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
+
+	//-- 2. Feed Forward
+	FFstart=timeGetTime(); FFcnt++;
+	if (!FF()) return false;
+	FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
+
+	//-- 3. If we have targets, Calc Error (sets e[], te, updates tse) for the whole batch
+	CEstart=timeGetTime(); CEcnt++;
+	if (haveTargets) {
+		if (!calcErr()) return false;
+	}
+	CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
+
+	return true;
+}
+bool sNN::BackwardPass(DataSet* ds, int batchId, bool updateWeights) {
+
+	//-- 1. BackPropagate, calc dJdW for for current batch
+	BPstart=timeGetTime(); BPcnt++;
+	if (!BP_std()) return false;
+	BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
+
+	//-- 2. Weights Update for current batch
+	WUstart=timeGetTime(); WUcnt++;
+	if (updateWeights) {
+		if (!WU_std()) return false;
+	}
+	WUtimeTot+=((DWORD)(timeGetTime()-WUstart));
+
+	return true;
+}
 int sNN::train(DataSet* trs) {
 	int l;
 	DWORD epoch_starttime;
@@ -369,31 +408,11 @@ int sNN::train(DataSet* trs) {
 		//-- 1.1. train one batch at a time
 		for (int b=0; b<batchCnt; b++) {
 
-			//-- 1.1.2.  load batch samples + targets onto GPU
-			LDstart=timeGetTime(); LDcnt++;
-			if (Alg->h2d(&F[(useBias) ? 1 : 0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
-			if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
-			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
+			//-- forward pass, with targets
+			if (!ForwardPass(trs, b, true)) return -1;
 
-			//-- 1.1.3. Feed Forward current batch
-			FFstart=timeGetTime(); FFcnt++;
-			if (!FF()) return -1;
-			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
-
-			//-- 1.1.4. Calc error (e[], se), and updates total error (tse) for current batch 
-			CEstart=timeGetTime(); CEcnt++;
-			if (!calcErr()) return -1;
-			CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
-
-			//-- 1.1.5. BackPropagate, calc dJdW for for current batch
-			BPstart=timeGetTime(); BPcnt++;
-			if (!BP_std()) return -1;
-			BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
-
-			//-- 1.1.6. Weights Update for current batch
-			WUstart=timeGetTime(); WUcnt++;
-			if (!WU_std()) return -1;
-			WUtimeTot+=((DWORD)(timeGetTime()-WUstart));
+			//-- backward pass, with weights update
+			if (!BackwardPass(trs, b, true)) return -1;
 
 		}
 
@@ -416,15 +435,8 @@ int sNN::train(DataSet* trs) {
 	if (Vinit(1, tse, 0, 0)!=0) return -1;
 	for (int b=0; b<batchCnt; b++) {
 
-		//-- load samples + targets onto GPU
-		if (Alg->h2d(&F[(useBias)?1:0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
-		if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
-
-		//-- Feed Forward ()
-		if (!FF()) return -1;
-
-		//-- Calc Error (sets e[], te, updates tse) for the whole batch
-		if (!calcErr()) return -1;
+		//-- forward pass, with targets
+		if(!ForwardPass(trs, b, true)) return -1;
 
 	}
 	TRtimeTot+=((DWORD)(timeGetTime()-TRstart));
@@ -459,7 +471,6 @@ int sNN::train(DataSet* trs) {
 }
 int sNN::run(DataSet* runSet, numtype* runW) {
 
-
 	//-- set Neurons Layout based on batchSampleCount of run set
 	batchSamplesCnt=runSet->batchSamplesCnt;
 	batchCnt=runSet->batchCnt;
@@ -484,7 +495,7 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 		if (Alg->h2d(&u[0], &runSet->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
 
 		//-- 1.1.2. Feed Forward
-		if (FF()!=0) return -1;
+		if (!FF()) return -1;
 
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
 		if (Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;

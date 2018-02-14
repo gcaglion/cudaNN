@@ -74,7 +74,6 @@ typedef struct sNN {
 
 	numtype* a;
 	numtype* F;
-	numtype** biasNode;	//-- array of pointers to the bias node of each level (except output)
 	numtype* dF;
 	numtype* edF;
 	numtype* W;
@@ -117,8 +116,11 @@ typedef struct sNN {
 	bool FF();
 	bool Activate(int level);
 	bool calcErr();
+	bool ForwardPass(DataSet* ds, int batchId, bool haveTargets);
 	bool BP_std();
 	bool WU_std();
+	bool BackwardPass(DataSet* ds, int batchId, bool updateWeights);
+	bool stopTraining();
 
 	EXPORT int train(DataSet* trs);
 	EXPORT int run(DataSet* runSet, numtype* runW);
