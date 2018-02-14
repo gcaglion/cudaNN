@@ -26,7 +26,7 @@ int main() {
 	//-- debugger settings
 	tDebugInfo* clientDbg=new tDebugInfo(0, "Client.log", DEBUG_DEFAULT_PATH, false);
 	tDebugInfo* DBG=clientDbg;	//-- sets clientDbg as default Debug settings used in macros
-	tDebugInfo* persistorDbg=new tDebugInfo(2, "Persistor.log", DEBUG_DEFAULT_PATH);
+	tDebugInfo* persistorDbg=new tDebugInfo(0, "Persistor.log", DEBUG_DEFAULT_PATH);
 	//--
 
 	safeCallE("create DBConnection for FX History DB", FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));
@@ -58,7 +58,7 @@ int main() {
 	//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 	safeCallE("NN creation", { trNN=new NN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias); });
 	//-- set training parameters
-	trNN->MaxEpochs=100;
+	trNN->MaxEpochs=50;
 	trNN->NetSaveFreq=200;
 	trNN->TargetMSE=(float)0.0001;
 	trNN->BP_Algo=BP_STD;

@@ -114,16 +114,19 @@ typedef struct sNN {
 	void setLayout(char LevelRatioS_[60], int batchSamplesCnt_);
 
 	EXPORT void setActivationFunction(int* func_);
-	int FF();
-	int Activate(int level);
-	int calcErr();
+	bool FF();
+	bool Activate(int level);
+	bool calcErr();
+	bool BP_std();
+	bool WU_std();
 
 	EXPORT int train(DataSet* trs);
 	EXPORT int run(DataSet* runSet, numtype* runW);
 
 private:
 	//-- malloc + init
-	int createNeurons();
+	bool mallocNeurons();
+	bool initNeurons();
 	int createWeights();
 	//-- free
 	void destroyNeurons();

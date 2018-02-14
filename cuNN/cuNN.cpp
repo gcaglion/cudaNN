@@ -47,6 +47,8 @@ sNN::~sNN() {
 	free(nodesCnt);
 	free(levelFirstNode);
 	free(ctxStart);
+	free(biasNode);
+
 	//	free(weightsCnt);
 	//	free(levelFirstWeight);
 	//	free(ActivationFunction);
@@ -150,7 +152,37 @@ void sNN::setActivationFunction(int* func_) {
 		}
 	}
 }
-int sNN::Activate(int level) {
+
+bool sNN::FF() {
+	for (int l=0; l<(levelsCnt-1); l++) {
+		int Ay=nodesCnt[l+1]/batchSamplesCnt;
+		int Ax=nodesCnt[l]/batchSamplesCnt;
+		numtype* A=&W[levelFirstWeight[l]];
+		int By=nodesCnt[l]/batchSamplesCnt;
+		int Bx=batchSamplesCnt;
+		numtype* B=&F[levelFirstNode[l]];
+		numtype* C=&a[levelFirstNode[l+1]];
+
+		//-- actual feed forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
+		FF0start=timeGetTime(); FF0cnt++;
+		if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C)!=0) return false;
+		FF0timeTot+=((DWORD)(timeGetTime()-FF0start));
+
+		//-- activation sets F[l+1] and dF[l+1]
+		FF1start=timeGetTime(); FF1cnt++;
+		if (!Activate(l+1)) return false;
+		FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
+
+		//-- feed back to context neurons
+		FF2start=timeGetTime(); FF2cnt++;
+		if (useContext) {
+			Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
+		}
+		FF2timeTot+=((DWORD)(timeGetTime()-FF2start));
+	}
+	return true;
+}
+bool sNN::Activate(int level) {
 	// sets F, dF
 	int ret, retd;
 	int skipBias=(useBias&&level!=nodesCnt[levelsCnt-1]) ? 1 : 0;	//-- because bias neuron does not exits in outer layer
@@ -180,72 +212,42 @@ int sNN::Activate(int level) {
 		ret=-1;
 		break;
 	}
-	return((ret==0&&retd==0) ? 0 : -1);
+	return(ret==0&&retd==0);
 }
-int sNN::calcErr() {
+bool sNN::calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
-	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return -1;	// e=F[2]-u
-	if (Vssum(nodesCnt[levelsCnt-1], e, se)!=0) return -1;											// se=ssum(e) 
-	if (Vadd(1, tse, 1, se, 1, tse)!=0) return -1;													// tse+=se;
+	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return false;	// e=F[2]-u
+	if (Vssum(nodesCnt[levelsCnt-1], e, se)!=0) return false;											// se=ssum(e) 
+	if (Vadd(1, tse, 1, se, 1, tse)!=0) return false;													// tse+=se;
 
-	return 0;
-}
-int sNN::FF() {
-	char fname[MAX_PATH];
-	for (int l=0; l<(levelsCnt-1); l++) {
-		int Ay=nodesCnt[l+1]/batchSamplesCnt;
-		int Ax=nodesCnt[l]/batchSamplesCnt;
-		numtype* A=&W[levelFirstWeight[l]];
-		int By=nodesCnt[l]/batchSamplesCnt;
-		int Bx=batchSamplesCnt;
-		numtype* B=&F[levelFirstNode[l]];
-		numtype* C=&a[levelFirstNode[l+1]];
-
-		//-- actual feed forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
-		FF0start=timeGetTime(); FF0cnt++;
-		if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C)!=0) return -1;
-		FF0timeTot+=((DWORD)(timeGetTime()-FF0start));
-		
-		//-- activation sets F[l+1] and dF[l+1]
-		FF1start=timeGetTime(); FF1cnt++;
-		if (Activate(l+1)!=0) return -1;
-		FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
-
-		//-- feed back to context neurons
-		FF2start=timeGetTime(); FF2cnt++;
-		if (useContext) {
-			Vcopy(nodesCnt[l+1], &F[levelFirstNode[l+1]], &F[ctxStart[l]]);
-		}
-		FF2timeTot+=((DWORD)(timeGetTime()-FF2start));
-	}
-	return 0;
+	return true;
 }
 
-int sNN::createNeurons() {
+bool sNN::mallocNeurons() {
 	//-- malloc neurons (on either CPU or GPU)
-	if (myMalloc(&a, nodesCntTotal)!=0) return -1;
-	if (myMalloc(&F, nodesCntTotal)!=0) return -1;
-	if (myMalloc(&dF, nodesCntTotal)!=0) return -1;
-	if (myMalloc(&edF, nodesCntTotal)!=0) return -1;
-	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) return -1;
-	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) return -1;
+	if (myMalloc(&a, nodesCntTotal)!=0) return false;
+	if (myMalloc(&F, nodesCntTotal)!=0) return false;
+	if (myMalloc(&dF, nodesCntTotal)!=0) return false;
+	if (myMalloc(&edF, nodesCntTotal)!=0) return false;
+	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) return false;
+	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) return false;
+	return true;
+}
+bool sNN::initNeurons(){
 	//--
-	if (Vinit(nodesCntTotal, F, 0, 0)!=0) return -1;
+	if (Vinit(nodesCntTotal, F, 0, 0)!=0) return false;
 	if (useBias) {
-		biasNode=(numtype**)malloc(levelsCnt*sizeof(numtype*));
-		numtype biasVal=1;
 		for (int l=0; l<(levelsCnt-1); l++) {
 			//-- set every bias node's F=1
-			if (Vinit(1, &F[levelFirstNode[l]], 1, 0)!=0) return -1;
-			//-- make biasnode[l] point to first node of this level
-			biasNode[l]=&F[levelFirstNode[l]];
+			if (Vinit(1, &F[levelFirstNode[l]], 1, 0)!=0) return false;
 		}
 	}
 	//---- the following are needed by cublas version of MbyM
-	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return -1;
-	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return -1;
-	if (Vinit(nodesCntTotal, edF, 0, 0)!=0) return -1;
-	return 0;
+	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return false;
+	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return false;
+	if (Vinit(nodesCntTotal, edF, 0, 0)!=0) return false;
+
+	return true;
 }
 void sNN::destroyNeurons() {
 	myFree(a);
@@ -268,15 +270,69 @@ void sNN::destroyWeights() {
 	myFree(dJdW);
 }
 
+bool sNN::BP_std(){
+	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
+	numtype* A; numtype* B; numtype* C;
+
+	for (int l = levelsCnt-1; l>0; l--) {
+		if (l==(levelsCnt-1)) {
+			//-- top level only
+			if (VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return false;	// edF(l) = e * dF(l)
+		} else {
+			//-- lower levels
+			Ay=nodesCnt[l+1]/batchSamplesCnt;
+			Ax=nodesCnt[l]/batchSamplesCnt;
+			Astart=levelFirstWeight[l];
+			A=&W[Astart];
+			By=nodesCnt[l+1]/batchSamplesCnt;
+			Bx=batchSamplesCnt;
+			Bstart=levelFirstNode[l+1];
+			B=&edF[Bstart];
+			Cy=Ax;	// because A gets transposed
+			Cx=Bx;
+			Cstart=levelFirstNode[l];
+			C=&edF[Cstart];
+
+			if (Alg->MbyM(Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return false;	// edF(l) = edF(l+1) * WT(l)
+			if (VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return false;	// edF(l) = edF(l) * dF(l)
+		}
+
+		//-- common	
+		Ay=nodesCnt[l]/batchSamplesCnt;
+		Ax=batchSamplesCnt;
+		Astart=levelFirstNode[l];
+		A=&edF[Astart];
+		By=nodesCnt[l-1]/batchSamplesCnt;
+		Bx=batchSamplesCnt;
+		Bstart=levelFirstNode[l-1];
+		B=&F[Bstart];
+		Cy=Ay;
+		Cx=By;// because B gets transposed
+		Cstart=levelFirstWeight[l-1];
+		C=&dJdW[Cstart];
+
+		// dJdW(l-1) = edF(l) * F(l-1)
+		if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, true, B, C)!=0) return false;
+
+	}
+	return true;
+}
+bool sNN::WU_std(){
+
+	//-- 1. calc dW = LM*dW - LR*dJdW
+	if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW)!=0) return false;
+
+	//-- 2. update W = W + dW for current batch
+	if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return false;
+
+	return true;
+}
 int sNN::train(DataSet* trs) {
 	int l;
 	DWORD epoch_starttime;
 	DWORD training_starttime=timeGetTime();
 	int epoch;
 	numtype tse_h;	// total squared error copid on host at the end of each eopch
-
-	int Ay, Ax, Astart, By, Bx, Bstart, Cy, Cx, Cstart;
-	numtype* A; numtype* B; numtype* C;
 
 	//-- set batch count and batchSampleCnt for the network from dataset
 	batchSamplesCnt=trs->batchSamplesCnt;
@@ -285,22 +341,21 @@ int sNN::train(DataSet* trs) {
 	setLayout("", batchSamplesCnt);
 
 	//-- 0. malloc + init neurons
-	if (createNeurons()!=0) return -1;
+	if (!mallocNeurons()) return -1;
+	if (!initNeurons()) return -1;
 
 	//-- malloc mse[maxepochs], always host-side
 	mseT=(numtype*)malloc(MaxEpochs*sizeof(numtype));
 	mseV=(numtype*)malloc(MaxEpochs*sizeof(numtype));
 
-	//---- 0.1. Init Neurons (must set context neurons=0, at least for layer 0)
-	if (Vinit(weightsCntTotal, dJdW, 0, 0)!=0) return -1;
-
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
 	//dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
-	//loadArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
+	loadArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
 
-	//---- 0.3. Init dW
+	//---- 0.3. Init dW, dJdW
 	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
+	if (Vinit(weightsCntTotal, dJdW, 0, 0)!=0) return -1;
 
 	//-- 1. for every epoch, calc and display MSE
 	for (epoch=0; epoch<MaxEpochs; epoch++) {
@@ -314,84 +369,41 @@ int sNN::train(DataSet* trs) {
 		//-- 1.1. train one batch at a time
 		for (int b=0; b<batchCnt; b++) {
 
-			//-- 1.1.1. BackPropagation & Weights Update (only if at least one FF() has happened)
-			if((epoch+b)!=0) {
-				//-- 1.1.1.1. BackPropagate, calc dJdW for for current batch
-				BPstart=timeGetTime(); BPcnt++;
-				for (l = levelsCnt-1; l>0; l--) {
-					if (l==(levelsCnt-1)) {
-						//-- top level only
-						if (VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return -1;	// edF(l) = e * dF(l)
-					} else {
-						//-- lower levels
-						Ay=nodesCnt[l+1]/batchSamplesCnt;
-						Ax=nodesCnt[l]/batchSamplesCnt;
-						Astart=levelFirstWeight[l];
-						A=&W[Astart];
-						By=nodesCnt[l+1]/batchSamplesCnt;
-						Bx=batchSamplesCnt;
-						Bstart=levelFirstNode[l+1];
-						B=&edF[Bstart];
-						Cy=Ax;	// because A gets transposed
-						Cx=Bx;
-						Cstart=levelFirstNode[l];
-						C=&edF[Cstart];
-
-						if (Alg->MbyM(Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return -1;	// edF(l) = edF(l+1) * WT(l)
-						if (VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return -1;	// edF(l) = edF(l) * dF(l)
-					}
-
-					//-- common	
-					Ay=nodesCnt[l]/batchSamplesCnt;
-					Ax=batchSamplesCnt;
-					Astart=levelFirstNode[l];
-					A=&edF[Astart];
-					By=nodesCnt[l-1]/batchSamplesCnt;
-					Bx=batchSamplesCnt;
-					Bstart=levelFirstNode[l-1];
-					B=&F[Bstart];
-					Cy=Ay;
-					Cx=By;// because B gets transposed
-					Cstart=levelFirstWeight[l-1];
-					C=&dJdW[Cstart];
-
-					// dJdW(l-1) = edF(l) * F(l-1)
-					if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, true, B, C)!=0) return -1;
-
-				}
-				BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
-
-				//-- 1.1.1.2. calc dW = LM*dW - LR*dJdW
-				if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW)!=0) return -1;
-				//-- 1.1.1.3. update W = W + dW for current batch
-				if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return -1;
-			}
-
 			//-- 1.1.2.  load batch samples + targets onto GPU
 			LDstart=timeGetTime(); LDcnt++;
-			if (Alg->h2d(&F[(useBias)?1:0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
+			if (Alg->h2d(&F[(useBias) ? 1 : 0], &trs->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
 			if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
 			LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
 			//-- 1.1.3. Feed Forward current batch
 			FFstart=timeGetTime(); FFcnt++;
-			if (FF()!=0) return -1;
+			if (!FF()) return -1;
 			FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
 			//-- 1.1.4. Calc error (e[], se), and updates total error (tse) for current batch 
 			CEstart=timeGetTime(); CEcnt++;
-			if (calcErr()!=0) return -1;
+			if (!calcErr()) return -1;
 			CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
+
+			//-- 1.1.5. BackPropagate, calc dJdW for for current batch
+			BPstart=timeGetTime(); BPcnt++;
+			if (!BP_std()) return -1;
+			BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
+
+			//-- 1.1.6. Weights Update for current batch
+			WUstart=timeGetTime(); WUcnt++;
+			if (!WU_std()) return -1;
+			WUtimeTot+=((DWORD)(timeGetTime()-WUstart));
 
 		}
 
-		//-- 1.2. calc and display epoch MSE (for ALL batches)
+		//-- 1.2. calc and display epoch MSE (for ALL batches)		
 		Alg->d2h(&tse_h, tse, sizeof(numtype));
 		mseT[epoch]=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
 		mseV[epoch]=0;	// TO DO !
-		printf("\rpid=%d, tid=%d, epoch %d, Training MSE=%1.10f, duration=%d ms", pid, tid, epoch, mseT[epoch], (timeGetTime()-epoch_starttime));
+		printf("\rpid=%d, tid=%d, epoch %d, Training TSE=%f, MSE=%1.10f, duration=%d ms", pid, tid, epoch, tse_h, mseT[epoch], (timeGetTime()-epoch_starttime));
 		if (mseT[epoch]<TargetMSE) break;
-		if ((StopOnDivergence && epoch>1&&mseT[epoch]>mseT[epoch-2])) break;
+		if ((StopOnDivergence && epoch>1&&mseT[epoch]>mseT[epoch-1])) break;
 		if ((epoch%NetSaveFreq)==0) {
 			//-- TO DO ! (callback?)
 		}
@@ -400,6 +412,7 @@ int sNN::train(DataSet* trs) {
 
 	//-- test run. need this to make sure all batches pass through the net with the latest weights
 	TRstart=timeGetTime(); TRcnt++;
+
 	if (Vinit(1, tse, 0, 0)!=0) return -1;
 	for (int b=0; b<batchCnt; b++) {
 
@@ -408,10 +421,10 @@ int sNN::train(DataSet* trs) {
 		if (Alg->h2d(&u[0], &trs->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
 
 		//-- Feed Forward ()
-		if (FF()!=0) return -1;
+		if (!FF()) return -1;
 
 		//-- Calc Error (sets e[], te, updates tse) for the whole batch
-		if (calcErr()!=0) return -1;
+		if (!calcErr()) return -1;
 
 	}
 	TRtimeTot+=((DWORD)(timeGetTime()-TRstart));
@@ -419,7 +432,8 @@ int sNN::train(DataSet* trs) {
 	//-- calc and display final epoch MSE
 	Alg->d2h(&tse_h, tse, sizeof(numtype));
 	mseTfinal=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
-	printf("\npid=%d, tid=%d, epoch %d, Training MSE-final=%1.10f, duration=%d ms", pid, tid, ActualEpochs-1, mseTfinal, (timeGetTime()-epoch_starttime));
+	printf("\npid=%d, tid=%d, epoch %d, Training TSE-final=%f, MSE-final=%1.10f, duration=%d ms", pid, tid, ActualEpochs-1, tse_h, mseTfinal, (timeGetTime()-epoch_starttime));
+
 
 	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;
 	float elapsed_avg=elapsed_tot/ActualEpochs;
@@ -452,7 +466,8 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 	setLayout("", runSet->batchSamplesCnt);
 
 	//-- malloc + init neurons
-	if (createNeurons()!=0) return -1;
+	if (!mallocNeurons()) return -1;
+	if (!initNeurons()) return -1;
 
 	//-- reset tse=0
 	if (Vinit(1, tse, 0, 0)!=0) return -1;
