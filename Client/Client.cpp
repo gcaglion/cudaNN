@@ -40,11 +40,12 @@ int main() {
 	int modelFeature[]={ 1};
 	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 	int dataTransformation=DT_DELTA;
-	int historyLen= 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 50;//;// 20; //6;// 200;// 200;
-	int predictionLen=3;
+	int historyLen= 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
+	int sampleLen=  50;// 3;// 50;//;// 20; //6;// 200;// 200;
+	int predictionLen=3;// 1;// 3;
 
 	//-- net geometry
+	//char* levelRatioS= "0.7";
 	char* levelRatioS= "1, 0.5";//"1, 0.5, 1";//
 	int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 	bool useContext=false;
