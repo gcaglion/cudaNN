@@ -36,10 +36,6 @@ typedef struct sDebugInfo {
 
 } tDebugInfo;
 
-#ifdef __cplusplus
-//EXPORT void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount, ...);
-#endif
-
 #define safeCallE(desc, block) \
 if(DBG->timing) DBG->startTime=timeGetTime(); \
 try {block;} catch (const char* e) { \

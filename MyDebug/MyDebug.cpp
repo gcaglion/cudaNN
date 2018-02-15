@@ -5,63 +5,6 @@ void getCurrentTime(char* ot) {
 	sprintf(ot, "%s", ctime(&mytime));
 }
 
-/*EXPORT void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount, ...) {
-	// pLogLevel=	0 (No screen, No file) | 1 (Screen, No file) | 2 (Screen AND File)
-	int n;
-	char*			arg_s;
-	int				arg_d;
-	double			arg_f;
-	va_list			arguments;
-	char submsg[MAX_PATH];
-	unsigned int	im = 0;
-	int				prev_im = 0;
-	char timestamp[60];
-
-	if (DebugParms->level==0&&LogType==DBG_INFO) return;
-
-	if (DebugParms->ThreadSafeLogging>0) WaitForSingleObject(DebugParms->Mtx, INFINITE);
-
-	va_start(arguments, argcount);
-	n = 0;
-
-	do {
-		if (msg[im]==37) {                // "%"
-			memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
-			n++;
-			prev_im = im+2;
-			if (msg[im+1]==115) {   // "s"
-				arg_s = va_arg(arguments, char*);
-				if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_ERROR) printf(submsg, arg_s);
-				if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_ERROR)	fprintf(DebugParms->outFile->handle, submsg, arg_s);
-			} else if (msg[im+1]==100) {   // "d"
-				arg_d = va_arg(arguments, int);
-				if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_ERROR) printf(submsg, arg_d);
-				if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_ERROR)	fprintf(DebugParms->outFile->handle, submsg, arg_d);
-			} else if (msg[im+1]==112) {   // "p"
-				arg_d = va_arg(arguments, long);
-				if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_ERROR) printf(submsg, arg_d);
-				if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_ERROR)	fprintf(DebugParms->outFile->handle, submsg, arg_d);
-			} else {   // this could be 67 ("f") or any mask before "f" -> in any case, it's a double
-				arg_f = va_arg(arguments, double);
-				if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_ERROR) printf(submsg, arg_f);
-				if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_ERROR)	fprintf(DebugParms->outFile->handle, submsg, arg_f);
-			}
-		}
-		im++;
-	} while (im<strlen(msg));
-
-	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
-	if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_ERROR) printf(submsg);
-	if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_ERROR) fprintf(DebugParms->outFile->handle, submsg);
-	if (LogType==DBG_ERROR && DebugParms->PauseOnError) { printf("Press any key..."); getchar(); }
-
-	va_end(arguments);
-
-	if (DebugParms->ThreadSafeLogging>0) ReleaseMutex(DebugParms->Mtx);
-}
-*/
-
-
 void sDebugInfo::write(int LogType, const char* msg, int argcount, ...) {
 	// pLogLevel=	0 (No screen, No file) | 1 (Screen, No file) | 2 (Screen AND File)
 	int n;
