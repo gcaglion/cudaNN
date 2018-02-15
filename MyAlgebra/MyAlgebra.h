@@ -172,9 +172,9 @@ EXPORT int Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm);
 EXPORT int myMalloc(numtype** var, int size);
 EXPORT int myFree(numtype* var);
 
-EXPORT int dumpArray(int vlen, numtype* v, const char* fname);
-EXPORT int dumpArrayH(int vlen, numtype* v, const char* fname);
-EXPORT int loadArray(int vlen, numtype* v, const char* fname);
+EXPORT bool dumpArray(int vlen, numtype* v, const char* fname);
+EXPORT bool dumpArrayH(int vlen, numtype* v, const char* fname);
+EXPORT bool loadArray(int vlen, numtype* v, const char* fname);
 
 EXPORT int Tanh(int Vlen, numtype* in, numtype* out);
 EXPORT int dTanh(int Vlen, numtype* in, numtype* out);

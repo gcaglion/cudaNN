@@ -188,37 +188,37 @@ EXPORT int myFree(numtype* var) {
 }
 
 //-- read/write mem<->file
-EXPORT int dumpArray(int vlen, numtype* v, const char* fname) {
+EXPORT bool dumpArray(int vlen, numtype* v, const char* fname) {
 #ifdef USE_GPU
 	return(dumpArray_cu(vlen, v, fname));
 #else
 	FILE* f=fopen(fname, "w");
-	if (f==nullptr) return -1;
+	if (f==nullptr) return false;
 	for (int i=0; i<vlen; i++) fprintf(f, "%f\n", v[i]);
 	fclose(f);
-	return 0;
+	return true;
 #endif
 }
-EXPORT int dumpArrayH(int vlen, numtype* v, const char* fname) {
+EXPORT bool dumpArrayH(int vlen, numtype* v, const char* fname) {
 	FILE* f=fopen(fname, "w");
-	if (f==nullptr) return -1;
+	if (f==nullptr) return false;
 	for (int i=0; i<vlen; i++) fprintf(f, "%f\n", v[i]);
 	fclose(f);
-	return 0;
+	return true;
 }
-EXPORT int loadArray(int vlen, numtype* v, const char* fname) {
+EXPORT bool loadArray(int vlen, numtype* v, const char* fname) {
 #ifdef USE_GPU
 	return(loadArray_cu(vlen, v, fname));
 #else
 	numtype fh;
 	FILE* f=fopen(fname, "r");
-	if (f==nullptr) return -1;
+	if (f==nullptr) return false;
 	for (int i=0; i<vlen; i++) {
-		if (fscanf(f, "%f\n", &fh)==0) return -1;
+		if (fscanf(f, "%f\n", &fh)==0) return false;
 		v[i]=fh;
 	}
 	fclose(f);
-	return 0;
+	return true;
 #endif
 }
 

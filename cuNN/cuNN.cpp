@@ -239,11 +239,11 @@ bool sNN::initNeurons(){
 	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return false;
 	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return false;
 	if (Vinit(nodesCntTotal, edF, 0, 0)!=0) return false;
+
 	if (useBias) {
 		for (int l=0; l<(levelsCnt-1); l++) {
 			//-- set every bias node's F=1
 			if (Vinit(1, &F[levelFirstNode[l]], 1, 0)!=0) return false;
-			//if (Vinit(1, &dF[levelFirstNode[l]], 1, 0)!=0) return false;
 		}
 	}
 
@@ -406,8 +406,8 @@ int sNN::train(DataSet* trs) {
 
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
-	//dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
-	//loadArray(weightsCntTotal, &W[0], "C:/temp/initW.txt");
+	//if(!dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt")) return -1;
+	if(!loadArray(weightsCntTotal, &W[0], "C:/temp/initW.txt")) return -1;
 
 	//---- 0.3. Init dW, dJdW
 	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
