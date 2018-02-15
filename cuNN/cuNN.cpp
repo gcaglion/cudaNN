@@ -184,7 +184,7 @@ bool sNN::FF() {
 bool sNN::Activate(int level) {
 	// sets F, dF
 	int ret, retd;
-	int skipBias=(useBias&&level!=nodesCnt[levelsCnt-1]) ? 1 : 0;	//-- because bias neuron does not exits in outer layer
+	int skipBias=(useBias&&level!=(levelsCnt-1))?1:0;	//-- because bias neuron does not exits in outer layer
 	int nc=nodesCnt[level]-skipBias;
 	numtype* va=&a[levelFirstNode[level]+skipBias];
 	numtype* vF=&F[levelFirstNode[level]+skipBias];
@@ -445,7 +445,7 @@ int sNN::train(DataSet* trs) {
 	TRtimeTot+=((DWORD)(timeGetTime()-TRstart));
 
 	//-- calc and display final epoch MSE
-	epochMetCriteria(ActualEpochs-1, epoch_starttime);
+	printf("\n"); epochMetCriteria(ActualEpochs-1, epoch_starttime);
 
 
 	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;

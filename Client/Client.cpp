@@ -48,7 +48,7 @@ int main() {
 	char* levelRatioS= "1, 0.5";//"1, 0.5, 1";//
 	int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 	bool useContext=false;
-	bool useBias=false;
+	bool useBias=true;
 
 	//-- DataSets for train and run. batchSize can be different between the two
 	DataSet* trainSet;	int batchsamplesCnt_T=1;// 10;
