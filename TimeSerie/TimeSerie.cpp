@@ -187,7 +187,7 @@ int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 
 sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDebugInfo* DebugParms_) {
 	if (DebugParms_==nullptr) {
-		DebugParms=new tDebugInfo(0, "DataSet.log");
+		DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"));
 	} else {
 		DebugParms=DebugParms_;
 	}

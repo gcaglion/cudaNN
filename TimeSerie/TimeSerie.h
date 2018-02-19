@@ -69,7 +69,7 @@ typedef struct sTS {
 	//-- constructor / destructor
 	sTS(int steps_, int featuresCnt_, tDebugInfo* DebugParms_=nullptr) {
 		if(DebugParms_==nullptr){
-			DebugParms=new tDebugInfo(0, "Timeserie.log");
+			DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"));
 		} else {
 			DebugParms=DebugParms_;
 		}
