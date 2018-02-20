@@ -201,7 +201,6 @@ bool sNN::Activate(int level) {
 	case NN_ACTIVATION_TANH:
 		retf=Tanh(nc, va, vF);
 		retd=dTanh(nc, va, vdF);
-		retd=-1;
 		break;
 	case NN_ACTIVATION_EXP4:
 		retf=Exp4(nc, va, vF);
@@ -416,7 +415,7 @@ int sNN::train(DataSet* trs) {
 
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
-	//if(!dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt")) return -1;
+	//if(!dumpArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt")) return -1;
 	if(!loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt")) return -1;
 
 	//---- 0.3. Init dW, dJdW

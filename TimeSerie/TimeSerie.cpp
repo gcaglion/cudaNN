@@ -199,14 +199,7 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	if (samplesCnt<1) bottomThrow("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;
-	/*{
-		DebugParms->compose("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
-		sprintf_s(DebugParms->stackmsg, "%s\n%s(): Error %d at line %d", DebugParms->stackmsg, __func__, errno, __LINE__);
-		throw std::runtime_error(DebugParms->stackmsg);
-	}
-	*/
-	bottomThrow("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
-	//DebugParms->compose("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
+	if ((batchCnt*batchSamplesCnt)!=samplesCnt) bottomThrow("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
 	
 	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
 	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
@@ -222,7 +215,7 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	prediction0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
 
 	//-- fill sample/target data right at creation time. TS has data in SBF format
-	if (buildFromTS(sourceTS)!=0) throw "buildFromTS() failed\n";
+	buildFromTS(sourceTS);
 
 	for (int b=0; b<batchCnt; b++) {
 		//-- populate BFS sample/target for every batch
@@ -300,7 +293,7 @@ bool sDataSet::isSelected(int ts_f) {
 	}
 	return false;
 }
-int sDataSet::buildFromTS(sTS* ts) {
+void sDataSet::buildFromTS(sTS* ts) {
 
 	int s, b, f;
 
@@ -331,7 +324,6 @@ int sDataSet::buildFromTS(sTS* ts) {
 		}
 	}
 
-	return 0;
 }
 
 void sDataSet::SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS) {

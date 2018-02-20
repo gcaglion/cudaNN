@@ -5,29 +5,6 @@
 #include "../Logger/Logger.h"
 #include "../MyAlgebra/MyAlgebra.h"
 
-void dbgcli() {
-	try {
-		tDebugInfo* dbg1=new tDebugInfo();
-	}
-	catch (std::exception e) {
-		printf("%s\n", e.what());
-	}
-}
-void dbgcli2() {
-	char* msg="%s returned %d, with double=%f\n";
-	tDebugInfo* dbg=new tDebugInfo();
-	dbg->write(DBG_LEVEL_STD, msg, 3, "myfunc()", -3, 1.345);
-	dbg->compose(msg, 3, "myfunc()", -3, -0.1);
-	printf("%s\n", dbg->stackmsg);
-}
-int argcnt(char* mask){
-	int cnt=0;
-	for (int i=0; i<strlen(mask); i++) {
-		if (mask[i]==37) cnt++;
-	}
-	return cnt;
-}
-
 int main() {
 
 	//dbgcli();
