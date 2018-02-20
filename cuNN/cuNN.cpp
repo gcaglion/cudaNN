@@ -219,7 +219,7 @@ bool sNN::Activate(int level) {
 		retf=-1;
 		break;
 	}
-	if (!(retf==0&&retd==0)) bottomThrow("retf=%d ; retd=%d", 2, (retf, retd));
+	if (!(retf==0&&retd==0)) bottomThrow("retf=%d ; retd=%d", 2, retf, retd);
 
 	return true;
 }

@@ -40,15 +40,22 @@ EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
 
 	return (ListLen+1);
 }
+int argcnt(const char* mask) {
+	int cnt=0;
+	for (int i=0; i<strlen(mask); i++) {
+		if (mask[i]==37) cnt++;
+	}
+	return cnt;
+}
 
 
 sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
-	sprintf_s(stackmsg, 20, "stackmsg start.\n");
+	sprintf_s(stackmsg, 20, "\nError stack:");
 	//-- outFile is created and opened by constructor (if not passed).
 	if (outFile_==nullptr) {
 		try {
-			outFile=new tFileInfo(DEBUG_DEFAULT_PATH, "defaultDebug.log");
+			outFile=new tFileInfo("defaultDebug.log", DEBUG_DEFAULT_PATH);
 		}
 		catch (std::exception e) {
 			sprintf_s(errmsg, 1024, "%s() error creating default debug file\nFrom: %s", __func__, e.what()); throw std::runtime_error(errmsg);
@@ -57,6 +64,7 @@ sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseO
 		outFile=outFile_;
 	}
 }
+
 void sDbg::write(int LogType, const char* msg, int argcount, ...) {
 	// pLogLevel=	0 (No screen, No file) | 1 (Screen, No file) | 2 (Screen AND File)
 	int n;
@@ -106,6 +114,39 @@ void sDbg::write(int LogType, const char* msg, int argcount, ...) {
 
 	if (ThreadSafeLogging) ReleaseMutex(Mtx);
 }
+void sDbg::compose(char* msg, int argcount, ...) {
+	va_list			arguments;
+	char submsg[MAX_PATH];
+	char*			arg_s;
+	int				arg_d;
+	double			arg_f;
+	unsigned int	im = 0;
+	int				prev_im = 0;
+
+	va_start(arguments, argcount);
+	do {
+		if (msg[im]==37) {                // "%"
+			memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
+			prev_im = im+2;
+			if (msg[im+1]==115) {   // "s"
+				arg_s = va_arg(arguments, char*);
+				sprintf_s(errmsg, submsg, arg_s); strcat_s(stackmsg, errmsg);
+			} else if (submsg[im+1]==100) {   // "d"
+				arg_d = va_arg(arguments, int);
+				sprintf_s(errmsg, submsg, arg_d); strcat_s(stackmsg, errmsg);
+			} else if (submsg[im+1]==112) {   // "p"
+				arg_d = va_arg(arguments, long);
+				sprintf_s(errmsg, submsg, arg_d); strcat_s(stackmsg, errmsg);
+			} else {   // this could be 67 ("f") or any mask before "f" -> in any case, it's a double
+				arg_f = va_arg(arguments, double);
+				sprintf_s(errmsg, submsg, arg_f); strcat_s(stackmsg, errmsg);
+			}
+		}
+		im++;
+	} while (im<strlen(msg));
+	va_end(arguments);
+}
+
 template <typename T> void sDbg::argOut(int msgType, char* submsg, T arg) {
 	if (msgType==DBG_LEVEL_ERR) {
 		//-- file log is mandatory in case of error

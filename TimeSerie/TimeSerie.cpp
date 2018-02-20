@@ -198,9 +198,16 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	samplesCnt=sourceTS->steps-sampleLen-targetLen+1;
 	if (samplesCnt<1) bottomThrow("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
 	batchSamplesCnt=batchSamplesCnt_;
-	batchCnt=samplesCnt/batchSamplesCnt;// (int)floor(samplesCnt/batchSamplesCnt);
-	bottomThrow("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, (samplesCnt, batchSamplesCnt));
-
+	batchCnt=samplesCnt/batchSamplesCnt;
+	/*{
+		DebugParms->compose("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
+		sprintf_s(DebugParms->stackmsg, "%s\n%s(): Error %d at line %d", DebugParms->stackmsg, __func__, errno, __LINE__);
+		throw std::runtime_error(DebugParms->stackmsg);
+	}
+	*/
+	bottomThrow("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
+	//DebugParms->compose("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
+	
 	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
 	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
 	prediction=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
