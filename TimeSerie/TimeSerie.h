@@ -1,11 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../MyDebug/mydebug.h"
-#include "../DBConnection.h"
-#include "../fxdata.h"
-#include "../DataFile.h"
-#include "../MT4data.h"
+#include "../SharedUtils/SharedUtils.h"
 
 #ifdef USE_ORCL
 #include "../OraUtils/OraUtils.h"
@@ -35,10 +31,6 @@
 #define TSF_TURNINGPOINTS 5
 #define TSF_SHE 6
 #define TSF_HISTVOL 7
-
-//-- Exceptions
-#define WRONG_BATCH_SIZE(sc,bsc) "SamplesCnt ((sc)) is not a multiple of batchSampleCnt ((bsc))"
-#define NOT_ENOUGH_DATA "negative or zero number of samples. check TimeSerie steps, sampleLen, targetLen"
 
 typedef struct sTS {
 

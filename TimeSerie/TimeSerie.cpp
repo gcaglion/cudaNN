@@ -196,10 +196,10 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	sampleLen=sampleLen_; 
 	targetLen=targetLen_; 
 	samplesCnt=sourceTS->steps-sampleLen-targetLen+1;
-	if (samplesCnt<1) throw NOT_ENOUGH_DATA;
+	if (samplesCnt<1) bottomThrow("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;// (int)floor(samplesCnt/batchSamplesCnt);
-	if ((batchCnt*batchSamplesCnt)!=samplesCnt) throw WRONG_BATCH_SIZE(samplesCnt, batchSamplesCnt);
+	bottomThrow("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, (samplesCnt, batchSamplesCnt));
 
 	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
 	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));

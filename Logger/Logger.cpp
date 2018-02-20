@@ -1,5 +1,20 @@
 #include "Logger.h"
 
+sLogger::sLogger(tDBConnection* logDB, tDebugInfo* DebugParms_) {
+	if (DebugParms_==nullptr) {
+		DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"));
+	} else {
+		DebugParms=DebugParms_;
+	}
+	dest=LOG_TO_ORCL;
+	db=logDB;
+}
+sLogger::sLogger(tDataFile* logFile) {
+	dest=LOG_TO_TEXT;
+	file=logFile;
+}
+sLogger::~sLogger() {}
+
 bool sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV) {
 	if (saveMSE) {
 		if (dest==LOG_TO_ORCL) {

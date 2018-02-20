@@ -176,7 +176,7 @@ bool sNN::FF() {
 
 		//-- activation sets F[l+1] and dF[l+1]
 		FF1start=timeGetTime(); FF1cnt++;
-		safeCall(DebugParms, Activate(l+1));
+		safeCall(Activate(l+1));
 		FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
 
 		//-- feed back to context neurons
@@ -219,7 +219,7 @@ bool sNN::Activate(int level) {
 		retf=-1;
 		break;
 	}
-	if (!(retf==0&&retd==0)) bottomThrow(DebugParms);
+	if (!(retf==0&&retd==0)) bottomThrow("retf=%d ; retd=%d", 2, (retf, retd));
 
 	return true;
 }
@@ -351,13 +351,13 @@ bool sNN::ForwardPass(DataSet* ds, int batchId, bool haveTargets) {
 
 	//-- 2. Feed Forward
 	FFstart=timeGetTime(); FFcnt++;	
-	safeCall(DebugParms, FF());	//if (!FF()) return false;
+	safeCall(FF());	//if (!FF()) return false;
 	FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
 	//-- 3. If we have targets, Calc Error (sets e[], te, updates tse) for the whole batch
 	CEstart=timeGetTime(); CEcnt++;
 	if (haveTargets) {
-		safeCall(DebugParms, calcErr());	// if (!calcErr()) return false;
+		safeCall(calcErr());	// if (!calcErr()) return false;
 	}
 	CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
 
@@ -436,7 +436,7 @@ int sNN::train(DataSet* trs) {
 		for (b=0; b<batchCnt; b++) {
 
 			//-- forward pass, with targets
-			safeCall(DebugParms, ForwardPass(trs, b, true));
+			safeCall(ForwardPass(trs, b, true));
 			//if (!ForwardPass(trs, b, true)) return -1;
 
 			//-- backward pass, with weights update

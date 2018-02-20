@@ -1,6 +1,47 @@
 #pragma once
 #include "SharedUtils.h"
 
+//-- generic (non-classed)
+EXPORT void Trim(char* str) {
+	int l = 0;
+	int i;
+	int r = (int)strlen(str);
+	char ret[MAX_PATH];
+	while (isspace(str[l])>0) l++;
+	while (isspace(str[r-1])>0) r--;
+	for (i = 0; i<(r-l); i++) ret[i] = str[l+i];
+	ret[r-l] = '\0';
+	//strcpy(str, ret);
+	memcpy_s(str, strlen(str), ret, r-l-1);
+}
+EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
+	//-- 1. Put a <separator>-separated list of string values into an array of strings, and returns list length
+	int i = 0;
+	int prevSep = 0;
+	int ListLen = 0;
+	int kaz;
+
+	while (csl[i]!='\0') {
+		kaz = (prevSep==0) ? 0 : 1;
+		if (csl[i]==Separator) {
+			// separator
+			memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
+			StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
+			Trim(StrList[ListLen]);
+			ListLen++;
+			prevSep = i;
+		}
+		i++;
+	}
+	//-- portion of pDesc after the last comma
+	memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
+	StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
+	Trim(StrList[ListLen]);
+
+	return (ListLen+1);
+}
+
+
 sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
 	sprintf_s(stackmsg, 20, "stackmsg start.\n");

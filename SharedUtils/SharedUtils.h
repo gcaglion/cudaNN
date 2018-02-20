@@ -10,3 +10,7 @@
 #include "DBConnection.h"
 #include "FXData.h"
 #include "MT4data.h"
+
+//-- generic (non-classed)
+EXPORT void Trim(char* str);
+EXPORT int cslToArray(char* csl, char Separator, char** StrList);

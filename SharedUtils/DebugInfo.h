@@ -67,8 +67,14 @@ if((block)!=0){\
 if(DebugParms->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-DebugParms->startTime));\
 }
 
-#define FailWithMsg(msg) {}
 
 #define safeCallTop(desc, call) DebugParms->write(DBG_LEVEL_STD, "%s\n", 1, desc); try{ call; } catch(std::exception e) { sprintf_s(DebugParms->stackmsg, "%s\n%s(): Error %d at line %d", DebugParms->stackmsg, __func__, errno, __LINE__); return -1; }
 #define safeCall(call) try{ call; } catch(std::exception e) { sprintf_s(DebugParms->stackmsg, "%s\n%s(): Error %d at line %d", DebugParms->stackmsg, __func__, errno, __LINE__); throw std::runtime_error(DebugParms->stackmsg); }
-#define bottomThrow()  sprintf_s(DebugParms->stackmsg, "%s\n%s(): Error %d at line %d", DebugParms->stackmsg, __func__, errno, __LINE__); throw std::runtime_error(DebugParms->stackmsg);
+#define bottomThrow(mask, varcnt, values) \
+	sprintf_s(DebugParms->stackmsg, "%s\n%s(): Error %d at line %d", DebugParms->stackmsg, __func__, errno, __LINE__); \
+	/*--- missing variable parameters ---*/ \
+printf("%s\n", DebugParms->stackmsg);	\
+throw std::runtime_error(DebugParms->stackmsg);
+
+
+

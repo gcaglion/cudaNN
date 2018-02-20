@@ -1,7 +1,6 @@
 #pragma once
 
 #include "..\CommonEnv.h"
-#include "../MyUtils/MyUtils.h"
 #include "../MyAlgebra/MyAlgebra.h"
 #include "../TimeSerie/TimeSerie.h"
 
