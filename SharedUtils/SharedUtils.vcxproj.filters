@@ -23,5 +23,23 @@
     <ClInclude Include="SharedUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DataFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DBConnection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FXData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MT4data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

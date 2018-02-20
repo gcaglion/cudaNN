@@ -92,3 +92,23 @@ sFileInfo::sFileInfo(char* Name_, char* Path_, bool append_) {
 sFileInfo::~sFileInfo() {
 	fclose(handle);
 }
+
+sDBConnection::sDBConnection(char* username, char* password, char* connstring, tDebugInfo* DebugParms_) {
+	if (DebugParms_==nullptr) {
+		DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DBConnection.err"));
+	} else {
+		DebugParms=DebugParms_;
+	}
+	strcpy_s(DBUser, 30, username);
+	strcpy_s(DBPassword, 30, password);
+	strcpy_s(DBConnString, 30, connstring);
+	DBCtx=NULL;
+}
+sDBConnection::sDBConnection() {}
+
+sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_) {
+	db=db_;
+	strcpy_s(Symbol, FX_SYMBOL_MAX_LEN, symbol_);
+	strcpy_s(TimeFrame, FX_TIMEFRAME_MAX_LEN, tf_);
+	IsFilled=isFilled_;
+}
