@@ -7,7 +7,7 @@
 
 typedef float numtype;
 
-#define DEBUG_DEFAULT_PATH "C:/temp"
+#define DEBUG_DEFAULT_PATH "C:/temp/logs"
 
 #ifndef EXPORT
 #define EXPORT __declspec(dllexport)

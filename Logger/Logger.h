@@ -24,7 +24,7 @@ EXPORT void Commit(tDebugInfo* DebugParms);
 */
 typedef struct sLogger {
 	int dest;
-	tDebugInfo* dbg;
+	tDebugInfo* DebugParms;
 	tDBConnection* db;
 	tDataFile* file;
 	bool saveNothing=false;
@@ -35,8 +35,12 @@ typedef struct sLogger {
 	bool saveImage=true;
 
 #ifdef __cplusplus
-	EXPORT sLogger(tDebugInfo* DebugProps, tDBConnection* logDB) {
-		dbg=DebugProps;
+	EXPORT sLogger(tDBConnection* logDB, tDebugInfo* DebugParms_) {
+		if (DebugParms_==nullptr) {
+			DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"));
+		} else {
+			DebugParms=DebugParms_;
+		}
 		dest=LOG_TO_ORCL;
 		db=logDB;
 	}
