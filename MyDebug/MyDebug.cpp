@@ -58,6 +58,7 @@ void sDbg::write(int LogType, const char* msg, int argcount, ...) {
 
 sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
+	sprintf_s(stackmsg, 20, "stackmsg start.\n");
 	//-- outFile is created and opened by constructor (if not passed).
 	if (outFile_==nullptr) {
 		try {

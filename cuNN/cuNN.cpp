@@ -1,9 +1,16 @@
 #include "cuNN.h"
 
-sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction_, bool useContext_, bool useBias_) {
+sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction_, bool useContext_, bool useBias_, tDebugInfo* DebugParms_) {
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
 
+	//-- set debug parameters
+	if (DebugParms_==nullptr) {
+		DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("cuNN.err"));
+	} else {
+		DebugParms=DebugParms_;
+	}
+	
 	//-- set input and output basic dimensions (batchsize not considered yet)
 	sampleLen=sampleLen_;
 	predictionLen=predictionLen_;
@@ -169,7 +176,7 @@ bool sNN::FF() {
 
 		//-- activation sets F[l+1] and dF[l+1]
 		FF1start=timeGetTime(); FF1cnt++;
-		if (!Activate(l+1)) return false;
+		safeCall(DebugParms, Activate(l+1));
 		FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
 
 		//-- feed back to context neurons
@@ -183,7 +190,7 @@ bool sNN::FF() {
 }
 bool sNN::Activate(int level) {
 	// sets F, dF
-	int ret, retd;
+	int retf, retd;
 	int skipBias=(useBias&&level!=(levelsCnt-1))?1:0;	//-- because bias neuron does not exits in outer layer
 	int nc=nodesCnt[level]-skipBias;
 	numtype* va=&a[levelFirstNode[level]+skipBias];
@@ -192,26 +199,29 @@ bool sNN::Activate(int level) {
 
 	switch (ActivationFunction[level]) {
 	case NN_ACTIVATION_TANH:
-		ret=Tanh(nc, va, vF);
+		retf=Tanh(nc, va, vF);
 		retd=dTanh(nc, va, vdF);
+		retd=-1;
 		break;
 	case NN_ACTIVATION_EXP4:
-		ret=Exp4(nc, va, vF);
+		retf=Exp4(nc, va, vF);
 		retd=dExp4(nc, va, vdF);
 		break;
 	case NN_ACTIVATION_RELU:
-		ret=Relu(nc, va, vF);
+		retf=Relu(nc, va, vF);
 		retd=dRelu(nc, va, vdF);
 		break;
 	case NN_ACTIVATION_SOFTPLUS:
-		ret=SoftPlus(nc, va, vF);
+		retf=SoftPlus(nc, va, vF);
 		retd=dSoftPlus(nc, va, vdF);
 		break;
 	default:
-		ret=-1;
+		retf=-1;
 		break;
 	}
-	return(ret==0&&retd==0);
+	if (!(retf==0&&retd==0)) bottomThrow(DebugParms);
+
+	return true;
 }
 bool sNN::calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
@@ -340,14 +350,14 @@ bool sNN::ForwardPass(DataSet* ds, int batchId, bool haveTargets) {
 	LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
 	//-- 2. Feed Forward
-	FFstart=timeGetTime(); FFcnt++;
-	if (!FF()) return false;
+	FFstart=timeGetTime(); FFcnt++;	
+	safeCall(DebugParms, FF());	//if (!FF()) return false;
 	FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
 	//-- 3. If we have targets, Calc Error (sets e[], te, updates tse) for the whole batch
 	CEstart=timeGetTime(); CEcnt++;
 	if (haveTargets) {
-		if (!calcErr()) return false;
+		safeCall(DebugParms, calcErr());	// if (!calcErr()) return false;
 	}
 	CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
 
@@ -407,7 +417,7 @@ int sNN::train(DataSet* trs) {
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
 	//if(!dumpArray(weightsCntTotal, &W[0], "C:/temp/initW.txt")) return -1;
-	if(!loadArray(weightsCntTotal, &W[0], "C:/temp/initW.txt")) return -1;
+	if(!loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt")) return -1;
 
 	//---- 0.3. Init dW, dJdW
 	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
@@ -426,7 +436,8 @@ int sNN::train(DataSet* trs) {
 		for (b=0; b<batchCnt; b++) {
 
 			//-- forward pass, with targets
-			if (!ForwardPass(trs, b, true)) return -1;
+			safeCall(DebugParms, ForwardPass(trs, b, true));
+			//if (!ForwardPass(trs, b, true)) return -1;
 
 			//-- backward pass, with weights update
 			if (!BackwardPass(trs, b, true)) return -1;

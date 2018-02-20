@@ -33,15 +33,16 @@ typedef struct sDbg {
 	bool timing;
 	DWORD startTime;
 
+	char errmsg[1024];
+	char stackmsg[32768];
+
 #ifdef __cplusplus
 	//-- constructors
 	EXPORT sDbg(int level_=DBG_LEVEL_DEFAULT, int dest_=DBG_DEST_DEFAULT, tFileInfo* outFile_=nullptr, bool timing_=false, bool PauseOnError_=true, bool ThreadSafeLogging_=false);
 	~sDbg() {}
 
-
-	char* getCurrTimeS();
 	EXPORT void write(int cat, const char* msg, int argcount, ...);
-
+	EXPORT void compose(const char* msg, int argcount, ...);
 private:
 	template <typename T> void argOut(int msgType, char* submsg, T arg){
 		if (msgType==DBG_LEVEL_ERR) {
@@ -56,7 +57,6 @@ private:
 		}
 	}
 
-	char errmsg[1024];
 #endif
 
 } tDebugInfo;
@@ -79,3 +79,9 @@ if((block)!=0){\
 } else{\
 if(DBG->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-DBG->startTime));\
 }
+
+#define FailWithMsg(msg) {}
+
+#define safeCallTop(dbg, desc, call) dbg->write(DBG_LEVEL_STD, "%s\n", 1, desc); try{ call; } catch(std::exception e) { sprintf_s(dbg->stackmsg, "%s\n%s(): Error %d at line %d", dbg->stackmsg, __func__, errno, __LINE__); return -1; }
+#define safeCall(dbg, call) try{ call; } catch(std::exception e) { sprintf_s(dbg->stackmsg, "%s\n%s(): Error %d at line %d", dbg->stackmsg, __func__, errno, __LINE__); throw std::runtime_error(dbg->stackmsg); }
+#define bottomThrow(dbg)  sprintf_s(dbg->stackmsg, "%s\n%s(): Error %d at line %d", dbg->stackmsg, __func__, errno, __LINE__); throw std::runtime_error(dbg->stackmsg);

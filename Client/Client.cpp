@@ -38,16 +38,6 @@ int main() {
 	tDebugInfo* persistorDbg=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("Persistor.log", DEBUG_DEFAULT_PATH));
 	//--
 
-#define DBG		clientDbg
-#define desc	"create DBConnection for FX History DB"
-#define block	FXDB=new tDBConnection("History", "HistoryPwd", "ALGO")
-
-	try { block; }
-	catch (const char* e) {
-			clientDbg->write(DBG_LEVEL_ERR, "%s failed. Exception %s \n", 2, desc, e);
-			return -1;
-	}
-
 	safeCallE(clientDbg, "create DBConnection for FX History DB", FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));
 	safeCallE(clientDbg, "create FXData for EURUSD H1", eurusdH1=new tFXData(FXDB, "EURUSD", "H1", false));
 	safeCallE(persistorDbg, "create DBConnection for Persistor DB", persistDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO"));
@@ -109,7 +99,17 @@ int main() {
 	safeCallE(clientDbg, "create run   dataset from timeserie", runSet=new DataSet(fxTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R));
 
 	//-- 7. train with training Set
-	safeCallR(clientDbg, "train with train Set", trNN->train(trainSet));
+
+/*	#define block trNN->train(trainSet)
+	#define DBG clientDbg
+	try { block; }
+	catch (std::exception e) {
+			sprintf_s(DBG->stackmsg, "%s\n%s(): Error %d at line %d", DBG->stackmsg, __func__, errno, __LINE__);
+			DBG->write(DBG_LEVEL_ERR, "%s failed. Exception %s \n", 2, DBG->stackmsg, e.what());
+			return -1;
+	}
+*/
+	safeCallTop(clientDbg, "train with train Set", trNN->train(trainSet));
 
 	//-- 7.1. persist training
 	safeCallR(persistorDbg, "persist MSE", persistor->SaveMSE(trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV));
