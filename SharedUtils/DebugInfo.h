@@ -69,15 +69,12 @@ if((block)!=0){\
 if(DebugParms->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-DebugParms->startTime));\
 }
 
-
-//#define safeCallTop(desc, call) DebugParms->write(DBG_LEVEL_STD, "%s\n", 1, desc); try{ call; } catch(std::exception e) { sprintf_s(DebugParms->stackmsg, "%s\n%s(): Error %d at line %d", DebugParms->stackmsg, __func__, errno, __LINE__); return -1; }
-
 #define safeCall_(desc, block, arg3, arg4) \
 if(DebugParms->timing) DebugParms->startTime=timeGetTime(); \
 DebugParms->write(DBG_LEVEL_STD, "%s\n", 1, desc); \
 try {block;} catch (std::exception e) { \
-	DebugParms->write(DBG_LEVEL_ERR, "%s failed. Exception %s \n", 2, desc, e.what()); \
-	return -1; \
+DebugParms->write(DBG_LEVEL_ERR, "%s failed. Exception %s \n", 2, desc, e.what()); \
+	return false; \
 } \
 if(DebugParms->timing) printf("%s : elapsed time=%ld \n", desc, (DWORD)(timeGetTime()-DebugParms->startTime));
 
@@ -98,13 +95,13 @@ throw std::runtime_error(DebugParms->stackmsg);\
 
 #define safeCall(...) safeCall_Pick(__VA_ARGS__)(__VA_ARGS__)
 */
-#define safeCall_1_args(call) safeCall_(call,0 , 0, 0)
+#define safeCall_1_args(call) safeCall_("blah", call, 0, 0)
 #define safeCall_2_args(desc, call) safeCall_(desc, call, 0, 0)
 #define safeCall_3_args(desc, call, arg3) safeCall_(desc, call, arg3, 0)
 #define safeCall_4_args(desc, call, arg3, arg4) safeCall_(desc, call, arg3, arg4)
 
 #define GET_4TH_ARG(arg1, arg2, arg3, arg4, ...) arg4
-#define safeCall_Pick(...) GET_4TH_ARG(__VA_ARGS__, safeCall_3_args, safeCall_2_args, safeCall_1_args, )
+#define safeCall_Pick(...) GET_4TH_ARG(__VA_ARGS__, safeCall_3_args, safeCall_1_args, safeCall_2_args, )
 
 #define safeCall(...) safeCall_Pick(__VA_ARGS__)(__VA_ARGS__)
 

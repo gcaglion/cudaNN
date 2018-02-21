@@ -5,7 +5,7 @@
 #include "../Logger/Logger.h"
 #include "../MyAlgebra/MyAlgebra.h"
 
-int main() {
+bool main() {
 
 	//dbgcli();
 	//dbgcli2();
@@ -115,11 +115,11 @@ int main() {
 	}
 	catch (std::exception e) {
 		DebugParms->write(DBG_LEVEL_ERR,"main() received an exception: %s\nExiting...\n", 1, e.what());
-		return -1;
+		return false;
 	}
 	printf("Finished. Total elapsed time=%ld \n", (DWORD)(timeGetTime()-mainStart));
 
 	system("pause");
-	return 0;
+	return true;
 
 }
