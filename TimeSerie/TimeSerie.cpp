@@ -1,76 +1,76 @@
 //#include <vld.h>
 #include "TimeSerie.h"
 
-int sTS::LoadOHLCVdata(char* date0) {
+bool sTS::LoadOHLCVdata(char* date0) {
 
-	if (OraConnect(DebugParms, FXData->db)!=0) return -1;
-	if (Ora_GetFlatOHLCV(DebugParms, FXData->db, FXData->Symbol, FXData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)!=0) return -1;
+	if (OraConnect(dbg, FXData->db)!=0) return false;
+	if (Ora_GetFlatOHLCV(dbg, FXData->db, FXData->Symbol, FXData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)!=0) return false;
 
-	return 0;
+	return true;
 }
 
-int sTS::load(tFXData* tsFXData_, char* pDate0) {
+void sTS::load(tFXData* tsFXData_, char* pDate0) {
 	FXData=tsFXData_;
 	sourceType=SOURCE_DATA_FROM_FXDB;
-	return (LoadOHLCVdata(pDate0));
+	if (!LoadOHLCVdata(pDate0)) throwE("pDate0=%s", 1, pDate0);
 }
-int sTS::load(tDataFile* tsFileData, char* pDate0) {
-	return -1;
+void sTS::load(tDataFile* tsFileData, char* pDate0) {
+	throwE("", 0);
 }
-int sTS::load(tMT4Data* tsMT4Data, char* pDate0) {
-	return -1;
+void sTS::load(tMT4Data* tsMT4Data, char* pDate0) {
+	throwE("", 0);
 }
-int sTS::dump(char* dumpFileName) {
-	int s,f;
-	FILE* fdump=fopen(dumpFileName, "w");
-	fprintf(fdump, "i, datetime");
-	for (f=0; f<featuresCnt; f++) fprintf(fdump, ",F%d_orig,F%d_tr,F%d_trs", f, f, f);	
-	fprintf(fdump, "\n%d,%s", -1, bdtime);
+void sTS::dump(char* dumpFileName) {
+	int s,f; 
+	tFileInfo* fdump; safeCallEE(fdump=new tFileInfo(dumpFileName));
+	fprintf(fdump->handle, "i, datetime");
+	for (f=0; f<featuresCnt; f++) fprintf(fdump->handle, ",F%d_orig,F%d_tr,F%d_trs", f, f, f);	
+	fprintf(fdump->handle, "\n%d,%s", -1, bdtime);
 	for (f=0; f<featuresCnt; f++) {
-		fprintf(fdump, ",%f", bd[f]);
-		for (int ff=0; ff<(featuresCnt-3); ff++) fprintf(fdump, ",");
+		fprintf(fdump->handle, ",%f", bd[f]);
+		for (int ff=0; ff<(featuresCnt-3); ff++) fprintf(fdump->handle, ",");
 	}
 
 	for (s=0; s<steps; s++) {
-		fprintf(fdump, "\n%d, %s", s, dtime[s]);
+		fprintf(fdump->handle, "\n%d, %s", s, dtime[s]);
 		for (f=0; f<featuresCnt; f++) {
-			fprintf(fdump, ",%f", d[s*featuresCnt+f]);
+			fprintf(fdump->handle, ",%f", d[s*featuresCnt+f]);
 			if (hasTR) {
-				fprintf(fdump, ",%f", d_tr[s*featuresCnt+f]);
+				fprintf(fdump->handle, ",%f", d_tr[s*featuresCnt+f]);
 			} else {
-				fprintf(fdump, ",");
+				fprintf(fdump->handle, ",");
 			}
 			if (hasTRS) {
-				fprintf(fdump, ",%f", d_trs[s*featuresCnt+f]);
+				fprintf(fdump->handle, ",%f", d_trs[s*featuresCnt+f]);
 			} else {
-				fprintf(fdump, ",");
+				fprintf(fdump->handle, ",");
 			}
 		}
 	}
-	fprintf(fdump, "\n");
+	fprintf(fdump->handle, "\n");
 
 	if (hasTR) {
-		fprintf(fdump, "\ntr-min:");
-		for (f=0; f<featuresCnt; f++) fprintf(fdump, ",,,%f", dmin[f]);
-		fprintf(fdump, "\ntr-max:");
-		for (f=0; f<featuresCnt; f++) fprintf(fdump, ",,,%f", dmax[f]);
-		fprintf(fdump, "\n");
+		fprintf(fdump->handle, "\ntr-min:");
+		for (f=0; f<featuresCnt; f++) fprintf(fdump->handle, ",,,%f", dmin[f]);
+		fprintf(fdump->handle, "\ntr-max:");
+		for (f=0; f<featuresCnt; f++) fprintf(fdump->handle, ",,,%f", dmax[f]);
+		fprintf(fdump->handle, "\n");
 	}
 	if (hasTRS) {
-		fprintf(fdump, "\nscaleM:");
-		for (f=0; f<featuresCnt; f++) fprintf(fdump, ",,,%f", scaleM[f]);
-		fprintf(fdump, "\nscaleP:");
-		for (f=0; f<featuresCnt; f++) fprintf(fdump, ",,,%f", scaleP[f]);
-		fprintf(fdump, "\n");
+		fprintf(fdump->handle, "\nscaleM:");
+		for (f=0; f<featuresCnt; f++) fprintf(fdump->handle, ",,,%f", scaleM[f]);
+		fprintf(fdump->handle, "\nscaleP:");
+		for (f=0; f<featuresCnt; f++) fprintf(fdump->handle, ",,,%f", scaleP[f]);
+		fprintf(fdump->handle, "\n");
 
-		//fprintf(fdump, "scaleM:,,%f,,,%f,,,%f,,,%f,,,%f \n", scaleM[0], scaleM[1], scaleM[2], scaleM[3], scaleM[4]);
-		//fprintf(fdump, "scaleP:,,%f,,,%f,,,%f,,,%f,,,%f \n", scaleP[0], scaleP[1], scaleP[2], scaleP[3], scaleP[4]);
+		//fprintf(fdump->handle, "scaleM:,,%f,,,%f,,,%f,,,%f,,,%f \n", scaleM[0], scaleM[1], scaleM[2], scaleM[3], scaleM[4]);
+		//fprintf(fdump->handle, "scaleP:,,%f,,,%f,,,%f,,,%f,,,%f \n", scaleP[0], scaleP[1], scaleP[2], scaleP[3], scaleP[4]);
 	}
 
-	fclose(fdump);
-	return 0;
+	delete fdump;
+
 }
-int sTS::transform(int dt_) {
+void sTS::transform(int dt_) {
 	dt=dt_;
 	for (int s=0; s<steps; s++) {
 		for (int f=0; f<featuresCnt; f++) {
@@ -101,12 +101,11 @@ int sTS::transform(int dt_) {
 	}
 
 	hasTR=true;
-	return 0;
 }
-int sTS::scale(numtype scaleMin_, numtype scaleMax_) {
+void sTS::scale(numtype scaleMin_, numtype scaleMax_) {
 	//-- ScaleMin/Max depend on the core, scaleM/P are specific for each feature
 	
-	if (!hasTR) return -1; //-- must transform before scaling!
+	if (!hasTR) throwE("-- must transform before scaling! ---", 0);
 
 	for (int f=0; f<featuresCnt; f++) {
 		scaleM[f] = (scaleMax_-scaleMin_)/(dmax[f]-dmin[f]);
@@ -120,18 +119,17 @@ int sTS::scale(numtype scaleMin_, numtype scaleMax_) {
 	}
 
 	hasTRS=true;
-	return 0;
 }
 
-int sTS::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
+void sTS::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
 	dt=dt_;
-	FILE* ftrs=nullptr;
+	tFileInfo* ftrs=nullptr; safeCallEE(ftrs=new tFileInfo("TransformScale.out"));
 
 	int s, f;
 	//-- first, transform
 	for (s=0; s<steps; s++) {
 		for (f=0; f<featuresCnt; f++) {
-			if (DebugParms->level>1) fprintf(ftrs, ",%f", d[s*featuresCnt+f]);
+			if (dbg->level>1) fprintf(ftrs->handle, ",%f", d[s*featuresCnt+f]);
 			switch (dt) {
 			case DT_NONE:
 				break;
@@ -168,16 +166,14 @@ int sTS::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
 	for (s=0; s<steps; s++) {
 		for (f=0; f<featuresCnt; f++) {
 			d_trs[s*featuresCnt+f]=d_tr[s*featuresCnt+f]*scaleM[f]+scaleP[f];
-			if (DebugParms->level>1) fprintf(ftrs, "%d,%s,,,%f", s, dtime[s], d_trs[s*featuresCnt+f]);
+			if (dbg->level>1) fprintf(ftrs->handle, "%d,%s,,,%f", s, dtime[s], d_trs[s*featuresCnt+f]);
 		}
-		if (DebugParms->level>1) fprintf(ftrs, "\n");
+		if (dbg->level>1) fprintf(ftrs->handle, "\n");
 	}
-	if (DebugParms->level>1) fclose(ftrs);
+	delete ftrs;
 
-	return 0;
 }
-int sTS::unTrS(numtype scaleMin_, numtype scaleMax_) {
-	return 0;
+void sTS::unTrS(numtype scaleMin_, numtype scaleMax_) {
 }
 
 int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
@@ -185,21 +181,21 @@ int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 	return 0;
 }
 
-sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDebugInfo* DebugParms_) {
-	if (DebugParms_==nullptr) {
-		DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"));
+sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_) {
+	if (dbg_==nullptr) {
+		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"));
 	} else {
-		DebugParms=DebugParms_;
+		dbg=dbg_;
 	}
 	sourceTS=sourceTS_;
 	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
 	sampleLen=sampleLen_; 
 	targetLen=targetLen_; 
 	samplesCnt=sourceTS->steps-sampleLen-targetLen+1;
-	if (samplesCnt<1) bottomThrow("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
+	if (samplesCnt<1) throwE("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;
-	if ((batchCnt*batchSamplesCnt)!=samplesCnt) bottomThrow("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
+	if ((batchCnt*batchSamplesCnt)!=samplesCnt) throwE("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
 	
 	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
 	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
@@ -293,7 +289,7 @@ bool sDataSet::isSelected(int ts_f) {
 	}
 	return false;
 }
-void sDataSet::buildFromTS(sTS* ts) {
+void sDataSet::buildFromTS(TS* ts) {
 
 	int s, b, f;
 

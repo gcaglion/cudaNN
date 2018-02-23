@@ -1,14 +1,14 @@
 #include "cuNN.h"
 
-sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction_, bool useContext_, bool useBias_, tDebugInfo* DebugParms_) {
+sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction_, bool useContext_, bool useBias_, tDbg* dbg_) {
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
 
 	//-- set debug parameters
-	if (DebugParms_==nullptr) {
-		DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("cuNN.err"));
+	if (dbg_==nullptr) {
+		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("cuNN.err"));
 	} else {
-		DebugParms=DebugParms_;
+		dbg=dbg_;
 	}
 	
 	//-- set input and output basic dimensions (batchsize not considered yet)
@@ -23,7 +23,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 	setLayout(LevelRatioS_, 1);
 
 	//-- weights can be set now, as they are not affected by batchSampleCnt
-	if (!createWeights()) throw FAIL_MALLOC_W;
+	safeCallEE(createWeights());
 
 	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
 	Alg=new Algebra();
@@ -35,8 +35,8 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 	setActivationFunction(ActivationFunction_);
 
 	//-- 3. malloc device-based scalar value, to be used by reduction functions (sum, ssum, ...)
-	if (myMalloc(&se, 1)!=0) throw FAIL_MALLOC_SCALAR;
-	if (myMalloc(&tse, 1)!=0) throw FAIL_MALLOC_SCALAR;
+	safeCallEB(myMalloc(&se, 1));
+	safeCallEB(myMalloc(&tse, 1));
 
 }
 sNN::~sNN() {
@@ -171,12 +171,12 @@ bool sNN::FF() {
 
 		//-- actual feed forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
 		FF0start=timeGetTime(); FF0cnt++;
-		if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C)!=0) return false;
+		safeCallBB(Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C));
 		FF0timeTot+=((DWORD)(timeGetTime()-FF0start));
 
 		//-- activation sets F[l+1] and dF[l+1]
 		FF1start=timeGetTime(); FF1cnt++;
-		safeCall(Activate(l+1));
+		safeCallEB(Activate(l+1));
 		FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
 
 		//-- feed back to context neurons
@@ -218,45 +218,42 @@ bool sNN::Activate(int level) {
 		retf=-1;
 		break;
 	}
-	if (!(retf==0&&retd==0)) bottomThrow("retf=%d ; retd=%d", 2, retf, retd);
+	if (!(retf==0&&retd==0)) throwB("retf=%d ; retd=%d", 2, retf, retd);
 
 	return true;
 }
 bool sNN::calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
-	if (Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e)!=0) return false;	// e=F[2]-u
-	if (Vssum(nodesCnt[levelsCnt-1], e, se)!=0) return false;											// se=ssum(e) 
-	if (Vadd(1, tse, 1, se, 1, tse)!=0) return false;													// tse+=se;
+	safeCallBB(Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e));	// e=F[2]-u
+	safeCallBB(Vssum(nodesCnt[levelsCnt-1], e, se));									// se=ssum(e) 
+	safeCallBB(Vadd(1, tse, 1, se, 1, tse));											// tse+=se;
 
 	return true;
 }
 
-bool sNN::mallocNeurons() {
+void sNN::mallocNeurons() {
 	//-- malloc neurons (on either CPU or GPU)
-	if (myMalloc(&a, nodesCntTotal)!=0) return false;
-	if (myMalloc(&F, nodesCntTotal)!=0) return false;
-	if (myMalloc(&dF, nodesCntTotal)!=0) return false;
-	if (myMalloc(&edF, nodesCntTotal)!=0) return false;
-	if (myMalloc(&e, nodesCnt[levelsCnt-1])!=0) return false;
-	if (myMalloc(&u, nodesCnt[levelsCnt-1])!=0) return false;
-	return true;
+	safeCallEB(myMalloc(&a, nodesCntTotal));
+	safeCallEB(myMalloc(&F, nodesCntTotal));
+	safeCallEB(myMalloc(&dF, nodesCntTotal));
+	safeCallEB(myMalloc(&edF, nodesCntTotal));
+	safeCallEB(myMalloc(&e, nodesCnt[levelsCnt-1]));
+	safeCallEB(myMalloc(&u, nodesCnt[levelsCnt-1]));
 }
-bool sNN::initNeurons(){
+void sNN::initNeurons(){
 	//--
-	if (Vinit(nodesCntTotal, F, 0, 0)!=0) return false;
+	safeCallEB(Vinit(nodesCntTotal, F, 0, 0));
 	//---- the following are needed by cublas version of MbyM
-	if (Vinit(nodesCntTotal, a, 0, 0)!=0) return false;
-	if (Vinit(nodesCntTotal, dF, 0, 0)!=0) return false;
-	if (Vinit(nodesCntTotal, edF, 0, 0)!=0) return false;
+	safeCallEB(Vinit(nodesCntTotal, a, 0, 0));
+	safeCallEB(Vinit(nodesCntTotal, dF, 0, 0));
+	safeCallEB(Vinit(nodesCntTotal, edF, 0, 0));
 
 	if (useBias) {
 		for (int l=0; l<(levelsCnt-1); l++) {
 			//-- set every bias node's F=1
-			if (Vinit(1, &F[levelFirstNode[l]], 1, 0)!=0) return false;
+			safeCallEB(Vinit(1, &F[levelFirstNode[l]], 1, 0));
 		}
 	}
-
-	return true;
 }
 void sNN::destroyNeurons() {
 	myFree(a);
@@ -266,13 +263,12 @@ void sNN::destroyNeurons() {
 	myFree(e);
 	myFree(u);
 }
-bool sNN::createWeights() {
+void sNN::createWeights() {
 	//-- malloc weights (on either CPU or GPU)
-	if (myMalloc(&W, weightsCntTotal)!=0) return false;
-	if (myMalloc(&prevW, weightsCntTotal)!=0) return false;
-	if (myMalloc(&dW, weightsCntTotal)!=0) return false;
-	if (myMalloc(&dJdW, weightsCntTotal)!=0) return false;
-	return true;
+	safeCallEB(myMalloc(&W, weightsCntTotal));
+	safeCallEB(myMalloc(&prevW, weightsCntTotal));
+	safeCallEB(myMalloc(&dW, weightsCntTotal));
+	safeCallEB(myMalloc(&dJdW, weightsCntTotal));
 }
 void sNN::destroyWeights() {
 	myFree(W);
@@ -288,7 +284,7 @@ bool sNN::BP_std(){
 	for (int l = levelsCnt-1; l>0; l--) {
 		if (l==(levelsCnt-1)) {
 			//-- top level only
-			if (VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return false;	// edF(l) = e * dF(l)
+			safeCallBB(VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]));	// edF(l) = e * dF(l)
 		} else {
 			//-- lower levels
 			Ay=nodesCnt[l+1]/batchSamplesCnt;
@@ -304,8 +300,8 @@ bool sNN::BP_std(){
 			Cstart=levelFirstNode[l];
 			C=&edF[Cstart];
 
-			if (Alg->MbyM(Ay, Ax, 1, true, A, By, Bx, 1, false, B, C)!=0) return false;	// edF(l) = edF(l+1) * WT(l)
-			if (VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]])!=0) return false;	// edF(l) = edF(l) * dF(l)
+			safeCallBB(Alg->MbyM(Ay, Ax, 1, true, A, By, Bx, 1, false, B, C));	// edF(l) = edF(l+1) * WT(l)
+			safeCallBB(VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]));	// edF(l) = edF(l) * dF(l)
 		}
 
 		//-- common	
@@ -323,7 +319,7 @@ bool sNN::BP_std(){
 		C=&dJdW[Cstart];
 
 		// dJdW(l-1) = edF(l) * F(l-1)
-		if (Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, true, B, C)!=0) return false;
+		safeCallBB(Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, true, B, C));
 
 	}
 	return true;
@@ -331,10 +327,10 @@ bool sNN::BP_std(){
 bool sNN::WU_std(){
 
 	//-- 1. calc dW = LM*dW - LR*dJdW
-	if (Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW)!=0) return false;
+	safeCallBB(Vdiff(weightsCntTotal, dW, LearningMomentum, dJdW, LearningRate, dW));
 
 	//-- 2. update W = W + dW for current batch
-	if (Vadd(weightsCntTotal, W, 1, dW, 1, W)!=0) return false;
+	safeCallBB(Vadd(weightsCntTotal, W, 1, dW, 1, W));
 
 	return true;
 }
@@ -342,21 +338,21 @@ bool sNN::ForwardPass(DataSet* ds, int batchId, bool haveTargets) {
 
 	//-- 1. load samples (and targets, if passed) from single batch in dataset onto input layer
 	LDstart=timeGetTime(); LDcnt++;
-	if (Alg->h2d(&F[(useBias)?1:0], &ds->sampleBFS[batchId*InputCount], InputCount*sizeof(numtype), true)!=0) return false;
+	safeCallBB(Alg->h2d(&F[(useBias) ? 1 : 0], &ds->sampleBFS[batchId*InputCount], InputCount*sizeof(numtype), true));
 	if (haveTargets) {
-		if (Alg->h2d(&u[0], &ds->targetBFS[batchId*OutputCount], OutputCount*sizeof(numtype), true)!=0) return false;
+		safeCallBB(Alg->h2d(&u[0], &ds->targetBFS[batchId*OutputCount], OutputCount*sizeof(numtype), true));
 	}
 	LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
 	//-- 2. Feed Forward
 	FFstart=timeGetTime(); FFcnt++;	
-	safeCall(FF());	//if (!FF()) return false;
+	safeCallEB(FF());
 	FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
 	//-- 3. If we have targets, Calc Error (sets e[], te, updates tse) for the whole batch
 	CEstart=timeGetTime(); CEcnt++;
 	if (haveTargets) {
-		safeCall(calcErr());	// if (!calcErr()) return false;
+		safeCallEB(calcErr());
 	}
 	CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
 
@@ -366,13 +362,13 @@ bool sNN::BackwardPass(DataSet* ds, int batchId, bool updateWeights) {
 
 	//-- 1. BackPropagate, calc dJdW for for current batch
 	BPstart=timeGetTime(); BPcnt++;
-	if (!BP_std()) return false;
+	safeCallBB(BP_std());
 	BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
 
 	//-- 2. Weights Update for current batch
 	WUstart=timeGetTime(); WUcnt++;
 	if (updateWeights) {
-		if (!WU_std()) return false;
+		safeCallBB(WU_std());
 	}
 	WUtimeTot+=((DWORD)(timeGetTime()-WUstart));
 
@@ -393,7 +389,7 @@ bool sNN::epochMetCriteria(int epoch, DWORD starttime, bool displayProgress) {
 
 	return false;
 }
-int sNN::train(DataSet* trs) {
+void sNN::train(DataSet* trs) {
 	int l;
 	DWORD epoch_starttime;
 	DWORD training_starttime=timeGetTime();
@@ -406,8 +402,8 @@ int sNN::train(DataSet* trs) {
 	setLayout("", batchSamplesCnt);
 
 	//-- 0. malloc + init neurons
-	if (!mallocNeurons()) return -1;
-	if (!initNeurons()) return -1;
+	safeCallEE(mallocNeurons());
+	safeCallEE(initNeurons());
 
 	//-- malloc mse[maxepochs], always host-side
 	mseT=(numtype*)malloc(MaxEpochs*sizeof(numtype));
@@ -416,11 +412,11 @@ int sNN::train(DataSet* trs) {
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
 	//if(!dumpArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt")) return -1;
-	if(!loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt")) return -1;
+	safeCallEB(loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
 
 	//---- 0.3. Init dW, dJdW
-	if (Vinit(weightsCntTotal, dW, 0, 0)!=0) return -1;
-	if (Vinit(weightsCntTotal, dJdW, 0, 0)!=0) return -1;
+	safeCallEB(Vinit(weightsCntTotal, dW, 0, 0));
+	safeCallEB(Vinit(weightsCntTotal, dJdW, 0, 0));
 
 	//-- 1. for every epoch, train all batch with one Forward pass ( loadSamples(b)+FF()+calcErr() ), and one Backward pass (BP + calcdW + W update)
 	for (epoch=0; epoch<MaxEpochs; epoch++) {
@@ -429,17 +425,17 @@ int sNN::train(DataSet* trs) {
 		epoch_starttime=timeGetTime();
 
 		//-- 1.0. reset epoch tse
-		if (Vinit(1, tse, 0, 0)!=0) return -1;
+		safeCallEB(Vinit(1, tse, 0, 0));
 
 		//-- 1.1. train one batch at a time
 		for (b=0; b<batchCnt; b++) {
 
 			//-- forward pass, with targets
-			safeCall(ForwardPass(trs, b, true));
+			safeCallEB(ForwardPass(trs, b, true));
 			//if (!ForwardPass(trs, b, true)) return -1;
 
 			//-- backward pass, with weights update
-			if (!BackwardPass(trs, b, true)) return -1;
+			safeCallEB(BackwardPass(trs, b, true));
 
 		}
 
@@ -451,8 +447,8 @@ int sNN::train(DataSet* trs) {
 
 	//-- 2. test run. need this to make sure all batches pass through the net with the latest weights, and training targets
 	TRstart=timeGetTime(); TRcnt++;
-	if (Vinit(1, tse, 0, 0)!=0) return -1;
-	for (b=0; b<batchCnt; b++) if(!ForwardPass(trs, b, true)) return -1;
+	safeCallEB(Vinit(1, tse, 0, 0));
+	for (b=0; b<batchCnt; b++) safeCallEB(ForwardPass(trs, b, true));
 	TRtimeTot+=((DWORD)(timeGetTime()-TRstart));
 
 	//-- calc and display final epoch MSE
@@ -479,9 +475,8 @@ int sNN::train(DataSet* trs) {
 	//-- feee neurons()
 	destroyNeurons();
 
-	return 0;
 }
-int sNN::run(DataSet* runSet, numtype* runW) {
+void sNN::run(DataSet* runSet, numtype* runW) {
 
 	//-- set Neurons Layout based on batchSampleCount of run set
 	batchSamplesCnt=runSet->batchSamplesCnt;
@@ -489,11 +484,11 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 	setLayout("", runSet->batchSamplesCnt);
 
 	//-- malloc + init neurons
-	if (!mallocNeurons()) return -1;
-	if (!initNeurons()) return -1;
+	safeCallEE(mallocNeurons());
+	safeCallEE(initNeurons());
 
 	//-- reset tse=0
-	if (Vinit(1, tse, 0, 0)!=0) return -1;
+	safeCallEB(Vinit(1, tse, 0, 0)!=0);
 
 	//-- load weights (if needed)
 	if (runW!=nullptr) {
@@ -503,16 +498,16 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 	for (int b=0; b<batchCnt; b++) {
 
 		//-- 1.1.1.  load samples/targets onto GPU
-		if (Alg->h2d(&F[(useBias)?1:0], &runSet->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true)!=0) return -1;
-		if (Alg->h2d(&u[0], &runSet->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true)!=0) return -1;
+		safeCallEB(Alg->h2d(&F[(useBias) ? 1 : 0], &runSet->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true));
+		safeCallEB(Alg->h2d(&u[0], &runSet->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true));
 
 		//-- 1.1.2. Feed Forward
-		if (!FF()) return -1;
+		safeCallEB(FF());
 
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
-		if (Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype))!=0) return -1;
+		safeCallEB(Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[levelsCnt-1]], OutputCount*sizeof(numtype)));
 
-		calcErr();
+		safeCallEB(calcErr());
 	}
 
 	//-- calc and display final epoch MSE
@@ -524,12 +519,10 @@ int sNN::run(DataSet* runSet, numtype* runW) {
 	//-- convert prediction from BFS to SFB (fol all batches at once)
 	runSet->BFS2SFBfull(runSet->targetLen, runSet->predictionBFS, runSet->predictionSFB);
 	//-- extract first bar only from target/prediction SFB
-	if (Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->targetSFB, 0, runSet->target0, true)!=0) return -1;
-	if (Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->predictionSFB, 0, runSet->prediction0, true)!=0) return -1;
+	safeCallEB(Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->targetSFB, 0, runSet->target0, true));
+	safeCallEB(Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->predictionSFB, 0, runSet->prediction0, true));
 
 
 	//-- feee neurons()
 	destroyNeurons();
-
-	return 0;
 }

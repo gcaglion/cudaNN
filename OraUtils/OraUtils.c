@@ -208,7 +208,7 @@ void getCurrentTime(char* ot) {
 	time_t mytime = time(NULL);
 	sprintf(ot, "%s", ctime(&mytime));
 }
-void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount, ...) {
+void LogWrite(tDbg* dbg, int LogType, const char* msg, int argcount, ...) {
 	// pLogLevel=	0 (No screen, No file) | 1 (Screen, No file) | 2 (Screen AND File)
 	int n;
 	char*			arg_s;
@@ -220,17 +220,17 @@ void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount
 	int				prev_im = 0;
 	//char timestamp[60];
 
-	if (DebugParms->level==0&&LogType==DBG_LEVEL_STD) return;
+	if (dbg->level==0&&LogType==DBG_LEVEL_STD) return;
 
-	if (DebugParms->ThreadSafeLogging>0) WaitForSingleObject(DebugParms->Mtx, INFINITE);
+	if (dbg->ThreadSafeLogging>0) WaitForSingleObject(dbg->Mtx, INFINITE);
 /*
 	//-- Opens Log file only once
-	if (DebugParms->fIsOpen!=1) {
-		strcpy(DebugParms->FullfName, DebugParms->fPath); strcat(DebugParms->FullfName, "/"); strcat(DebugParms->FullfName, DebugParms->fName);
-		DebugParms->outFile->handle = fopen(DebugParms->FullfName, "a");
-		DebugParms->fIsOpen = 1;
+	if (dbg->fIsOpen!=1) {
+		strcpy(dbg->FullfName, dbg->fPath); strcat(dbg->FullfName, "/"); strcat(dbg->FullfName, dbg->fName);
+		dbg->outFile->handle = fopen(dbg->FullfName, "a");
+		dbg->fIsOpen = 1;
 		getCurrentTime(timestamp);
-		fprintf(DebugParms->outFile->handle, "\n---------- Process %d Started New Log at %s ----------\n", GetCurrentProcessId(), timestamp);
+		fprintf(dbg->outFile->handle, "\n---------- Process %d Started New Log at %s ----------\n", GetCurrentProcessId(), timestamp);
 	}
 */
 	va_start(arguments, argcount);
@@ -243,37 +243,37 @@ void LogWrite(tDebugInfo* DebugParms, int LogType, const char* msg, int argcount
 			prev_im = im+2;
 			if (msg[im+1]==115) {   // "s"
 				arg_s = va_arg(arguments, char*);
-				if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_s);
-				if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_LEVEL_ERR)	fprintf(DebugParms->outFile->handle, submsg, arg_s);
+				if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_s);
+				if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR)	fprintf(dbg->outFile->handle, submsg, arg_s);
 			} else if (msg[im+1]==100) {   // "d"
 				arg_d = va_arg(arguments, int);
-				if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_d);
-				if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_LEVEL_ERR)	fprintf(DebugParms->outFile->handle, submsg, arg_d);
+				if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_d);
+				if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR)	fprintf(dbg->outFile->handle, submsg, arg_d);
 			} else if (msg[im+1]==112) {   // "p"
 				arg_d = va_arg(arguments, long);
-				if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_d);
-				if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_LEVEL_ERR)	fprintf(DebugParms->outFile->handle, submsg, arg_d);
+				if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_d);
+				if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR)	fprintf(dbg->outFile->handle, submsg, arg_d);
 			} else {   // this could be 67 ("f") or any mask before "f" -> in any case, it's a double
 				arg_f = va_arg(arguments, double);
-				if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_f);
-				if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_LEVEL_ERR)	fprintf(DebugParms->outFile->handle, submsg, arg_f);
+				if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_f);
+				if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR)	fprintf(dbg->outFile->handle, submsg, arg_f);
 			}
 		}
 		im++;
 	} while (im<strlen(msg));
 
 	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
-	if (DebugParms->level==1||DebugParms->level==3||LogType==DBG_LEVEL_ERR) printf(submsg);
-	if (DebugParms->level==2||DebugParms->level==3||LogType==DBG_LEVEL_ERR) fprintf(DebugParms->outFile->handle, submsg);
-	if (LogType==DBG_LEVEL_ERR && DebugParms->PauseOnError) { printf("Press any key..."); getchar(); }
+	if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg);
+	if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR) fprintf(dbg->outFile->handle, submsg);
+	if (LogType==DBG_LEVEL_ERR && dbg->PauseOnError) { printf("Press any key..."); getchar(); }
 
 	va_end(arguments);
 
-	if (DebugParms->ThreadSafeLogging>0) ReleaseMutex(DebugParms->Mtx);
+	if (dbg->ThreadSafeLogging>0) ReleaseMutex(dbg->Mtx);
 }
 
 //=== DB common functions
-EXPORT bool  OraConnect(tDebugInfo* DebugParms, tDBConnection* DBConnInfo) {
+EXPORT bool  OraConnect(tDbg* dbg, tDBConnection* DBConnInfo) {
 
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
@@ -284,7 +284,7 @@ EXPORT bool  OraConnect(tDebugInfo* DebugParms, tDBConnection* DBConnInfo) {
 	/* EXEC SQL END DECLARE SECTION; */ 
 
 
-	//LogWrite_C(DebugParms, "%s About to execute connect with %s , %s , %s\n", 4, timestamp_C, pUserName, pPassword, pDBString);
+	//LogWrite_C(dbg, "%s About to execute connect with %s , %s , %s\n", 4, timestamp_C, pUserName, pPassword, pDBString);
 
 	char* vPath = getenv("PATH");
 	char* vOH = getenv("ORACLE_HOME");
@@ -388,14 +388,14 @@ EXPORT bool  OraConnect(tDebugInfo* DebugParms, tDBConnection* DBConnInfo) {
 	if (sqlca.sqlcode==0) {
 		//memcpy(DBConnInfo->Ctx, vCtx, sizeof(sql_context));
 		DBConnInfo->DBCtx = vCtx;
-		//DebugParms->DBCtx = vCtx;
-		LogWrite(DebugParms, DBG_LEVEL_STD, "OraConnect() - Connected to ORACLE as user: %s ; DBConnInfo->DBCtx=%p\n", 2, username, DBConnInfo->DBCtx);
+		//dbg->DBCtx = vCtx;
+		LogWrite(dbg, DBG_LEVEL_STD, "OraConnect() - Connected to ORACLE as user: %s ; DBConnInfo->DBCtx=%p\n", 2, username, DBConnInfo->DBCtx);
 	} else {
-		LogWrite(DebugParms, DBG_LEVEL_STD, "PATH=%s\n", 1, vPath);
-		LogWrite(DebugParms, DBG_LEVEL_STD, "ORACLE_HOME=%s\n", 1, vOH);
-		LogWrite(DebugParms, DBG_LEVEL_STD, "DBUser=%s\n", 1, DBConnInfo->DBUser);
-		//Oerr(DebugParms, __func__, sqlca.sqlcode);
-		LogWrite(DebugParms, DBG_LEVEL_ERR, "%s failed. user = %s\n Error %s", 3, __func__, DBConnInfo->DBUser, sqlca.sqlerrm.sqlerrmc);
+		LogWrite(dbg, DBG_LEVEL_STD, "PATH=%s\n", 1, vPath);
+		LogWrite(dbg, DBG_LEVEL_STD, "ORACLE_HOME=%s\n", 1, vOH);
+		LogWrite(dbg, DBG_LEVEL_STD, "DBUser=%s\n", 1, DBConnInfo->DBUser);
+		//Oerr(dbg, __func__, sqlca.sqlcode);
+		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. user = %s\n Error %s", 3, __func__, DBConnInfo->DBUser, sqlca.sqlerrm.sqlerrmc);
 	}
 	return(sqlca.sqlcode);
 }
@@ -478,7 +478,7 @@ EXPORT void OraCommit(tDBConnection* DBConnInfo) {
 }
 
 //=== Retrieval functions
-EXPORT bool Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar) {
+EXPORT bool Ora_GetFlatOHLCV(tDbg* dbg, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar) {
 	//-- 'Flat' bar means returning OHLC(V) values for each record as an array 
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
@@ -644,7 +644,7 @@ EXPORT bool Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pS
 		} else if (sqlca.sqlcode==1403) {
 			break;
 		} else {
-			LogWrite(DebugParms, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 			retval = sqlca.sqlcode;
 			break;
 		}
@@ -737,7 +737,7 @@ EXPORT bool Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pS
 		oBaseBar[3] = vClose;
 		oBaseBar[4] = vVolume;
 	} else if (sqlca.sqlcode!=1403) {
-		LogWrite(DebugParms, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		retval = sqlca.sqlcode;
 	}
 
@@ -764,7 +764,7 @@ EXPORT bool Ora_GetFlatOHLCV(tDebugInfo* DebugParms, tDBConnection* db, char* pS
 }
 
 //=== Logging functions
-EXPORT bool Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV) {
+EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i;
@@ -789,13 +789,13 @@ EXPORT bool Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, i
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(DebugParms, db)!=0) {
-			LogWrite(DebugParms, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+		if (OraConnect(dbg, db)!=0) {
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
 			return -1;
 		}
 		vCtx = db->DBCtx;
 	}
-	LogWrite(DebugParms, DBG_LEVEL_STD, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, db->DBCtx, vCtx);
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, db->DBCtx, vCtx);
 
 	vInsertCount=mseCnt;
 	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
@@ -814,7 +814,7 @@ EXPORT bool Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, i
 
 	//-- Then, Build the Insert statement
 	sprintf(&stmt[0], "insert into TrainLog(ProcessId, ThreadId, Epoch, MSE_T, MSE_V) values(:P01, :P02, :P03, :P04, :P05)");
-	LogWrite(DebugParms, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
@@ -1096,9 +1096,9 @@ EXPORT bool Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, i
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
 
 	//pInsertCount[vNetLevel] = sqlca.sqlerrd[2];
-	LogWrite(DebugParms, DBG_LEVEL_STD, "BulkMSEInsert() inserted %d rows.\n", 1, sqlca.sqlerrd[2]);
+	LogWrite(dbg, DBG_LEVEL_STD, "BulkMSEInsert() inserted %d rows.\n", 1, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
-		if (sqlca.sqlcode!=1) LogWrite(DebugParms, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		return sqlca.sqlcode;
 	}
 	/* EXEC SQL DEALLOCATE DESCRIPTOR 'inMSE'; */ 
@@ -1130,7 +1130,7 @@ EXPORT bool Ora_LogSaveMSE(tDebugInfo* DebugParms, tDBConnection* db, int pid, i
 
 	return sqlca.sqlcode;
 }
-EXPORT bool Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W) {
+EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i;
@@ -1155,13 +1155,13 @@ EXPORT bool Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(DebugParms, db)!=0) {
-			LogWrite(DebugParms, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+		if (OraConnect(dbg, db)!=0) {
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
 			return -1;
 		}
 		vCtx = db->DBCtx;
 	}
-	LogWrite(DebugParms, DBG_LEVEL_STD, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, db->DBCtx, vCtx);
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, db->DBCtx, vCtx);
 
 	vInsertCount=Wcnt;
 	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
@@ -1180,7 +1180,7 @@ EXPORT bool Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int
 
 	//-- Then, Build the Insert statement
 	sprintf(&stmt[0], "insert into CoreImage_NN (ProcessId, ThreadId, Epoch, WId, W) values(:P01, :P02, :P03, :P04, :P05)");
-	LogWrite(DebugParms, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
@@ -1461,9 +1461,9 @@ EXPORT bool Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int
 
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
 
-	LogWrite(DebugParms, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
-		if (sqlca.sqlcode!=1) LogWrite(DebugParms, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		return sqlca.sqlcode;
 	}
 	/* EXEC SQL DEALLOCATE DESCRIPTOR 'inCINN'; */ 
@@ -1495,7 +1495,7 @@ EXPORT bool Ora_LogSaveW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int
 
 	return sqlca.sqlcode;
 }
-EXPORT bool Ora_LogSaveClient(tDebugInfo* DebugParms, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
+EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	sql_context vCtx = db->DBCtx;
@@ -1505,7 +1505,7 @@ EXPORT bool Ora_LogSaveClient(tDebugInfo* DebugParms, tDBConnection* db, int pid
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(DebugParms, db)!=0) {
+		if (OraConnect(dbg, db)!=0) {
 			printf("%s() could not connect to Log Database...\n", __func__);
 			return -1;
 		}
@@ -1553,12 +1553,12 @@ EXPORT bool Ora_LogSaveClient(tDebugInfo* DebugParms, tDBConnection* db, int pid
 
 
 	if (sqlca.sqlcode!=0) {
-		LogWrite(DebugParms, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		return sqlca.sqlcode;
 	}
 	return 0;
 }
-EXPORT bool Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
+EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i, b, f;
@@ -1586,13 +1586,13 @@ EXPORT bool Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, i
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(DebugParms, db)!=0) {
-			LogWrite(DebugParms, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+		if (OraConnect(dbg, db)!=0) {
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
 			return -1;
 		}
 		vCtx = db->DBCtx;
 	}
-	LogWrite(DebugParms, DBG_LEVEL_STD, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, db->DBCtx, vCtx);
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, db->DBCtx, vCtx);
 
 	vFeaturesCnt=featuresCnt;
 	vInsertCount=barCnt*featuresCnt;
@@ -1621,7 +1621,7 @@ EXPORT bool Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, i
 
 	//-- Then, Build the Insert statement
 	sprintf(&stmt[0], "insert into RunLog (ProcessId, ThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07)");
-	LogWrite(DebugParms, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
@@ -1975,9 +1975,9 @@ EXPORT bool Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, i
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
 
 	//pInsertCount[vNetLevel] = sqlca.sqlerrd[2];
-	LogWrite(DebugParms, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
-		if (sqlca.sqlcode!=1) LogWrite(DebugParms, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		return sqlca.sqlcode;
 	}
 	/* EXEC SQL DEALLOCATE DESCRIPTOR 'inRun'; */ 
@@ -2012,7 +2012,7 @@ EXPORT bool Ora_LogSaveRun(tDebugInfo* DebugParms, tDBConnection* db, int pid, i
 	return sqlca.sqlcode;
 }
 
-EXPORT bool Ora_LogLoadW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
+EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i;
@@ -2026,13 +2026,13 @@ EXPORT bool Ora_LogLoadW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(DebugParms, db)!=0) printf("%s() could not connect to Log Database...\n", __func__);
+		if (OraConnect(dbg, db)!=0) printf("%s() could not connect to Log Database...\n", __func__);
 		vCtx = db->DBCtx;
 	}
 
 	//-- Load Network Weights from CoreImage_NN
 	sprintf(&stmt[0], "select WId, W from CoreImage_NN where ProcessId=%d and ThreadId=%d and Epoch=%d order by 1,2,3", pid, tid, epoch);
-	LogWrite(DebugParms, DBG_LEVEL_STD, "%s() CheckPoint 3 - stmt=%s\n", 2, __func__, stmt);
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 3 - stmt=%s\n", 2, __func__, stmt);
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
 	/* EXEC SQL PREPARE sLoadW FROM :stmt; */ 
@@ -2148,7 +2148,7 @@ EXPORT bool Ora_LogLoadW(tDebugInfo* DebugParms, tDBConnection* db, int pid, int
 		} else if (sqlca.sqlcode==1403) {
 			break;
 		} else {
-			LogWrite(DebugParms, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 			retval = sqlca.sqlcode;
 			break;
 		}

@@ -6,7 +6,7 @@
 
 void dbgcli() {
 	try {
-		tDebugInfo* dbg1=new tDebugInfo();
+		tDbg* dbg1=new tDbg();
 	}
 	catch (std::exception e) {
 		printf("%s\n", e.what());
@@ -14,10 +14,10 @@ void dbgcli() {
 }
 void dbgcli2() {
 	char* msg="%s returned %d, with double=%f\n";
-	tDebugInfo* dbg=new tDebugInfo();
+	tDbg* dbg=new tDbg();
 	dbg->write(DBG_LEVEL_STD, msg, 3, "myfunc()", -3, 1.345);
 	dbg->compose(msg, 3, "myfunc()", -3, -0.1);
-	printf("%s\n", dbg->stackmsg);
+	printf("%s\n", dbg->errmsg);
 }
 int argcnt(char* mask) {
 	int cnt=0;
@@ -681,14 +681,6 @@ int client10() {
 
 	//	SBF2BFS(batchCnt, samplesCnt, barCnt, featuresCnt, SBFv, BFSv);
 	//	BFS2SBF(batchCnt, samplesCnt, barCnt, featuresCnt, BFSv, SBFv);
-
-	return 0;
-}
-int client11() {
-	TS* ts1=new TS(20, 5);
-//	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
-	if (ts1->TrS(DT_DELTA, -1, 1)!=0) return -1;
-	//	DataSet* DataSet1=new DataSet(ts1, 5, 2, 20);
 
 	return 0;
 }

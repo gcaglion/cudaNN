@@ -34,7 +34,7 @@
 
 typedef struct sTS {
 
-	tDebugInfo* DebugParms;
+	tDbg* dbg;
 
 	int sourceType;
 	tFXData* FXData;
@@ -59,11 +59,11 @@ typedef struct sTS {
 	numtype* d_trs;
 
 	//-- constructor / destructor
-	sTS(int steps_, int featuresCnt_, tDebugInfo* DebugParms_=nullptr) {
-		if(DebugParms_==nullptr){
-			DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"));
+	sTS(int steps_, int featuresCnt_, tDbg* dbg_=nullptr) {
+		if(dbg_==nullptr){
+			dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"));
 		} else {
-			DebugParms=DebugParms_;
+			dbg=dbg_;
 		}
 		steps=steps_;
 		featuresCnt=featuresCnt_;
@@ -92,30 +92,25 @@ typedef struct sTS {
 		free(dtime); free(bdtime);
 	}
 	
-	EXPORT int load(tFXData* tsFXData, char* pDate0);
-	EXPORT int load(tDataFile* tsFileData, char* pDate0);
-	EXPORT int load(tMT4Data* tsMT4Data, char* pDate0);
+	EXPORT void load(tFXData* tsFXData, char* pDate0);
+	EXPORT void load(tDataFile* tsFileData, char* pDate0);
+	EXPORT void load(tMT4Data* tsMT4Data, char* pDate0);
 
-	EXPORT int transform(int dt_);
-	EXPORT int scale(numtype scaleMin_, numtype scaleMax_);
+	EXPORT void transform(int dt_);
+	EXPORT void scale(numtype scaleMin_, numtype scaleMax_);
 
-	EXPORT int TrS(int dt_, numtype scaleMin_, numtype scaleMax_);
-	EXPORT int unTrS(numtype scaleMin_, numtype scaleMax_);
+	EXPORT void TrS(int dt_, numtype scaleMin_, numtype scaleMax_);
+	EXPORT void unTrS(numtype scaleMin_, numtype scaleMax_);
 
-	EXPORT int dump(char* dumpFileName="C:/temp/TSdump.csv");
-
-	EXPORT int calcTSF();
-	EXPORT int createFromTS(sTS* sourceTS, int* feature);
-
-	EXPORT int buildRunData();
+	EXPORT void dump(char* dumpFileName="C:/temp/TSdump.csv");
 
 private:
-	int LoadOHLCVdata(char* date0);
+	bool LoadOHLCVdata(char* date0);
 
 } TS;
 
 typedef struct sDataSet {
-	tDebugInfo* DebugParms;
+	tDbg* dbg;
 
 	TS* sourceTS;
 	int sampleLen;
@@ -143,7 +138,7 @@ typedef struct sDataSet {
 	numtype* prediction0=nullptr;
 
 	//-- constructor / destructor
-	EXPORT sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDebugInfo* DebugParms_=nullptr);
+	EXPORT sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_=nullptr);
 	~sDataSet() {
 		free(sample);
 		if (target!=nullptr) free(target);
@@ -156,7 +151,7 @@ typedef struct sDataSet {
 	}
 
 	bool isSelected(int ts_f);
-	EXPORT void buildFromTS(sTS* ts);
+	EXPORT void buildFromTS(TS* ts);
 	EXPORT void SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS);
 	EXPORT void BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF);
 	EXPORT void BFS2SFB(int batchId, int barCnt, numtype* fromBFS, numtype* toSFB);

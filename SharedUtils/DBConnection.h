@@ -8,9 +8,9 @@ typedef struct sDBConnection{
 	char DBPassword[30];
 	char DBConnString[30];
 	void* DBCtx;
-	tDebugInfo* DebugParms;
+	tDbg* dbg;
 #ifdef __cplusplus
-	EXPORT sDBConnection(char* username, char* password, char* connstring, tDebugInfo* DebugParms_=nullptr);
+	EXPORT sDBConnection(char* username, char* password, char* connstring, tDbg* dbg_=nullptr);
 	EXPORT sDBConnection();
 #endif
 } tDBConnection;

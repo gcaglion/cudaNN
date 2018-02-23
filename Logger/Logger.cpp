@@ -1,10 +1,10 @@
 #include "Logger.h"
 
-sLogger::sLogger(tDBConnection* logDB, tDebugInfo* DebugParms_) {
-	if (DebugParms_==nullptr) {
-		DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"));
+sLogger::sLogger(tDBConnection* logDB, tDbg* dbg_) {
+	if (dbg_==nullptr) {
+		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"));
 	} else {
-		DebugParms=DebugParms_;
+		dbg=dbg_;
 	}
 	dest=LOG_TO_ORCL;
 	db=logDB;
@@ -18,7 +18,7 @@ sLogger::~sLogger() {}
 bool sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV) {
 	if (saveMSE) {
 		if (dest==LOG_TO_ORCL) {
-			return (Ora_LogSaveMSE(DebugParms, db, pid, tid, mseCnt, mseT, mseV));
+			return (Ora_LogSaveMSE(dbg, db, pid, tid, mseCnt, mseT, mseV));
 		} else {
 			return false;
 		}
@@ -29,7 +29,7 @@ bool sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV
 bool sLogger::SaveRun(int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual) {
 	if (saveRun) {
 		if (dest==LOG_TO_ORCL) {
-			return (Ora_LogSaveRun(DebugParms, db, pid, tid, runCnt, featuresCnt, prediction, actual));
+			return (Ora_LogSaveRun(dbg, db, pid, tid, runCnt, featuresCnt, prediction, actual));
 		} else {
 			return false;
 		}
@@ -48,7 +48,7 @@ bool sLogger::SaveW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
 			hW=W;
 		#endif
 		if (dest==LOG_TO_ORCL) {
-			return (Ora_LogSaveW(DebugParms, db, pid, tid, epoch, Wcnt, hW));
+			return (Ora_LogSaveW(dbg, db, pid, tid, epoch, Wcnt, hW));
 		} else {
 			return true;
 		}
@@ -68,7 +68,7 @@ bool sLogger::LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	hW=W;
 #endif
 	if (dest==LOG_TO_ORCL) {
-		return (Ora_LogLoadW(DebugParms, db, pid, tid, epoch, Wcnt, hW));
+		return (Ora_LogLoadW(dbg, db, pid, tid, epoch, Wcnt, hW));
 	} else {
 		return false;
 	}
@@ -80,7 +80,7 @@ bool sLogger::LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
 bool sLogger::SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
 	if (saveClient) {
 		if (dest==LOG_TO_ORCL) {
-			return (Ora_LogSaveClient(DebugParms, db, pid, clientName, startTime, duration, simulLen, simulStart, doTraining, doRun));
+			return (Ora_LogSaveClient(dbg, db, pid, clientName, startTime, duration, simulLen, simulStart, doTraining, doRun));
 		} else {
 			return false;
 		}

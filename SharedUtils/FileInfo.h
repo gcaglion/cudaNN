@@ -14,7 +14,7 @@ typedef struct sFileInfo {
 #ifdef __cplusplus
 
 	EXPORT sFileInfo(char* Name_, char* Path_=DEBUG_DEFAULT_PATH, bool append_=false);
-	~sFileInfo();
+	EXPORT ~sFileInfo();
 private:
 	char errmsg[1024]; 
 

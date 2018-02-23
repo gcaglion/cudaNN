@@ -25,7 +25,7 @@
 
 typedef struct sNN {
 
-	tDebugInfo* DebugParms;
+	tDbg* dbg;
 
 	//-- MyAlgebra common structures
 	Algebra* Alg;
@@ -107,7 +107,7 @@ typedef struct sNN {
 	DWORD WUstart, WUtimeTot=0, WUcnt=0; float WUtimeAvg;
 	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
-	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction, bool useContext_, bool useBias_, tDebugInfo* DebugParms_=nullptr);
+	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction, bool useContext_, bool useBias_, tDbg* dbg_=nullptr);
 	EXPORT ~sNN();
 
 	void setLayout(char LevelRatioS_[60], int batchSamplesCnt_);
@@ -122,14 +122,14 @@ typedef struct sNN {
 	bool WU_std();
 	bool BackwardPass(DataSet* ds, int batchId, bool updateWeights);
 
-	EXPORT int train(DataSet* trs);
-	EXPORT int run(DataSet* runSet, numtype* runW);
+	EXPORT void train(DataSet* trs);
+	EXPORT void run(DataSet* runSet, numtype* runW);
 
 private:
 	//-- malloc + init
-	bool mallocNeurons();
-	bool initNeurons();
-	bool createWeights();
+	void mallocNeurons();
+	void initNeurons();
+	void createWeights();
 	//-- free
 	void destroyNeurons();
 	void destroyWeights();

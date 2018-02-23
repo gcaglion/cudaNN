@@ -47,18 +47,28 @@ int argcnt(const char* mask) {
 	}
 	return cnt;
 }
-
+void removeQuotes(char* istr, char* ostr) {
+	size_t slen=strlen(istr);
+	size_t rlen=slen;
+	int ri=0;
+	for (int si=0; si<slen; si++) {
+		if(istr[si]!=34) {
+			ostr[ri]=istr[si];
+			ri++;
+		}
+	}
+	ostr[ri]='\0';
+}
 
 sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
-	sprintf_s(stackmsg, 20, "\nError stack:");
 	//-- outFile is created and opened by constructor (if not passed).
 	if (outFile_==nullptr) {
 		try {
 			outFile=new tFileInfo("defaultDebug.log", DEBUG_DEFAULT_PATH);
 		}
 		catch (std::exception e) {
-			sprintf_s(errmsg, 1024, "%s() error creating default debug file\nFrom: %s", __func__, e.what()); throw std::runtime_error(errmsg);
+			sprintf_s(errmsg, sizeof(errmsg), "%s() error creating default debug file\nFrom: %s", __func__, e.what()); throw std::runtime_error(errmsg);
 		}
 	} else {
 		outFile=outFile_;
@@ -114,7 +124,8 @@ void sDbg::write(int LogType, const char* msg, int argcount, ...) {
 
 	if (ThreadSafeLogging) ReleaseMutex(Mtx);
 }
-void sDbg::compose(char* msg, int argcount, ...) {
+
+void sDbg::compose(char* msg_, int argcount, ...) {
 	va_list			arguments;
 	char submsg[MAX_PATH];
 	char*			arg_s;
@@ -122,24 +133,29 @@ void sDbg::compose(char* msg, int argcount, ...) {
 	double			arg_f;
 	unsigned int	im = 0;
 	int				prev_im = 0;
+	char tmpmsg[1024];
+	char msg[1024];
 
 	va_start(arguments, argcount);
+	removeQuotes(msg_, msg);
+	errmsg[0]='\0';
 	do {
 		if (msg[im]==37) {                // "%"
 			memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
 			prev_im = im+2;
 			if (msg[im+1]==115) {   // "s"
 				arg_s = va_arg(arguments, char*);
-				sprintf_s(errmsg, submsg, arg_s); strcat_s(stackmsg, errmsg);
+				sprintf_s(tmpmsg, submsg, arg_s);
+				strcat_s(errmsg, tmpmsg);
 			} else if (submsg[im+1]==100) {   // "d"
 				arg_d = va_arg(arguments, int);
-				sprintf_s(errmsg, submsg, arg_d); strcat_s(stackmsg, errmsg);
+				sprintf_s(tmpmsg, submsg, arg_d); strcat_s(errmsg, tmpmsg);
 			} else if (submsg[im+1]==112) {   // "p"
 				arg_d = va_arg(arguments, long);
-				sprintf_s(errmsg, submsg, arg_d); strcat_s(stackmsg, errmsg);
+				sprintf_s(tmpmsg, submsg, arg_d); strcat_s(errmsg, tmpmsg);
 			} else {   // this could be 67 ("f") or any mask before "f" -> in any case, it's a double
 				arg_f = va_arg(arguments, double);
-				sprintf_s(errmsg, submsg, arg_f); strcat_s(stackmsg, errmsg);
+				sprintf_s(tmpmsg, submsg, arg_f); strcat_s(errmsg, tmpmsg);
 			}
 		}
 		im++;
@@ -175,11 +191,11 @@ sFileInfo::~sFileInfo() {
 	fclose(handle);
 }
 
-sDBConnection::sDBConnection(char* username, char* password, char* connstring, tDebugInfo* DebugParms_) {
-	if (DebugParms_==nullptr) {
-		DebugParms=new tDebugInfo(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DBConnection.err"));
+sDBConnection::sDBConnection(char* username, char* password, char* connstring, tDbg* dbg_) {
+	if (dbg_==nullptr) {
+		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DBConnection.err"));
 	} else {
-		DebugParms=DebugParms_;
+		dbg=dbg_;
 	}
 	strcpy_s(DBUser, 30, username);
 	strcpy_s(DBPassword, 30, password);

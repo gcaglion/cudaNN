@@ -46,57 +46,57 @@ EXPORT void Vscale(int Vlen, int* V, float s) {
 //--
 
 //-- vector functions
-EXPORT int Vscale(int vlen, numtype* v, numtype s) {
+EXPORT bool Vscale(int vlen, numtype* v, numtype s) {
 #ifdef USE_GPU
 	return(Vscale_cu(vlen, v, s));
 #else
 	for (int i=0; i<vlen; i++) v[i]*=s;
-	return 0;
+	return true;
 #endif
 }
-EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2) {
+EXPORT bool Vcopy(int vlen, numtype* v1, numtype* v2) {
 #ifdef USE_GPU
 	return(Vcopy_cu(vlen, v1, v2));
 #else
 	for (int i=0; i<vlen; i++) v2[i]=v1[i];
-	return 0;
+	return true;
 #endif
 }
-EXPORT int Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
+EXPORT bool Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
 #ifdef USE_GPU
 	return (Vadd_cu(vlen, v1, scale1, v2, scale2, ov));
 #else
 	for (int i=0; i<vlen; i++) ov[i]=v2[i]*scale2+v1[i]*scale1;
-	return 0;
+	return true;
 #endif
 }
-EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
+EXPORT bool Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
 #ifdef USE_GPU
 	return (Vdiff_cu(vlen, v1, scale1, v2, scale2, ov));
 #else
 	for (int i=0; i<vlen; i++) ov[i]=v1[i]*scale1-v2[i]*scale2;
-	return 0;
+	return true;
 #endif
 }
-EXPORT int Vssum(int vlen, numtype* v, numtype* ovssum) {
+EXPORT bool Vssum(int vlen, numtype* v, numtype* ovssum) {
 	//-- if using GPU, the sum scalar also resides in GPU
 #ifdef USE_GPU
 	return(Vssum_cu(vlen, v, ovssum));
 #else
 	(*ovssum)=0;
 	for (int i=0; i<vlen; i++) (*ovssum)+=v[i]*v[i];
-	return 0;
+	return true;
 #endif
 }
-EXPORT int Vinit(int size, numtype* v, numtype start, numtype inc) {
+EXPORT bool Vinit(int size, numtype* v, numtype start, numtype inc) {
 #ifdef USE_GPU
 	return(Vinit_cu(size, v, start, inc));
 #else
 	for (int i=0; i<size; i++) v[i]=start+i*inc;
-	return 0;
+	return true;
 #endif
 }
-EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH) {
+EXPORT bool VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH) {
 #ifdef USE_GPU
 	return(VinitRnd_cu(Vlen, V, rndmin, rndmax, cuRandH));
 #else
@@ -116,19 +116,19 @@ EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* 
 		V[i] = rndmin+(numtype)number/((numtype)UINT_MAX+1) * (rndmax-rndmin);
 	}
 */
-	return 0;
+	return true;
 #endif
 }
-EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV) {
+EXPORT bool VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV) {
 #ifdef USE_GPU
 	return(VbyV2V_cu(Vlen, V1, V2, oV));
 #else
 	for (int i = 0; i < Vlen; i++) oV[i] = V1[i]*V2[i];
-	return 0;
+	return true;
 #endif
 }
 
-EXPORT int Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm) {
+EXPORT bool Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm) {
 #ifdef USE_GPU
 	return(cuMtr_cublas(cublasH, my, mx, m, otm));
 #else
@@ -137,10 +137,10 @@ EXPORT int Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm) {
 			otm[x*my+y] = m[y*mx+x];
 		}
 	}
-	return 0;
+	return true;
 #endif
 }
-EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C) {
+EXPORT bool MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C) {
 
 	int m1y=Ay, m1x=Ax, m1i; numtype* m1=A;
 	int m2y=By, m2x=Bx, m2i; numtype* m2=B;
@@ -165,25 +165,25 @@ EXPORT int MbyM_std(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By
 		}
 	}
 	//printf("\n");
-	return 0;
+	return true;
 }
 
 
 //-- memory initializatin
-EXPORT int myMalloc(numtype** var, int size) {
+EXPORT bool myMalloc(numtype** var, int size) {
 #ifdef USE_GPU
 	return (Malloc_cu(var, size));
 #else
 	(*var) = (numtype*)malloc(size*sizeof(numtype));
-	return 0;
+	return true;
 #endif
 }
-EXPORT int myFree(numtype* var) {
+EXPORT bool myFree(numtype* var) {
 	#ifdef USE_GPU
 		return (Free_cu(var));
 	#else
 		free(var);
-		return 0;
+		return true;
 	#endif
 }
 
@@ -222,93 +222,93 @@ EXPORT bool loadArray(int vlen, numtype* v, const char* fname) {
 #endif
 }
 
-EXPORT int Tanh(int Vlen, numtype* in, numtype* out){
+EXPORT bool Tanh(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return(Tanh_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)tanh(in[i]);
-	return 0;
+	return true;
 #endif 
 }
-EXPORT int dTanh(int Vlen, numtype* in, numtype* out){
+EXPORT bool dTanh(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return (dTanh_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1-pow(tanh(in[i]),2));
-	return 0;
+	return true;
 #endif 
 }
-EXPORT int Exp4(int Vlen, numtype* in, numtype* out){
+EXPORT bool Exp4(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return(Exp4_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1/(1+exp(-4*in[i])));
-	return 0;
+	return true;
 #endif
 }
-EXPORT int dExp4(int Vlen, numtype* in, numtype* out){
+EXPORT bool dExp4(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return(dExp4_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(4*exp(4*in[i])/(pow(exp(4*in[i])+1, 2)));
-	return 0;
+	return true;
 #endif
 }
-EXPORT int Relu(int Vlen, numtype* in, numtype* out){
+EXPORT bool Relu(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return(Relu_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(((in[i] > 0) ? 1 : 0));
-	return 0;
+	return true;
 #endif 
 }
-EXPORT int dRelu(int Vlen, numtype* in, numtype* out){
+EXPORT bool dRelu(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return(dRelu_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(((in[i] > 0) ? in[i] : 0));
-	return 0;
+	return true;
 #endif 
 }
-EXPORT int SoftPlus(int Vlen, numtype* in, numtype* out){
+EXPORT bool SoftPlus(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return(SoftPlus_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(log(1+exp(in[i])));
-	return 0;
+	return true;
 #endif 
 }
-EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out){
+EXPORT bool dSoftPlus(int Vlen, numtype* in, numtype* out){
 #ifdef USE_GPU 
 	return(dSoftPlus_cu(Vlen, in, out));
 #else 
 	for (int i=0; i<Vlen; i++) out[i]=(numtype)(1/(1+exp(-in[i])));
-	return 0;
+	return true;
 #endif 
 }
 
 
-EXPORT int VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu) {
+EXPORT bool VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu) {
 #ifdef USE_GPU	
 	if (usegpu) {
-		if (VbyV2V_cu(Vlen, V1, V2, oV)!=0) return -1;
+		if (VbyV2V_cu(Vlen, V1, V2, oV)!=0) return false;
 	} else {
 		for (int i = 0; i<Vlen; i++) oV[i] = V1[i]*V2[i];
 	}
 #endif
-	return 0;
+	return true;
 }
-EXPORT int Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtype scale2, numtype* oV, bool usegpu) {
+EXPORT bool Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtype scale2, numtype* oV, bool usegpu) {
 #ifdef USE_GPU	
 	if (usegpu) {
-		if (Vdiff_cu(Vlen, V1, scale1, V2, scale2, oV)!=0) return -1;
+		if (Vdiff_cu(Vlen, V1, scale1, V2, scale2, oV)!=0) return false;
 	} else {
 		for (int i = 0; i<Vlen; i++) oV[i] = V1[i]*scale1-V2[i]*scale2;
 	}
 #endif
-	return 0;
+	return true;
 }
-EXPORT int MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu) {
+EXPORT bool MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu) {
 #ifdef USE_GPU	
 	if (usegpu) {
 		return MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C);
@@ -316,7 +316,7 @@ EXPORT int MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, num
 		return MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C);
 	}
 #endif
-	return 0;
+	return true;
 }
 
 int Vcompare(int vlen, numtype* v1, numtype* v2) {
@@ -332,7 +332,7 @@ int Vcompare(int vlen, numtype* v1, numtype* v2) {
 	return ret;
 }
 
-int MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T) {
+bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T) {
 #ifdef USE_GPU
 	DWORD start;
 	int Tsize=(Ay+By)*(Ax+Bx);
@@ -346,37 +346,37 @@ int MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype
 
 	//-- copy dev->host
 	start=timeGetTime();
-	if (cudaMemcpy(Ah, A, Ay*Ax*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
-	if (cudaMemcpy(Bh, B, By*Bx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return -1;
+	if (cudaMemcpy(Ah, A, Ay*Ax*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return false;
+	if (cudaMemcpy(Bh, B, By*Bx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return false;
 	printf("copy dev->host; elapsed time=%ld\n", (DWORD)(timeGetTime()-start));
 
 	//-- cpu run
 	start=timeGetTime();
-	if (MbyM_std(Ay, Ax, Ascale, Atr, Ah, By, Bx, Bscale, Btr, Bh, Ch)) return -1;
+	if (MbyM_std(Ay, Ax, Ascale, Atr, Ah, By, Bx, Bscale, Btr, Bh, Ch)) return false;
 	printf("CPU run; elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 	//mprint(Ay, Ax, Ah, "Ah"); mprint(By, Bx, Bh, "Bh"); mprint(Cy, Cx, Ch, "Ch");
 
 	//-- gpu run
 	start=timeGetTime();
-	if (MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C)!=0) return -1;
+	if (MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C)!=0) return false;
 	printf("GPU run; elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
 
 	//-- copy results dev->host
 	start=timeGetTime();
 	if (cudaMemcpy(Cr, C, Cy*Cx*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) {
 		printf("CUDA error %d\n", cudaGetLastError());
-		return -1;
+		return false;
 	}
 
 	//-- compare results
-	int ret=Vcompare(Cy*Cx, Cr, Ch);
+	bool ret=Vcompare(Cy*Cx, Cr, Ch);
 
 	//-- free host
 	free(Ah); free(Bh); free(Ch); free(Th); free(Cr);
 
 	return ret;
 #else
-	return -1;
+	return false;
 #endif
 }
 
@@ -394,7 +394,7 @@ s_Algebra::s_Algebra() {
 	if (initCUstreams(cuStream)!=0) throw FAIL_INITCU;
 #endif
 	//-- init shared scalar
-	if (myMalloc(&ss, 1)!=0) throw FAIL_MALLOC_SCALAR;
+	if (!myMalloc(&ss, 1)) throw FAIL_MALLOC_SCALAR;
 }
 s_Algebra::~s_Algebra() {
 	myFree(ss);
@@ -402,11 +402,11 @@ s_Algebra::~s_Algebra() {
 	// destroy cublasH, cuRandH, streams, curanddestroygenerator...
 }
 //-- class methods
-int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
+bool getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 	for (int y=0; y<Ay; y++) oCol[y]=A[y*Ax+col];
-	return 0;
+	return true;
 }
-int s_Algebra::getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool forceCPU) {
+bool s_Algebra::getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool forceCPU) {
 #ifdef USE_GPU
 	if (forceCPU) {
 		return(getMcol_cpu(Ay, Ax, A, col, oCol));
@@ -417,7 +417,7 @@ int s_Algebra::getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool 
 	return(getMcol_cpu(Ay, Ax, A, col, oCol));
 #endif
 }
-int s_Algebra::MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU) {
+bool s_Algebra::MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU) {
 #ifdef USE_GPU
 	if(forceCPU) {
 		return(MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
@@ -428,19 +428,19 @@ int s_Algebra::MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By
 	return(MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
 #endif
 }
-int s_Algebra::h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams) {
+bool s_Algebra::h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams) {
 #ifdef USE_GPU
 	return(h2d_cu(destAddr, srcAddr, size, ((useStreams)?cuStream:nullptr)) );
 #else
 	memcpy(destAddr, srcAddr, size);
-	return 0;
+	return true;
 #endif
 }
-int s_Algebra::d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams) {
+bool s_Algebra::d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams) {
 #ifdef USE_GPU
 	return(d2h_cu(destAddr, srcAddr, size, ((useStreams)?cuStream:nullptr)) );
 #else
 	memcpy(destAddr, srcAddr, size);
-	return 0;
+	return true;
 #endif
 }
