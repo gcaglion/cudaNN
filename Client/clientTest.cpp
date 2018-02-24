@@ -401,7 +401,11 @@ void client5() {
 	if (cudaMemcpy(db, b->m, 4*unitsize*2*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
 
 	numtype* dtmp; if (cudaMalloc(&dtmp, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
-	if (Alg->MbyM(3*unitsize, 2*unitsize, 1, false, da, 4*unitsize, 2*unitsize, 1, true, db, dc)!=0) return;
+	try {
+		Alg->MbyM(3*unitsize, 2*unitsize, 1, false, da, 4*unitsize, 2*unitsize, 1, true, db, dc);
+	} catch (std::exception e) {
+		printf("%s\n", e.what()); return; 
+	}
 	if (cudaMemcpy(c->m, dc, 3*unitsize*4*unitsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
 	c->print("C from cublas");
 #endif

@@ -113,14 +113,14 @@ typedef struct sNN {
 	void setLayout(char LevelRatioS_[60], int batchSamplesCnt_);
 
 	EXPORT void setActivationFunction(int* func_);
-	bool FF();
-	bool Activate(int level);
-	bool calcErr();
-	bool ForwardPass(DataSet* ds, int batchId, bool haveTargets);
+	void FF();
+	void Activate(int level);
+	void calcErr();
+	void ForwardPass(DataSet* ds, int batchId, bool haveTargets);
 	bool epochMetCriteria(int epoch, DWORD starttime, bool displayProgress=true);
-	bool BP_std();
-	bool WU_std();
-	bool BackwardPass(DataSet* ds, int batchId, bool updateWeights);
+	void BP_std();
+	void WU_std();
+	void BackwardPass(DataSet* ds, int batchId, bool updateWeights);
 
 	EXPORT void train(DataSet* trs);
 	EXPORT void run(DataSet* runSet, numtype* runW);

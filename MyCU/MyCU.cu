@@ -44,7 +44,7 @@ EXPORT bool initCUDA() {
 		printf("cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?\n");
 		return false;
 	}
-	return 0;
+	return true;
 }
 EXPORT bool initCUBLAS(void* cublasH) {
 	// init CUBLAS
@@ -54,7 +54,7 @@ EXPORT bool initCUBLAS(void* cublasH) {
 		return false;
 	}
 
-	return 0;
+	return true;
 }
 EXPORT bool initCURand(void* cuRandH) {
 	if (curandCreateGenerator((curandGenerator_t*)cuRandH, CURAND_RNG_PSEUDO_DEFAULT)!=CURAND_STATUS_SUCCESS) {
@@ -64,26 +64,26 @@ EXPORT bool initCURand(void* cuRandH) {
 	}
 	/* Set seed */
 	if (curandSetPseudoRandomGeneratorSeed((*(curandGenerator_t*)cuRandH), timeGetTime())!=CURAND_STATUS_SUCCESS) return false;
-	return 0;
+	return true;
 }
 EXPORT bool initCUstreams(void* cuStream[]) {
 	for (int s=0; s<MAX_STREAMS; s++) {
 		if (cudaStreamCreate((cudaStream_t*)cuStream[s])!=cudaSuccess) return false;
 	}
-	return 0;
+	return true;
 }
 
 EXPORT bool Malloc_cu(numtype** var, int size) {
 	return ((cudaMalloc(var, size*sizeof(numtype))==cudaSuccess));
 }
 EXPORT bool Free_cu(numtype* var) {
-	return (cudaFree(var));
+	return (cudaFree(var)==cudaSuccess);
 }
 
 //-- CPU<->GPU transfer functions
 EXPORT bool h2d_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
 	if(cuStream==nullptr) {
-		return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyHostToDevice)==cudaSuccess)?0:-1);
+		return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyHostToDevice)==cudaSuccess));
 	} else {
 		int streamSize=size/sizeof(numtype)/MAX_STREAMS;
 		size_t streamBytes=streamSize*sizeof(numtype);
@@ -94,7 +94,7 @@ EXPORT bool h2d_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream
 				return false;
 			}
 		}
-		return 0;
+		return true;
 	}
 }
 EXPORT bool d2h_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
@@ -110,7 +110,7 @@ EXPORT bool d2h_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream
 				return false;
 			}
 		}
-		return 0;
+		return true;
 	}
 }
 
@@ -140,8 +140,7 @@ EXPORT bool loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void
 			return false;
 		}
 	}
-	return 0;
-	//return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyHostToDevice)==cudaSuccess));
+	return true;
 }
 EXPORT bool dumpArray_cu(int vlen, numtype* v, const char* fname) {
 	numtype* hw=(numtype*)malloc(vlen*sizeof(numtype));
@@ -151,7 +150,7 @@ EXPORT bool dumpArray_cu(int vlen, numtype* v, const char* fname) {
 	for (int i=0; i<vlen; i++) fprintf(f, "%f\n", hw[i]);
 	free(hw);
 	fclose(f);
-	return 0;
+	return true;
 }
 EXPORT bool loadArray_cu(int vlen, numtype* v, const char* fname){
 	numtype fh;
@@ -165,7 +164,7 @@ EXPORT bool loadArray_cu(int vlen, numtype* v, const char* fname){
 	if (cudaMemcpy(v, vh, vlen*sizeof(numtype), cudaMemcpyHostToDevice)!=cudaSuccess) return false;
 	fclose(f);
 	free(vh);
-	return 0;
+	return true;
 }
 
 //-- matrix functions
@@ -173,7 +172,7 @@ EXPORT bool cuMtr_cublas(void* cublasH, int my, int mx, numtype* m, numtype* otm
 	float alpha=1;
 	float beta=0;
 	if (cublasSgeam((*(cublasHandle_t*)cublasH), CUBLAS_OP_T, CUBLAS_OP_T, my, mx, &alpha, m, mx, &beta, m, mx, otm, my)!=CUBLAS_STATUS_SUCCESS) return false;
-	return 0;
+	return true;
 }
 
 EXPORT bool MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C) {
@@ -203,10 +202,10 @@ EXPORT bool MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, num
 		ldC=By;
 	}
 
-	if (Vinit_cu(m*n, C, 0, 0)!=0) return false;
+	if (!Vinit_cu(m*n, C, 0, 0)) return false;
 	if (cublasSgemm((*(cublasHandle_t*)cublasH), Bop, Aop, m, n, k, alpha, vB, ldB, vA, ldA, beta, C, ldC)!=CUBLAS_STATUS_SUCCESS) return false;
 
-	return 0;
+	return true;
 }
 
 __global__ void cuSadd(const numtype* s1, const numtype* s2, numtype* ssum) {
@@ -304,7 +303,7 @@ EXPORT bool getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, int col, numty
 		printf("getMcol_cu() CUBLAS error %d: %s\n", err, cudaGetErrorEnum(err));
 		return false;
 	}
-	return 0;
+	return true;
 }
 EXPORT bool Vscale_cu(int vlen, numtype* v, numtype s){
 	dim3 gridDim;
@@ -372,13 +371,13 @@ EXPORT bool Vssum_cu(int vlen, numtype* v, numtype* ovssum) {
 EXPORT bool Vssum_cu_cublas(void* cublasH, int Vlen, numtype* V, numtype* oVssum, numtype* ss_d) {
 	if (cublasSnrm2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVssum)!=CUBLAS_STATUS_SUCCESS) return false;
 	(*oVssum)=(*oVssum)*(*oVssum);
-	return 0;
+	return true;
 }
 
 EXPORT bool Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm, numtype* ss_d) {
 	if (cublasSnrm2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVnorm)!=CUBLAS_STATUS_SUCCESS) return false;
 	if (cudaMemcpy(oVnorm, ss_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return false;
-	return 0;
+	return true;
 }
 EXPORT bool Vinit_cu(int vlen, numtype* v, numtype start, numtype inc) {
 	dim3 gridDim;

@@ -16,7 +16,7 @@
 #define DBG_DEST_BOTH 2
 
 //-- default values for the two above
-#define DBG_LEVEL_DEFAULT DBG_LEVEL_STD
+#define DBG_LEVEL_DEFAULT DBG_LEVEL_ERR
 #define DBG_DEST_DEFAULT DBG_DEST_SCREEN
 
 typedef struct sDbg {

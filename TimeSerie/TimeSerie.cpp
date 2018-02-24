@@ -191,7 +191,7 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
 	sampleLen=sampleLen_; 
 	targetLen=targetLen_; 
-	samplesCnt=sourceTS->steps-sampleLen-targetLen+1;
+	samplesCnt=sourceTS->steps-sampleLen-targetLen;// +1;
 	if (samplesCnt<1) throwE("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;

@@ -180,10 +180,9 @@ void sDbg::compose(char* msg_, int argcount, ...) {
 }
 template <typename T> void sDbg::argOut(int msgType, char* submsg, T arg) {
 	if (msgType==DBG_LEVEL_ERR) {
-		//-- file log is mandatory in case of error
+		//-- both file and screen log are mandatory in case of error
 		fprintf(outFile->handle, submsg, arg);
-		//-- then, screen log only if defined by dest
-		if (dest==DBG_DEST_SCREEN||dest==DBG_DEST_BOTH) printf(submsg, arg);
+		printf(submsg, arg);
 	} else {
 		//-- check dest only
 		if (dest==DBG_DEST_SCREEN||dest==DBG_DEST_BOTH) printf(submsg, arg);

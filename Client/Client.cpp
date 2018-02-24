@@ -5,7 +5,6 @@
 #include "../Logger/Logger.h"
 #include "../MyAlgebra/MyAlgebra.h"
 
-
 int main() {
 
 	DWORD mainStart=timeGetTime();
@@ -54,28 +53,28 @@ int main() {
 		safeCallEE(eurusdH1=new tFXData(FXDB, "EURUSD", "H1", false));							//-- create FXData for EURUSD H1		
 		safeCallEE(persistDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO", persistorDbg));	//-- create DBConnection for Persistor DB
 		safeCallEE(persistor=new tLogger(persistDB, persistorDbg));								//-- create Logger from persistDB connection to save results data		
-		persistor->saveImage=true;																//-- logger parameters (when different from default settings)
+		persistor->saveImage=false;																//-- logger parameters (when different from default settings)
 
 		//-- data params
 		int modelFeature[]={ 1 };
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 		int dataTransformation=DT_DELTA;
-		int historyLen= 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
-		int sampleLen=  50;// 3;// 50;//;// 20; //6;// 200;// 200;
+		int historyLen= 500;// 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
+		int sampleLen=  50;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
 		int predictionLen=3;// 1;// 3;
 
 		//-- net geometry
-		char* levelRatioS= "1,0.5";//"1, 0.5, 1";//"0.7"
+		char* levelRatioS= "1,0.5";// "1, 0.5, 1";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 		bool useContext=false;
 		bool useBias=true;
 
 		//-- DataSets for train and run. batchSize can be different between the two
-		int batchsamplesCnt_T=1;// 10;
-		int batchsamplesCnt_R=1;// 10;
+		int batchsamplesCnt_T=1;// 50;// 10;
+		int batchsamplesCnt_R=1;// 50;// 10;
 
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
-		safeCallEE(trNN=new NN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias));
+		safeCallEE(trNN=new NN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
 		//-- 0.1. set training parameters
 		trNN->MaxEpochs=50;
 		trNN->NetSaveFreq=200;

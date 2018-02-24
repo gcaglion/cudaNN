@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
+#include "../SharedUtils/SharedUtils.h"
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
@@ -94,6 +95,7 @@ typedef struct s_matrix {
 				i++;
 			}
 		}
+		return 0;
 	}
 	void scale(float s) {
 		for (int i=0; i<(my*mx); i++) m[i]*=s;
@@ -198,20 +200,23 @@ EXPORT bool MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, nu
 EXPORT bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T);
 
 typedef struct s_Algebra {
+	
+	tDbg* dbg;
+
 	void* cublasH;
 	void* cuRandH;
 	void* cuStream[MAX_STREAMS];
 	numtype* ss;	// shared scalar
 
 	//-- class constructor/destructor
-	EXPORT s_Algebra();
+	EXPORT s_Algebra(tDbg* dbg_=nullptr);
 	~s_Algebra();
 
 	//-- class methods
-	EXPORT bool MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);
-	EXPORT bool getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool forceCPU);
+	EXPORT void MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);
+	EXPORT void getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool forceCPU);
 	//-- CPU<->GPU transfer functions
-	EXPORT bool h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
-	EXPORT bool d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
+	EXPORT void h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
+	EXPORT void d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
 } Algebra;
 
