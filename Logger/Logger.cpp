@@ -13,7 +13,7 @@ sLogger::sLogger(tDataFile* logFile) {
 	dest=LOG_TO_TEXT;
 	file=logFile;
 }
-sLogger::~sLogger() {}
+sLogger::~sLogger() { delete dbg; }
 
 bool sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV) {
 	if (saveMSE) {

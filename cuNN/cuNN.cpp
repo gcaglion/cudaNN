@@ -26,7 +26,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 	safeCallEE(createWeights());
 
 	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
-	safeCallEE(Alg=new Algebra(new tDbg()));
+	safeCallEE(Alg=new Algebra());
 
 	//-- x. malloc and set Activation function and scale parameters (also sets scaleMin / scaleMax)
 	ActivationFunction=(int*)malloc(levelsCnt*sizeof(int));
@@ -58,6 +58,9 @@ sNN::~sNN() {
 	//	free(weightsCnt);
 	//	free(levelFirstWeight);
 	//	free(ActivationFunction);
+
+	delete Alg;
+	delete dbg;
 }
 
 void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {

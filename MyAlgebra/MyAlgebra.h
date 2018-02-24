@@ -210,7 +210,7 @@ typedef struct s_Algebra {
 
 	//-- class constructor/destructor
 	EXPORT s_Algebra(tDbg* dbg_=nullptr);
-	~s_Algebra();
+	EXPORT ~s_Algebra();
 
 	//-- class methods
 	EXPORT void MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);

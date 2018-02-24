@@ -73,7 +73,9 @@ sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseO
 		outFile=outFile_;
 	}
 }
-
+sDbg::~sDbg() {
+	delete outFile;
+}
 //-- timing methods
 void sDbg::setStartTime() { startTime=timeGetTime(); }
 void sDbg::setElapsedTime() { elapsedTime=(DWORD)(timeGetTime()-startTime); }
@@ -81,6 +83,8 @@ void sDbg::setElapsedTime() { elapsedTime=(DWORD)(timeGetTime()-startTime); }
 
 //-- logging methods
 void sDbg::write(int LogType, const char* msg, int argcount, ...) {
+	if (LogType>level) return;
+
 	char*			arg_s;
 	int				arg_d;
 	double			arg_f;
@@ -93,7 +97,6 @@ void sDbg::write(int LogType, const char* msg, int argcount, ...) {
 	int iim;
 	//--
 
-	if (LogType>level) return;
 	if (ThreadSafeLogging) WaitForSingleObject(Mtx, INFINITE);
 
 	va_start(arguments, argcount);
@@ -203,7 +206,12 @@ sFileInfo::sFileInfo(char* Name_, char* Path_, bool append_) {
 	}
 }
 sFileInfo::~sFileInfo() {
+	fseek(handle, 0, SEEK_END); // seek to end of file
+	size_t fsize = ftell(handle); // get current file pointer
+
 	fclose(handle);
+
+	if (fsize==0) remove(FullName);
 }
 
 sDBConnection::sDBConnection(char* username, char* password, char* connstring, tDbg* dbg_) {
@@ -218,6 +226,7 @@ sDBConnection::sDBConnection(char* username, char* password, char* connstring, t
 	DBCtx=NULL;
 }
 sDBConnection::sDBConnection() {}
+sDBConnection::~sDBConnection() { delete dbg; }
 
 sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_) {
 	db=db_;

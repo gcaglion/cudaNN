@@ -59,38 +59,8 @@ typedef struct sTS {
 	numtype* d_trs;
 
 	//-- constructor / destructor
-	sTS(int steps_, int featuresCnt_, tDbg* dbg_=nullptr) {
-		if(dbg_==nullptr){
-			dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"));
-		} else {
-			dbg=dbg_;
-		}
-		steps=steps_;
-		featuresCnt=featuresCnt_;
-		len=steps*featuresCnt;
-		dmin=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		dmax=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		for (int f=0; f<featuresCnt; f++) {
-			dmin[f]=1e8; dmax[f]=-1e8;
-		}
-		scaleM=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		scaleP=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		dtime=(char**)malloc(len*sizeof(char*)); for (int i=0; i<len; i++) dtime[i]=(char*)malloc(12+1);
-		bdtime=(char*)malloc(12+1);
-		d=(numtype*)malloc(len*sizeof(numtype));
-		bd=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		d_tr=(numtype*)malloc(len*sizeof(numtype));
-		d_trs=(numtype*)malloc(len*sizeof(numtype));
-	}
-
-	~sTS() {
-		free(d);
-		free(bd);
-		free(d_trs);
-		free(d_tr);
-		for (int i=0; i<len; i++) free(dtime[i]);
-		free(dtime); free(bdtime);
-	}
+	EXPORT sTS(int steps_, int featuresCnt_, tDbg* dbg_=nullptr);
+	EXPORT ~sTS();
 	
 	EXPORT void load(tFXData* tsFXData, char* pDate0);
 	EXPORT void load(tDataFile* tsFileData, char* pDate0);
@@ -139,16 +109,7 @@ typedef struct sDataSet {
 
 	//-- constructor / destructor
 	EXPORT sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_=nullptr);
-	~sDataSet() {
-		free(sample);
-		if (target!=nullptr) free(target);
-		free(prediction);
-		free(sampleBFS);
-		free(targetBFS);
-		free(predictionBFS);
-		free(target0);
-		free(prediction0);
-	}
+	EXPORT ~sDataSet();
 
 	bool isSelected(int ts_f);
 	EXPORT void buildFromTS(TS* ts);

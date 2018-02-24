@@ -44,11 +44,13 @@ int main() {
 		//-- NN own debugger
 		tDbg* NNdbg=nullptr;
 
+		//-- set timing for main debugger
+		dbg->timing=true;
+
 		//-- create additional debuggers
 		safeCallEE(persistorDbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("persistor.log"), true));
 		safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 
-		dbg->timing=true;
 		safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));						//-- create DBConnection for FX History DB		
 		safeCallEE(eurusdH1=new tFXData(FXDB, "EURUSD", "H1", false));							//-- create FXData for EURUSD H1		
 		safeCallEE(persistDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO", persistorDbg));	//-- create DBConnection for Persistor DB
@@ -123,8 +125,15 @@ int main() {
 		//-- final Commit
 		persistor->Commit();
 
-		//-- destroy training NN
+		//-- destroy all objects (therefore all tDbg* objects, therefore all empty debug files)
+		delete FXDB;
+		delete persistor;
+		delete eurusdH1;
+		delete fxTS;
+		delete trainSet;
+		delete runSet;
 		delete trNN;
+
 	} catch(std::exception e) {
 		dbg->write(DBG_LEVEL_ERR, "Client failed.", 0);
 		return -1;

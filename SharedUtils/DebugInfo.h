@@ -38,6 +38,7 @@ typedef struct sDbg {
 #ifdef __cplusplus
 	//-- constructor (fully defaulted)
 	EXPORT sDbg(int level_=DBG_LEVEL_DEFAULT, int dest_=DBG_DEST_DEFAULT, tFileInfo* outFile_=nullptr, bool timing_=false, bool PauseOnError_=true, bool ThreadSafeLogging_=false);
+	EXPORT ~sDbg();
 
 	EXPORT void write(int LogType, const char* msg, int argcount, ...);
 	EXPORT void compose(char* mask, int argcount, ...);	//-- writes resulting message into errmsg
