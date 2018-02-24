@@ -15,53 +15,53 @@
 #define FAIL_INITCU "CUDA/CUBLAS Initialization Failed. \n"
 #define FAIL_CUDAMALLOC "CUDA malloc failed. \n"
 
-EXPORT int initCUDA();
-EXPORT int initCUBLAS(void* cublasH);
-EXPORT int initCURand(void* cuRandH);
-EXPORT int initCUstreams(void* cuStream[]);
+EXPORT bool initCUDA();
+EXPORT bool initCUBLAS(void* cublasH);
+EXPORT bool initCURand(void* cuRandH);
+EXPORT bool initCUstreams(void* cuStream[]);
 
-EXPORT int Malloc_cu(numtype** var, int size);
-EXPORT int Free_cu(numtype* var);
+EXPORT bool Malloc_cu(numtype** var, int size);
+EXPORT bool Free_cu(numtype* var);
 
 //-- CPU<->GPU transfer functions
-EXPORT int h2d_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
-EXPORT int d2h_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
+EXPORT bool h2d_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
+EXPORT bool d2h_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
 
-EXPORT int loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
-EXPORT int MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C);
+EXPORT bool loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]);
+EXPORT bool MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C);
 
 //-- scalar functions
-EXPORT int Sadd_cu(numtype* s1, numtype* s2, numtype* ssum);
+EXPORT bool Sadd_cu(numtype* s1, numtype* s2, numtype* ssum);
 
 //-- vector functions;
-EXPORT int getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, int col, numtype* oCol);
-EXPORT int Vscale_cu(int vlen, numtype* v, numtype s);
-EXPORT int Vcopy_cu(int vlen, numtype* v1, numtype* v2);
-EXPORT int Vadd_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
-EXPORT int Vdiff_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
-EXPORT int Vsum_cu(int Vlen, numtype* V, numtype* oSum, numtype* ss_d);
-EXPORT int Vssum_cu(int Vlen, numtype* V, numtype* oVssum);
-EXPORT int Vnorm_cu(void* cublasH, int Vlen, numtype* V, numtype* oVnorm, numtype* ss_d);
-EXPORT int Vinit_cu(int vlen, numtype* v, numtype start, numtype inc);
-EXPORT int VbyV2V_cu(int vlen, numtype* v1, numtype* v2, numtype* ov);
-EXPORT int VinitRnd_cu(int vlen, numtype* v, numtype rndmin, numtype rndmax, void* cuRandH);
+EXPORT bool getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, int col, numtype* oCol);
+EXPORT bool Vscale_cu(int vlen, numtype* v, numtype s);
+EXPORT bool Vcopy_cu(int vlen, numtype* v1, numtype* v2);
+EXPORT bool Vadd_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
+EXPORT bool Vdiff_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
+EXPORT bool Vsum_cu(int Vlen, numtype* V, numtype* oSum, numtype* ss_d);
+EXPORT bool Vssum_cu(int Vlen, numtype* V, numtype* oVssum);
+EXPORT bool Vnorm_cu(void* cublasH, int Vlen, numtype* V, numtype* oVnorm, numtype* ss_d);
+EXPORT bool Vinit_cu(int vlen, numtype* v, numtype start, numtype inc);
+EXPORT bool VbyV2V_cu(int vlen, numtype* v1, numtype* v2, numtype* ov);
+EXPORT bool VinitRnd_cu(int vlen, numtype* v, numtype rndmin, numtype rndmax, void* cuRandH);
 
 //-- kernel functions wrappers
 EXPORT void initGPUData(float *data, int numElements, float value);
-EXPORT int dumpArray_cu(int vlen, numtype* v, const char* fname);
-EXPORT int loadArray_cu(int vlen, numtype* v, const char* fname);
+EXPORT bool dumpArray_cu(int vlen, numtype* v, const char* fname);
+EXPORT bool loadArray_cu(int vlen, numtype* v, const char* fname);
 
 //-- matrix functions
-EXPORT int cuMtr_cublas(void* cublasH, int my, int mx, numtype* m, numtype* otm);
+EXPORT bool cuMtr_cublas(void* cublasH, int my, int mx, numtype* m, numtype* otm);
 
-EXPORT int Tanh_cu(int vlen, numtype* in, numtype* out);
-EXPORT int dTanh_cu(int vlen, numtype* in, numtype* out);
-EXPORT int Exp4_cu(int vlen, numtype* in, numtype* out);
-EXPORT int dExp4_cu(int vlen, numtype* in, numtype* out);
-EXPORT int Relu_cu(int vlen, numtype* in, numtype* out);
-EXPORT int dRelu_cu(int vlen, numtype* in, numtype* out);
-EXPORT int SoftPlus_cu(int vlen, numtype* in, numtype* out);
-EXPORT int dSoftPlus_cu(int vlen, numtype* in, numtype* out);
+EXPORT bool Tanh_cu(int vlen, numtype* in, numtype* out);
+EXPORT bool dTanh_cu(int vlen, numtype* in, numtype* out);
+EXPORT bool Exp4_cu(int vlen, numtype* in, numtype* out);
+EXPORT bool dExp4_cu(int vlen, numtype* in, numtype* out);
+EXPORT bool Relu_cu(int vlen, numtype* in, numtype* out);
+EXPORT bool dRelu_cu(int vlen, numtype* in, numtype* out);
+EXPORT bool SoftPlus_cu(int vlen, numtype* in, numtype* out);
+EXPORT bool dSoftPlus_cu(int vlen, numtype* in, numtype* out);
 
-EXPORT int cuMtr_naive(int my, int mx, numtype* m, numtype* omt);
+EXPORT bool cuMtr_naive(int my, int mx, numtype* m, numtype* omt);
 

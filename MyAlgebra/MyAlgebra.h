@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../MyUtils/MyUtils.h"
+#include "../SharedUtils/SharedUtils.h"
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
@@ -10,6 +10,15 @@
 #include "../MyCU/MyCU.h"
 #else
 #define MAX_STREAMS 1
+#endif
+
+//-- generic swap function
+#ifdef __cplusplus
+template <typename T> EXPORT void swap(T* v1, T* v2) {
+	T tmp=(*v1);
+	(*v1)=(*v2);
+	(*v2)=tmp;
+}
 #endif
 
 //-- Exceptions
@@ -86,6 +95,7 @@ typedef struct s_matrix {
 				i++;
 			}
 		}
+		return 0;
 	}
 	void scale(float s) {
 		for (int i=0; i<(my*mx); i++) m[i]*=s;
@@ -153,57 +163,60 @@ EXPORT void Vscale(int Vlen, int* V, float s);
 //--
 
 //-- vector functions
-EXPORT int Vscale(int vlen, numtype* v, numtype s);
-EXPORT int Vcopy(int vlen, numtype* v1, numtype* v2);
-EXPORT int Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
-EXPORT int Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
-EXPORT int Vssum(int vlen, numtype* v, numtype* ovssum);
-EXPORT int Vinit(int size, numtype* v, numtype start, numtype inc);
-EXPORT int VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH=NULL);
-EXPORT int VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV);
+EXPORT bool Vscale(int vlen, numtype* v, numtype s);
+EXPORT bool Vcopy(int vlen, numtype* v1, numtype* v2);
+EXPORT bool Vadd(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
+EXPORT bool Vdiff(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov);
+EXPORT bool Vssum(int vlen, numtype* v, numtype* ovssum);
+EXPORT bool Vinit(int size, numtype* v, numtype start, numtype inc);
+EXPORT bool VinitRnd(int Vlen, numtype* V, numtype rndmin, numtype rndmax, void* cuRandH=NULL);
+EXPORT bool VbyV2V(int Vlen, numtype* V1, numtype* V2, numtype* oV);
 
 //-- TODO: CUDA version!
 EXPORT void MbyV(int my, int mx, numtype* m, bool Transpose, numtype* v, numtype* ov);
 
 //-- matrix functions
-EXPORT int Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm);
+EXPORT bool Mtranspose(void* cublasH, int my, int mx, numtype* m, numtype* otm);
 
-EXPORT int myMalloc(numtype** var, int size);
-EXPORT int myFree(numtype* var);
+EXPORT bool myMalloc(numtype** var, int size);
+EXPORT bool myFree(numtype* var);
 
-EXPORT int dumpArray(int vlen, numtype* v, const char* fname);
-EXPORT int dumpArrayH(int vlen, numtype* v, const char* fname);
-EXPORT int loadArray(int vlen, numtype* v, const char* fname);
+EXPORT bool dumpArray(int vlen, numtype* v, const char* fname);
+EXPORT bool dumpArrayH(int vlen, numtype* v, const char* fname);
+EXPORT bool loadArray(int vlen, numtype* v, const char* fname);
 
-EXPORT int Tanh(int Vlen, numtype* in, numtype* out);
-EXPORT int dTanh(int Vlen, numtype* in, numtype* out);
-EXPORT int Exp4(int Vlen, numtype* in, numtype* out);
-EXPORT int dExp4(int Vlen, numtype* in, numtype* out);
-EXPORT int Relu(int Vlen, numtype* in, numtype* out);
-EXPORT int dRelu(int Vlen, numtype* in, numtype* out);
-EXPORT int SoftPlus(int Vlen, numtype* in, numtype* out);
-EXPORT int dSoftPlus(int Vlen, numtype* in, numtype* out);
+EXPORT bool Tanh(int Vlen, numtype* in, numtype* out);
+EXPORT bool dTanh(int Vlen, numtype* in, numtype* out);
+EXPORT bool Exp4(int Vlen, numtype* in, numtype* out);
+EXPORT bool dExp4(int Vlen, numtype* in, numtype* out);
+EXPORT bool Relu(int Vlen, numtype* in, numtype* out);
+EXPORT bool dRelu(int Vlen, numtype* in, numtype* out);
+EXPORT bool SoftPlus(int Vlen, numtype* in, numtype* out);
+EXPORT bool dSoftPlus(int Vlen, numtype* in, numtype* out);
 
-EXPORT int VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu);
-EXPORT int Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtype scale2, numtype* oV, bool usegpu);
-EXPORT int MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu);
-EXPORT int MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T);
+EXPORT bool VVVcomp(int Vlen, numtype* V1, numtype* V2, numtype* oV, bool usegpu);
+EXPORT bool Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtype scale2, numtype* oV, bool usegpu);
+EXPORT bool MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu);
+EXPORT bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T);
 
 typedef struct s_Algebra {
+	
+	tDbg* dbg;
+
 	void* cublasH;
 	void* cuRandH;
 	void* cuStream[MAX_STREAMS];
 	numtype* ss;	// shared scalar
 
 	//-- class constructor/destructor
-	EXPORT s_Algebra();
-	~s_Algebra();
+	EXPORT s_Algebra(tDbg* dbg_=nullptr);
+	EXPORT ~s_Algebra();
 
 	//-- class methods
-	EXPORT int MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);
-	EXPORT int getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool forceCPU);
+	EXPORT void MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);
+	EXPORT void getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool forceCPU);
 	//-- CPU<->GPU transfer functions
-	EXPORT int h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
-	EXPORT int d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
+	EXPORT void h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
+	EXPORT void d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
 } Algebra;
 

@@ -2,7 +2,6 @@
 #pragma once
 #include "../CommonEnv.h"
 
-#define MAXDATASETS 8
 typedef struct sMT4Data {
 	int FileDataSetsCount;
 } tMT4Data;
