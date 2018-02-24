@@ -47,7 +47,13 @@ int main() {
 	DataSet* runSet;
 	//--
 	NN* trNN=nullptr;
+
+	float x=12.3456789;
+	printf("id=%d; desc=%s;abcd x=%10.4f; int=%d . Bye!\n", 12, "description", x, -3);
+	dbg->write(DBG_LEVEL_STD,	"id=%d; desc=%s;abcd x=%10.4f; int=%d . Bye!\n", 4,	12, "description", x, -3);
+	system("pause");
 		
+	dbg->timing=true;
 	safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));						//-- create DBConnection for FX History DB		
 	safeCallEE(eurusdH1=new tFXData(FXDB, "EURUSD", "H1", false));							//-- create FXData for EURUSD H1		
 	safeCallEE(persistDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO", persistorDbg));	//-- create DBConnection for Persistor DB
@@ -133,57 +139,3 @@ int main() {
 	return 0;
 
 }
-
-/*
-//-- case 1a: throw exception from constructor / method
-typedef struct sMyClass {
-	tDbg* dbg;
-
-	sMyClass(char* cpname, int cpval) {
-		dbg=new tDbg();
-	}
-
-	void fail() {
-		throwE("--reason-for-failure---, paramName=%s , paramValue=%d \n", 2, "Cparam1", 15);
-	}
-} tMyClass;
-//-- case 2a: return error from boolean function
-bool calcErr(char* cp, int ip, sDbg* dbg=nullptr) {
-	if (dbg==nullptr) dbg=new sDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH);
-	throwB("--reason-for-failure--- , cp=%s , ip=%d", 2, cp, ip);
-	return true;
-}
-
-int main() {
-
-	//-- client debugger declaration
-	sDbg* dbg=nullptr;
-
-	//-- enclose everything that might throw anything
-	try {
-		//-- create client debugger. need to proof with 3a/3b
-		dbg=new sDbg(DBG_LEVEL_STD, DBG_DEST_BOTH, nullptr, true);
-
-		//-- objects created by this client
-		tMyClass* mycl;
-
-		//-- case 1b: caller of exception-throwing constructor / method (SUCCESS)
-		safeCallE(mycl=new tMyClass("myClass param1", 123));
-		//-- case 1b: caller of exception-throwing constructor / method (FAILURE)
-		safeCallE(mycl->fail());
-
-		//-- case 2b: caller of boolean functions
-		int p=222;
-		safeCallB(calcErr("Bf param 1", p));
-
-	} catch(std::exception e) {
-		if (dbg==nullptr) {
-			fprintf(stderr, "\n CRITICAL ERROR: could not create main client debugger!\n");
-			system("pause"); return -1;
-		}
-	}
-
-	system("pause");
-	return 0;
-}
-*/

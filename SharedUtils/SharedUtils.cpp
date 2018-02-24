@@ -75,40 +75,59 @@ sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseO
 	}
 }
 
+//-- timing methods
+void sDbg::setStartTime() { startTime=timeGetTime(); }
+void sDbg::setElapsedTime() { elapsedTime=(DWORD)(timeGetTime()-startTime); }
+//--
+
+//-- logging methods
 void sDbg::write(int LogType, const char* msg, int argcount, ...) {
-	// pLogLevel=	0 (No screen, No file) | 1 (Screen, No file) | 2 (Screen AND File)
-	int n;
 	char*			arg_s;
 	int				arg_d;
 	double			arg_f;
 	va_list			arguments;
-	char submsg[MAX_PATH];
-	unsigned int	im = 0;
-	int				prev_im = 0;
+	char			submsg[1024];
+	unsigned int	im=0, prev_im = 0;
+
+	//--
+	char fmask[16];
+	int fmasklen;
+	int iim;
+	//--
 
 	if (LogType>level) return;
-
 	if (ThreadSafeLogging) WaitForSingleObject(Mtx, INFINITE);
 
 	va_start(arguments, argcount);
-	n = 0;
-
 	do {
 		if (msg[im]==37) {                // "%"
 			memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
-			n++;
-			prev_im = im+2;
-			if (msg[im+1]==115) {   // "s"
+			if (msg[im+1]=='s') {   // "s"
+				prev_im = im+2;
 				arg_s = va_arg(arguments, char*);
 				argOut(LogType, submsg, arg_s);
-			} else if (submsg[im+1]==100) {   // "d"
+			} else if (msg[im+1]=='d') {   // "d"
+				prev_im = im+2;
 				arg_d = va_arg(arguments, int);
 				argOut(LogType, submsg, arg_d);
-			} else if (submsg[im+1]==112) {   // "p"
+			} else if (msg[im+1]=='p') {   // "p"
+				prev_im = im+2;
 				arg_d = va_arg(arguments, long);
 				argOut(LogType, submsg, arg_d);
-			} else {   // this could be 67 ("f") or any mask before "f" -> in any case, it's a double
+			} else {   // this could be 'f' or any mask before 'f' -> in any case, it's a double
 				arg_f = va_arg(arguments, double);
+				//--
+				iim=0;
+				//-- if there's a mask before 'f', we need to re-define submsg
+				while (msg[im+iim]!='f') {
+					fmask[iim]=msg[im+iim];
+					iim++;
+				}
+				fmask[iim]='f'; fmask[iim+1]='\0';
+				memcpy(&submsg[strlen(submsg)-2], fmask, iim+2);
+				im+=iim;
+				prev_im=im+1;
+				//--
 				argOut(LogType, submsg, arg_f);
 			}
 		}
@@ -124,7 +143,6 @@ void sDbg::write(int LogType, const char* msg, int argcount, ...) {
 
 	if (ThreadSafeLogging) ReleaseMutex(Mtx);
 }
-
 void sDbg::compose(char* msg_, int argcount, ...) {
 	va_list			arguments;
 	char submsg[MAX_PATH];
@@ -162,7 +180,6 @@ void sDbg::compose(char* msg_, int argcount, ...) {
 	} while (im<strlen(msg));
 	va_end(arguments);
 }
-
 template <typename T> void sDbg::argOut(int msgType, char* submsg, T arg) {
 	if (msgType==DBG_LEVEL_ERR) {
 		//-- file log is mandatory in case of error
@@ -175,6 +192,7 @@ template <typename T> void sDbg::argOut(int msgType, char* submsg, T arg) {
 		if (dest==DBG_DEST_FILE||dest==DBG_DEST_BOTH) fprintf(outFile->handle, submsg, arg);
 	}
 }
+//--
 
 sFileInfo::sFileInfo(char* Name_, char* Path_, bool append_) {
 	strcpy_s(Name, MAX_PATH, Name_);

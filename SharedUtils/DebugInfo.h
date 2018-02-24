@@ -33,7 +33,7 @@ typedef struct sDbg {
 	//-- timing stuff
 	bool timing;
 	DWORD startTime;
-	DWORD elapsed;
+	DWORD elapsedTime;
 
 #ifdef __cplusplus
 	//-- constructor (fully defaulted)
@@ -41,6 +41,9 @@ typedef struct sDbg {
 
 	EXPORT void write(int LogType, const char* msg, int argcount, ...);
 	EXPORT void compose(char* mask, int argcount, ...);	//-- writes resulting message into errmsg
+
+	EXPORT void setStartTime();
+	EXPORT void setElapsedTime();
 
 private:
 	template <typename T> void argOut(int msgType, char* submsg, T arg);
@@ -64,10 +67,13 @@ private:
 //-- class calling class
 #define safeCallEE(block) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
+	if(dbg->timing) dbg->setStartTime(); \
 	try {block;} catch (std::exception e) { \
 		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); throw(e); \
 	} \
-	dbg->write(DBG_LEVEL_STD, "SUCCESS.\n", 0); \
+	dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
+	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
+	dbg->write(DBG_LEVEL_STD, "\n", 0); \
 }
 //-- class calling boolean
 #define safeCallEB(block) { \
