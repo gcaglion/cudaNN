@@ -8,11 +8,6 @@
 
 int main() {
 
-	//dbgcli();
-	//dbgcli2();
-	//system("pause");
-	//return -1;
-
 	DWORD mainStart=timeGetTime();
 	//--
 	int clientPid=GetCurrentProcessId();

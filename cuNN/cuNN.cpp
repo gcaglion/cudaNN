@@ -87,14 +87,11 @@ void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {
 	//-- 0.3. set nodesCnt (single sample)
 	nodesCnt[0] = InputCount;
 	nodesCnt[levelsCnt-1] = OutputCount;
-	for (nl = 0; nl<(levelsCnt-2); nl++) {
-		nodesCnt[nl+1] = (int)floor(nodesCnt[nl]*levelRatio[nl]);
-	}
+	for (nl = 0; nl<(levelsCnt-2); nl++) nodesCnt[nl+1] = (int)floor(nodesCnt[nl]*levelRatio[nl]);
+
 	//-- add context neurons
 	if (useContext) {
-		for (nl = levelsCnt-1; nl>0; nl--) {
-			nodesCnt[nl-1] += nodesCnt[nl];
-		}
+		for (nl = levelsCnt-1; nl>0; nl--) nodesCnt[nl-1] += nodesCnt[nl];
 	}
 	//-- add one bias neurons for each layer, except output layer
 	if (useBias) {
@@ -124,9 +121,7 @@ void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {
 
 	//-- ctxStart[] can only be defined after levelFirstNode has been defined.
 	if (useContext) {
-		for (nl=0; nl<(levelsCnt-1); nl++) {
-			ctxStart[nl]=levelFirstNode[nl+1]-nodesCnt[nl+1]+((useBias) ? 1 : 0);
-		}
+		for (nl=0; nl<(levelsCnt-1); nl++) ctxStart[nl]=levelFirstNode[nl+1]-nodesCnt[nl+1]+((useBias) ? 1 : 0);
 	}
 
 	for (i=0; i<60; i++) free(DescList[i]);	free(DescList);
