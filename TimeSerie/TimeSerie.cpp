@@ -54,10 +54,10 @@ void sTS::load(tMT4Data* tsMT4Data, char* pDate0) {
 	throwE("", 0);
 }
 void sTS::dump(char* dumpFileName) {
-	int s,f; 
+	int s, f;
 	tFileInfo* fdump; safeCallEE(fdump=new tFileInfo(dumpFileName));
 	fprintf(fdump->handle, "i, datetime");
-	for (f=0; f<featuresCnt; f++) fprintf(fdump->handle, ",F%d_orig,F%d_tr,F%d_trs", f, f, f);	
+	for (f=0; f<featuresCnt; f++) fprintf(fdump->handle, ",F%d_orig,F%d_tr,F%d_trs", f, f, f);
 	fprintf(fdump->handle, "\n%d,%s", -1, bdtime);
 	for (f=0; f<featuresCnt; f++) {
 		fprintf(fdump->handle, ",%f", bd[f]);
@@ -137,7 +137,7 @@ void sTS::transform(int dt_) {
 }
 void sTS::scale(numtype scaleMin_, numtype scaleMax_) {
 	//-- ScaleMin/Max depend on the core, scaleM/P are specific for each feature
-	
+
 	if (!hasTR) throwE("-- must transform before scaling! ---", 0);
 
 	for (int f=0; f<featuresCnt; f++) {
@@ -222,18 +222,14 @@ sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedF
 	}
 	sourceTS=sourceTS_;
 	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
-	sampleLen=sampleLen_; 
-	targetLen=targetLen_; 
-<<<<<<< HEAD
-	samplesCnt=sourceTS->steps-sampleLen-targetLen+1;
-=======
+	sampleLen=sampleLen_;
+	targetLen=targetLen_;
 	samplesCnt=sourceTS->steps-sampleLen-targetLen;// +1;
 	if (samplesCnt<1) throwE("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
->>>>>>> SharedUtils
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;
 	if ((batchCnt*batchSamplesCnt)!=samplesCnt) throwE("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
-	
+
 	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
 	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
 	prediction=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
@@ -279,14 +275,14 @@ void sDataSet::dump(char* filename) {
 
 	LogFile = fopen(LogFileName, "w");
 	fprintf(LogFile, "SampleId\t");
-	for ( b=0; b<(sampleLen); b++) {
-		for ( f=0; f<selectedFeaturesCnt; f++) {
+	for (b=0; b<(sampleLen); b++) {
+		for (f=0; f<selectedFeaturesCnt; f++) {
 			fprintf(LogFile, "  Bar%dF%d\t", b, selectedFeature[f]);
 		}
 	}
 	fprintf(LogFile, "\t");
-	for ( b=0; b<(targetLen); b++) {
-		for ( f=0; f<selectedFeaturesCnt; f++) {
+	for (b=0; b<(targetLen); b++) {
+		for (f=0; f<selectedFeaturesCnt; f++) {
 			fprintf(LogFile, "  Prd%dF%d\t", b, selectedFeature[f]);
 		}
 	}
@@ -312,7 +308,7 @@ void sDataSet::dump(char* filename) {
 			}
 		}
 		fprintf(LogFile, "|\t");
-		
+
 		//-- targets
 		tidx=sidx;
 		for (b=0; b<targetLen; b++) {
@@ -381,7 +377,7 @@ void sDataSet::SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS
 	for (int bar=0; bar<B; bar++) {												// i1=bar	l1=B
 		for (int f=0; f<F; f++) {										// i2=f		l2=F
 			for (int s=0; s<S; s++) {										// i3=s		l3=S
-				idx=idx0 +s*F*B +bar*F +f;
+				idx=idx0+s*F*B+bar*F+f;
 				toBFS[i]=fromSBF[idx];
 				i++;
 			}
@@ -398,7 +394,7 @@ void sDataSet::BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF
 	for (int s=0; s<S; s++) {												// i1=s		l1=S
 		for (int bar=0; bar<B; bar++) {											// i2=bar	l1=B
 			for (int f=0; f<F; f++) {									// i3=f		l3=F
-				idx=idx0 +bar*F*S +f*S +s;
+				idx=idx0+bar*F*S+f*S+s;
 				toSBF[i]=fromBFS[idx];
 				i++;
 			}
@@ -412,7 +408,7 @@ void sDataSet::BFS2SFBfull(int barCnt, numtype* fromBFS, numtype* toSFB) {
 	int F=selectedFeaturesCnt;
 	int B=barCnt;
 	int i, idx, idx0;
-	for(int batchId=0; batchId<batchCnt; batchId++) {
+	for (int batchId=0; batchId<batchCnt; batchId++) {
 		idx0=batchId*B*F*S;
 		i=idx0;
 		for (int s=0; s<S; s++) {												// i1=s		l1=S
