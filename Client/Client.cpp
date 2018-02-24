@@ -48,11 +48,11 @@ int main() {
 	//--
 	NN* trNN=nullptr;
 
-	float x=12.3456789;
+/*	float x=12.3456789;
 	printf("id=%d; desc=%s;abcd x=%10.4f; int=%d . Bye!\n", 12, "description", x, -3);
 	dbg->write(DBG_LEVEL_STD,	"id=%d; desc=%s;abcd x=%10.4f; int=%d . Bye!\n", 4,	12, "description", x, -3);
 	system("pause");
-		
+*/		
 	dbg->timing=true;
 	safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));						//-- create DBConnection for FX History DB		
 	safeCallEE(eurusdH1=new tFXData(FXDB, "EURUSD", "H1", false));							//-- create FXData for EURUSD H1		
@@ -69,7 +69,7 @@ int main() {
 	int predictionLen=3;// 1;// 3;
 
 	//-- net geometry
-	char* levelRatioS= "1, 0.5";//"1, 0.5, 1";//"0.7"
+	char* levelRatioS= " 1 ,  0.5";//"1, 0.5, 1";//"0.7"
 	int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 	bool useContext=false;
 	bool useBias=true;

@@ -69,7 +69,8 @@ private:
 	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
 	try {block;} catch (std::exception e) { \
-		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); throw(e); \
+		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); \
+		throw(e); \
 	} \
 	dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
 	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
@@ -78,24 +79,40 @@ private:
 //-- class calling boolean
 #define safeCallEB(block) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
-	if((block)){ \
-		dbg->write(DBG_LEVEL_STD, "SUCCESS.\n", 0); } else { dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); throw std::exception("Call to bool function failed"); \
+	if(dbg->timing) dbg->setStartTime(); \
+	if(!(block)){ \
+		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); \
+		throw std::exception("Call to bool function failed"); \
+	} else {\
+		dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
 	}\
+	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
+	dbg->write(DBG_LEVEL_STD, "\n", 0); \
 }
 //-- boolean calling class
 #define safeCallBE(block) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
+	if(dbg->timing) dbg->setStartTime(); \
 	try {block;} catch (std::exception e) { \
-		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); return false; \
+		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); \
+		return false; \
 	} \
-	dbg->write(DBG_LEVEL_STD, "SUCCESS.\n", 0); \
-	return true; \
+	dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
+	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
+	dbg->write(DBG_LEVEL_STD, "\n", 0); \
 }
 //-- boolean calling boolean
 #define safeCallBB(block) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s\n", 1, (#block)); \
-	if(!(block)) return false; \
-	return true; \
+	if(dbg->timing) dbg->setStartTime(); \
+	if(!(block)) {\
+		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); \
+		return false; \
+	} else { \
+		dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
+	} \
+	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
+	dbg->write(DBG_LEVEL_STD, "\n", 0); \
 }
 
 //-- throw exception from class method

@@ -11,8 +11,7 @@ EXPORT void Trim(char* str) {
 	while (isspace(str[r-1])>0) r--;
 	for (i = 0; i<(r-l); i++) ret[i] = str[l+i];
 	ret[r-l] = '\0';
-	//strcpy(str, ret);
-	memcpy_s(str, strlen(str), ret, r-l-1);
+	strcpy_s(str, MAX_PATH, ret);
 }
 EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
 	//-- 1. Put a <separator>-separated list of string values into an array of strings, and returns list length
@@ -27,7 +26,7 @@ EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
 			// separator
 			memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
 			StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
-			Trim(StrList[ListLen]);
+			//Trim(StrList[ListLen]);
 			ListLen++;
 			prevSep = i;
 		}
@@ -36,7 +35,7 @@ EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
 	//-- portion of pDesc after the last comma
 	memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
 	StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
-	Trim(StrList[ListLen]);
+	//Trim(StrList[ListLen]);
 
 	return (ListLen+1);
 }
@@ -91,7 +90,6 @@ void sDbg::write(int LogType, const char* msg, int argcount, ...) {
 
 	//--
 	char fmask[16];
-	int fmasklen;
 	int iim;
 	//--
 

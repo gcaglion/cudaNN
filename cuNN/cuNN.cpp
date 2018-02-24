@@ -87,7 +87,9 @@ void sNN::setLayout(char LevelRatioS[60], int batchSamplesCnt_) {
 	//-- 0.3. set nodesCnt (single sample)
 	nodesCnt[0] = InputCount;
 	nodesCnt[levelsCnt-1] = OutputCount;
-	for (nl = 0; nl<(levelsCnt-2); nl++) nodesCnt[nl+1] = (int)floor(nodesCnt[nl]*levelRatio[nl]);
+	for (nl = 0; nl<(levelsCnt-2); nl++) {
+		nodesCnt[nl+1] = (int)floor(nodesCnt[nl]*levelRatio[nl]);
+	}
 	//-- add context neurons
 	if (useContext) {
 		for (nl = levelsCnt-1; nl>0; nl--) {
@@ -218,7 +220,7 @@ bool sNN::Activate(int level) {
 		retf=-1;
 		break;
 	}
-	if (!(retf==0&&retd==0)) throwB("retf=%d ; retd=%d", 2, retf, retd);
+	if (!(retf&&retd)) throwB("retf=%d ; retd=%d", 2, retf, retd);
 
 	return true;
 }
@@ -362,13 +364,13 @@ bool sNN::BackwardPass(DataSet* ds, int batchId, bool updateWeights) {
 
 	//-- 1. BackPropagate, calc dJdW for for current batch
 	BPstart=timeGetTime(); BPcnt++;
-	safeCallBB(BP_std());
+	if (!BP_std()) return false;	// safeCallBB(BP_std());
 	BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
 
 	//-- 2. Weights Update for current batch
 	WUstart=timeGetTime(); WUcnt++;
 	if (updateWeights) {
-		safeCallBB(WU_std());
+		if (!WU_std()) return false;	// safeCallBB(WU_std());
 	}
 	WUtimeTot+=((DWORD)(timeGetTime()-WUstart));
 
