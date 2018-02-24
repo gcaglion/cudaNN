@@ -335,7 +335,7 @@ bool sNN::ForwardPass(DataSet* ds, int batchId, bool haveTargets) {
 
 	//-- 1. load samples (and targets, if passed) from single batch in dataset onto input layer
 	LDstart=timeGetTime(); LDcnt++;
-	safeCallBB(Alg->h2d(&F[(useBias) ? 1 : 0], &ds->sampleBFS[batchId*InputCount], InputCount*sizeof(numtype), true));
+	safeCallBB(Alg->h2d(&F[(useBias)?1:0], &ds->sampleBFS[batchId*InputCount], InputCount*sizeof(numtype), true));
 	if (haveTargets) {
 		safeCallBB(Alg->h2d(&u[0], &ds->targetBFS[batchId*OutputCount], OutputCount*sizeof(numtype), true));
 	}
@@ -359,13 +359,13 @@ bool sNN::BackwardPass(DataSet* ds, int batchId, bool updateWeights) {
 
 	//-- 1. BackPropagate, calc dJdW for for current batch
 	BPstart=timeGetTime(); BPcnt++;
-	if (!BP_std()) return false;	// safeCallBB(BP_std());
+	safeCallBB(BP_std());
 	BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
 
 	//-- 2. Weights Update for current batch
 	WUstart=timeGetTime(); WUcnt++;
 	if (updateWeights) {
-		if (!WU_std()) return false;	// safeCallBB(WU_std());
+		safeCallBB(WU_std());
 	}
 	WUtimeTot+=((DWORD)(timeGetTime()-WUstart));
 
@@ -408,7 +408,7 @@ void sNN::train(DataSet* trs) {
 
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
-	//if(!dumpArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt")) return -1;
+	//safeCallEB(dumpArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
 	safeCallEB(loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
 
 	//---- 0.3. Init dW, dJdW
