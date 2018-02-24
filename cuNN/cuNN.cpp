@@ -6,7 +6,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 
 	//-- set debug parameters
 	if (dbg_==nullptr) {
-		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("cuNN.err"));
+		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("NN.err"));
 	} else {
 		dbg=dbg_;
 	}

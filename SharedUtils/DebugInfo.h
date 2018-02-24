@@ -65,6 +65,19 @@ private:
 //--	safeCallBE()
 //--	safeCallEB()
 
+//-- main debugger declaration & creation
+#define createMainDebugger(level, dest) \
+sDbg* dbg=nullptr; \
+try { \
+	dbg=new tDbg(level, dest, new tFileInfo("mainDebugger.log", DEBUG_DEFAULT_PATH)); \
+} \
+catch (std::exception e) { \
+	if (dbg==nullptr) { \
+		fprintf(stderr, "\n CRITICAL ERROR: could not create main client debugger!\n"); \
+		system("pause"); return -1; \
+	} \
+}
+
 //-- class calling class
 #define safeCallEE(block) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
