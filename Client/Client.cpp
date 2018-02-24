@@ -12,143 +12,21 @@ int main() {
 	int clientPid=GetCurrentProcessId();
 	int clientTid=GetCurrentThreadId();
 
-<<<<<<< HEAD
-	float scaleM, scaleP;
-
-	//-- data params
-	int modelFeature[]={ 1};
-	int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
-	int dataTransformation=DT_DELTA;
-	int historyLen= 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
-	int sampleLen= 50;//;// 20; //6;// 200;// 200;
-	int predictionLen=3;
-
-	//-- net geometry
-	char* levelRatioS= "1, 0.5";//"1, 0.5, 1";//
-	int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
-	bool useContext=false;
-	bool useBias=false;
-
-	//-- DataSets for train and run. batchSize can be different between the two
-	DataSet* trainSet;	int batchsamplesCnt_T=1;// 10;
-	DataSet* runSet;	int batchsamplesCnt_R=1;// 10;
-
-	//-- logging parameters
-	bool saveClient=true;
-	bool saveMSE=true;
-	bool saveRun=true;
-	bool saveW=false;
-	bool saveNet=false;
-
-	//-- Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
-	NN* trNN=nullptr;
-=======
 	//-- main debugger declaration & creation
 	sDbg* dbg=nullptr;
->>>>>>> SharedUtils
 	try {
 		dbg=new tDbg(DBG_LEVEL_STD, DBG_DEST_BOTH, new tFileInfo("Client.log", DEBUG_DEFAULT_PATH));
-	} catch (std::exception e) {
+	}
+	catch (std::exception e) {
 		if (dbg==nullptr) {
 			fprintf(stderr, "\n CRITICAL ERROR: could not create main client debugger!\n");
 			system("pause"); return -1;
 		}
 	}
 
-<<<<<<< HEAD
-	//-- 1. load timeserie, transform, and scale it according to level 0 activation
-	const int FXfeaturesCnt=5;	//-- OHLC, fixed by the query
-	char* tsDate0="201612300000";
-	start=timeGetTime();
-	TS* ts1=new TS(historyLen, FXfeaturesCnt, DebugParms);
-	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), tsDate0)!=0) return -1;
-	printf("ts1 create+load, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));	
-	ts1->dump("C:/temp/ts1.orig.csv");
-
-	//-- 2. apply data transformation
-	if (ts1->transform(dataTransformation)!=0) return -1;
-	//ts1->dump("C:/temp/ts1.tr.csv");
-
-	//-- scale according to activation at network level 0 
-	ts1->scale(trNN->scaleMin[0], trNN->scaleMax[0]);
-	//ts1->dump("C:/temp/ts1.trs.csv");
-
-	//-- 3. create training dataset from timeserie
-	//-- sampleLen/predictionLen is taken from nn
-	//-- model features cnt must be taken from nn
-	//-- model features list is defined here.
-	//-- batch size is defined here, and can be different between train and run datasets
-
-	start=timeGetTime();
-	try {
-		trainSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_T);
-	}
-	catch (const char* e) {
-		LogWrite(DebugParms, LOG_ERROR, "TRAIN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_T);
-		return -1;
-	}
-	trainSet->dump("c:/temp/trainSet.log");
-	printf("build train DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-=======
 	//-- everything must be enclosed in try/catch block
->>>>>>> SharedUtils
 
 	try {
-<<<<<<< HEAD
-		runSet=new DataSet(ts1, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R);
-	}
-	catch (const char* e) {
-		LogWrite(DebugParms, LOG_ERROR, "RUN Dataset creation failed: %s (sampleLen=%d, predictionLen=%d, batchSampleCnt=%d)\n", 4, e, sampleLen, predictionLen, batchsamplesCnt_R);
-		return -1;
-	}
-	//runSet->dump("C:/temp/runSet.log");
-	printf("build run DataSet from ts, elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-
-
-	//-- set training parameters
-	trNN->MaxEpochs=300;
-	trNN->NetSaveFreq=200;
-	trNN->TargetMSE=(float)0.0001;
-	trNN->BP_Algo=BP_STD;
-	trNN->LearningRate=(numtype)0.01;
-	trNN->LearningMomentum=(numtype)0.5;
-	trNN->StopOnDivergence=false;
-
-	//-- train with training Set, which specifies batch size and features list (not count)
-	if (trNN->train(trainSet)!=0) {
-		LogWrite(DebugParms, LOG_ERROR, "Network Training failed\n", 0);
-		return -1;
-	}
-	//-- persist MSE 
-	if(saveMSE){
-		start=timeGetTime();
-		if (LogSaveMSE(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV)!=0) return -1;
-		printf("LogSaveMSE() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	}
-	//-- persist final W
-	if (saveW) {
-		start=timeGetTime();
-		if (LogSaveW(DebugParms, trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W)!=0) return -1;
-		printf("LogSaveW() elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	}
-	//-- Persist network structure
-	if (saveNet) {
-		//if (LogSaveStruct(DebugParms, trNN->pid, trNN->tid, trNN->InputCount, trNN->OutputCount, trNN->featuresCnt, trNN->sampleLen, trNN->predictionLen, trNN->batchCnt, batchSamplesCount, trNN->useContext, trNN->useBias, trNN->ActivationFunction, trNN->MaxEpochs, trNN->ActualEpochs, trNN->TargetMSE, trNN->StopOnDivergence, trNN->NetSaveFreq, trNN->BP_Algo, trNN->LearningRate, trNN->LearningMomentum)!=0) return -1;
-	}
-
-	//-- run
-	start=timeGetTime();
-	trNN->run(runSet, nullptr);
-	printf("run() , elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	
-	//-- persist run
-	if (saveRun) {
-		start=timeGetTime();
-		if (LogSaveRun(DebugParms, trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0)!=0) return -1;
-		printf("LogSaveRun(), elapsed time=%ld \n", (DWORD)(timeGetTime()-start));
-	}
-=======
->>>>>>> SharedUtils
 
 		//-- db connections
 		tDBConnection* FXDB=nullptr;
@@ -180,7 +58,7 @@ int main() {
 		safeCallEE(persistor=new tLogger(persistDB, persistorDbg));								//-- create Logger from persistDB connection to save results data		
 		persistor->saveImage=false;																//-- logger parameters (when different from default settings)
 
-		//-- data params
+																								//-- data params
 		int modelFeature[]={ 1 };
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 		int dataTransformation=DT_DELTA;
@@ -188,7 +66,7 @@ int main() {
 		int sampleLen=  50;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
 		int predictionLen=3;// 1;// 3;
 
-		//-- net geometry
+							//-- net geometry
 		char* levelRatioS= "1,0.5";// "1, 0.5, 1";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 		bool useContext=false;
@@ -198,7 +76,7 @@ int main() {
 		int batchsamplesCnt_T=1;// 50;// 10;
 		int batchsamplesCnt_R=1;// 50;// 10;
 
-		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
+								//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 		safeCallEE(trNN=new NN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
 		//-- 0.1. set training parameters
 		trNN->MaxEpochs=50;
@@ -259,7 +137,8 @@ int main() {
 
 		dbg->write(DBG_LEVEL_STD, "\nTotal Client Elapsed time: %.4f s.\n", 1, ((timeGetTime()-mainStart)/(float)1000));
 		delete dbg;
-	} catch(std::exception e) {
+	}
+	catch (std::exception e) {
 		dbg->write(DBG_LEVEL_ERR, "Client failed.", 0);
 		return -1;
 	}
