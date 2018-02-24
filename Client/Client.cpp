@@ -117,10 +117,10 @@ int main() {
 		safeCallEE(persistor->SaveW(trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W));
 
 		//-- 8. run on the network just trained with runing Set, which specifies batch size and features list (not count)
-		safeCallEE(trNN->run(runSet, nullptr));
+		//safeCallEE(trNN->run(runSet, nullptr));
 
 		//-- 8.1. persist runing
-		safeCallEE(persistor->SaveRun(trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0));
+		//safeCallEE(persistor->SaveRun(trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0));
 
 		//-- final Commit
 		persistor->Commit();
@@ -134,6 +134,8 @@ int main() {
 		delete runSet;
 		delete trNN;
 
+		dbg->write(DBG_LEVEL_STD, "\nTotal Client Elapsed time: %.4f s.\n", 1, ((timeGetTime()-mainStart)/(float)1000));
+		delete dbg;
 	} catch(std::exception e) {
 		dbg->write(DBG_LEVEL_ERR, "Client failed.", 0);
 		return -1;
