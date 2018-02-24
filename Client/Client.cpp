@@ -15,7 +15,7 @@ int main() {
 	//-- main debugger declaration & creation
 	sDbg* dbg=nullptr;
 	try {
-		dbg=new tDbg(DBG_LEVEL_STD, DBG_DEST_BOTH, new tFileInfo("Client.log", DEBUG_DEFAULT_PATH));
+		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("Client.log", DEBUG_DEFAULT_PATH));
 	}
 	catch (std::exception e) {
 		if (dbg==nullptr) {
@@ -46,7 +46,7 @@ int main() {
 		tDbg* NNdbg=nullptr;
 
 		//-- set timing for main debugger
-		dbg->timing=true;
+		dbg->timing=false;
 
 		//-- create additional debuggers
 		safeCallEE(persistorDbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("persistor.log"), true));
@@ -139,7 +139,7 @@ int main() {
 		delete dbg;
 	}
 	catch (std::exception e) {
-		dbg->write(DBG_LEVEL_ERR, "Client failed.", 0);
+		dbg->write(DBG_LEVEL_ERR, "\nClient failed.\n", 0);
 		return -1;
 	}
 

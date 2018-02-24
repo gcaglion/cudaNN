@@ -16,7 +16,10 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 	predictionLen=predictionLen_;
 	featuresCnt=featuresCnt_;
 	useContext=useContext_;
+
 	useBias=useBias_;
+	//-- bias still not working(!) Better abort until it does
+	if (useBias) throwE("Bias still not working properly. NN creation aborted.", 0);
 
 	//-- set Layout. We don't have batchSampleCnt, so we set it at 1. train() and run() will set it later
 	levelRatio=(float*)malloc(60*sizeof(float));

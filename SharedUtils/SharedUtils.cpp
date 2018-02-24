@@ -179,6 +179,10 @@ void sDbg::compose(char* msg_, int argcount, ...) {
 		}
 		im++;
 	} while (im<strlen(msg));
+
+	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
+	sprintf_s(tmpmsg, submsg, arg_s); strcat_s(errmsg, tmpmsg);
+
 	va_end(arguments);
 }
 template <typename T> void sDbg::argOut(int msgType, char* submsg, T arg) {
