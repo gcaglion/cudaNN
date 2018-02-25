@@ -409,7 +409,7 @@ void sNN::train(DataSet* trs) {
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
 	//safeCallEB(dumpArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
-	safeCallEB(loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
+	//safeCallEB(loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
 
 	//---- 0.3. Init dW, dJdW
 	safeCallEB(Vinit(weightsCntTotal, dW, 0, 0));
@@ -429,7 +429,6 @@ void sNN::train(DataSet* trs) {
 
 			//-- forward pass, with targets
 			safeCallEE(ForwardPass(trs, b, true));
-			//if (!ForwardPass(trs, b, true)) return -1;
 
 			//-- backward pass, with weights update
 			safeCallEE(BackwardPass(trs, b, true));

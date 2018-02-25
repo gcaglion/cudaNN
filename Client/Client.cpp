@@ -43,7 +43,7 @@ int main() {
 		safeCallEE(persistorDbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("persistor.log"), true));
 		safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 
-		safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));						//-- create DBConnection for FX History DB		
+		safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));					//-- create DBConnection for FX History DB		
 		safeCallEE(eurusdH1=new tFXData(FXDB, "EURUSD", "H1", false));							//-- create FXData for EURUSD H1		
 		safeCallEE(persistDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO", persistorDbg));	//-- create DBConnection for Persistor DB
 		safeCallEE(persistor=new tLogger(persistDB, persistorDbg));								//-- create Logger from persistDB connection to save results data		
@@ -54,13 +54,13 @@ int main() {
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 		int dataTransformation=DT_DELTA;
 		int historyLen= 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
-		int sampleLen=  100;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
+		int sampleLen=  200;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
 		int predictionLen=3;// 1;// 3;
 
 		//-- net geometry
 		char* levelRatioS= "1, 0.5, 1";//"1,0.5";// "1, 0.5, 1";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
-		bool useContext=false;
+		bool useContext=true;
 		bool useBias=false;
 
 		//-- DataSets for train and run. batchSize can be different between the two
@@ -74,7 +74,7 @@ int main() {
 		trNN->NetSaveFreq=200;
 		trNN->TargetMSE=(float)0.0001;
 		trNN->BP_Algo=BP_STD;
-		trNN->LearningRate=(numtype)0.01;
+		trNN->LearningRate=(numtype)0.002;
 		trNN->LearningMomentum=(numtype)0.5;
 		trNN->StopOnDivergence=false;
 
