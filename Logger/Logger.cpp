@@ -26,10 +26,10 @@ bool sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV
 		return true;
 	}
 }
-bool sLogger::SaveRun(int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual) {
+bool sLogger::SaveRun(int pid, int tid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
 	if (saveRun) {
 		if (dest==LOG_TO_ORCL) {
-			return (Ora_LogSaveRun(dbg, db, pid, tid, runCnt, featuresCnt, prediction, actual));
+			return (Ora_LogSaveRun(dbg, db, pid, tid, runCnt, featuresCnt, feature, prediction, actual));
 		} else {
 			return false;
 		}

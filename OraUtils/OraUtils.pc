@@ -378,7 +378,7 @@ EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clien
 	}
 	return 0;
 }
-EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, numtype* prediction, numtype* actual) {
+EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	int i, b, f;
 	int vInsertCount;
@@ -428,7 +428,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 			vProcessId[i]=pid;
 			vThreadId[i]=tid;
 			vStep[i] = b;
-			vFeatureId[i]=f;
+			vFeatureId[i]=feature[f];
 			vPredictionTRS[i]=prediction[i];
 			vActualTRS[i]=actual[i];
 			vErrorTRS[i]=fabs(actual[i]-prediction[i]);

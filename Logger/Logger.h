@@ -30,7 +30,7 @@ typedef struct sLogger {
 	EXPORT ~sLogger();
 
 	EXPORT bool SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV);
-	EXPORT bool SaveRun(int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual);
+	EXPORT bool SaveRun(int pid, int tid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
 	EXPORT bool SaveW(int pid, int tid, int epoch, int Wcnt, numtype* W);
 	EXPORT bool LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W);
 	EXPORT bool SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun);

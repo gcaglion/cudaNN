@@ -53,21 +53,21 @@ int main() {
 		bool doRun=true;
 
 		//-- data params
-		int modelFeature[]={ 3,2,1,0 };
+		int modelFeature[]={ 0,1 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 		int dataTransformation=DT_DELTA;
-		int historyLen= 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
-		int sampleLen=  200;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
+		int historyLen= 6003; // 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
+		int sampleLen=  60;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
 		int predictionLen=3;// 1;// 3;
 
 		//-- net geometry
-		char* levelRatioS= "1, 0.5, 1";//"1,0.5";// "1, 0.5, 1";//"0.7"
+		char* levelRatioS= "0.5";// "1, 0.5, 1";//"1,0.5";// "1, 0.5, 1";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
-		bool useContext=true;
+		bool useContext=false;
 		bool useBias=false;
 
 		//-- DataSets for train and run. batchSize can be different between the two
-		int batchsamplesCnt_T=50;// 1;// 50;// 10;
+		int batchsamplesCnt_T=10;// 50;// 10;
 		int batchsamplesCnt_R=batchsamplesCnt_T;	// different values still  don't seem to work!!!	50;// 1;// 50;// 10;
 
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
@@ -116,7 +116,7 @@ int main() {
 			//-- 8. run on the network just trained with runing Set, which specifies batch size and features list (not count)
 			safeCallEE(trNN->run(runSet, nullptr));
 			//-- 8.1. persist runing
-			safeCallEE(persistor->SaveRun(trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0));
+			safeCallEE(persistor->SaveRun(trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, modelFeature, runSet->prediction0, runSet->target0));
 		}
 
 		//-- 9. persist Client info
