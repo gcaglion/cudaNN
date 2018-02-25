@@ -353,7 +353,7 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 
 	return (sqlca.sqlcode==0);
 }
-EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun) {
+EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	sql_context vCtx = db->DBCtx;
 	char stmt[1000];
@@ -368,7 +368,7 @@ EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clien
 		vCtx = db->DBCtx;
 	}
 	//-- Builds Insert statement
-	sprintf(&stmt[0], "insert into ClientInfo(ProcessId, ClientName, ClientStart, SimulationLen, Duration, SimulationStart, DoTraining, DoRun) values(%d, '%s', sysdate, %d, %ld, to_date('%s','YYYYMMDDHH24MI'), %d, %d)", pid, clientName, simulLen, (DWORD)(duration/1000), simulStart, (doTraining)?1:0, (doRun)?1:0);
+	sprintf(&stmt[0], "insert into ClientInfo(ProcessId, ClientName, ClientStart, SimulationLen, Duration, SimulationStart, DoTraining, DoTrainRun, DoTestRun) values(%d, '%s', sysdate, %d, %ld, to_date('%s','YYYYMMDDHH24MI'), %d, %d, %d)", pid, clientName, simulLen, (DWORD)(duration/1000), simulStart, (doTrain)?1:0, (doTrainRun)?1:0, (doTestRun)?1:0);
 	//-- Executes Insert statement
 	EXEC SQL CONTEXT USE : vCtx;
 	EXEC SQL EXECUTE IMMEDIATE : stmt;
@@ -378,7 +378,7 @@ EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clien
 	}
 	return true;
 }
-EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
+EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int setid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	int i, b, f;
 	int vInsertCount;
@@ -388,6 +388,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int n
 	//--
 	int* vProcessId;
 	int* vThreadId;
+	int* vSetId;
 	int* vNetProcessId;
 	int* vNetThreadId;
 	int* vStep;
@@ -418,6 +419,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int n
 	vInsertCount=barCnt*featuresCnt;
 	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
 	vThreadId=(int*)malloc(vInsertCount*sizeof(int));
+	vSetId=(int*)malloc(vInsertCount*sizeof(int));
 	vNetProcessId=(int*)malloc(vInsertCount*sizeof(int));
 	vNetThreadId=(int*)malloc(vInsertCount*sizeof(int));
 	vStep = (int*)malloc(vInsertCount*sizeof(int));
@@ -431,8 +433,9 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int n
 		for (f=0; f<featuresCnt; f++) {
 			vProcessId[i]=pid;
 			vThreadId[i]=tid;
-			vNetProcessId[i]=pid;
-			vNetThreadId[i]=tid;
+			vSetId[i]=setid;
+			vNetProcessId[i]=npid;
+			vNetThreadId[i]=ntid;
 			vStep[i] = b;
 			vFeatureId[i]=feature[f];
 			vPredictionTRS[i]=prediction[i];
@@ -444,23 +447,24 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int n
 	}
 
 	//-- Then, Build the Insert statement
-	sprintf(&stmt[0], "insert into RunLog (ProcessId, ThreadId, NetProcessId, NetThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07, :P08, :P09)");
+	sprintf(&stmt[0], "insert into RunLog (ProcessId, ThreadId, SetId, NetProcessId, NetThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07, :P08, :P09, :P10)");
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	EXEC SQL CONTEXT USE :vCtx;
 	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
 	EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inRun';
-	EXEC SQL SET DESCRIPTOR 'inRun' COUNT = 9;
+	EXEC SQL SET DESCRIPTOR 'inRun' COUNT = 10;
 	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 1 DATA = :vProcessId;
 	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 2 DATA = :vThreadId;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 3 DATA = :vNetProcessId;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 4 DATA = :vNetThreadId;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 5 DATA = :vStep;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 6 DATA = :vFeatureId;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 7 DATA = :vPredictionTRS;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 8 DATA = :vActualTRS;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 9 DATA = :vErrorTRS;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 3 DATA = :vSetId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 4 DATA = :vNetProcessId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 5 DATA = :vNetThreadId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 6 DATA = :vStep;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 7 DATA = :vFeatureId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 8 DATA = :vPredictionTRS;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 9 DATA = :vActualTRS;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 10 DATA = :vErrorTRS;
 	EXEC SQL PREPARE DynIns FROM :stmt;
 	EXEC SQL FOR :vInsertCount EXECUTE DynIns USING DESCRIPTOR 'inRun';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
@@ -476,6 +480,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int n
 	//-- free()s
 	free(vProcessId);
 	free(vThreadId);
+	free(vSetId);
 	free(vNetProcessId);
 	free(vNetThreadId);
 	free(vStep);

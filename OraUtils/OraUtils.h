@@ -29,8 +29,8 @@ EXPORT bool Ora_GetFlatOHLCV(tDbg* dbg, tDBConnection* db, char* pSymbol, char* 
 //=== Logging functions
 EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV);
 EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W);
-EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun);
-EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
+EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun);
+EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int setid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
 EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW);
 
 #ifdef __cplusplus

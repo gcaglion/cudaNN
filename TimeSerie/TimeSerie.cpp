@@ -1,8 +1,8 @@
 //#include <vld.h>
 #include "TimeSerie.h"
 
-//-- constructor / destructor
-sTS::sTS(int steps_, int featuresCnt_, tDbg* dbg_) {
+//-- constructors / destructor
+void sTS::sTScommon(int steps_, int featuresCnt_, tDbg* dbg_) {
 	if (dbg_==nullptr) {
 		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"));
 	} else {
@@ -25,6 +25,21 @@ sTS::sTS(int steps_, int featuresCnt_, tDbg* dbg_) {
 	d_tr=(numtype*)malloc(len*sizeof(numtype));
 	d_trs=(numtype*)malloc(len*sizeof(numtype));
 }
+sTS::sTS(int steps_, int featuresCnt_, tDbg* dbg_) {
+	sTScommon(steps_, featuresCnt_, dbg_);
+}
+sTS::sTS(tFXData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_){
+	//-- 1. create
+	sTScommon(steps_, FXDATA_FEATURESCNT, dbg_);	// no safeCall() because we don't set dbg, here
+	//-- 2. load data
+	safeCallEE(load(dataSource_, date0_));
+	//-- 3. transform
+	safeCallEE(transform(dt_));
+	//-- 4. scale
+	safeCallEE(scale(scaleMin_, scaleMax_));
+}
+sTS::sTS(tDataFile* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_){}
+sTS::sTS(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_){}
 sTS::~sTS() {
 	free(d);
 	free(bd);

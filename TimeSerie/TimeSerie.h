@@ -58,8 +58,12 @@ typedef struct sTS {
 	bool hasTRS=false;
 	numtype* d_trs;
 
-	//-- constructor / destructor
+	//-- constructors / destructor
+	EXPORT void sTScommon(int steps_, int featuresCnt_, tDbg* dbg_);
 	EXPORT sTS(int steps_, int featuresCnt_, tDbg* dbg_=nullptr);
+	EXPORT sTS(tFXData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
+	EXPORT sTS(tDataFile* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
+	EXPORT sTS(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
 	EXPORT ~sTS();
 	
 	EXPORT void load(tFXData* tsFXData, char* pDate0);

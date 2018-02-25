@@ -23,10 +23,10 @@ void sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV
 		}
 	}
 }
-void sLogger::SaveRun(int pid, int tid, int npid, int ntid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
+void sLogger::SaveRun(int pid, int tid, int setid, int npid, int ntid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
 	if (saveRun) {
 		if (dest==LOG_TO_ORCL) {
-			safeCallEB(Ora_LogSaveRun(dbg, db, pid, tid, npid, ntid, runCnt, featuresCnt, feature, prediction, actual));
+			safeCallEB(Ora_LogSaveRun(dbg, db, pid, tid, setid, npid, ntid, runCnt, featuresCnt, feature, prediction, actual));
 		} else {
 		}
 	}
@@ -68,10 +68,10 @@ void sLogger::LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	free(hW);
 #endif
 }
-void sLogger::SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun) {
+void sLogger::SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun) {
 	if (saveClient) {
 		if (dest==LOG_TO_ORCL) {
-			safeCallEB(Ora_LogSaveClient(dbg, db, pid, clientName, startTime, duration, simulLen, simulStart, doTraining, doRun));
+			safeCallEB(Ora_LogSaveClient(dbg, db, pid, clientName, startTime, duration, simulLen, simulStart, doTrain, doTrainRun, doTestRun));
 		} else {
 		}
 	}

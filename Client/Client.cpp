@@ -13,25 +13,35 @@ int main() {
 	int clientTid=GetCurrentThreadId();
 
 	//-- main debugger declaration & creation
-	createMainDebugger(DBG_LEVEL_ERR, DBG_DEST_BOTH);
+	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH);
 
 	//-- everything must be enclosed in try/catch block
 
 	try {
 
-		//-- db connections
-		tDBConnection* FXDB=nullptr;
-		tDBConnection* persistDB=nullptr;
-		//-- results logger
-		tLogger* persistor=nullptr;
-		//-- results logger's own debugger
-		tDbg* persistorDbg=nullptr;
-		//-- timeseries & datasets
-		tFXData* eurusdH1= nullptr;
-		tTS* fxTS=nullptr;
-		tDataSet* trainSet=nullptr;
-		tDataSet* runSet=nullptr;
+		//-- TRAIN timeseries & datasets
+		char* trainTSdate0="201512300000";
+		int trainTShistoryLen=603;
+		int trainTS_DT=DT_DELTA;
+		int batchSamplesCnt_Train=10;// 50;// 10;
+		//-- TEST timeseries & datasets
+		char* testTSdate0="201612300000";
+		int testTShistoryLen=603;			//-- can be different
+		int testTS_DT=DT_DELTA;				//-- can be different
+		int batchSamplesCnt_Test=20;		//-- can be different
+		//-- VALIDATION timeseries & datasets
+		char* validTSdate0="201412300000";
+		int validTShistoryLen=trainTShistoryLen;			//-- must be the same (?)
+		int validTS_DT=trainTS_DT;							//-- must be the same (?)
+		int batchSamplesCnt_Valid=batchSamplesCnt_Train;	//-- must be the same (?)
 		//--
+		int testWpid=0, testWtid=0;
+		bool doTrain=true;
+		bool doValid=false;
+		bool doTrainRun =true;	//-- In-Sample		test. Runs on Training	set.
+		bool doTestRun  =true;	//-- Out-of-Sample	test. Runs on Test		set.
+
+		//-- NN
 		tNN* myNN=nullptr;
 		//-- NN own debugger
 		tDbg* NNdbg=nullptr;
@@ -40,24 +50,24 @@ int main() {
 		dbg->timing=false;
 
 		//-- create additional debuggers
-		safeCallEE(persistorDbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("persistor.log"), true));
 		safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 
-		safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));					//-- create DBConnection for FX History DB		
-		safeCallEE(eurusdH1=new tFXData(FXDB, "EURUSD", "H1", false));							//-- create FXData for EURUSD H1		
-		safeCallEE(persistDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO", persistorDbg));	//-- create DBConnection for Persistor DB
-		safeCallEE(persistor=new tLogger(persistDB, persistorDbg));								//-- create Logger from persistDB connection to save results data		
-		persistor->saveImage=true;																//-- logger parameters (when different from default settings)
+		//-- create persistor, with its own DBConnection, to save results data. In this case, we want it to have its own debugger
+		tDbg*			persistorDbg; safeCallEE(persistorDbg=new tDbg(DBG_LEVEL_STD, DBG_DEST_BOTH, new tFileInfo("persistor.log"), true));
+		tDBConnection*	persistorDB;  safeCallEE(persistorDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO", persistorDbg));
+		tLogger*		persistor;	  safeCallEE(persistor=new tLogger(persistorDB, persistorDbg));
+		//-- logger parameters (when different from default settings)
+		persistor->saveImage=true;
 
-		int runWpid=0, runWtid=0;
-		bool doTrain=false; 
-		bool doRun=true; runWpid=139476; runWtid=138304;
+
+		//-- create DBConnection for FX History DB (common to all TimeSeries)
+		tDBConnection* FXDB; safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));
+
 
 		//-- data params
 		int modelFeature[]={ 0,1,2,3 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
-		int dataTransformation=DT_DELTA;
-		int historyLen= 603; // 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
+		//int historyLen= 603; // 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
 		int sampleLen=  60;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
 		int predictionLen=3;// 1;// 3;
 
@@ -67,10 +77,6 @@ int main() {
 		bool useContext=false;
 		bool useBias=false;
 
-		//-- DataSets for train and run. batchSize can be different between the two
-		int batchsamplesCnt_T=10;// 50;// 10;
-		int batchsamplesCnt_R=30; //batchsamplesCnt_T;	// different values still  don't seem to work!!!	50;// 1;// 50;// 10;
-
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 		safeCallEE(myNN=new tNN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
 		//-- 0.1. set training parameters
@@ -78,54 +84,55 @@ int main() {
 		myNN->NetSaveFreq=200;
 		myNN->TargetMSE=(float)0.0001;
 		myNN->BP_Algo=BP_STD;
-		myNN->LearningRate=(numtype)0.002;
+		myNN->LearningRate=(numtype)0.01;
 		myNN->LearningMomentum=(numtype)0.5;
 		myNN->StopOnDivergence=false;
 
-		//-- 1. create timeSerie, set len as the number of time steps, and set featuresCnt based on the expected data it will hold
-		const int FXfeaturesCnt=5;	//-- OHLC, fixed by the query
-		safeCallEE(fxTS=new tTS(historyLen, FXfeaturesCnt));
-
-		//-- 3. load data into fxTS, using FXData info, and start date
-		char* tsDate0="201612300000";
-		safeCallEE(fxTS->load(eurusdH1, tsDate0));
-
-		//-- 4. apply data transformation
-		safeCallEE(fxTS->transform(dataTransformation));
-
-		//-- 5. scale according to activation at network level 0 
-		safeCallEE(fxTS->scale(myNN->scaleMin[0], myNN->scaleMax[0]));
-
-		//-- 6. create training dataset from timeserie
-		//-- sampleLen/predictionLen is taken from nn
-		//-- model features cnt must be taken from nn
-		//-- model features list is defined here.
-		//-- batch size is defined here, and can be different between train and run datasets
-
-
-		if (doTrain){
-			//-- 7.1. create Training set
-			safeCallEE(trainSet=new tDataSet(fxTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_T));
-			//-- 7.2. train with training Set
+		//-- 1. For each TimeSerie(Training, Validation, Test), do the following:
+		//-- 1.1. define its DataSource
+		//-- 1.2. call specific constructor to "Prepare" it : Create, LoadData, Transform, Scale
+		//-- 1.3. create dataset (1:1 ??)
+		//--		sampleLen/predictionLen is taken from nn
+		//--		model features cnt must be taken from nn
+		//--		model features list is defined here.
+		//--		batch size is defined here, and can be different between train and test datasets
+		if (doTrain) {
+			tFXData* trainDataSrc; safeCallEE(trainDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
+			tTS* trainTS; safeCallEE(trainTS=new tTS(trainDataSrc, trainTShistoryLen, trainTSdate0, trainTS_DT, myNN->scaleMin[0], myNN->scaleMax[0]));
+			tDataSet* trainSet; safeCallEE(trainSet=new tDataSet(trainTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchSamplesCnt_Train));
+			//-- train with training set
 			safeCallEE(myNN->train(trainSet));
-			//-- 7.3. persist training (MSE + W)
+			//-- persist training (MSE + W). Whether or not this gets actually done is controlled by SLogger properties
 			safeCallEE(persistor->SaveMSE(myNN->pid, myNN->tid, myNN->ActualEpochs, myNN->mseT, myNN->mseV));
 			safeCallEE(persistor->SaveW(myNN->pid, myNN->tid, myNN->ActualEpochs, myNN->weightsCntTotal, myNN->W));
+			//-- inference from training set (run + persist)
+			if (doTrainRun) {
+				safeCallEE(myNN->run(trainSet));
+				safeCallEE(persistor->SaveRun(myNN->pid, myNN->tid, 0, myNN->pid, myNN->tid, trainSet->samplesCnt, modelFeaturesCnt, modelFeature, trainSet->prediction0, trainSet->target0));
+			}
 		}
-
-		if (doRun) {
-			//-- 8.1. create Run set, which specifies batch size and features list (not count)
-			safeCallEE(runSet=new tDataSet(fxTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R));
-			//-- 8.2 load runW, if needed ('-1' stands for 'latest epoch')
-			if (!doTrain) safeCallEE(persistor->LoadW(runWpid, runWtid, -1, myNN->weightsCntTotal, myNN->W));
-			//-- 8.3. run with Run set
-			safeCallEE(myNN->run(runSet));
-			//-- 8.4. persist runing
-			safeCallEE(persistor->SaveRun(myNN->pid, myNN->tid, runWpid, runWtid, runSet->samplesCnt, modelFeaturesCnt, modelFeature, runSet->prediction0, runSet->target0));
+		if (doValid) {
+			tFXData* validDataSrc; safeCallEE(validDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
+			tTS* validTS; safeCallEE(validTS=new tTS(validDataSrc, validTShistoryLen, validTSdate0, validTS_DT, myNN->scaleMin[0], myNN->scaleMax[0]));
+			tDataSet* validSet; safeCallEE(validSet=new tDataSet(validTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchSamplesCnt_Valid));
+		}
+		if (doTestRun) {
+			tFXData* testDataSrc; safeCallEE(testDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
+			tTS* testTS; safeCallEE(testTS=new tTS(testDataSrc, testTShistoryLen, testTSdate0, testTS_DT, myNN->scaleMin[0], myNN->scaleMax[0]));
+			tDataSet* testSet; safeCallEE(testSet=new tDataSet(testTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchSamplesCnt_Test));
+			if (testWpid!=0&&testWtid!=0) {
+				//-- if we specifed both testWpid and testWtid, then load training Weights('-1' stands for 'latest epoch')
+				safeCallEE(persistor->LoadW(testWpid, testWtid, -1, myNN->weightsCntTotal, myNN->W));
+			} else {
+				//-- otherwise, use existing W from training (---FINALIZE!! ---)
+			}
+			//-- Inference from Test Set (run + persist)
+			safeCallEE(myNN->run(testSet));
+			safeCallEE(persistor->SaveRun(myNN->pid, myNN->tid, 1, testWpid, testWtid, testSet->samplesCnt, modelFeaturesCnt, modelFeature, testSet->prediction0, testSet->target0));
 		}
 
 		//-- 9. persist Client info
-		safeCallEE(persistor->SaveClient(GetCurrentProcessId(), "Client.cpp", mainStart, (DWORD)(timeGetTime()-mainStart), 1, tsDate0, doTrain, doRun));
+		safeCallEE(persistor->SaveClient(GetCurrentProcessId(), "Client.cpp", mainStart, (DWORD)(timeGetTime()-mainStart), 1, trainTSdate0, doTrain, doTrainRun, doTestRun));
 
 		//-- final Commit
 		persistor->Commit();
@@ -133,11 +140,11 @@ int main() {
 		//-- destroy all objects (therefore all tDbg* objects, therefore all empty debug files)
 		delete FXDB;
 		delete persistor;
-		delete eurusdH1;
-		delete fxTS;
+/*		delete trainDataSrc;
+		delete trainTS;
 		if(trainSet!=nullptr) delete trainSet;
-		if(runSet!=nullptr) delete runSet;
-		delete myNN;
+		if(testSet!=nullptr) delete testSet;
+*/		delete myNN;
 
 		dbg->write(DBG_LEVEL_STD, "\nTotal Client Elapsed time: %.4f s.\n", 1, ((timeGetTime()-mainStart)/(float)1000));
 		delete dbg;
