@@ -115,7 +115,7 @@ EXPORT bool  OraConnect(tDbg* dbg, tDBConnection* DBConnInfo) {
 		//Oerr(dbg, __func__, sqlca.sqlcode);
 		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. user = %s\n Error %s", 3, __func__, DBConnInfo->DBUser, sqlca.sqlerrm.sqlerrmc);
 	}
-	return(sqlca.sqlcode);
+	return(sqlca.sqlcode==0);
 }
 EXPORT void OraDisconnect(tDBConnection* DBConnInfo, int Commit) {
 	EXEC SQL BEGIN DECLARE SECTION;
@@ -188,7 +188,7 @@ EXPORT bool Ora_GetFlatOHLCV(tDbg* dbg, tDBConnection* db, char* pSymbol, char* 
 
 	EXEC SQL CLOSE cOHLCV;
 
-	return retval;
+	return (retval==0);
 }
 
 //=== Logging functions
@@ -215,9 +215,9 @@ EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int m
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) {
+		if (!OraConnect(dbg, db)) {
 			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
-			return -1;
+			return false;
 		}
 		vCtx = db->DBCtx;
 	}
@@ -259,8 +259,8 @@ EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int m
 	//pInsertCount[vNetLevel] = sqlca.sqlerrd[2];
 	LogWrite(dbg, DBG_LEVEL_STD, "BulkMSEInsert() inserted %d rows.\n", 1, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
-		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
+		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s\n", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		return false;
 	}
 	EXEC SQL DEALLOCATE DESCRIPTOR 'inMSE';
 
@@ -271,7 +271,7 @@ EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int m
 	free(vMSE_T);
 	free(vMSE_V);
 
-	return sqlca.sqlcode;
+	return (sqlca.sqlcode==0);
 }
 EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	EXEC SQL BEGIN DECLARE SECTION;
@@ -296,9 +296,9 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) {
+		if (!OraConnect(dbg, db)) {
 			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
-			return -1;
+			return false;
 		}
 		vCtx = db->DBCtx;
 	}
@@ -340,7 +340,7 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
 		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
+		return (sqlca.sqlcode==0);
 	}
 	EXEC SQL DEALLOCATE DESCRIPTOR 'inCINN';
 
@@ -351,7 +351,7 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 	free(vWid);
 	free(vW);
 
-	return sqlca.sqlcode;
+	return (sqlca.sqlcode==0);
 }
 EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun) {
 	EXEC SQL BEGIN DECLARE SECTION;
@@ -361,9 +361,9 @@ EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clien
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) {
-			printf("%s() could not connect to Log Database...\n", __func__);
-			return -1;
+		if (!OraConnect(dbg, db)) {
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+			return false;
 		}
 		vCtx = db->DBCtx;
 	}
@@ -374,11 +374,11 @@ EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clien
 	EXEC SQL EXECUTE IMMEDIATE : stmt;
 	if (sqlca.sqlcode!=0) {
 		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
+		return false;
 	}
-	return 0;
+	return true;
 }
-EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
+EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	int i, b, f;
 	int vInsertCount;
@@ -388,6 +388,8 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 	//--
 	int* vProcessId;
 	int* vThreadId;
+	int* vNetProcessId;
+	int* vNetThreadId;
 	int* vStep;
 	int* vFeatureId;
 	double* vPredictionTRS;
@@ -404,9 +406,9 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) {
+		if (!OraConnect(dbg, db)) {
 			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
-			return -1;
+			return false;
 		}
 		vCtx = db->DBCtx;
 	}
@@ -416,6 +418,8 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 	vInsertCount=barCnt*featuresCnt;
 	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
 	vThreadId=(int*)malloc(vInsertCount*sizeof(int));
+	vNetProcessId=(int*)malloc(vInsertCount*sizeof(int));
+	vNetThreadId=(int*)malloc(vInsertCount*sizeof(int));
 	vStep = (int*)malloc(vInsertCount*sizeof(int));
 	vFeatureId = (int*)malloc(vInsertCount*sizeof(int));
 	vPredictionTRS=(double*)malloc(vInsertCount*sizeof(double));
@@ -427,6 +431,8 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 		for (f=0; f<featuresCnt; f++) {
 			vProcessId[i]=pid;
 			vThreadId[i]=tid;
+			vNetProcessId[i]=pid;
+			vNetThreadId[i]=tid;
 			vStep[i] = b;
 			vFeatureId[i]=feature[f];
 			vPredictionTRS[i]=prediction[i];
@@ -438,21 +444,23 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 	}
 
 	//-- Then, Build the Insert statement
-	sprintf(&stmt[0], "insert into RunLog (ProcessId, ThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07)");
+	sprintf(&stmt[0], "insert into RunLog (ProcessId, ThreadId, NetProcessId, NetThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07, :P08, :P09)");
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	EXEC SQL CONTEXT USE :vCtx;
 	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
 	EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inRun';
-	EXEC SQL SET DESCRIPTOR 'inRun' COUNT = 7;
+	EXEC SQL SET DESCRIPTOR 'inRun' COUNT = 9;
 	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 1 DATA = :vProcessId;
 	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 2 DATA = :vThreadId;
-	EXEC SQL FOR : vInsertCount SET DESCRIPTOR 'inRun' VALUE 3 DATA = : vStep;
-	EXEC SQL FOR : vInsertCount SET DESCRIPTOR 'inRun' VALUE 4 DATA = : vFeatureId;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 5 DATA = :vPredictionTRS;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 6 DATA = :vActualTRS;
-	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE  7 DATA = :vErrorTRS;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 3 DATA = :vNetProcessId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 4 DATA = :vNetThreadId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 5 DATA = :vStep;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 6 DATA = :vFeatureId;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 7 DATA = :vPredictionTRS;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 8 DATA = :vActualTRS;
+	EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 9 DATA = :vErrorTRS;
 	EXEC SQL PREPARE DynIns FROM :stmt;
 	EXEC SQL FOR :vInsertCount EXECUTE DynIns USING DESCRIPTOR 'inRun';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
@@ -461,42 +469,58 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
 		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
+		return false;
 	}
 	EXEC SQL DEALLOCATE DESCRIPTOR 'inRun';
 
 	//-- free()s
 	free(vProcessId);
 	free(vThreadId);
+	free(vNetProcessId);
+	free(vNetThreadId);
 	free(vStep);
 	free(vFeatureId);
 	free(vPredictionTRS);
 	free(vActualTRS);
 	free(vErrorTRS);
 
-	return sqlca.sqlcode;
+	return (sqlca.sqlcode==0);
 }
 
 EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
 	EXEC SQL BEGIN DECLARE SECTION;
 	int i;
-	int retval = 0;
+	int retval=0;
 	sql_context vCtx = db->DBCtx;
 	char stmt[1000];
 	//-- Network Weights variables
+	int vPid=pid; int vTid=tid;	int vEpoch=epoch; 
 	int vWid; double vW;
 	EXEC SQL END DECLARE SECTION;
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) printf("%s() could not connect to Log Database...\n", __func__);
+		if (!OraConnect(dbg, db)) {
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+			return false;
+		}
 		vCtx = db->DBCtx;
 	}
 
 	//-- Load Network Weights from CoreImage_NN
-	sprintf(&stmt[0], "select WId, W from CoreImage_NN where ProcessId=%d and ThreadId=%d and Epoch=%d order by 1,2,3", pid, tid, epoch);
+	EXEC SQL CONTEXT USE : vCtx;
+
+	if (vEpoch==-1) {
+		EXEC SQL select max(epoch) into :vEpoch from CoreImage_NN where ProcessId= :vPid and ThreadId= :vTid;
+	}
+	if (vEpoch==-1) {
+		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. Could not find max(epoch) for ProcessId=%d, ThreadId=%d\n", 3, __func__, vPid, vTid);
+		return false;
+	}
+
+	sprintf(&stmt[0], "select WId, W from CoreImage_NN where ProcessId=%d and ThreadId=%d and Epoch=%d order by 1,2", pid, tid, vEpoch);
+	
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 3 - stmt=%s\n", 2, __func__, stmt);
-	EXEC SQL CONTEXT USE :vCtx;
 	EXEC SQL PREPARE sLoadW FROM :stmt;
 	EXEC SQL DECLARE cLoadW CURSOR FOR sLoadW;
 	EXEC SQL OPEN cLoadW;
@@ -507,12 +531,12 @@ EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 		} else if (sqlca.sqlcode==1403) {
 			break;
 		} else {
-			LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s\n", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 			retval = sqlca.sqlcode;
 			break;
 		}
 	}
 	EXEC SQL CLOSE cLoadW;
 
-	return retval;
+	return (retval==0);
 }

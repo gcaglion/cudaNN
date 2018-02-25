@@ -116,14 +116,14 @@ typedef struct sNN {
 	void FF();
 	void Activate(int level);
 	void calcErr();
-	void ForwardPass(DataSet* ds, int batchId, bool haveTargets);
+	void ForwardPass(tDataSet* ds, int batchId, bool haveTargets);
 	bool epochMetCriteria(int epoch, DWORD starttime, bool displayProgress=true);
 	void BP_std();
 	void WU_std();
-	void BackwardPass(DataSet* ds, int batchId, bool updateWeights);
+	void BackwardPass(tDataSet* ds, int batchId, bool updateWeights);
 
-	EXPORT void train(DataSet* trs);
-	EXPORT void run(DataSet* runSet, numtype* runW);
+	EXPORT void train(tDataSet* trainSet);
+	EXPORT void run(tDataSet* runSet);
 
 private:
 	//-- malloc + init
@@ -134,5 +134,5 @@ private:
 	void destroyNeurons();
 	void destroyWeights();
 
-} NN;
+} tNN;
 

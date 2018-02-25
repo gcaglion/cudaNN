@@ -168,22 +168,25 @@ static const short sqlcud0[] =
 632,0,0,6,0,0,23,337,0,64,0,0,6,105,110,67,73,78,78,1,0,
 653,0,0,0,0,0,91,345,0,64,0,0,6,105,110,67,73,78,78,1,0,
 674,0,0,7,0,0,24,374,0,0,1,1,0,1,0,1,97,0,0,
-693,0,0,0,0,0,90,447,0,64,0,0,5,105,110,82,117,110,1,0,
-713,0,0,0,0,0,93,448,0,64,0,0,5,105,110,82,117,110,1,0,
-733,0,0,0,0,0,93,449,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-757,0,0,0,0,0,93,450,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-781,0,0,0,0,0,93,451,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-805,0,0,0,0,0,93,452,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-829,0,0,0,0,0,93,453,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-853,0,0,0,0,0,93,454,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-877,0,0,0,0,0,93,455,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-901,0,0,6,0,0,17,456,0,0,1,1,0,1,0,1,97,0,0,
-920,0,0,6,0,0,23,457,0,64,0,0,5,105,110,82,117,110,1,0,
-940,0,0,0,0,0,91,466,0,64,0,0,5,105,110,82,117,110,1,0,
-960,0,0,8,0,0,17,500,0,0,1,1,0,1,0,1,97,0,0,
-979,0,0,8,0,0,45,502,0,0,0,0,0,1,0,
-994,0,0,8,0,0,13,504,0,0,2,0,0,1,0,2,3,0,0,2,4,0,0,
-1017,0,0,8,0,0,15,515,0,0,0,0,0,1,0,
+693,0,0,0,0,0,90,453,0,64,0,0,5,105,110,82,117,110,1,0,
+713,0,0,0,0,0,93,454,0,64,0,0,5,105,110,82,117,110,1,0,
+733,0,0,0,0,0,93,455,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+757,0,0,0,0,0,93,456,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+781,0,0,0,0,0,93,457,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+805,0,0,0,0,0,93,458,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+829,0,0,0,0,0,93,459,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+853,0,0,0,0,0,93,460,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+877,0,0,0,0,0,93,461,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+901,0,0,0,0,0,93,462,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+925,0,0,0,0,0,93,463,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+949,0,0,6,0,0,17,464,0,0,1,1,0,1,0,1,97,0,0,
+968,0,0,6,0,0,23,465,0,64,0,0,5,105,110,82,117,110,1,0,
+988,0,0,0,0,0,91,474,0,64,0,0,5,105,110,82,117,110,1,0,
+1008,0,0,8,84,0,4,514,0,0,3,2,0,1,0,2,3,0,0,1,3,0,0,1,3,0,0,
+1035,0,0,9,0,0,17,524,0,0,1,1,0,1,0,1,97,0,0,
+1054,0,0,9,0,0,45,526,0,0,0,0,0,1,0,
+1069,0,0,9,0,0,13,528,0,0,2,0,0,1,0,2,3,0,0,2,4,0,0,
+1092,0,0,9,0,0,15,539,0,0,0,0,0,1,0,
 };
 
 
@@ -397,7 +400,7 @@ EXPORT bool  OraConnect(tDbg* dbg, tDBConnection* DBConnInfo) {
 		//Oerr(dbg, __func__, sqlca.sqlcode);
 		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. user = %s\n Error %s", 3, __func__, DBConnInfo->DBUser, sqlca.sqlerrm.sqlerrmc);
 	}
-	return(sqlca.sqlcode);
+	return(sqlca.sqlcode==0);
 }
 EXPORT void OraDisconnect(tDBConnection* DBConnInfo, int Commit) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
@@ -760,7 +763,7 @@ EXPORT bool Ora_GetFlatOHLCV(tDbg* dbg, tDBConnection* db, char* pSymbol, char* 
 
 
 
-	return retval;
+	return (retval==0);
 }
 
 //=== Logging functions
@@ -789,9 +792,9 @@ EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int m
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) {
+		if (!OraConnect(dbg, db)) {
 			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
-			return -1;
+			return false;
 		}
 		vCtx = db->DBCtx;
 	}
@@ -1098,8 +1101,8 @@ EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int m
 	//pInsertCount[vNetLevel] = sqlca.sqlerrd[2];
 	LogWrite(dbg, DBG_LEVEL_STD, "BulkMSEInsert() inserted %d rows.\n", 1, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
-		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
+		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s\n", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		return false;
 	}
 	/* EXEC SQL DEALLOCATE DESCRIPTOR 'inMSE'; */ 
 
@@ -1128,7 +1131,7 @@ EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int m
 	free(vMSE_T);
 	free(vMSE_V);
 
-	return sqlca.sqlcode;
+	return (sqlca.sqlcode==0);
 }
 EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
@@ -1155,9 +1158,9 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) {
+		if (!OraConnect(dbg, db)) {
 			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
-			return -1;
+			return false;
 		}
 		vCtx = db->DBCtx;
 	}
@@ -1464,7 +1467,7 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
 		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
+		return (sqlca.sqlcode==0);
 	}
 	/* EXEC SQL DEALLOCATE DESCRIPTOR 'inCINN'; */ 
 
@@ -1493,7 +1496,7 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 	free(vWid);
 	free(vW);
 
-	return sqlca.sqlcode;
+	return (sqlca.sqlcode==0);
 }
 EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
@@ -1505,9 +1508,9 @@ EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clien
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) {
-			printf("%s() could not connect to Log Database...\n", __func__);
-			return -1;
+		if (!OraConnect(dbg, db)) {
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+			return false;
 		}
 		vCtx = db->DBCtx;
 	}
@@ -1554,11 +1557,11 @@ EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clien
 
 	if (sqlca.sqlcode!=0) {
 		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
+		return false;
 	}
-	return 0;
+	return true;
 }
-EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
+EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i, b, f;
@@ -1569,6 +1572,8 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 	//--
 	int* vProcessId;
 	int* vThreadId;
+	int* vNetProcessId;
+	int* vNetThreadId;
 	int* vStep;
 	int* vFeatureId;
 	double* vPredictionTRS;
@@ -1586,9 +1591,9 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) {
+		if (!OraConnect(dbg, db)) {
 			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
-			return -1;
+			return false;
 		}
 		vCtx = db->DBCtx;
 	}
@@ -1598,6 +1603,8 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 	vInsertCount=barCnt*featuresCnt;
 	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
 	vThreadId=(int*)malloc(vInsertCount*sizeof(int));
+	vNetProcessId=(int*)malloc(vInsertCount*sizeof(int));
+	vNetThreadId=(int*)malloc(vInsertCount*sizeof(int));
 	vStep = (int*)malloc(vInsertCount*sizeof(int));
 	vFeatureId = (int*)malloc(vInsertCount*sizeof(int));
 	vPredictionTRS=(double*)malloc(vInsertCount*sizeof(double));
@@ -1609,6 +1616,8 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 		for (f=0; f<featuresCnt; f++) {
 			vProcessId[i]=pid;
 			vThreadId[i]=tid;
+			vNetProcessId[i]=pid;
+			vNetThreadId[i]=tid;
 			vStep[i] = b;
 			vFeatureId[i]=feature[f];
 			vPredictionTRS[i]=prediction[i];
@@ -1620,7 +1629,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 	}
 
 	//-- Then, Build the Insert statement
-	sprintf(&stmt[0], "insert into RunLog (ProcessId, ThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07)");
+	sprintf(&stmt[0], "insert into RunLog (ProcessId, ThreadId, NetProcessId, NetThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07, :P08, :P09)");
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
@@ -1646,7 +1655,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 }
 
 
-	/* EXEC SQL SET DESCRIPTOR 'inRun' COUNT = 7; */ 
+	/* EXEC SQL SET DESCRIPTOR 'inRun' COUNT = 9; */ 
 
 {
  struct sqlexd sqlstm;
@@ -1660,7 +1669,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
- sqlstm.occurs = (unsigned int  )7;
+ sqlstm.occurs = (unsigned int  )9;
  sqlcxt(&vCtx, &sqlctx, &sqlstm, &sqlfpn);
 }
 
@@ -1737,7 +1746,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 }
 
 
-	/* EXEC SQL FOR : vInsertCount SET DESCRIPTOR 'inRun' VALUE 3 DATA = : vStep; */ 
+	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 3 DATA = :vNetProcessId; */ 
 
 {
  struct sqlexd sqlstm;
@@ -1752,6 +1761,78 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
  sqlstm.occurs = (unsigned int  )3;
+ sqlstm.sqhstv[0] = (         void  *)vNetProcessId;
+ sqlstm.sqhstl[0] = (unsigned int  )sizeof(int);
+ sqlstm.sqhsts[0] = (         int  )sizeof(int);
+ sqlstm.sqindv[0] = (         void  *)0;
+ sqlstm.sqinds[0] = (         int  )0;
+ sqlstm.sqharm[0] = (unsigned int  )0;
+ sqlstm.sqadto[0] = (unsigned short )0;
+ sqlstm.sqtdso[0] = (unsigned short )0;
+ sqlstm.sqphsv = sqlstm.sqhstv;
+ sqlstm.sqphsl = sqlstm.sqhstl;
+ sqlstm.sqphss = sqlstm.sqhsts;
+ sqlstm.sqpind = sqlstm.sqindv;
+ sqlstm.sqpins = sqlstm.sqinds;
+ sqlstm.sqparm = sqlstm.sqharm;
+ sqlstm.sqparc = sqlstm.sqharc;
+ sqlstm.sqpadto = sqlstm.sqadto;
+ sqlstm.sqptdso = sqlstm.sqtdso;
+ sqlcxt(&vCtx, &sqlctx, &sqlstm, &sqlfpn);
+}
+
+
+	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 4 DATA = :vNetThreadId; */ 
+
+{
+ struct sqlexd sqlstm;
+ sqlstm.sqlvsn = 13;
+ sqlstm.arrsiz = 6;
+ sqlstm.sqladtp = &sqladt;
+ sqlstm.sqltdsp = &sqltds;
+ sqlstm.stmt = "";
+ sqlstm.iters = (unsigned int  )vInsertCount;
+ sqlstm.offset = (unsigned int  )805;
+ sqlstm.cud = sqlcud0;
+ sqlstm.sqlest = (unsigned char  *)&sqlca;
+ sqlstm.sqlety = (unsigned short)4352;
+ sqlstm.occurs = (unsigned int  )4;
+ sqlstm.sqhstv[0] = (         void  *)vNetThreadId;
+ sqlstm.sqhstl[0] = (unsigned int  )sizeof(int);
+ sqlstm.sqhsts[0] = (         int  )sizeof(int);
+ sqlstm.sqindv[0] = (         void  *)0;
+ sqlstm.sqinds[0] = (         int  )0;
+ sqlstm.sqharm[0] = (unsigned int  )0;
+ sqlstm.sqadto[0] = (unsigned short )0;
+ sqlstm.sqtdso[0] = (unsigned short )0;
+ sqlstm.sqphsv = sqlstm.sqhstv;
+ sqlstm.sqphsl = sqlstm.sqhstl;
+ sqlstm.sqphss = sqlstm.sqhsts;
+ sqlstm.sqpind = sqlstm.sqindv;
+ sqlstm.sqpins = sqlstm.sqinds;
+ sqlstm.sqparm = sqlstm.sqharm;
+ sqlstm.sqparc = sqlstm.sqharc;
+ sqlstm.sqpadto = sqlstm.sqadto;
+ sqlstm.sqptdso = sqlstm.sqtdso;
+ sqlcxt(&vCtx, &sqlctx, &sqlstm, &sqlfpn);
+}
+
+
+	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 5 DATA = :vStep; */ 
+
+{
+ struct sqlexd sqlstm;
+ sqlstm.sqlvsn = 13;
+ sqlstm.arrsiz = 6;
+ sqlstm.sqladtp = &sqladt;
+ sqlstm.sqltdsp = &sqltds;
+ sqlstm.stmt = "";
+ sqlstm.iters = (unsigned int  )vInsertCount;
+ sqlstm.offset = (unsigned int  )829;
+ sqlstm.cud = sqlcud0;
+ sqlstm.sqlest = (unsigned char  *)&sqlca;
+ sqlstm.sqlety = (unsigned short)4352;
+ sqlstm.occurs = (unsigned int  )5;
  sqlstm.sqhstv[0] = (         void  *)vStep;
  sqlstm.sqhstl[0] = (unsigned int  )sizeof(int);
  sqlstm.sqhsts[0] = (         int  )sizeof(int);
@@ -1773,7 +1854,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 }
 
 
-	/* EXEC SQL FOR : vInsertCount SET DESCRIPTOR 'inRun' VALUE 4 DATA = : vFeatureId; */ 
+	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 6 DATA = :vFeatureId; */ 
 
 {
  struct sqlexd sqlstm;
@@ -1783,11 +1864,11 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
  sqlstm.sqltdsp = &sqltds;
  sqlstm.stmt = "";
  sqlstm.iters = (unsigned int  )vInsertCount;
- sqlstm.offset = (unsigned int  )805;
+ sqlstm.offset = (unsigned int  )853;
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
- sqlstm.occurs = (unsigned int  )4;
+ sqlstm.occurs = (unsigned int  )6;
  sqlstm.sqhstv[0] = (         void  *)vFeatureId;
  sqlstm.sqhstl[0] = (unsigned int  )sizeof(int);
  sqlstm.sqhsts[0] = (         int  )sizeof(int);
@@ -1809,7 +1890,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 }
 
 
-	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 5 DATA = :vPredictionTRS; */ 
+	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 7 DATA = :vPredictionTRS; */ 
 
 {
  struct sqlexd sqlstm;
@@ -1819,11 +1900,11 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
  sqlstm.sqltdsp = &sqltds;
  sqlstm.stmt = "";
  sqlstm.iters = (unsigned int  )vInsertCount;
- sqlstm.offset = (unsigned int  )829;
+ sqlstm.offset = (unsigned int  )877;
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
- sqlstm.occurs = (unsigned int  )5;
+ sqlstm.occurs = (unsigned int  )7;
  sqlstm.sqhstv[0] = (         void  *)vPredictionTRS;
  sqlstm.sqhstl[0] = (unsigned int  )sizeof(double);
  sqlstm.sqhsts[0] = (         int  )sizeof(double);
@@ -1845,7 +1926,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 }
 
 
-	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 6 DATA = :vActualTRS; */ 
+	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 8 DATA = :vActualTRS; */ 
 
 {
  struct sqlexd sqlstm;
@@ -1855,11 +1936,11 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
  sqlstm.sqltdsp = &sqltds;
  sqlstm.stmt = "";
  sqlstm.iters = (unsigned int  )vInsertCount;
- sqlstm.offset = (unsigned int  )853;
+ sqlstm.offset = (unsigned int  )901;
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
- sqlstm.occurs = (unsigned int  )6;
+ sqlstm.occurs = (unsigned int  )8;
  sqlstm.sqhstv[0] = (         void  *)vActualTRS;
  sqlstm.sqhstl[0] = (unsigned int  )sizeof(double);
  sqlstm.sqhsts[0] = (         int  )sizeof(double);
@@ -1881,7 +1962,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 }
 
 
-	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE  7 DATA = :vErrorTRS; */ 
+	/* EXEC SQL FOR :vInsertCount SET DESCRIPTOR 'inRun' VALUE 9 DATA = :vErrorTRS; */ 
 
 {
  struct sqlexd sqlstm;
@@ -1891,11 +1972,11 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
  sqlstm.sqltdsp = &sqltds;
  sqlstm.stmt = "";
  sqlstm.iters = (unsigned int  )vInsertCount;
- sqlstm.offset = (unsigned int  )877;
+ sqlstm.offset = (unsigned int  )925;
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
- sqlstm.occurs = (unsigned int  )7;
+ sqlstm.occurs = (unsigned int  )9;
  sqlstm.sqhstv[0] = (         void  *)vErrorTRS;
  sqlstm.sqhstl[0] = (unsigned int  )sizeof(double);
  sqlstm.sqhsts[0] = (         int  )sizeof(double);
@@ -1927,7 +2008,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
  sqlstm.sqltdsp = &sqltds;
  sqlstm.stmt = "";
  sqlstm.iters = (unsigned int  )1;
- sqlstm.offset = (unsigned int  )901;
+ sqlstm.offset = (unsigned int  )949;
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
@@ -1963,7 +2044,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
  sqlstm.sqltdsp = &sqltds;
  sqlstm.stmt = "";
  sqlstm.iters = (unsigned int  )vInsertCount;
- sqlstm.offset = (unsigned int  )920;
+ sqlstm.offset = (unsigned int  )968;
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
@@ -1978,7 +2059,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
 		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
-		return sqlca.sqlcode;
+		return false;
 	}
 	/* EXEC SQL DEALLOCATE DESCRIPTOR 'inRun'; */ 
 
@@ -1990,7 +2071,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
  sqlstm.sqltdsp = &sqltds;
  sqlstm.stmt = "";
  sqlstm.iters = (unsigned int  )1;
- sqlstm.offset = (unsigned int  )940;
+ sqlstm.offset = (unsigned int  )988;
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
@@ -2003,38 +2084,108 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int b
 	//-- free()s
 	free(vProcessId);
 	free(vThreadId);
+	free(vNetProcessId);
+	free(vNetThreadId);
 	free(vStep);
 	free(vFeatureId);
 	free(vPredictionTRS);
 	free(vActualTRS);
 	free(vErrorTRS);
 
-	return sqlca.sqlcode;
+	return (sqlca.sqlcode==0);
 }
 
 EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	int i;
-	int retval = 0;
+	int retval=0;
 	sql_context vCtx = db->DBCtx;
 	char stmt[1000];
 	//-- Network Weights variables
+	int vPid=pid; int vTid=tid;	int vEpoch=epoch; 
 	int vWid; double vW;
 	/* EXEC SQL END DECLARE SECTION; */ 
 
 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
-		if (OraConnect(dbg, db)!=0) printf("%s() could not connect to Log Database...\n", __func__);
+		if (!OraConnect(dbg, db)) {
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+			return false;
+		}
 		vCtx = db->DBCtx;
 	}
 
 	//-- Load Network Weights from CoreImage_NN
-	sprintf(&stmt[0], "select WId, W from CoreImage_NN where ProcessId=%d and ThreadId=%d and Epoch=%d order by 1,2,3", pid, tid, epoch);
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 3 - stmt=%s\n", 2, __func__, stmt);
-	/* EXEC SQL CONTEXT USE :vCtx; */ 
+	/* EXEC SQL CONTEXT USE : vCtx; */ 
 
+
+	if (vEpoch==-1) {
+		/* EXEC SQL select max(epoch) into :vEpoch from CoreImage_NN where ProcessId= :vPid and ThreadId= :vTid; */ 
+
+{
+  struct sqlexd sqlstm;
+  sqlstm.sqlvsn = 13;
+  sqlstm.arrsiz = 6;
+  sqlstm.sqladtp = &sqladt;
+  sqlstm.sqltdsp = &sqltds;
+  sqlstm.stmt = "select max(epoch) into :b0  from CoreImage_NN where (Proces\
+sId=:b1 and ThreadId=:b2)";
+  sqlstm.iters = (unsigned int  )1;
+  sqlstm.offset = (unsigned int  )1008;
+  sqlstm.selerr = (unsigned short)1;
+  sqlstm.sqlpfmem = (unsigned int  )0;
+  sqlstm.cud = sqlcud0;
+  sqlstm.sqlest = (unsigned char  *)&sqlca;
+  sqlstm.sqlety = (unsigned short)4352;
+  sqlstm.occurs = (unsigned int  )0;
+  sqlstm.sqhstv[0] = (         void  *)&vEpoch;
+  sqlstm.sqhstl[0] = (unsigned int  )sizeof(int);
+  sqlstm.sqhsts[0] = (         int  )0;
+  sqlstm.sqindv[0] = (         void  *)0;
+  sqlstm.sqinds[0] = (         int  )0;
+  sqlstm.sqharm[0] = (unsigned int  )0;
+  sqlstm.sqadto[0] = (unsigned short )0;
+  sqlstm.sqtdso[0] = (unsigned short )0;
+  sqlstm.sqhstv[1] = (         void  *)&vPid;
+  sqlstm.sqhstl[1] = (unsigned int  )sizeof(int);
+  sqlstm.sqhsts[1] = (         int  )0;
+  sqlstm.sqindv[1] = (         void  *)0;
+  sqlstm.sqinds[1] = (         int  )0;
+  sqlstm.sqharm[1] = (unsigned int  )0;
+  sqlstm.sqadto[1] = (unsigned short )0;
+  sqlstm.sqtdso[1] = (unsigned short )0;
+  sqlstm.sqhstv[2] = (         void  *)&vTid;
+  sqlstm.sqhstl[2] = (unsigned int  )sizeof(int);
+  sqlstm.sqhsts[2] = (         int  )0;
+  sqlstm.sqindv[2] = (         void  *)0;
+  sqlstm.sqinds[2] = (         int  )0;
+  sqlstm.sqharm[2] = (unsigned int  )0;
+  sqlstm.sqadto[2] = (unsigned short )0;
+  sqlstm.sqtdso[2] = (unsigned short )0;
+  sqlstm.sqphsv = sqlstm.sqhstv;
+  sqlstm.sqphsl = sqlstm.sqhstl;
+  sqlstm.sqphss = sqlstm.sqhsts;
+  sqlstm.sqpind = sqlstm.sqindv;
+  sqlstm.sqpins = sqlstm.sqinds;
+  sqlstm.sqparm = sqlstm.sqharm;
+  sqlstm.sqparc = sqlstm.sqharc;
+  sqlstm.sqpadto = sqlstm.sqadto;
+  sqlstm.sqptdso = sqlstm.sqtdso;
+  sqlcxt(&vCtx, &sqlctx, &sqlstm, &sqlfpn);
+}
+
+
+	}
+	if (vEpoch==-1) {
+		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. Could not find max(epoch) for ProcessId=%d, ThreadId=%d\n", 3, __func__, vPid, vTid);
+		return false;
+	}
+
+	sprintf(&stmt[0], "select WId, W from CoreImage_NN where ProcessId=%d and ThreadId=%d and Epoch=%d order by 1,2", pid, tid, vEpoch);
+	
+	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 3 - stmt=%s\n", 2, __func__, stmt);
 	/* EXEC SQL PREPARE sLoadW FROM :stmt; */ 
 
 {
@@ -2045,7 +2196,7 @@ EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
  sqlstm.sqltdsp = &sqltds;
  sqlstm.stmt = "";
  sqlstm.iters = (unsigned int  )1;
- sqlstm.offset = (unsigned int  )960;
+ sqlstm.offset = (unsigned int  )1035;
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
@@ -2083,7 +2234,7 @@ EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
  sqlstm.sqltdsp = &sqltds;
  sqlstm.stmt = "";
  sqlstm.iters = (unsigned int  )1;
- sqlstm.offset = (unsigned int  )979;
+ sqlstm.offset = (unsigned int  )1054;
  sqlstm.selerr = (unsigned short)1;
  sqlstm.sqlpfmem = (unsigned int  )0;
  sqlstm.cud = sqlcud0;
@@ -2105,7 +2256,7 @@ EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
   sqlstm.sqladtp = &sqladt;
   sqlstm.sqltdsp = &sqltds;
   sqlstm.iters = (unsigned int  )1;
-  sqlstm.offset = (unsigned int  )994;
+  sqlstm.offset = (unsigned int  )1069;
   sqlstm.selerr = (unsigned short)1;
   sqlstm.sqlpfmem = (unsigned int  )0;
   sqlstm.cud = sqlcud0;
@@ -2148,7 +2299,7 @@ EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 		} else if (sqlca.sqlcode==1403) {
 			break;
 		} else {
-			LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s\n", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 			retval = sqlca.sqlcode;
 			break;
 		}
@@ -2162,7 +2313,7 @@ EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
  sqlstm.sqladtp = &sqladt;
  sqlstm.sqltdsp = &sqltds;
  sqlstm.iters = (unsigned int  )1;
- sqlstm.offset = (unsigned int  )1017;
+ sqlstm.offset = (unsigned int  )1092;
  sqlstm.cud = sqlcud0;
  sqlstm.sqlest = (unsigned char  *)&sqlca;
  sqlstm.sqlety = (unsigned short)4352;
@@ -2172,5 +2323,5 @@ EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 
 
 
-	return retval;
+	return (retval==0);
 }

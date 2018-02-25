@@ -4,6 +4,8 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
 
+	MaxEpochs=0;	//-- we need this so destructor does not fail when NN object is used to run-only
+
 	//-- set debug parameters
 	if (dbg_==nullptr) {
 		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("NN.err"));
@@ -41,14 +43,16 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_
 	safeCallEB(myMalloc(&se, 1));
 	safeCallEB(myMalloc(&tse, 1));
 
+	//-- 4. we need to malloc these here (issue when running with no training...)
+	mseT=(numtype*)malloc(1*sizeof(numtype));
+	mseV=(numtype*)malloc(1*sizeof(numtype));
+
+
 }
 sNN::~sNN() {
 	myFree(se);
 	myFree(tse);
 
-	//free(weightsCnt);
-	//free(a);  free(F); free(dF); free(edF);
-	//free(W);
 	free(mseT); free(mseV);
 	free(ActivationFunction);
 	free(scaleMin); free(scaleMax);
@@ -333,7 +337,7 @@ void sNN::WU_std(){
 	safeCallEB(Vadd(weightsCntTotal, W, 1, dW, 1, W));
 
 }
-void sNN::ForwardPass(DataSet* ds, int batchId, bool haveTargets) {
+void sNN::ForwardPass(tDataSet* ds, int batchId, bool haveTargets) {
 
 	//-- 1. load samples (and targets, if passed) from single batch in dataset onto input layer
 	LDstart=timeGetTime(); LDcnt++;
@@ -356,7 +360,7 @@ void sNN::ForwardPass(DataSet* ds, int batchId, bool haveTargets) {
 	CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
 
 }
-void sNN::BackwardPass(DataSet* ds, int batchId, bool updateWeights) {
+void sNN::BackwardPass(tDataSet* ds, int batchId, bool updateWeights) {
 
 	//-- 1. BackPropagate, calc dJdW for for current batch
 	BPstart=timeGetTime(); BPcnt++;
@@ -386,15 +390,15 @@ bool sNN::epochMetCriteria(int epoch, DWORD starttime, bool displayProgress) {
 
 	return false;
 }
-void sNN::train(DataSet* trs) {
+void sNN::train(tDataSet* trainSet) {
 	int l;
 	DWORD epoch_starttime;
 	DWORD training_starttime=timeGetTime();
 	int epoch, b;
 
 	//-- set batch count and batchSampleCnt for the network from dataset
-	batchSamplesCnt=trs->batchSamplesCnt;
-	batchCnt=trs->batchCnt;
+	batchSamplesCnt=trainSet->batchSamplesCnt;
+	batchCnt=trainSet->batchCnt;
 	//-- set Layout. This should not change weightsCnt[] at all, just nodesCnt[]
 	setLayout("", batchSamplesCnt);
 
@@ -402,14 +406,14 @@ void sNN::train(DataSet* trs) {
 	safeCallEE(mallocNeurons());
 	safeCallEE(initNeurons());
 
-	//-- malloc mse[maxepochs], always host-side
-	mseT=(numtype*)malloc(MaxEpochs*sizeof(numtype));
-	mseV=(numtype*)malloc(MaxEpochs*sizeof(numtype));
+	//-- malloc mse[maxepochs], always host-side. We need to free them, first (see issue when running without training...)
+	free(mseT); mseT=(numtype*)malloc(MaxEpochs*sizeof(numtype));
+	free(mseV); mseV=(numtype*)malloc(MaxEpochs*sizeof(numtype));
 
 	//---- 0.2. Init W
 	for (l=0; l<(levelsCnt-1); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
 	//safeCallEB(dumpArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
-	//safeCallEB(loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
+	//safeCallEB(loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW_4F.txt"));
 
 	//---- 0.3. Init dW, dJdW
 	safeCallEB(Vinit(weightsCntTotal, dW, 0, 0));
@@ -428,10 +432,10 @@ void sNN::train(DataSet* trs) {
 		for (b=0; b<batchCnt; b++) {
 
 			//-- forward pass, with targets
-			safeCallEE(ForwardPass(trs, b, true));
+			safeCallEE(ForwardPass(trainSet, b, true));
 
 			//-- backward pass, with weights update
-			safeCallEE(BackwardPass(trs, b, true));
+			safeCallEE(BackwardPass(trainSet, b, true));
 
 		}
 
@@ -444,7 +448,7 @@ void sNN::train(DataSet* trs) {
 	//-- 2. test run. need this to make sure all batches pass through the net with the latest weights, and training targets
 	TRstart=timeGetTime(); TRcnt++;
 	safeCallEB(Vinit(1, tse, 0, 0));
-	for (b=0; b<batchCnt; b++) safeCallEE(ForwardPass(trs, b, true));
+	for (b=0; b<batchCnt; b++) safeCallEE(ForwardPass(trainSet, b, true));
 	TRtimeTot+=((DWORD)(timeGetTime()-TRstart));
 
 	//-- calc and display final epoch MSE
@@ -472,7 +476,7 @@ void sNN::train(DataSet* trs) {
 	destroyNeurons();
 
 }
-void sNN::run(DataSet* runSet, numtype* runW) {
+void sNN::run(tDataSet* runSet) {
 
 	//-- set Neurons Layout based on batchSampleCount of run set
 	batchSamplesCnt=runSet->batchSamplesCnt;
@@ -485,10 +489,6 @@ void sNN::run(DataSet* runSet, numtype* runW) {
 
 	//-- reset tse=0
 	safeCallEB(Vinit(1, tse, 0, 0)!=0);
-
-	//-- load weights (if needed)
-	if (runW!=nullptr) {
-	}
 
 	//-- batch run
 	for (int b=0; b<batchCnt; b++) {

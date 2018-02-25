@@ -77,12 +77,12 @@ typedef struct sTS {
 private:
 	bool LoadOHLCVdata(char* date0);
 
-} TS;
+} tTS;
 
 typedef struct sDataSet {
 	tDbg* dbg;
 
-	TS* sourceTS;
+	tTS* sourceTS;
 	int sampleLen;
 	int targetLen;
 	int selectedFeaturesCnt;
@@ -112,11 +112,11 @@ typedef struct sDataSet {
 	EXPORT ~sDataSet();
 
 	bool isSelected(int ts_f);
-	EXPORT void buildFromTS(TS* ts);
+	EXPORT void buildFromTS(tTS* ts);
 	EXPORT void SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS);
 	EXPORT void BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF);
 	EXPORT void BFS2SFB(int batchId, int barCnt, numtype* fromBFS, numtype* toSFB);
 	EXPORT void BFS2SFBfull(int barCnt, numtype* fromBFS, numtype* toSFB);
 	EXPORT void dump(char* filename=nullptr);
 
-} DataSet;
+} tDataSet;

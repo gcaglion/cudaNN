@@ -37,8 +37,8 @@ sTS::~sTS() {
 
 bool sTS::LoadOHLCVdata(char* date0) {
 
-	if (OraConnect(dbg, FXData->db)!=0) return false;
-	if (Ora_GetFlatOHLCV(dbg, FXData->db, FXData->Symbol, FXData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)!=0) return false;
+	if (!OraConnect(dbg, FXData->db)) return false;
+	if (!Ora_GetFlatOHLCV(dbg, FXData->db, FXData->Symbol, FXData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)) return false;
 
 	return true;
 }
@@ -334,7 +334,7 @@ bool sDataSet::isSelected(int ts_f) {
 	}
 	return false;
 }
-void sDataSet::buildFromTS(TS* ts) {
+void sDataSet::buildFromTS(tTS* ts) {
 
 	int s, b, f;
 

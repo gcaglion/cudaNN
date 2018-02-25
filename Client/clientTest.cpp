@@ -90,7 +90,7 @@ int client13() {
 	return 0;
 
 }
-int client1(NN* myNN) {
+int client1(tNN* myNN) {
 	float alpha=1, beta=0;
 
 	int ay=8, ax=12;
@@ -162,7 +162,7 @@ int client1(NN* myNN) {
 }
 #endif
 
-int client2(NN* pNN) {
+int client2(tNN* pNN) {
 	int l, sm, n;
 	float alpha=1, beta=0;
 

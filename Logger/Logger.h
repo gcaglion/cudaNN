@@ -29,11 +29,11 @@ typedef struct sLogger {
 	EXPORT sLogger(tDataFile* logFile);
 	EXPORT ~sLogger();
 
-	EXPORT bool SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV);
-	EXPORT bool SaveRun(int pid, int tid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
-	EXPORT bool SaveW(int pid, int tid, int epoch, int Wcnt, numtype* W);
-	EXPORT bool LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W);
-	EXPORT bool SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun);
+	EXPORT void SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV);
+	EXPORT void SaveRun(int pid, int tid, int npid, int ntid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
+	EXPORT void SaveW(int pid, int tid, int epoch, int Wcnt, numtype* W);
+	EXPORT void LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W);
+	EXPORT void SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun);
 	EXPORT void Commit();
 
 } tLogger;
