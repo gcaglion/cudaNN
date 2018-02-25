@@ -21,9 +21,9 @@ int main() {
 
 		//-- TRAIN timeseries & datasets
 		char* trainTSdate0="201512300000";
-		int trainTShistoryLen=603;
+		int trainTShistoryLen=60003;
 		int trainTS_DT=DT_DELTA;
-		int batchSamplesCnt_Train=10;// 50;// 10;
+		int batchSamplesCnt_Train=100;// 50;// 10;
 		//-- TEST timeseries & datasets
 		char* testTSdate0="201612300000";
 		int testTShistoryLen=603;			//-- can be different
@@ -68,11 +68,11 @@ int main() {
 		int modelFeature[]={ 0,1,2,3 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 		//int historyLen= 603; // 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
-		int sampleLen=  60;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
+		int sampleLen=  200;// 60;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
 		int predictionLen=3;// 1;// 3;
 
 		//-- net geometry
-		char* levelRatioS= "0.5";// "1, 0.5, 1";//"1,0.5";// "1, 0.5, 1";//"0.7"
+		char* levelRatioS= "1, 0.5, 1";//"1,0.5";// "1, 0.5, 1";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 		bool useContext=false;
 		bool useBias=false;
@@ -84,7 +84,7 @@ int main() {
 		myNN->NetSaveFreq=200;
 		myNN->TargetMSE=(float)0.0001;
 		myNN->BP_Algo=BP_STD;
-		myNN->LearningRate=(numtype)0.01;
+		myNN->LearningRate=(numtype)0.005;
 		myNN->LearningMomentum=(numtype)0.5;
 		myNN->StopOnDivergence=false;
 
