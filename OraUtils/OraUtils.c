@@ -1495,7 +1495,7 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 
 	return sqlca.sqlcode;
 }
-EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
+EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun) {
 	/* EXEC SQL BEGIN DECLARE SECTION; */ 
 
 	sql_context vCtx = db->DBCtx;
@@ -1512,7 +1512,7 @@ EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clien
 		vCtx = db->DBCtx;
 	}
 	//-- Builds Insert statement
-	sprintf(&stmt[0], "insert into ClientInfo(ProcessId, ClientName, ClientStart, SimulationLen, Duration, SimulationStart, DoTraining, DoRun) values(%d, '%s', sysdate, %d, %ld, to_date('%s','YYYYMMDDHH24MI'), %d, %d)", pid, clientName, simulLen, (DWORD)(duration/1000), simulStart, doTraining, doRun);
+	sprintf(&stmt[0], "insert into ClientInfo(ProcessId, ClientName, ClientStart, SimulationLen, Duration, SimulationStart, DoTraining, DoRun) values(%d, '%s', sysdate, %d, %ld, to_date('%s','YYYYMMDDHH24MI'), %d, %d)", pid, clientName, simulLen, (DWORD)(duration/1000), simulStart, (doTraining)?1:0, (doRun)?1:0);
 	//-- Executes Insert statement
 	/* EXEC SQL CONTEXT USE : vCtx; */ 
 

@@ -49,8 +49,11 @@ int main() {
 		safeCallEE(persistor=new tLogger(persistDB, persistorDbg));								//-- create Logger from persistDB connection to save results data		
 		persistor->saveImage=false;																//-- logger parameters (when different from default settings)
 
+		bool doTrain=true;
+		bool doRun=true;
+
 		//-- data params
-		int modelFeature[]={ 0,1,2,3 };
+		int modelFeature[]={ 3,2,1,0 };
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 		int dataTransformation=DT_DELTA;
 		int historyLen= 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
@@ -65,7 +68,7 @@ int main() {
 
 		//-- DataSets for train and run. batchSize can be different between the two
 		int batchsamplesCnt_T=50;// 1;// 50;// 10;
-		int batchsamplesCnt_R=50;// 1;// 50;// 10;
+		int batchsamplesCnt_R=batchsamplesCnt_T;	// different values still  don't seem to work!!!	50;// 1;// 50;// 10;
 
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 		safeCallEE(trNN=new NN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
@@ -101,18 +104,23 @@ int main() {
 		safeCallEE(trainSet=new DataSet(fxTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_T));
 		safeCallEE(runSet=new DataSet(fxTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchsamplesCnt_R));
 
-		//-- 7. train with training Set
-		safeCallEE(trNN->train(trainSet));
+		if (doTrain){
+			//-- 7. train with training Set
+			safeCallEE(trNN->train(trainSet));
+			//-- 7.1. persist training (MSE + W)
+			safeCallEE(persistor->SaveMSE(trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV));
+			safeCallEE(persistor->SaveW(trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W));
+		}
 
-		//-- 7.1. persist training
-		safeCallEE(persistor->SaveMSE(trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->mseT, trNN->mseV));
-		safeCallEE(persistor->SaveW(trNN->pid, trNN->tid, trNN->ActualEpochs, trNN->weightsCntTotal, trNN->W));
+		if (doRun) {
+			//-- 8. run on the network just trained with runing Set, which specifies batch size and features list (not count)
+			safeCallEE(trNN->run(runSet, nullptr));
+			//-- 8.1. persist runing
+			safeCallEE(persistor->SaveRun(trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0));
+		}
 
-		//-- 8. run on the network just trained with runing Set, which specifies batch size and features list (not count)
-		//safeCallEE(trNN->run(runSet, nullptr));
-
-		//-- 8.1. persist runing
-		//safeCallEE(persistor->SaveRun(trNN->pid, trNN->tid, runSet->samplesCnt, modelFeaturesCnt, runSet->prediction0, runSet->target0));
+		//-- 9. persist Client info
+		safeCallEE(persistor->SaveClient(GetCurrentProcessId(), "Client.cpp", mainStart, (DWORD)(timeGetTime()-mainStart), 1, tsDate0, doTrain, doRun));
 
 		//-- final Commit
 		persistor->Commit();

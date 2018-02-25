@@ -77,7 +77,7 @@ bool sLogger::LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	free(hW);
 #endif
 }
-bool sLogger::SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun) {
+bool sLogger::SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTraining, bool doRun) {
 	if (saveClient) {
 		if (dest==LOG_TO_ORCL) {
 			return (Ora_LogSaveClient(dbg, db, pid, clientName, startTime, duration, simulLen, simulStart, doTraining, doRun));
