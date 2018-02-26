@@ -13,74 +13,73 @@ int main() {
 	int clientTid=GetCurrentThreadId();
 
 	//-- main debugger declaration & creation
-	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH);
+	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH,);
+	//-- set main debugger properties
+	dbg->timing=false;
 
-	//-- everything must be enclosed in try/catch block
-
+	//-- everything else must be enclosed in try/catch block
 	try {
 
+		//-- invariant data shape
+		int sampleLen=200;
+		int predictionLen=3;
+
 		//-- TRAIN timeseries & datasets
-		char* trainTSdate0="201512300000";
-		int trainTShistoryLen=603;
+		bool doTrain=true;
+		bool doTrainRun =true;				//-- In-Sample test. Runs on Training set.
+		char* trainTSdate0="201712300000";
+		int trainTShistoryLen=50003;
 		int trainTS_DT=DT_DELTA;
-		int batchSamplesCnt_Train=10;// 50;// 10;
+		int batchSamplesCnt_Train=100;
+
 		//-- TEST timeseries & datasets
+		bool doTestRun  =true;				//-- Out-of-Sample test. Runs on Test set.
+		//int testWpid=76168, testWtid=77828;			//-- if both 0, use currently loaded W
+		int testWpid=0, testWtid=0;			//-- if both 0, use currently loaded W
 		char* testTSdate0="201612300000";
-		int testTShistoryLen=603;			//-- can be different
+		int testTShistoryLen=50003;			//-- can be different
 		int testTS_DT=DT_DELTA;				//-- can be different
-		int batchSamplesCnt_Test=1;		//-- can be different
+		int batchSamplesCnt_Test=100;			//-- can be different
+		
 		//-- VALIDATION timeseries & datasets
+		bool doValid=false;
 		char* validTSdate0="201412300000";
 		int validTShistoryLen=trainTShistoryLen;			//-- must be the same (?)
 		int validTS_DT=trainTS_DT;							//-- must be the same (?)
 		int batchSamplesCnt_Valid=batchSamplesCnt_Train;	//-- must be the same (?)
-		//--
-		int testWpid=0, testWtid=0;
-		bool doTrain=true;
-		bool doValid=false;
-		bool doTrainRun =true;	//-- In-Sample		test. Runs on Training	set.
-		bool doTestRun  =true;	//-- Out-of-Sample	test. Runs on Test		set.
 
 		//-- NN
 		tNN* myNN=nullptr;
 		//-- NN own debugger
 		tDbg* NNdbg=nullptr;
 
-		//-- set timing for main debugger
-		dbg->timing=false;
-
 		//-- create additional debuggers
-		safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
+		safeCallEE(tDbg* NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 
 		//-- create persistor, with its own DBConnection, to save results data. In this case, we want it to have its own debugger
-		tDbg*			persistorDbg; safeCallEE(persistorDbg=new tDbg(DBG_LEVEL_STD, DBG_DEST_BOTH, new tFileInfo("persistor.log"), true));
+		tDbg*			persistorDbg; safeCallEE(persistorDbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("persistor.log"), true));
 		tDBConnection*	persistorDB;  safeCallEE(persistorDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO", persistorDbg));
 		tLogger*		persistor;	  safeCallEE(persistor=new tLogger(persistorDB, persistorDbg));
 		//-- logger parameters (when different from default settings)
 		persistor->saveImage=true;
 
-
 		//-- create DBConnection for FX History DB (common to all TimeSeries)
 		tDBConnection* FXDB; safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));
 
-
 		//-- data params
-		int modelFeature[]={ 0,3 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
+		int modelFeature[]={ 0,1,2,3 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
-		//int historyLen= 603; // 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
-		int sampleLen=  200;// 60;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
-		int predictionLen=3;// 1;// 3;
 
 		//-- net geometry
-		char* levelRatioS= "0.5";//"1,0.5";// "1, 0.5, 1";//"0.7"
+		char* levelRatioS= "1, 0.5, 1";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
-		bool useContext=false;
+		bool useContext=true;
 		bool useBias=false;
 
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 		safeCallEE(myNN=new tNN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
 		//-- 0.1. set training parameters
-		myNN->MaxEpochs=250;
+		myNN->MaxEpochs=50;
 		myNN->NetSaveFreq=200;
 		myNN->TargetMSE=(float)0.0001;
 		myNN->BP_Algo=BP_STD;
@@ -124,7 +123,8 @@ int main() {
 				//-- if we specifed both testWpid and testWtid, then load training Weights('-1' stands for 'latest epoch')
 				safeCallEE(persistor->LoadW(testWpid, testWtid, -1, myNN->weightsCntTotal, myNN->W));
 			} else {
-				//-- otherwise, use existing W from training (---FINALIZE!! ---)
+				//-- otherwise, testW pid/tid are those from current training session; also, use existing W from training
+				testWpid=myNN->pid; testWtid=myNN->tid;
 			}
 			//-- Inference from Test Set (run + persist)
 			safeCallEE(myNN->run(testSet));
@@ -134,8 +134,20 @@ int main() {
 		//-- 9. persist Client info
 		safeCallEE(persistor->SaveClient(GetCurrentProcessId(), "Client.cpp", mainStart, (DWORD)(timeGetTime()-mainStart), 1, trainTSdate0, doTrain, doTrainRun, doTestRun));
 
+		dbg->write(DBG_LEVEL_STD, "\nTotal Client Elapsed time: %.4f s.\n", 1, ((timeGetTime()-mainStart)/(float)1000));
 		//-- final Commit
-		persistor->Commit();
+		printf("Confirm Final Commit? (Y/N)");
+		while (true) {
+			int c=getchar();
+			if (c=='y'||c=='Y') {
+				persistor->Commit();
+				break;
+			}
+			if (c=='n'||c=='N') {
+				break;
+			}
+		}
+		
 
 		//-- destroy all objects (therefore all tDbg* objects, therefore all empty debug files)
 		delete FXDB;
@@ -146,7 +158,6 @@ int main() {
 		if(testSet!=nullptr) delete testSet;
 */		delete myNN;
 
-		dbg->write(DBG_LEVEL_STD, "\nTotal Client Elapsed time: %.4f s.\n", 1, ((timeGetTime()-mainStart)/(float)1000));
 		delete dbg;
 	}
 	catch (std::exception e) {

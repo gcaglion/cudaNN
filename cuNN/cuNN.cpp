@@ -231,8 +231,8 @@ void sNN::Activate(int level) {
 void sNN::calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
 	safeCallEB(Vdiff(nodesCnt[levelsCnt-1], &F[levelFirstNode[levelsCnt-1]], 1, u, 1, e));	// e=F[2]-u
-	safeCallEB(Vssum(nodesCnt[levelsCnt-1], e, se));									// se=ssum(e) 
-	safeCallEB(Vadd(1, tse, 1, se, 1, tse));											// tse+=se;
+	safeCallEB(Vssum(nodesCnt[levelsCnt-1], e, se));										// se=ssum(e) 
+	safeCallEB(Vadd(1, tse, 1, se, 1, tse));												// tse+=se;
 }
 
 void sNN::mallocNeurons() {
@@ -452,10 +452,10 @@ void sNN::train(tDataSet* trainSet) {
 	TRtimeTot+=((DWORD)(timeGetTime()-TRstart));
 
 	//-- calc and display final epoch MSE
-	printf("\n"); epochMetCriteria(ActualEpochs-1, epoch_starttime);
+	printf("\n"); epochMetCriteria(ActualEpochs-1, epoch_starttime); printf("\n");
 
 
-	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;
+/*	float elapsed_tot=(float)timeGetTime()-(float)training_starttime;
 	float elapsed_avg=elapsed_tot/ActualEpochs;
 	printf("\nTraining complete. Elapsed time: %0.1f seconds. Epoch average=%0.0f ms.\n", (elapsed_tot/(float)1000), elapsed_avg);
 	LDtimeAvg=(float)LDtimeTot/LDcnt; printf("LD count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", LDcnt, (LDtimeTot/(float)1000), LDtimeAvg);
@@ -470,7 +470,7 @@ void sNN::train(tDataSet* trainSet) {
 	//VStimeAvg=(float)VStimeTot/VScnt; printf("VS count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", VScnt, (VStimeTot/(float)1000), VStimeAvg);
 	BPtimeAvg=(float)BPtimeTot/LDcnt; printf("BP count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", BPcnt, (BPtimeTot/(float)1000), BPtimeAvg);
 	TRtimeAvg=(float)TRtimeTot/LDcnt; printf("TR count=%d ; time-tot=%0.1f s. time-avg=%0.0f ms.\n", TRcnt, (TRtimeTot/(float)1000), TRtimeAvg);
-
+*/
 
 	//-- feee neurons()
 	destroyNeurons();
@@ -510,7 +510,7 @@ void sNN::run(tDataSet* runSet) {
 	numtype tse_h;	// total squared error copid on host at the end of the run
 	Alg->d2h(&tse_h, tse, sizeof(numtype));
 	numtype mseR=tse_h/nodesCnt[levelsCnt-1]/batchCnt;
-	printf("\npid=%d, tid=%d, Run final MSE=%f\n", pid, tid, mseR);
+	printf("\npid=%d, tid=%d, Run final MSE=%1.10f\n", pid, tid, mseR);
 
 	//-- convert prediction from BFS to SFB (fol all batches at once)
 	runSet->BFS2SFBfull(runSet->targetLen, runSet->predictionBFS, runSet->predictionSFB);
