@@ -21,14 +21,14 @@ int main() {
 
 		//-- TRAIN timeseries & datasets
 		char* trainTSdate0="201512300000";
-		int trainTShistoryLen=60003;
+		int trainTShistoryLen=603;
 		int trainTS_DT=DT_DELTA;
-		int batchSamplesCnt_Train=100;// 50;// 10;
+		int batchSamplesCnt_Train=10;// 50;// 10;
 		//-- TEST timeseries & datasets
 		char* testTSdate0="201612300000";
 		int testTShistoryLen=603;			//-- can be different
 		int testTS_DT=DT_DELTA;				//-- can be different
-		int batchSamplesCnt_Test=20;		//-- can be different
+		int batchSamplesCnt_Test=1;		//-- can be different
 		//-- VALIDATION timeseries & datasets
 		char* validTSdate0="201412300000";
 		int validTShistoryLen=trainTShistoryLen;			//-- must be the same (?)
@@ -65,14 +65,14 @@ int main() {
 
 
 		//-- data params
-		int modelFeature[]={ 0,1,2,3 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
+		int modelFeature[]={ 0,3 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 		//int historyLen= 603; // 50003;// 500;// 50;// 500;// 50000;// 140;// 20;// 50000;// 50000;// 20;// 500;
 		int sampleLen=  200;// 60;// 50;// 3;// 50;//;// 20; //6;// 200;// 200;
 		int predictionLen=3;// 1;// 3;
 
 		//-- net geometry
-		char* levelRatioS= "1, 0.5, 1";//"1,0.5";// "1, 0.5, 1";//"0.7"
+		char* levelRatioS= "0.5";//"1,0.5";// "1, 0.5, 1";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 		bool useContext=false;
 		bool useBias=false;
@@ -80,7 +80,7 @@ int main() {
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 		safeCallEE(myNN=new tNN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
 		//-- 0.1. set training parameters
-		myNN->MaxEpochs=50;
+		myNN->MaxEpochs=250;
 		myNN->NetSaveFreq=200;
 		myNN->TargetMSE=(float)0.0001;
 		myNN->BP_Algo=BP_STD;
