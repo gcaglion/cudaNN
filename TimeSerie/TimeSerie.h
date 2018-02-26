@@ -1,11 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../MyDebug/mydebug.h"
-#include "../DBConnection.h"
-#include "../fxdata.h"
-#include "../filedata.h"
-#include "../MT4data.h"
+#include "../SharedUtils/SharedUtils.h"
 
 #ifdef USE_ORCL
 #include "../OraUtils/OraUtils.h"
@@ -36,16 +32,13 @@
 #define TSF_SHE 6
 #define TSF_HISTVOL 7
 
-//-- Exceptions
-#define WRONG_BATCH_SIZE "SamplesCnt is not a multiple of batchSampleCnt"
-
 typedef struct sTS {
 
-	tDebugInfo* DebugParms;
+	tDbg* dbg;
 
 	int sourceType;
 	tFXData* FXData;
-	tFileData* FileData;
+	tDataFile* FileData;
 	tMT4Data* MT4Data;
 
 	int steps;
@@ -65,68 +58,35 @@ typedef struct sTS {
 	bool hasTRS=false;
 	numtype* d_trs;
 
-	//-- constructor / destructor
-	sTS(int steps_, int featuresCnt_, tDebugInfo* DebugParms_=nullptr) {
-		if(DebugParms_==nullptr){
-			DebugParms=new tDebugInfo;
-			DebugParms->DebugLevel = 2;
-			strcpy(DebugParms->fPath, "C:/temp");
-			strcpy(DebugParms->fName, "TimeSerie.log");
-			DebugParms->PauseOnError = 1;
-		} else {
-			DebugParms=DebugParms_;
-		}
-		steps=steps_;
-		featuresCnt=featuresCnt_;
-		len=steps*featuresCnt;
-		dmin=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		dmax=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		for (int f=0; f<featuresCnt; f++) {
-			dmin[f]=1e8; dmax[f]=-1e8;
-		}
-		scaleM=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		scaleP=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		dtime=(char**)malloc(len*sizeof(char*)); for (int i=0; i<len; i++) dtime[i]=(char*)malloc(12+1);
-		bdtime=(char*)malloc(12+1);
-		d=(numtype*)malloc(len*sizeof(numtype));
-		bd=(numtype*)malloc(featuresCnt*sizeof(numtype));
-		d_tr=(numtype*)malloc(len*sizeof(numtype));
-		d_trs=(numtype*)malloc(len*sizeof(numtype));
-	}
-
-	~sTS() {
-		free(d);
-		free(bd);
-		free(d_trs);
-		free(d_tr);
-		for (int i=0; i<len; i++) free(dtime[i]);
-		free(dtime); free(bdtime);
-	}
+	//-- constructors / destructor
+	EXPORT void sTScommon(int steps_, int featuresCnt_, tDbg* dbg_);
+	EXPORT sTS(int steps_, int featuresCnt_, tDbg* dbg_=nullptr);
+	EXPORT sTS(tFXData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
+	EXPORT sTS(tDataFile* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
+	EXPORT sTS(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
+	EXPORT ~sTS();
 	
-	EXPORT int load(tFXData* tsFXData, char* pDate0);
-	EXPORT int load(tFileData* tsFileData, char* pDate0);
-	EXPORT int load(tMT4Data* tsMT4Data, char* pDate0);
+	EXPORT void load(tFXData* tsFXData, char* pDate0);
+	EXPORT void load(tDataFile* tsFileData, char* pDate0);
+	EXPORT void load(tMT4Data* tsMT4Data, char* pDate0);
 
-	EXPORT int transform(int dt_);
-	EXPORT int scale(numtype scaleMin_, numtype scaleMax_);
+	EXPORT void transform(int dt_);
+	EXPORT void scale(numtype scaleMin_, numtype scaleMax_);
 
-	EXPORT int TrS(int dt_, numtype scaleMin_, numtype scaleMax_);
-	EXPORT int unTrS(numtype scaleMin_, numtype scaleMax_);
+	EXPORT void TrS(int dt_, numtype scaleMin_, numtype scaleMax_);
+	EXPORT void unTrS(numtype scaleMin_, numtype scaleMax_);
 
-	EXPORT int dump(char* dumpFileName="C:/temp/TSdump.csv");
-
-	EXPORT int calcTSF();
-	EXPORT int createFromTS(sTS* sourceTS, int* feature);
-
-	EXPORT int buildRunData();
+	EXPORT void dump(char* dumpFileName="C:/temp/TSdump.csv");
 
 private:
-	int LoadOHLCVdata(char* date0);
+	bool LoadOHLCVdata(char* date0);
 
-} TS;
+} tTS;
 
 typedef struct sDataSet {
-	TS* sourceTS;
+	tDbg* dbg;
+
+	tTS* sourceTS;
 	int sampleLen;
 	int targetLen;
 	int selectedFeaturesCnt;
@@ -152,24 +112,15 @@ typedef struct sDataSet {
 	numtype* prediction0=nullptr;
 
 	//-- constructor / destructor
-	EXPORT sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_);
-	~sDataSet() {
-		free(sample);
-		if (target!=nullptr) free(target);
-		free(prediction);
-		free(sampleBFS);
-		free(targetBFS);
-		free(predictionBFS);
-		free(target0);
-		free(prediction0);
-	}
+	EXPORT sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_=nullptr);
+	EXPORT ~sDataSet();
 
 	bool isSelected(int ts_f);
-	EXPORT int buildFromTS(sTS* ts);
+	EXPORT void buildFromTS(tTS* ts);
 	EXPORT void SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS);
 	EXPORT void BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF);
 	EXPORT void BFS2SFB(int batchId, int barCnt, numtype* fromBFS, numtype* toSFB);
 	EXPORT void BFS2SFBfull(int barCnt, numtype* fromBFS, numtype* toSFB);
 	EXPORT void dump(char* filename=nullptr);
 
-} DataSet;
+} tDataSet;

@@ -1,17 +1,17 @@
 // Database Connection - generic (can be used for both data retrieval and logging)
 #pragma once
+#include "../CommonEnv.h"
+#include "DebugInfo.h"
+
 typedef struct sDBConnection{
 	char DBUser[30];
 	char DBPassword[30];
 	char DBConnString[30];
 	void* DBCtx;
+	tDbg* dbg;
 #ifdef __cplusplus
-	sDBConnection(char* username, char* password, char* connstring) {
-		strcpy_s(DBUser, 30, username);
-		strcpy_s(DBPassword, 30, password);
-		strcpy_s(DBConnString, 30, connstring);
-		DBCtx=NULL;
-	}
-	sDBConnection(){}
+	EXPORT sDBConnection(char* username, char* password, char* connstring, tDbg* dbg_=nullptr);
+	EXPORT sDBConnection();
+	EXPORT ~sDBConnection();
 #endif
 } tDBConnection;

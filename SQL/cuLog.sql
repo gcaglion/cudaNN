@@ -12,7 +12,8 @@ create table ClientInfo(
 	SimulationLen number,
 	SimulationStart date,
 	DoTraining number,
-	DoRun number
+	DoTrainRun number,
+	DoTestRun number
 );
 alter table ClientInfo add constraint ClientInfo_PK primary key( ProcessId ) using index tablespace LogIdx;
 
@@ -27,9 +28,11 @@ create table TrainLog(
 alter table TrainLog add constraint TrainLog_PK primary key( ProcessId, ThreadId, Epoch ) using index tablespace LogIdx;
 
 drop table RunLog purge;
+-- SetId: 0:trainSet ; 1:testSet;
 create table RunLog(
 	ProcessId number,
 	ThreadId number,
+	SetId	number,	
 	NetProcessId number,
 	NetThreadId number,
 	Pos number,
@@ -43,7 +46,7 @@ create table RunLog(
 	BarWidth number,
 	ErrorP number
 ) storage (initial 512m minextents 8 pctincrease 0);
-alter table RunLog add constraint RunLog_PK primary key( ProcessId, ThreadId, Pos, FeatureId ) using index tablespace LogIdx;
+alter table RunLog add constraint RunLog_PK primary key( ProcessId, ThreadId, SetId, Pos, FeatureId ) using index tablespace LogIdx;
 
 drop table CoreImage_NN purge;
 create table CoreImage_NN(

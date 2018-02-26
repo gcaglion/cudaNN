@@ -1,8 +1,32 @@
 #include "..\CommonEnv.h"
-#include "../MyDebug/mydebug.h"
+#include "../SharedUtils/SharedUtils.h"
 #include "../TimeSerie/TimeSerie.h"
 #include "..\cuNN\cuNN.h"
 #include "../Logger/Logger.h"
+
+void dbgcli() {
+	try {
+		tDbg* dbg1=new tDbg();
+	}
+	catch (std::exception e) {
+		printf("%s\n", e.what());
+	}
+}
+void dbgcli2() {
+	char* msg="%s returned %d, with double=%f\n";
+	tDbg* dbg=new tDbg();
+	dbg->write(DBG_LEVEL_STD, msg, 3, "myfunc()", -3, 1.345);
+	dbg->compose(msg, 3, "myfunc()", -3, -0.1);
+	printf("%s\n", dbg->errmsg);
+}
+int argcnt(char* mask) {
+	int cnt=0;
+	for (int i=0; i<strlen(mask); i++) {
+		if (mask[i]==37) cnt++;
+	}
+	return cnt;
+}
+
 
 #ifdef USE_GPU
 #include <cuda_runtime.h>
@@ -66,7 +90,7 @@ int client13() {
 	return 0;
 
 }
-int client1(NN* myNN) {
+int client1(tNN* myNN) {
 	float alpha=1, beta=0;
 
 	int ay=8, ax=12;
@@ -138,7 +162,7 @@ int client1(NN* myNN) {
 }
 #endif
 
-int client2(NN* pNN) {
+int client2(tNN* pNN) {
 	int l, sm, n;
 	float alpha=1, beta=0;
 
@@ -377,7 +401,11 @@ void client5() {
 	if (cudaMemcpy(db, b->m, 4*unitsize*2*unitsize*sizeof(numtype), cudaMemcpyHostToDevice)!=0) return;
 
 	numtype* dtmp; if (cudaMalloc(&dtmp, 3*unitsize*4*unitsize*sizeof(numtype))!=0) return;
-	if (Alg->MbyM(3*unitsize, 2*unitsize, 1, false, da, 4*unitsize, 2*unitsize, 1, true, db, dc)!=0) return;
+	try {
+		Alg->MbyM(3*unitsize, 2*unitsize, 1, false, da, 4*unitsize, 2*unitsize, 1, true, db, dc);
+	} catch (std::exception e) {
+		printf("%s\n", e.what()); return; 
+	}
 	if (cudaMemcpy(c->m, dc, 3*unitsize*4*unitsize*sizeof(numtype), cudaMemcpyDeviceToHost)!=0) return;
 	c->print("C from cublas");
 #endif
@@ -660,11 +688,58 @@ int client10() {
 
 	return 0;
 }
-int client11() {
-	TS* ts1=new TS(20, 5);
-	if (ts1->load(new tFXData("History", "HistoryPwd", "ALGO", "EURUSD", "H1", false), "201612010000")!=0) return -1;
-	if (ts1->TrS(DT_DELTA, -1, 1)!=0) return -1;
-	//	DataSet* DataSet1=new DataSet(ts1, 5, 2, 20);
 
-	return 0;
+/* Debug Tests
+//-- case 1a: throw exception from constructor / method
+typedef struct sMyClass {
+tDbg* dbg;
+
+sMyClass(char* cpname, int cpval) {
+dbg=new tDbg();
 }
+
+void fail() {
+throwE("--reason-for-failure---, paramName=%s , paramValue=%d \n", 2, "Cparam1", 15);
+}
+} tMyClass;
+//-- case 2a: return error from boolean function
+bool calcErr(char* cp, int ip, sDbg* dbg=nullptr) {
+if (dbg==nullptr) dbg=new sDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH);
+throwB("--reason-for-failure--- , cp=%s , ip=%d", 2, cp, ip);
+return true;
+}
+
+int main() {
+
+//-- client debugger declaration
+sDbg* dbg=nullptr;
+
+//-- enclose everything that might throw anything
+try {
+//-- create client debugger. need to proof with 3a/3b
+dbg=new sDbg(DBG_LEVEL_STD, DBG_DEST_BOTH, nullptr, true);
+
+//-- objects created by this client
+tMyClass* mycl;
+
+//-- case 1b: caller of exception-throwing constructor / method (SUCCESS)
+safeCallE(mycl=new tMyClass("myClass param1", 123));
+//-- case 1b: caller of exception-throwing constructor / method (FAILURE)
+safeCallE(mycl->fail());
+
+//-- case 2b: caller of boolean functions
+int p=222;
+safeCallB(calcErr("Bf param 1", p));
+
+} catch(std::exception e) {
+if (dbg==nullptr) {
+fprintf(stderr, "\n CRITICAL ERROR: could not create main client debugger!\n");
+system("pause"); return -1;
+}
+}
+
+system("pause");
+return 0;
+}
+*/
+

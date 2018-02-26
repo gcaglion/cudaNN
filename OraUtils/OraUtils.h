@@ -1,36 +1,37 @@
 #pragma once
 typedef void * sql_context;
 
-#include "../CommonEnv.h"
-
-#include "../fxdata.h"
-#include "../MyDebug/mydebug.h"
-#include <math.h>
-
 #ifdef __cplusplus
 #undef EXPORT
 #define EXPORT extern "C" __declspec(dllexport)
+#else
+typedef int bool;
+#define true 1
+#define false 0
 #endif
 
+#include "../CommonEnv.h"
+#include "../SharedUtils/FXData.h"
+#include "../SharedUtils/DBConnection.h"
+#include "../SharedUtils/DebugInfo.h"
+#include <math.h>
+
+
+
 //=== DB common functions
-EXPORT int  OraConnect(tDebugInfo* DebugInfo, tDBConnection* DBConnInfo);
-EXPORT void OraDisconnect(sql_context pCtx, int Commit);
-EXPORT void OraCommit(void* pCtx);
+EXPORT bool OraConnect(tDbg* DebugInfo, tDBConnection* DBConnInfo);
+EXPORT void OraDisconnect(tDBConnection* DBConnInfo, int Commit);
+EXPORT void OraCommit(tDBConnection* DBConnInfo);
 
 //=== Retrieval functions
-EXPORT int GetFlatBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, float* oBarData, float* oBaseBar);
-EXPORT int Ora_GetFlatOHLCV(tDebugInfo* DebugParms, sql_context pCtx, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar);
-
-EXPORT int GetBarsFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int pRecCount, int pSkipFirstN, tBar* oBar);
-EXPORT int GetCharPFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, char* oRet);
-EXPORT int GetStringArrayFromQuery(tDebugInfo* DebugParms, sql_context pCtx, char* pSQL, int ArrLen, char** oRet);
+EXPORT bool Ora_GetFlatOHLCV(tDbg* dbg, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar);
 
 //=== Logging functions
-EXPORT int Ora_LogSaveMSE(tDebugInfo* DebugParms, int pid, int tid, int mseCnt, float* mseT, float* mseV);
-EXPORT int Ora_LogSaveRun(tDebugInfo* DebugParms, int pid, int tid, int runCnt, int featuresCnt, numtype* prediction, numtype* actual);
-EXPORT int Ora_LogSaveW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* W);
-EXPORT int Ora_LogSaveClient(tDebugInfo* DebugParms, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, int doTraining, int doRun);
-EXPORT int Ora_LogLoadW(tDebugInfo* DebugParms, int pid, int tid, int epoch, int Wcnt, numtype* W);
+EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV);
+EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W);
+EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun);
+EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int setid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
+EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW);
 
 #ifdef __cplusplus
 #undef EXPORT

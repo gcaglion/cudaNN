@@ -1,12 +1,8 @@
 #pragma once
 
 #include "..\CommonEnv.h"
-#include "../MyUtils/MyUtils.h"
 #include "../MyAlgebra/MyAlgebra.h"
 #include "../TimeSerie/TimeSerie.h"
-
-#define MLP 0
-#define RNN 1
 
 //-- Training Protocols
 #define TP_STOCHASTIC	0
@@ -28,6 +24,8 @@
 #define BP_LM			5 // Levenberg-Marquardt
 
 typedef struct sNN {
+
+	tDbg* dbg;
 
 	//-- MyAlgebra common structures
 	Algebra* Alg;
@@ -80,6 +78,7 @@ typedef struct sNN {
 	numtype* dF;
 	numtype* edF;
 	numtype* W;
+	numtype* prevW;
 	numtype* dW;
 	numtype* dJdW;
 	numtype* e;
@@ -91,6 +90,7 @@ typedef struct sNN {
 	//--
 	numtype* mseT;	// Training mean squared error, array indexed by epoch, always on host
 	numtype* mseV;	// Validation mean squared error, array indexed by epoch, always on host
+	//--
 
 	//-- performance counters
 	DWORD LDstart, LDtimeTot=0, LDcnt=0; float LDtimeAvg;
@@ -107,26 +107,32 @@ typedef struct sNN {
 	DWORD WUstart, WUtimeTot=0, WUcnt=0; float WUtimeAvg;
 	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
-	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction, bool useContext_, bool useBias_);
+	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction, bool useContext_, bool useBias_, tDbg* dbg_=nullptr);
 	EXPORT ~sNN();
 
 	void setLayout(char LevelRatioS_[60], int batchSamplesCnt_);
 
 	EXPORT void setActivationFunction(int* func_);
-	int FF();
-	int Activate(int level);
-	int calcErr();
+	void FF();
+	void Activate(int level);
+	void calcErr();
+	void ForwardPass(tDataSet* ds, int batchId, bool haveTargets);
+	bool epochMetCriteria(int epoch, DWORD starttime, bool displayProgress=true);
+	void BP_std();
+	void WU_std();
+	void BackwardPass(tDataSet* ds, int batchId, bool updateWeights);
 
-	EXPORT int train(DataSet* trs);
-	EXPORT int run(DataSet* runSet, numtype* runW);
+	EXPORT void train(tDataSet* trainSet);
+	EXPORT void run(tDataSet* runSet);
 
 private:
 	//-- malloc + init
-	int createNeurons();
-	int createWeights();
+	void mallocNeurons();
+	void initNeurons();
+	void createWeights();
 	//-- free
 	void destroyNeurons();
 	void destroyWeights();
 
-} NN;
+} tNN;
 
