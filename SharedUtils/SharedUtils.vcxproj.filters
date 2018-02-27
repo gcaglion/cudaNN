@@ -41,5 +41,8 @@
     <ClInclude Include="MT4data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ParamMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

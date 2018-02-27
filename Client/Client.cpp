@@ -12,6 +12,8 @@ int main() {
 	int clientPid=GetCurrentProcessId();
 	int clientTid=GetCurrentThreadId();
 
+	tParamMgr* parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\Forecaster\\Tester\\tester.ini", FILE_MODE_READ));
+
 	//-- main debugger declaration & creation
 	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH,);
 	//-- set main debugger properties

@@ -1,7 +1,27 @@
 #pragma once
 #include "SharedUtils.h"
 
-//-- generic (non-classed)
+//=== generic (non-classed)
+EXPORT char* MyGetCurrentDirectory() {
+	TCHAR Buffer[MAX_PATH];
+	char  RetBuf[MAX_PATH];
+	DWORD dwRet;
+	size_t convcharsn;
+
+	dwRet = GetCurrentDirectory(MAX_PATH, Buffer);
+	if (dwRet==0) {
+		printf("GetCurrentDirectory failed (%d)\n", GetLastError());
+	}
+	wcstombs_s(&convcharsn, RetBuf, Buffer, MAX_PATH-1);
+	return &RetBuf[0];
+}
+EXPORT void UpperCase(char* str) {
+	int pos=0;
+	while (str[pos]!='\0') {
+		str[pos]=toupper(str[pos]);
+		pos++;
+	}
+}
 EXPORT void Trim(char* str) {
 	int l = 0;
 	int i;
@@ -39,6 +59,18 @@ EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
 
 	return (ListLen+1);
 }
+EXPORT char* substr(char* str, int start, int len) {
+	char ret[1000];
+	memcpy(ret, &str[start], len);
+	ret[len] = '\0';
+	return &ret[0];
+}
+EXPORT char* right(char* str, int len) {
+	return(substr(str, (int)strlen(str)-len, len));
+}
+EXPORT char* left(char* str, int len) {
+	return(substr(str, 0, len));
+}
 int argcnt(const char* mask) {
 	int cnt=0;
 	for (int i=0; i<strlen(mask); i++) {
@@ -59,6 +91,7 @@ void removeQuotes(char* istr, char* ostr) {
 	ostr[ri]='\0';
 }
 
+//=== sDbg
 sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
 	//-- outFile is created and opened by constructor (if not passed).
@@ -79,8 +112,6 @@ sDbg::~sDbg() {
 //-- timing methods
 void sDbg::setStartTime() { startTime=timeGetTime(); }
 void sDbg::setElapsedTime() { elapsedTime=(DWORD)(timeGetTime()-startTime); }
-//--
-
 //-- logging methods
 void sDbg::write(int LogType, const char* msg, int argcount, ...) {
 	if (LogType>level) return;
@@ -196,18 +227,27 @@ template <typename T> void sDbg::argOut(int msgType, char* submsg, T arg) {
 		if (dest==DBG_DEST_FILE||dest==DBG_DEST_BOTH) fprintf(outFile->handle, submsg, arg);
 	}
 }
-//--
 
-sFileInfo::sFileInfo(char* Name_, char* Path_, bool append_) {
+//=== sFileInfo
+sFileInfo::sFileInfo(char* Name_, char* Path_, int mode_) {
 	strcpy_s(Name, MAX_PATH, Name_);
 	strcpy_s(Path, MAX_PATH, Path_);
 	sprintf_s(creationTime, sizeof(creationTime), "%ld", timeGetTime());
 	sprintf_s(FullName, MAX_PATH-1, "%s/%s_%s.log", Path, Name, creationTime);
 
-	fopen_s(&handle, FullName, (append) ? "a" : "w");
+	setModeS(mode_); fopen_s(&handle, FullName, modeS);
 	if (errno!=0) {
-		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d creating file %s", __func__, errno, FullName); throw std::runtime_error(errmsg);
+		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d trying to %s file %s\n", __func__, errno, modeDesc, FullName); throw std::runtime_error(errmsg);
 	}
+}
+sFileInfo::sFileInfo(char* FullName_, int mode_) {
+	strcpy_s(FullName, MAX_PATH-1, FullName_);	//-- should also split Path/Name, and save them...
+
+	setModeS(mode_); fopen_s(&handle, FullName, modeS);
+	if (errno!=0) {
+		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d trying to %s file %s\n", __func__, errno, modeDesc, FullName); throw std::runtime_error(errmsg);
+	}
+
 }
 sFileInfo::~sFileInfo() {
 	fseek(handle, 0, SEEK_END); // seek to end of file
@@ -218,6 +258,25 @@ sFileInfo::~sFileInfo() {
 	if (fsize==0) remove(FullName);
 }
 
+void sFileInfo::setModeS(int mode_){
+	switch (mode_) {
+	case FILE_MODE_READ:
+		strcpy_s(modeS, "r");
+		strcpy_s(modeDesc, "Read"); break;
+	case FILE_MODE_WRITE:
+		strcpy_s(modeS, "w");
+		strcpy_s(modeDesc, "Write"); break;
+	case FILE_MODE_APPEND:
+		strcpy_s(modeS, "a"); 
+		strcpy_s(modeDesc, "Append"); break;
+	default:
+		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d accessing file %s; invalid mode: (%d)\n", __func__, errno, FullName, mode_); throw std::runtime_error(errmsg);
+		break;
+	}
+	mode=mode_;
+}
+
+//=== sDBConnection
 sDBConnection::sDBConnection(char* username, char* password, char* connstring, tDbg* dbg_) {
 	if (dbg_==nullptr) {
 		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DBConnection.err"));
@@ -232,9 +291,218 @@ sDBConnection::sDBConnection(char* username, char* password, char* connstring, t
 sDBConnection::sDBConnection() {}
 sDBConnection::~sDBConnection() { delete dbg; }
 
+//=== sFXData
 sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_) {
 	db=db_;
 	strcpy_s(Symbol, FX_SYMBOL_MAX_LEN, symbol_);
 	strcpy_s(TimeFrame, FX_TIMEFRAME_MAX_LEN, tf_);
 	IsFilled=isFilled_;
+}
+
+//=== ParamMgr
+sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) {
+	if (dbg_==nullptr) {
+		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("ParamMgr.err"));
+	} else {
+		dbg=dbg_;
+	}
+
+	bool altIniFile = false;
+	CLparamCount = argc;
+	for (int p = 1; p < CLparamCount; p++) {
+		char* pch = strchr(argv[p], '=');
+		if (pch==NULL||argv[p][0]!='-'||argv[p][1]!='-') throwE("Command Line Fail on parameter %d !\nExiting...\n", 1, p);
+		memcpy(&CLparamName[p][0], &argv[p][2], (pch-argv[p]-2)); CLparamName[p][pch-argv[p]-2] = '\0';
+		memcpy(&CLparamVal[p][0], &argv[p][pch-argv[p]+1], strlen(pch));
+
+		//-- if --IniFileName is specified, then set IniFileName global variable
+		UpperCase(CLparamName[p]);
+		if (strcmp(CLparamName[p], "INIFILE")==0) {
+			altIniFile = true;
+			strcpy_s(IniFileName, MAX_PATH-1, CLparamVal[p]);
+			safeCallEE(ParamFile=new tFileInfo(IniFileName, FILE_MODE_READ));
+		}
+	}
+	//-- if -- ParamFile is not passed, and IniFileName is not specified, then set look for default ini file in current directory
+	if (!altIniFile && ParamFile==nullptr) {
+		safeCallEE(ParamFile=new tFileInfo("Tester.ini", MyGetCurrentDirectory(), FILE_MODE_READ));
+	}
+}
+
+//-- enums
+void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
+	int ret = -1;
+
+	UpperCase(edesc);
+
+	if (strcmp(edesc, "FORECASTER.ACTION")==0) {
+		//if (strcmp(eVal, "TRAIN_SAVE_RUN")==0) { (*oVal) = TRAIN_SAVE_RUN; ret = 0; }
+		//if (strcmp(eVal, "ADD_SAMPLES")==0) { (*oVal) = ADD_SAMPLES; ret = 0; }
+		//if (strcmp(eVal, "JUST_RUN")==0) { (*oVal) = JUST_RUN; ret = 0; }
+	} else if (strcmp(edesc, "FORECASTER.ENGINE")==0) {
+		if (strcmp(eVal, "ENGINE_NN")==0) { (*oVal) = ENGINE_NN; ret = 0; }
+		if (strcmp(eVal, "ENGINE_GA")==0) { (*oVal) = ENGINE_GA; ret = 0; }
+		if (strcmp(eVal, "ENGINE_SVM")==0) { (*oVal) = ENGINE_SVM; ret = 0; }
+		if (strcmp(eVal, "ENGINE_SOM")==0) { (*oVal) = ENGINE_SOM; ret = 0; }
+		if (strcmp(eVal, "ENGINE_WNN")==0) { (*oVal) = ENGINE_WNN; ret = 0; }
+		if (strcmp(eVal, "ENGINE_XIE")==0) { (*oVal) = ENGINE_XIE; ret = 0; }
+	} else if (strcmp(edesc, "RESULTS.DESTINATION")==0) {
+		if (strcmp(eVal, "LOG_TO_TEXT")==0) { (*oVal) = LOG_TO_TEXT; ret = 0; }
+		if (strcmp(eVal, "LOG_TO_ORCL")==0) { (*oVal) = LOG_TO_ORCL; ret = 0; }
+/*	} else if (strcmp(edesc, "DATASOURCE.SOURCETYPE")==0) {
+		if (strcmp(eVal, "SOURCE_DATA_FROM_FXDB")==0) { (*oVal) = SOURCE_DATA_FROM_FXDB; ret = 0; }
+		if (strcmp(eVal, "SOURCE_DATA_FROM_FILE")==0) { (*oVal) = SOURCE_DATA_FROM_FILE; ret = 0; }
+		if (strcmp(eVal, "SOURCE_DATA_FROM_MT")==0) { (*oVal) = SOURCE_DATA_FROM_MT; ret = 0; }
+	} else if (strcmp(edesc, "DATASOURCE.TEXTFIELDSEPARATOR")==0) {
+		if (strcmp(eVal, "COMMA")==0) { (*oVal) = (int)COMMA; ret = 0; }
+		if (strcmp(eVal, "TAB")==0) { (*oVal) = (int)TAB; ret = 0; }
+		if (strcmp(eVal, "SPACE")==0) { (*oVal) = (int)SPACE; ret = 0; }
+*/	} else if (strcmp(edesc, "DATAPARMS.DATATRANSFORMATION")==0) {
+		if (strcmp(eVal, "DT_NONE")==0) { (*oVal) = DT_NONE; ret = 0; }
+		if (strcmp(eVal, "DT_DELTA")==0) { (*oVal) = DT_DELTA; ret = 0; }
+		if (strcmp(eVal, "DT_LOG")==0) { (*oVal) = DT_LOG; ret = 0; }
+		if (strcmp(eVal, "DT_DELTALOG")==0) { (*oVal) = DT_DELTALOG; ret = 0; }
+/*	} else if (strcmp(edesc, "DATASOURCE.BARDATATYPES")==0) {
+		if (strcmp(eVal, "OPEN")==0) { (*oVal) = OPEN; ret = 0; }
+		if (strcmp(eVal, "HIGH")==0) { (*oVal) = HIGH; ret = 0; }
+		if (strcmp(eVal, "LOW")==0) { (*oVal) = LOW; ret = 0; }
+		if (strcmp(eVal, "CLOSE")==0) { (*oVal) = CLOSE; ret = 0; }
+		if (strcmp(eVal, "VOLUME")==0) { (*oVal) = VOLUME; ret = 0; }
+		if (strcmp(eVal, "OTHER")==0) { (*oVal) = OTHER; ret = 0; }
+	} else if (strcmp(edesc, "DATAPARMS.TSFEATURES")==0) {
+		if (strcmp(eVal, "TSF_MEAN")==0) { (*oVal) = TSF_MEAN; ret = 0; }
+		if (strcmp(eVal, "TSF_MAD")==0) { (*oVal) = TSF_MAD; ret = 0; }
+		if (strcmp(eVal, "TSF_VARIANCE")==0) { (*oVal) = TSF_VARIANCE; ret = 0; }
+		if (strcmp(eVal, "TSF_SKEWNESS")==0) { (*oVal) = TSF_SKEWNESS; ret = 0; }
+		if (strcmp(eVal, "TSF_KURTOSIS")==0) { (*oVal) = TSF_KURTOSIS; ret = 0; }
+		if (strcmp(eVal, "TSF_TURNINGPOINTS")==0) { (*oVal) = TSF_TURNINGPOINTS; ret = 0; }
+		if (strcmp(eVal, "TSF_SHE")==0) { (*oVal) = TSF_SHE; ret = 0; }
+		if (strcmp(eVal, "TSF_HISTVOL")==0) { (*oVal) = TSF_HISTVOL; ret = 0; }
+	} else if (strcmp(right(edesc, 7), "BP_ALGO")==0) {
+		if (strcmp(eVal, "BP_STD")==0) { (*oVal) = BP_STD; ret = 0; }
+		if (strcmp(eVal, "BP_QING")==0) { (*oVal) = BP_QING; ret = 0; }
+		if (strcmp(eVal, "BP_SCGD")==0) { (*oVal) = BP_SCGD; ret = 0; }
+		if (strcmp(eVal, "BP_LM")==0) { (*oVal) = BP_LM; ret = 0; }
+		if (strcmp(eVal, "BP_QUICKPROP")==0) { (*oVal) = BP_QUICKPROP; ret = 0; }
+		if (strcmp(eVal, "BP_RPROP")==0) { (*oVal) = BP_RPROP; ret = 0; }
+	} else if (strcmp(right(edesc, 18), "ACTIVATIONFUNCTION")==0) {
+		if (strcmp(eVal, "NN_ACTIVATION_TANH")==0) { (*oVal) = NN_ACTIVATION_TANH; ret = 0; }
+		if (strcmp(eVal, "NN_ACTIVATION_EXP4")==0) { (*oVal) = NN_ACTIVATION_EXP4; ret = 0; }
+		if (strcmp(eVal, "NN_ACTIVATION_RELU")==0) { (*oVal) = NN_ACTIVATION_RELU; ret = 0; }
+		if (strcmp(eVal, "NN_ACTIVATION_SOFTPLUS")==0) { (*oVal) = NN_ACTIVATION_SOFTPLUS; ret = 0; }
+	} else if (strcmp(edesc, "SOMINFO.TDFUNCTION")==0) {
+		if (strcmp(eVal, "TD_DECAY_CONSTANT")==0) { (*oVal) = TD_DECAY_CONSTANT; ret = 0; }
+		if (strcmp(eVal, "TD_DECAY_LINEAR")==0) { (*oVal) = TD_DECAY_LINEAR; ret = 0; }
+		if (strcmp(eVal, "TD_DECAY_STEPPED")==0) { (*oVal) = TD_DECAY_STEPPED; ret = 0; }
+		if (strcmp(eVal, "TD_DECAY_EXP")==0) { (*oVal) = TD_DECAY_EXP; ret = 0; }
+	} else if (strcmp(edesc, "SOMINFO.LRFUNCTION")==0) {
+		if (strcmp(eVal, "LR_DECAY_CONSTANT")==0) { (*oVal) = LR_DECAY_CONSTANT; ret = 0; }
+		if (strcmp(eVal, "LR_DECAY_LINEAR")==0) { (*oVal) = LR_DECAY_LINEAR; ret = 0; }
+		if (strcmp(eVal, "LR_DECAY_STEPPED")==0) { (*oVal) = LR_DECAY_STEPPED; ret = 0; }
+		if (strcmp(eVal, "LR_DECAY_EXP")==0) { (*oVal) = LR_DECAY_EXP; ret = 0; }
+	} else if (strcmp(right(edesc, 10), "KERNELTYPE")==0) {
+		if (strcmp(eVal, "KERNEL_TYPE_LINEAR")==0) { (*oVal) = KERNEL_TYPE_LINEAR; ret = 0; }
+		if (strcmp(eVal, "KERNEL_TYPE_POLY")==0) { (*oVal) = KERNEL_TYPE_POLY; ret = 0; }
+		if (strcmp(eVal, "KERNEL_TYPE_RBF")==0) { (*oVal) = KERNEL_TYPE_RBF; ret = 0; }
+		if (strcmp(eVal, "KERNEL_TYPE_TANH")==0) { (*oVal) = KERNEL_TYPE_TANH; ret = 0; }
+		if (strcmp(eVal, "KERNEL_TYPE_CUSTOM")==0) { (*oVal) = KERNEL_TYPE_CUSTOM; ret = 0; }
+	} else if (strcmp(right(edesc, 9), "SLACKNORM")==0) {
+		if (strcmp(eVal, "SLACK_NORM_L1")==0) { (*oVal) = SLACK_NORM_L1; ret = 0; }
+		if (strcmp(eVal, "SLACK_NORM_SQUARED")==0) { (*oVal) = SLACK_NORM_SQUARED; ret = 0; }
+	} else if (strcmp(right(edesc, 15), "RESCALINGMETHOD")==0) {
+		if (strcmp(eVal, "RESCALING_METHOD_SLACK")==0) { (*oVal) = RESCALING_METHOD_SLACK; ret = 0; }
+		if (strcmp(eVal, "RESCALING_METHOD_MARGIN")==0) { (*oVal) = RESCALING_METHOD_MARGIN; ret = 0; }
+	} else if (strcmp(right(edesc, 12), "LOSSFUNCTION")==0) {
+		if (strcmp(eVal, "LOSS_FUNCTION_ZEROONE")==0) { (*oVal) = LOSS_FUNCTION_ZEROONE; ret = 0; }
+	} else if (strcmp(right(edesc, 12), "LEARNINGALGO")==0) {
+		if (strcmp(eVal, "LEARNING_ALGO_NSLACK")==0) { (*oVal) = LEARNING_ALGO_NSLACK; ret = 0; }
+		if (strcmp(eVal, "LEARNING_ALGO_NSLACK_SHRINK")==0) { (*oVal) = LEARNING_ALGO_NSLACK_SHRINK; ret = 0; }
+		if (strcmp(eVal, "LEARNING_ALGO_1SLACK_PRIMAL")==0) { (*oVal) = LEARNING_ALGO_1SLACK_PRIMAL; ret = 0; }
+		if (strcmp(eVal, "LEARNING_ALGO_1SLACK_DUAL")==0) { (*oVal) = LEARNING_ALGO_1SLACK_DUAL; ret = 0; }
+		if (strcmp(eVal, "LEARNING_ALGO_1SLACK_DUAL_CONSTR")==0) { (*oVal) = LEARNING_ALGO_1SLACK_DUAL_CONSTR; ret = 0; }
+		if (strcmp(eVal, "LEARNING_ALGO_CUSTOM")==0) { (*oVal) = LEARNING_ALGO_CUSTOM; ret = 0; }
+*/	}
+
+	if (ret<0) throwE("getEnumVal() could not resolve Parameter: %s = %s . Exiting.\n", 2, edesc, eVal);
+
+}
+//-- single value (int, double, char*, enum)
+void sParamMgr::getParam(char* paramName, double* oparamVal) {
+	char* vparamName = _strdup(paramName); UpperCase(vparamName);
+	for (int p = 1; p < CLparamCount; p++) {
+		if (strcmp(CLparamName[p], vparamName)==0) {
+			(*oparamVal) = atof(CLparamVal[p]);
+			free(vparamName);
+			return;
+		}
+	}
+	safeCallEE(ReadParamFromFile(IniFileName, vparamName, oparamVal));
+	free(vparamName);
+}
+void sParamMgr::getParam(char* paramName, char* oparamVal) {
+	char* vparamName = _strdup(paramName); UpperCase(vparamName);
+	for (int p = 1; p < CLparamCount; p++) {
+		if (strcmp(CLparamName[p], vparamName)==0) {
+			strcpy_s(oparamVal, ARRAY_PARAMETER_MAX_LEN, CLparamVal[p]);
+			free(vparamName);
+			return;
+		}
+	}
+	safeCallEE(ReadParamFromFile(IniFileName, vparamName, oparamVal));
+	free(vparamName);
+}
+void sParamMgr::getParam(char* paramName, int* oparamVal, bool isenum) {
+	char* vparamName = _strdup(paramName); UpperCase(vparamName);
+	char evals[100];
+	int ret = 0;
+	for (int p = 1; p < CLparamCount; p++) {
+		if (strcmp(CLparamName[p], vparamName)==0) {
+			strcpy_s(evals, ARRAY_PARAMETER_MAX_LEN, CLparamVal[p]);
+			safeCallEE(getEnumVal(vparamName, evals, oparamVal));
+			free(vparamName);
+			return;
+		}
+	}
+	safeCallEE(ReadParamFromFile(IniFileName, vparamName, oparamVal));
+	safeCallEE(getEnumVal(vparamName, evals, oparamVal));
+	free(vparamName);
+}
+void sParamMgr::ReadParamFromFile(char* pFileName, char* pParamName, int* oParamValue) {
+	char vParamName[1000];
+	char vParamValue[1000];
+
+	while (fscanf(ParamFile->handle, "%s = %s ", &vParamName[0], &vParamValue[0])!=EOF) {
+		Trim(vParamName); UpperCase(vParamName);
+		if (strcmp(&vParamName[0], &pParamName[0])==0) {
+			(*oParamValue) = atoi(vParamValue);
+			return;
+		}
+	}
+	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pParamName);
+}
+void sParamMgr::ReadParamFromFile(char* pFileName, char* pParamName, double* oParamValue) {
+	char vParamName[1000];
+	char vParamValue[1000];
+
+	while (fscanf(ParamFile->handle, "%s = %s ", &vParamName[0], &vParamValue[0])!=EOF) {
+		Trim(vParamName); UpperCase(vParamName);
+		if (strcmp(&vParamName[0], &pParamName[0])==0) {
+			(*oParamValue) = atof(vParamValue);
+			return;
+		}
+	}
+	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pParamName);
+}
+void sParamMgr::ReadParamFromFile(char* pFileName, char* pParamName, char* oParamValue) {
+	char vParamName[1000];
+	char vParamValue[1000];
+
+	while (fscanf(ParamFile->handle, "%s = %[^\n]", &vParamName[0], &vParamValue[0])!=EOF) {
+		Trim(vParamName); UpperCase(vParamName);
+		if (strcmp(&vParamName[0], &pParamName[0])==0) {
+			strcpy_s(oParamValue, ARRAY_PARAMETER_MAX_LEN, vParamValue);
+			return;
+		}
+	}
+	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pParamName);
 }
