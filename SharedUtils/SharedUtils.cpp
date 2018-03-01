@@ -31,7 +31,7 @@ EXPORT void Trim(char* str) {
 	while (isspace(str[r-1])>0) r--;
 	for (i = 0; i<(r-l); i++) ret[i] = str[l+i];
 	ret[r-l] = '\0';
-	strcpy_s(str, MAX_PATH, ret);
+	strcpy(str, ret);
 }
 EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
 	//-- 1. Put a <separator>-separated list of string values into an array of strings, and returns list length
@@ -308,6 +308,9 @@ sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) 
 		dbg=dbg_;
 	}
 
+	//-- mallocs
+	pArrDesc=(char**)malloc(ARRAY_PARAMETER_MAX_ELEMS*sizeof(char*)); for (int i=0; i<ARRAY_PARAMETER_MAX_ELEMS; i++) pArrDesc[i]=(char*)malloc(MAX_PARAMDESC_LEN);
+
 	bool altIniFile = false;
 	CLparamCount = argc;
 	for (int p = 1; p < CLparamCount; p++) {
@@ -327,7 +330,9 @@ sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) 
 	if (!altIniFile && ParamFile==nullptr) {
 		safeCallEE(ParamFile=new tFileInfo("Tester.ini", MyGetCurrentDirectory(), FILE_MODE_READ));
 	}
+
 }
+sParamMgr::~sParamMgr() { }
 
 //-- enums
 void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
@@ -436,7 +441,7 @@ void sParamMgr::get_(numtype* oparamVal, bool isenum) {
 void sParamMgr::get_(char* oparamVal, bool isenum) {
 	for (int p = 1; p < CLparamCount; p++) {
 		if (strcmp(CLparamName[p], pDesc)==0) {
-			strcpy_s(oparamVal, ARRAY_PARAMETER_MAX_LEN, CLparamVal[p]);
+			strcpy_s(oparamVal, MAX_PARAMDESC_LEN, CLparamVal[p]);
 			return;
 		}
 	}
@@ -447,7 +452,7 @@ void sParamMgr::get_(int* oparamVal, bool isenum) {
 	int ret = 0;
 	for (int p = 1; p < CLparamCount; p++) {
 		if (strcmp(CLparamName[p], pDesc)==0) {
-			strcpy_s(evals, ARRAY_PARAMETER_MAX_LEN, CLparamVal[p]);
+			strcpy_s(evals, MAX_PARAMDESC_LEN, CLparamVal[p]);
 			safeCallEE(getEnumVal(pDesc, evals, oparamVal));
 			return;
 		}
@@ -459,7 +464,37 @@ void sParamMgr::get_(int* oparamVal, bool isenum) {
 		safeCallEE(ReadParamFromFile(oparamVal));
 	}
 }
-
+//-- array values
+void sParamMgr::get_(numtype** oparamVal, bool isenum) {
+	//-- first, get the list as a regular char* parameter
+	get_(pListDesc);
+	//-- then, split
+	pListLen = cslToArray(pListDesc, ',', pArrDesc);
+	//-- finally, convert
+	for (int i=0; i<pListLen; i++) (*oparamVal)[i] = (numtype)atof(pArrDesc[i]);
+}
+void sParamMgr::get_(char** oparamVal, bool isenum) {
+	//-- first, get the list as a regular char* parameter
+	get_(pListDesc);
+	//-- then, split
+	pListLen = cslToArray(pListDesc, ',', pArrDesc);
+	//-- finally, convert
+	for (int i=0; i<pListLen; i++) strcpy(oparamVal[i], pArrDesc[i]);
+}
+void sParamMgr::get_(int** oparamVal, bool isenum) {
+	//-- first, get the list as a regular char* parameter
+	get_(pListDesc);
+	//-- then, split
+	pListLen = cslToArray(pListDesc, ',', pArrDesc);
+	//-- for each element, check if we need enum
+	for (int i=0; i<pListLen; i++){
+		if (isenum) {
+		safeCallEE(getEnumVal(pDesc, evals, oparamVal));
+		} else {
+			//-- convert
+			for (int i=0; i<pListLen; i++) (*oparamVal)[i] = atoi(pArrDesc[i]);
+		}
+}
 void sParamMgr::ReadParamFromFile(int* oParamValue) {
 	char vParamName[1000];
 	char vParamValue[1000];
@@ -496,7 +531,7 @@ void sParamMgr::ReadParamFromFile(char* oParamValue) {
 	while (fscanf(ParamFile->handle, "%s = %[^\n]", &vParamName[0], &vParamValue[0])!=EOF) {
 		Trim(vParamName); UpperCase(vParamName);
 		if (strcmp(&vParamName[0], pDesc)==0) {
-			strcpy_s(oParamValue, ARRAY_PARAMETER_MAX_LEN, vParamValue);
+			strcpy_s(oParamValue, MAX_PARAMDESC_LEN, vParamValue);
 			return;
 		}
 	}

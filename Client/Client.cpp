@@ -29,6 +29,12 @@ int main(int argc, char* argv[]) {
 		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
 		char dbuser[30];	parms->get(dbuser, "DataSource.DBConn.DBUser");
 		int EngineType;		parms->get(&EngineType, "Forecaster.Engine", true);
+		int* fileDS=(int*)malloc(MAXDATASETS*sizeof(int));
+		parms->get(&fileDS, "DataSource.FileDatasets");
+		float* lr=(float*)malloc(8*sizeof(float));
+		parms->get(&lr, "NNInfo.LevelRatios");
+		char** tsf=(char**)malloc(12*sizeof(char*)); for (int i=0; i<12; i++) tsf[i]=(char*)malloc(16);
+		parms->get(tsf, "DataParms.TSFeatures");
 
 		//-- TRAIN timeseries & datasets
 		bool doTrain=true;
