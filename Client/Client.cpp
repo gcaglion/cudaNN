@@ -28,6 +28,7 @@ int main(int argc, char* argv[]) {
 		int predictionLen;	parms->get(&predictionLen, "DataParms.PredictionLen");
 		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
 		char dbuser[30];	parms->get(dbuser, "DataSource.DBConn.DBUser");
+		int EngineType;		parms->get(&EngineType, "Forecaster.Engine", true);
 
 		//-- TRAIN timeseries & datasets
 		bool doTrain=true;
@@ -88,6 +89,7 @@ int main(int argc, char* argv[]) {
 		myNN->NetSaveFreq=200;
 		myNN->TargetMSE=(float)0.0001;
 		myNN->BP_Algo=BP_STD;
+
 		myNN->LearningRate=(numtype)0.005;
 		myNN->LearningMomentum=(numtype)0.5;
 		myNN->StopOnDivergence=false;

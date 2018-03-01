@@ -31,23 +31,21 @@ typedef struct sParamMgr {
 	EXPORT void getEnumVal(char* edesc, char* eVal, int* oVal);
 	
 	//-- generic
-	template <typename T> EXPORT void get(T* opVal, const char* parmDesc) {
+	template <typename T> EXPORT void get(T* opVal, const char* parmDesc, bool isenum=false) {
 		strcpy_s(pDesc, parmDesc); Trim(pDesc); UpperCase(pDesc);
 		if (strcmp(typeid((*opVal)).name(), "int")==0) {
-			get(opVal);
+			get_(opVal, isenum);
 		} else if ((strcmp(typeid((*opVal)).name(), "float")==0)||(strcmp(typeid((*opVal)).name(), "double")==0)) {
-			printf("ckp2\n");
-			get(opVal);
+			get_(opVal);
 		} else {
-			printf("ckp3\n");
-			get(opVal);
+			get_(opVal);
 		}
 
 	}
 	//-- single value (int, double, char*, enum)
-	EXPORT void get(numtype* oparamVal);
-	EXPORT void get(char* oparamVal);
-	EXPORT void get(int* oparamVal, bool isenum=false);
+	EXPORT void get_(numtype* oparamVal, bool isenum=false);
+	EXPORT void get_(char* oparamVal, bool isenum=false);
+	EXPORT void get_(int* oparamVal, bool isenum=false);
 	EXPORT void ReadParamFromFile(int* oParamValue);
 	EXPORT void ReadParamFromFile(numtype* oParamValue);
 	EXPORT void ReadParamFromFile(char* oParamValue);
