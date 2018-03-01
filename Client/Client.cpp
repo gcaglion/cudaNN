@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\Forecaster\\Tester\\tester.ini", FILE_MODE_READ), argc, argv));
+		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\giacomo.caglioni\\dev\\Forecaster\\Tester\\tester.ini", FILE_MODE_READ), argc, argv));
 
 		//-- invariant data shape
 		int sampleLen;		parms->get(&sampleLen, "DataParms.SampleLen");
@@ -35,6 +35,9 @@ int main(int argc, char* argv[]) {
 		parms->get(&lr, "NNInfo.LevelRatios");
 		char** tsf=(char**)malloc(12*sizeof(char*)); for (int i=0; i<12; i++) tsf[i]=(char*)malloc(16);
 		parms->get(tsf, "DataParms.TSFeatures");
+		int* tsfid=(int*)malloc(12*sizeof(int));
+		parms->get(&tsfid, "DataParms.TSFeatures", enumlist);
+
 
 		//-- TRAIN timeseries & datasets
 		bool doTrain=true;

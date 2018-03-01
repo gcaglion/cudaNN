@@ -46,7 +46,7 @@ EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
 			// separator
 			memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
 			StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
-			//Trim(StrList[ListLen]);
+			Trim(StrList[ListLen]);
 			ListLen++;
 			prevSep = i;
 		}
@@ -55,7 +55,7 @@ EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
 	//-- portion of pDesc after the last comma
 	memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
 	StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
-	//Trim(StrList[ListLen]);
+	Trim(StrList[ListLen]);
 
 	return (ListLen+1);
 }
@@ -370,7 +370,7 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 		if (strcmp(eVal, "CLOSE")==0) { (*oVal) = CLOSE; return; }
 		if (strcmp(eVal, "VOLUME")==0) { (*oVal) = VOLUME; return; }
 		if (strcmp(eVal, "OTHER")==0) { (*oVal) = OTHER; return; }
-	} else if (strcmp(edesc, "DATAPARMS.TSFEATURES")==0) {
+*/	} else if (strcmp(edesc, "DATAPARMS.TSFEATURES")==0) {
 		if (strcmp(eVal, "TSF_MEAN")==0) { (*oVal) = TSF_MEAN; return; }
 		if (strcmp(eVal, "TSF_MAD")==0) { (*oVal) = TSF_MAD; return; }
 		if (strcmp(eVal, "TSF_VARIANCE")==0) { (*oVal) = TSF_VARIANCE; return; }
@@ -379,7 +379,7 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 		if (strcmp(eVal, "TSF_TURNINGPOINTS")==0) { (*oVal) = TSF_TURNINGPOINTS; return; }
 		if (strcmp(eVal, "TSF_SHE")==0) { (*oVal) = TSF_SHE; return; }
 		if (strcmp(eVal, "TSF_HISTVOL")==0) { (*oVal) = TSF_HISTVOL; return; }
-	} else if (strcmp(right(edesc, 7), "BP_ALGO")==0) {
+/*	} else if (strcmp(right(edesc, 7), "BP_ALGO")==0) {
 		if (strcmp(eVal, "BP_STD")==0) { (*oVal) = BP_STD; return; }
 		if (strcmp(eVal, "BP_QING")==0) { (*oVal) = BP_QING; return; }
 		if (strcmp(eVal, "BP_SCGD")==0) { (*oVal) = BP_SCGD; return; }
@@ -489,12 +489,14 @@ void sParamMgr::get_(int** oparamVal, bool isenum) {
 	//-- for each element, check if we need enum
 	for (int i=0; i<pListLen; i++){
 		if (isenum) {
-		safeCallEE(getEnumVal(pDesc, evals, oparamVal));
+			safeCallEE(getEnumVal(pDesc, pArrDesc[i], &(*oparamVal)[i]));
 		} else {
 			//-- convert
 			for (int i=0; i<pListLen; i++) (*oparamVal)[i] = atoi(pArrDesc[i]);
 		}
+	}
 }
+
 void sParamMgr::ReadParamFromFile(int* oParamValue) {
 	char vParamName[1000];
 	char vParamValue[1000];
