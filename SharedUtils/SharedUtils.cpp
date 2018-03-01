@@ -301,6 +301,7 @@ sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_) {
 
 //=== ParamMgr
 sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) {
+	ParamFile=ParamFile_;
 	if (dbg_==nullptr) {
 		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("ParamMgr.err"));
 	} else {
@@ -319,8 +320,7 @@ sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) 
 		UpperCase(CLparamName[p]);
 		if (strcmp(CLparamName[p], "INIFILE")==0) {
 			altIniFile = true;
-			strcpy_s(IniFileName, MAX_PATH-1, CLparamVal[p]);
-			safeCallEE(ParamFile=new tFileInfo(IniFileName, FILE_MODE_READ));
+			safeCallEE(ParamFile=new tFileInfo(CLparamVal[p], FILE_MODE_READ));
 		}
 	}
 	//-- if -- ParamFile is not passed, and IniFileName is not specified, then set look for default ini file in current directory
@@ -426,83 +426,79 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 	if (ret<0) throwE("getEnumVal() could not resolve Parameter: %s = %s . Exiting.\n", 2, edesc, eVal);
 
 }
-//-- single value (int, double, char*, enum)
-void sParamMgr::getParam(char* paramName, double* oparamVal) {
-	char* vparamName = _strdup(paramName); UpperCase(vparamName);
+
+//-- single value (int, double, char*, enum) paramName should already be UpperCased & Trimmed
+void sParamMgr::get(numtype* oparamVal) {
 	for (int p = 1; p < CLparamCount; p++) {
-		if (strcmp(CLparamName[p], vparamName)==0) {
-			(*oparamVal) = atof(CLparamVal[p]);
-			free(vparamName);
+		if (strcmp(CLparamName[p], pDesc)==0) {
+			(*oparamVal) = (numtype)atof(CLparamVal[p]);
 			return;
 		}
 	}
-	safeCallEE(ReadParamFromFile(IniFileName, vparamName, oparamVal));
-	free(vparamName);
+	safeCallEE(ReadParamFromFile(oparamVal));
 }
-void sParamMgr::getParam(char* paramName, char* oparamVal) {
-	char* vparamName = _strdup(paramName); UpperCase(vparamName);
+void sParamMgr::get(char* oparamVal) {
 	for (int p = 1; p < CLparamCount; p++) {
-		if (strcmp(CLparamName[p], vparamName)==0) {
+		if (strcmp(CLparamName[p], pDesc)==0) {
 			strcpy_s(oparamVal, ARRAY_PARAMETER_MAX_LEN, CLparamVal[p]);
-			free(vparamName);
 			return;
 		}
 	}
-	safeCallEE(ReadParamFromFile(IniFileName, vparamName, oparamVal));
-	free(vparamName);
+	safeCallEE(ReadParamFromFile(oparamVal));
 }
-void sParamMgr::getParam(char* paramName, int* oparamVal, bool isenum) {
-	char* vparamName = _strdup(paramName); UpperCase(vparamName);
+void sParamMgr::get(int* oparamVal, bool isenum) {
 	char evals[100];
 	int ret = 0;
 	for (int p = 1; p < CLparamCount; p++) {
-		if (strcmp(CLparamName[p], vparamName)==0) {
+		if (strcmp(CLparamName[p], pDesc)==0) {
 			strcpy_s(evals, ARRAY_PARAMETER_MAX_LEN, CLparamVal[p]);
-			safeCallEE(getEnumVal(vparamName, evals, oparamVal));
-			free(vparamName);
+			safeCallEE(getEnumVal(pDesc, evals, oparamVal));
 			return;
 		}
 	}
-	safeCallEE(ReadParamFromFile(IniFileName, vparamName, oparamVal));
-	safeCallEE(getEnumVal(vparamName, evals, oparamVal));
-	free(vparamName);
+	safeCallEE(ReadParamFromFile(oparamVal));
+	if(isenum) safeCallEE(getEnumVal(pDesc, evals, oparamVal));
 }
-void sParamMgr::ReadParamFromFile(char* pFileName, char* pParamName, int* oParamValue) {
+
+void sParamMgr::ReadParamFromFile(int* oParamValue) {
 	char vParamName[1000];
 	char vParamValue[1000];
 
+	rewind(ParamFile->handle);
 	while (fscanf(ParamFile->handle, "%s = %s ", &vParamName[0], &vParamValue[0])!=EOF) {
 		Trim(vParamName); UpperCase(vParamName);
-		if (strcmp(&vParamName[0], &pParamName[0])==0) {
+		if (strcmp(&vParamName[0], pDesc)==0) {
 			(*oParamValue) = atoi(vParamValue);
 			return;
 		}
 	}
-	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pParamName);
+	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pDesc);
 }
-void sParamMgr::ReadParamFromFile(char* pFileName, char* pParamName, double* oParamValue) {
+void sParamMgr::ReadParamFromFile(numtype* oParamValue) {
 	char vParamName[1000];
 	char vParamValue[1000];
 
+	rewind(ParamFile->handle);
 	while (fscanf(ParamFile->handle, "%s = %s ", &vParamName[0], &vParamValue[0])!=EOF) {
 		Trim(vParamName); UpperCase(vParamName);
-		if (strcmp(&vParamName[0], &pParamName[0])==0) {
-			(*oParamValue) = atof(vParamValue);
+		if (strcmp(&vParamName[0], pDesc)==0) {
+			(*oParamValue) = (numtype)atof(vParamValue);
 			return;
 		}
 	}
-	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pParamName);
+	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pDesc);
 }
-void sParamMgr::ReadParamFromFile(char* pFileName, char* pParamName, char* oParamValue) {
+void sParamMgr::ReadParamFromFile(char* oParamValue) {
 	char vParamName[1000];
 	char vParamValue[1000];
 
+	rewind(ParamFile->handle);
 	while (fscanf(ParamFile->handle, "%s = %[^\n]", &vParamName[0], &vParamValue[0])!=EOF) {
 		Trim(vParamName); UpperCase(vParamName);
-		if (strcmp(&vParamName[0], &pParamName[0])==0) {
+		if (strcmp(&vParamName[0], pDesc)==0) {
 			strcpy_s(oParamValue, ARRAY_PARAMETER_MAX_LEN, vParamValue);
 			return;
 		}
 	}
-	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pParamName);
+	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pDesc);
 }

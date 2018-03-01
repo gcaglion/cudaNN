@@ -5,26 +5,29 @@
 #include "../Logger/Logger.h"
 #include "../MyAlgebra/MyAlgebra.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 
 	DWORD mainStart=timeGetTime();
 	//--
 	int clientPid=GetCurrentProcessId();
 	int clientTid=GetCurrentThreadId();
 
-	tParamMgr* parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\Forecaster\\Tester\\tester.ini", FILE_MODE_READ));
-
 	//-- main debugger declaration & creation
-	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH,);
+	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH);
 	//-- set main debugger properties
 	dbg->timing=false;
 
 	//-- everything else must be enclosed in try/catch block
 	try {
 
+		//-- create client parms, include command-line parms, and read parameters file
+		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\Forecaster\\Tester\\tester.ini", FILE_MODE_READ), argc, argv));
+
 		//-- invariant data shape
-		int sampleLen=200;
-		int predictionLen=3;
+		int sampleLen;		parms->get(&sampleLen, "DataParms.SampleLen");
+		int predictionLen;	parms->get(&predictionLen, "DataParms.PredictionLen");
+		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
+		char dbuser[30];	parms->get(dbuser, "DataSource.DBConn.DBUser");
 
 		//-- TRAIN timeseries & datasets
 		bool doTrain=true;

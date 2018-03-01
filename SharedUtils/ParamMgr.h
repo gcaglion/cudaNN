@@ -5,9 +5,11 @@
 #include "../MyEngines.h"
 #include "../Logger/Logger.h"
 #include "../TimeSerie/TimeSerie.h"
+#include <typeinfo>
 
-#define MAXPARAMDESCLEN 20	// Max length for comma-separated lists of descriptions
-#define ARRAY_PARAMETER_MAX_LEN	100
+#define MAX_CL_PARAMS_CNT 100
+#define MAXPARAMDESCLEN 100	
+#define ARRAY_PARAMETER_MAX_LEN	100	// Max length for comma-separated lists of descriptions
 #define enumlist true
 
 typedef struct sParamMgr {
@@ -16,12 +18,11 @@ typedef struct sParamMgr {
 
 	//-- ini file and command-line overrides
 	tFileInfo* ParamFile;
-	char IniFileName[MAX_PATH];
 	int  CLparamCount;
 	char CLparamName[1000][100];
 	char CLparamVal[1000][100];
 	//--
-	//char vParamName[MAXPARAMDESCLEN];
+	char pDesc[MAXPARAMDESCLEN];
 
 	//-- constructors / destructors
 	EXPORT sParamMgr(tFileInfo* ParamFile_=nullptr, int argc=0, char* argv[]=nullptr, tDbg* dbg_=nullptr); //-- directly from command-line
@@ -29,13 +30,26 @@ typedef struct sParamMgr {
 	//-- enums
 	EXPORT void getEnumVal(char* edesc, char* eVal, int* oVal);
 	
+	//-- generic
+	template <typename T> EXPORT void get(T* opVal, const char* parmDesc) {
+		strcpy_s(pDesc, parmDesc); Trim(pDesc); UpperCase(pDesc);
+		if (strcmp(typeid((*opVal)).name(), "int")==0) {
+			get(opVal);
+		} else if ((strcmp(typeid((*opVal)).name(), "float")==0)||(strcmp(typeid((*opVal)).name(), "double")==0)) {
+			printf("ckp2\n");
+			get(opVal);
+		} else {
+			printf("ckp3\n");
+			get(opVal);
+		}
+
+	}
 	//-- single value (int, double, char*, enum)
-	EXPORT void getParam(char* paramName, double* oparamVal);
-	EXPORT void getParam(char* paramName, char* oparamVal);
-	EXPORT void getParam(char* paramName, int* oparamVal, bool isenum);
-	EXPORT void ReadParamFromFile(char* pFileName, char* pParamName, int* oParamValue);
-	EXPORT void ReadParamFromFile(char* pFileName, char* pParamName, double* oParamValue);
-	EXPORT void ReadParamFromFile(char* pFileName, char* pParamName, char* oParamValue);
+	EXPORT void get(numtype* oparamVal);
+	EXPORT void get(char* oparamVal);
+	EXPORT void get(int* oparamVal, bool isenum=false);
+	EXPORT void ReadParamFromFile(int* oParamValue);
+	EXPORT void ReadParamFromFile(numtype* oParamValue);
+	EXPORT void ReadParamFromFile(char* oParamValue);
 
 } tParamMgr;
-
