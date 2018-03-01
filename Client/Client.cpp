@@ -21,12 +21,13 @@ int main(int argc, char* argv[]) {
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\giacomo.caglioni\\dev\\Forecaster\\Tester\\tester.ini", FILE_MODE_READ), argc, argv));
+		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\giacomo.caglioni\\dev\\cudaNN\\Client\\Client.ini", FILE_MODE_READ), argc, argv));
 
 		//-- invariant data shape
 		int sampleLen;		parms->get(&sampleLen, "DataParms.SampleLen");
 		int predictionLen;	parms->get(&predictionLen, "DataParms.PredictionLen");
-		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
+
+/*		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
 		char dbuser[30];	parms->get(dbuser, "DataSource.DBConn.DBUser");
 		int EngineType;		parms->get(&EngineType, "Forecaster.Engine", true);
 		int* fileDS=(int*)malloc(MAXDATASETS*sizeof(int));
@@ -37,24 +38,24 @@ int main(int argc, char* argv[]) {
 		parms->get(tsf, "DataParms.TSFeatures");
 		int* tsfid=(int*)malloc(12*sizeof(int));
 		parms->get(&tsfid, "DataParms.TSFeatures", enumlist);
-
+*/
 
 		//-- TRAIN timeseries & datasets
 		bool doTrain=true;
 		bool doTrainRun =true;				//-- In-Sample test. Runs on Training set.
 		char* trainTSdate0="201712300000";
-		int trainTShistoryLen=50003;
+		int trainTShistoryLen=503;
 		int trainTS_DT=DT_DELTA;
-		int batchSamplesCnt_Train=100;
+		int batchSamplesCnt_Train=10;
 
 		//-- TEST timeseries & datasets
 		bool doTestRun  =true;				//-- Out-of-Sample test. Runs on Test set.
 		//int testWpid=76168, testWtid=77828;			//-- if both 0, use currently loaded W
 		int testWpid=0, testWtid=0;			//-- if both 0, use currently loaded W
 		char* testTSdate0="201612300000";
-		int testTShistoryLen=50003;			//-- can be different
+		int testTShistoryLen=503;			//-- can be different
 		int testTS_DT=DT_DELTA;				//-- can be different
-		int batchSamplesCnt_Test=100;			//-- can be different
+		int batchSamplesCnt_Test=10;			//-- can be different
 		
 		//-- VALIDATION timeseries & datasets
 		bool doValid=false;
@@ -86,7 +87,7 @@ int main(int argc, char* argv[]) {
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 
 		//-- net geometry
-		char* levelRatioS= "1, 0.5, 1";//"0.7"
+		char* levelRatioS= "0.5";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 		bool useContext=true;
 		bool useBias=false;

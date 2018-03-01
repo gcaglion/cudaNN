@@ -42,20 +42,12 @@ typedef struct sParamMgr {
 
 		get_(opVal, isenum);
 
-/*		const char* pType=typeid((*opVal)).name();
-		if (strcmp(pType, "int")==0) {
-			get_(opVal, isenum);
-		} else if ((strcmp(pType, "float")==0)||(strcmp(pType, "double")==0)) {
-			get_(opVal);
-		} else {
-			get_(opVal);
-		}
-*/
 	}
-	//-- single value (int, double, char*, enum)
+	//-- single value: int(with or without enums), numtype, char*
 	EXPORT void get_(int* oparamVal, bool isenum=false);
 	EXPORT void get_(numtype* oparamVal, bool isenum=false);
 	EXPORT void get_(char* oparamVal, bool isenum=false);
+	//-- arrays: int(with or without enums), numtype, char*
 	EXPORT void get_(int** oparamVal, bool isenum=false);
 	EXPORT void get_(numtype** oparamVal, bool isenum=false);
 	EXPORT void get_(char** oparamVal, bool isenum=false);

@@ -332,7 +332,10 @@ sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) 
 	}
 
 }
-sParamMgr::~sParamMgr() { }
+sParamMgr::~sParamMgr() {
+	for (int i=0; i<ARRAY_PARAMETER_MAX_ELEMS; i++) free(pArrDesc[i]);
+	free(pArrDesc);
+}
 
 //-- enums
 void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
