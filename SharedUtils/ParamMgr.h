@@ -47,6 +47,7 @@ typedef struct sParamMgr {
 	EXPORT void get_(int* oparamVal, bool isenum=false);
 	EXPORT void get_(numtype* oparamVal, bool isenum=false);
 	EXPORT void get_(char* oparamVal, bool isenum=false);
+	EXPORT void get_(bool* oparamVal, bool isenum=false);
 	//-- arrays: int(with or without enums), numtype, char*
 	EXPORT void get_(int** oparamVal, bool isenum=false);
 	EXPORT void get_(numtype** oparamVal, bool isenum=false);
@@ -54,5 +55,6 @@ typedef struct sParamMgr {
 	EXPORT void ReadParamFromFile(int* oParamValue);
 	EXPORT void ReadParamFromFile(numtype* oParamValue);
 	EXPORT void ReadParamFromFile(char* oParamValue);
+	EXPORT void ReadParamFromFile(bool* oParamValue);
 
 } tParamMgr;

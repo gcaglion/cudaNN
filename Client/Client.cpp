@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 		int sampleLen;		parms->get(&sampleLen, "DataParms.SampleLen");
 		int predictionLen;	parms->get(&predictionLen, "DataParms.PredictionLen");
 
-/*		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
+		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
 		char dbuser[30];	parms->get(dbuser, "DataSource.DBConn.DBUser");
 		int EngineType;		parms->get(&EngineType, "Forecaster.Engine", true);
 		int* fileDS=(int*)malloc(MAXDATASETS*sizeof(int));
@@ -36,11 +36,10 @@ int main(int argc, char* argv[]) {
 		parms->get(tsf, "DataParms.TSFeatures");
 		int* tsfid=(int*)malloc(12*sizeof(int));
 		parms->get(&tsfid, "DataParms.TSFeatures", enumlist);
-*/
 
 		//-- TRAIN timeseries & datasets
-		bool doTrain=true;
-		bool doTrainRun =true;				//-- In-Sample test. Runs on Training set.
+		bool doTrain; parms->get(&doTrain, "Train.doTrain");
+		bool doTrainRun; parms->get(&doTrainRun, "Train.doTrainRun");
 		char* trainTSdate0="201712300000";
 		int trainTShistoryLen=50003;
 		int trainTS_DT=DT_DELTA;

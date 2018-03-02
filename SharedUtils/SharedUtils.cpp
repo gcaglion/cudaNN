@@ -460,6 +460,15 @@ void sParamMgr::get_(int* oparamVal, bool isenum) {
 		safeCallEE(ReadParamFromFile(oparamVal));
 	}
 }
+void sParamMgr::get_(bool* oparamVal, bool isenum) {
+	for (int p = 1; p < CLparamCount; p++) {
+		if (strcmp(CLparamName[p], pDesc)==0) {
+			(*oparamVal) = (strcmp(CLparamVal[p],"TRUE")==0);
+			return;
+		}
+	}
+	safeCallEE(ReadParamFromFile(oparamVal));
+}
 //-- array values
 void sParamMgr::get_(numtype** oparamVal, bool isenum) {
 	//-- first, get the list as a regular char* parameter
@@ -530,6 +539,21 @@ void sParamMgr::ReadParamFromFile(char* oParamValue) {
 		Trim(vParamName); UpperCase(vParamName);
 		if (strcmp(&vParamName[0], pDesc)==0) {
 			strcpy_s(oParamValue, MAX_PARAMDESC_LEN, vParamValue);
+			return;
+		}
+	}
+	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pDesc);
+}
+void sParamMgr::ReadParamFromFile(bool* oParamValue) {
+	char vParamName[1000];
+	char vParamValue[1000];
+
+	rewind(ParamFile->handle);
+	while (fscanf(ParamFile->handle, "%s = %s ", &vParamName[0], &vParamValue[0])!=EOF) {
+		Trim(vParamName); UpperCase(vParamName);
+		if (strcmp(&vParamName[0], pDesc)==0) {
+			Trim(vParamValue); UpperCase(vParamValue);
+			(*oParamValue) = (strcmp(vParamValue, "TRUE")==0);
 			return;
 		}
 	}
