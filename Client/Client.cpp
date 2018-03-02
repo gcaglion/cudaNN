@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\giacomo.caglioni\\dev\\cudaNN\\Client\\Client.ini", FILE_MODE_READ), argc, argv));
+		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.ini", FILE_MODE_READ), argc, argv));
 
 		//-- invariant data shape
 		int sampleLen;		parms->get(&sampleLen, "DataParms.SampleLen");
@@ -49,12 +49,12 @@ int main(int argc, char* argv[]) {
 		int batchSamplesCnt_Train=10;
 
 		//-- TEST timeseries & datasets
-		bool doTestRun  =true;				//-- Out-of-Sample test. Runs on Test set.
-		//int testWpid=76168, testWtid=77828;			//-- if both 0, use currently loaded W
-		int testWpid=0, testWtid=0;			//-- if both 0, use currently loaded W
+		bool doTestRun  =true;					//-- Out-of-Sample test. Runs on Test set.
+		//int testWpid=76168, testWtid=77828;	//-- if both 0, use currently loaded W
+		int testWpid=0, testWtid=0;				//-- if both 0, use currently loaded W
 		char* testTSdate0="201612300000";
-		int testTShistoryLen=503;			//-- can be different
-		int testTS_DT=DT_DELTA;				//-- can be different
+		int testTShistoryLen=503;				//-- can be different
+		int testTS_DT=DT_DELTA;					//-- can be different
 		int batchSamplesCnt_Test=10;			//-- can be different
 		
 		//-- VALIDATION timeseries & datasets
@@ -63,14 +63,6 @@ int main(int argc, char* argv[]) {
 		int validTShistoryLen=trainTShistoryLen;			//-- must be the same (?)
 		int validTS_DT=trainTS_DT;							//-- must be the same (?)
 		int batchSamplesCnt_Valid=batchSamplesCnt_Train;	//-- must be the same (?)
-
-		//-- NN
-		tNN* myNN=nullptr;
-		//-- NN own debugger
-		tDbg* NNdbg=nullptr;
-
-		//-- create additional debuggers
-		safeCallEE(tDbg* NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 
 		//-- create persistor, with its own DBConnection, to save results data. In this case, we want it to have its own debugger
 		tDbg*			persistorDbg; safeCallEE(persistorDbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("persistor.log"), true));
@@ -93,13 +85,13 @@ int main(int argc, char* argv[]) {
 		bool useBias=false;
 
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
-		safeCallEE(myNN=new tNN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
+		tDbg* NNdbg; safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
+		tNN* myNN;   safeCallEE(myNN=new tNN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
 		//-- 0.1. set training parameters
 		myNN->MaxEpochs=50;
 		myNN->NetSaveFreq=200;
 		myNN->TargetMSE=(float)0.0001;
 		myNN->BP_Algo=BP_STD;
-
 		myNN->LearningRate=(numtype)0.005;
 		myNN->LearningMomentum=(numtype)0.5;
 		myNN->StopOnDivergence=false;
@@ -126,11 +118,13 @@ int main(int argc, char* argv[]) {
 				safeCallEE(myNN->run(trainSet));
 				safeCallEE(persistor->SaveRun(myNN->pid, myNN->tid, 0, myNN->pid, myNN->tid, trainSet->samplesCnt, modelFeaturesCnt, modelFeature, trainSet->prediction0, trainSet->target0));
 			}
+			delete trainSet; delete trainTS; delete trainDataSrc;
 		}
 		if (doValid) {
 			tFXData* validDataSrc; safeCallEE(validDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
 			tTS* validTS; safeCallEE(validTS=new tTS(validDataSrc, validTShistoryLen, validTSdate0, validTS_DT, myNN->scaleMin[0], myNN->scaleMax[0]));
 			tDataSet* validSet; safeCallEE(validSet=new tDataSet(validTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchSamplesCnt_Valid));
+			delete validSet; delete validTS; delete validDataSrc;
 		}
 		if (doTestRun) {
 			tFXData* testDataSrc; safeCallEE(testDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
@@ -146,6 +140,7 @@ int main(int argc, char* argv[]) {
 			//-- Inference from Test Set (run + persist)
 			safeCallEE(myNN->run(testSet));
 			safeCallEE(persistor->SaveRun(myNN->pid, myNN->tid, 1, testWpid, testWtid, testSet->samplesCnt, modelFeaturesCnt, modelFeature, testSet->prediction0, testSet->target0));
+			delete testSet; delete testTS; delete testDataSrc;
 		}
 
 		//-- 9. persist Client info
@@ -168,12 +163,12 @@ int main(int argc, char* argv[]) {
 
 		//-- destroy all objects (therefore all tDbg* objects, therefore all empty debug files)
 		delete FXDB;
-		delete persistor;
 /*		delete trainDataSrc;
 		delete trainTS;
-		if(trainSet!=nullptr) delete trainSet;
-		if(testSet!=nullptr) delete testSet;
-*/		delete myNN;
+*/
+		delete persistor;
+		delete myNN;
+		delete parms;
 
 		delete dbg;
 	}

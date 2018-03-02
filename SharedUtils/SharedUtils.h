@@ -1,6 +1,10 @@
 #pragma once
 #include "../CommonEnv.h"
 
+#ifdef USE_GPU
+#include "../MyCU/MyCU.h"
+#endif
+
 #include <stdio.h>
 #include <time.h>
 
