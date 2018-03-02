@@ -3,11 +3,7 @@
 
 //-- constructors / destructor
 void sTS::sTScommon(int steps_, int featuresCnt_, tDbg* dbg_) {
-	if (dbg_==nullptr) {
-		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"));
-	} else {
-		dbg=dbg_;
-	}
+	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
 	steps=steps_;
 	featuresCnt=featuresCnt_;
 	len=steps*featuresCnt;
@@ -230,11 +226,7 @@ int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 }
 
 sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_) {
-	if (dbg_==nullptr) {
-		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"));
-	} else {
-		dbg=dbg_;
-	}
+	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"))) : dbg_;
 	sourceTS=sourceTS_;
 	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
 	sampleLen=sampleLen_;

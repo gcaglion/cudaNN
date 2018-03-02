@@ -278,11 +278,7 @@ void sFileInfo::setModeS(int mode_){
 
 //=== sDBConnection
 sDBConnection::sDBConnection(char* username, char* password, char* connstring, tDbg* dbg_) {
-	if (dbg_==nullptr) {
-		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DBConnection.err"));
-	} else {
-		dbg=dbg_;
-	}
+	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DBConnection.err"))) : dbg_;
 	strcpy_s(DBUser, 30, username);
 	strcpy_s(DBPassword, 30, password);
 	strcpy_s(DBConnString, 30, connstring);
@@ -302,11 +298,7 @@ sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_) {
 //=== ParamMgr
 sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) {
 	ParamFile=ParamFile_;
-	if (dbg_==nullptr) {
-		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("ParamMgr.err"));
-	} else {
-		dbg=dbg_;
-	}
+	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("ParamMgr.err"))) : dbg_;
 
 	//-- mallocs
 	pArrDesc=(char**)malloc(ARRAY_PARAMETER_MAX_ELEMS*sizeof(char*)); for (int i=0; i<ARRAY_PARAMETER_MAX_ELEMS; i++) pArrDesc[i]=(char*)malloc(MAX_PARAMDESC_LEN);

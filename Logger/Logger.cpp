@@ -1,11 +1,7 @@
 #include "Logger.h"
 
 sLogger::sLogger(tDBConnection* logDB, tDbg* dbg_) {
-	if (dbg_==nullptr) {
-		dbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"));
-	} else {
-		dbg=dbg_;
-	}
+	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"))) : dbg_;
 	dest=LOG_TO_ORCL;
 	db=logDB;
 }
@@ -13,7 +9,7 @@ sLogger::sLogger(tDataFile* logFile) {
 	dest=LOG_TO_TEXT;
 	file=logFile;
 }
-sLogger::~sLogger() { delete dbg; }
+sLogger::~sLogger() { delete db; delete dbg; }
 
 void sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV) {
 	if (saveMSE) {

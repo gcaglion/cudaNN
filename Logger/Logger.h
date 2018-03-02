@@ -25,7 +25,7 @@ typedef struct sLogger {
 	bool saveInternals=false;
 	bool saveImage=true;
 
-	EXPORT sLogger(tDBConnection* logDB, tDbg* dbg_);
+	EXPORT sLogger(tDBConnection* logDB, tDbg* dbg_=nullptr);
 	EXPORT sLogger(tDataFile* logFile);
 	EXPORT ~sLogger();
 

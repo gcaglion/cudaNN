@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 		int batchSamplesCnt_Train=10;
 
 		//-- TEST timeseries & datasets
-		bool doTestRun  =true;					//-- Out-of-Sample test. Runs on Test set.
+		bool doTestRun  =false;					//-- Out-of-Sample test. Runs on Test set.
 		//int testWpid=76168, testWtid=77828;	//-- if both 0, use currently loaded W
 		int testWpid=0, testWtid=0;				//-- if both 0, use currently loaded W
 		char* testTSdate0="201612300000";
@@ -64,10 +64,9 @@ int main(int argc, char* argv[]) {
 		int validTS_DT=trainTS_DT;							//-- must be the same (?)
 		int batchSamplesCnt_Valid=batchSamplesCnt_Train;	//-- must be the same (?)
 
-		//-- create persistor, with its own DBConnection, to save results data. In this case, we want it to have its own debugger
-		tDbg*			persistorDbg; safeCallEE(persistorDbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("persistor.log"), true));
-		tDBConnection*	persistorDB;  safeCallEE(persistorDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO", persistorDbg));
-		tLogger*		persistor;	  safeCallEE(persistor=new tLogger(persistorDB, persistorDbg));
+		//-- create persistor, with its own DBConnection, to save results data.
+		tDBConnection*	persistorDB;  safeCallEE(persistorDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO"));
+		tLogger*		persistor;	  safeCallEE(persistor=new tLogger(persistorDB));
 		//-- logger parameters (when different from default settings)
 		persistor->saveImage=true;
 
@@ -81,7 +80,7 @@ int main(int argc, char* argv[]) {
 		//-- net geometry
 		char* levelRatioS= "0.5";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
-		bool useContext=true;
+		bool useContext=false;
 		bool useBias=false;
 
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
@@ -94,7 +93,7 @@ int main(int argc, char* argv[]) {
 		myNN->BP_Algo=BP_STD;
 		myNN->LearningRate=(numtype)0.005;
 		myNN->LearningMomentum=(numtype)0.5;
-		myNN->StopOnDivergence=false;
+		myNN->StopOnDivergence=true;
 
 		//-- 1. For each TimeSerie(Training, Validation, Test), do the following:
 		//-- 1.1. define its DataSource
@@ -163,9 +162,6 @@ int main(int argc, char* argv[]) {
 
 		//-- destroy all objects (therefore all tDbg* objects, therefore all empty debug files)
 		delete FXDB;
-/*		delete trainDataSrc;
-		delete trainTS;
-*/
 		delete persistor;
 		delete myNN;
 		delete parms;
