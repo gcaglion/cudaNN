@@ -9,11 +9,9 @@ int main(int argc, char* argv[]) {
 
 	DWORD mainStart=timeGetTime();
 	//--
-	int clientPid=GetCurrentProcessId();
-	int clientTid=GetCurrentThreadId();
 
 	//-- main debugger declaration & creation
-	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH);
+	createMainDebugger(DBG_LEVEL_ERR, DBG_DEST_BOTH);
 	//-- set main debugger properties
 	dbg->timing=false;
 
@@ -44,18 +42,18 @@ int main(int argc, char* argv[]) {
 		bool doTrain=true;
 		bool doTrainRun =true;				//-- In-Sample test. Runs on Training set.
 		char* trainTSdate0="201712300000";
-		int trainTShistoryLen=503;
+		int trainTShistoryLen=50003;
 		int trainTS_DT=DT_DELTA;
 		int batchSamplesCnt_Train=10;
 
 		//-- TEST timeseries & datasets
-		bool doTestRun  =false;					//-- Out-of-Sample test. Runs on Test set.
+		bool doTestRun  =true;					//-- Out-of-Sample test. Runs on Test set.
 		//int testWpid=76168, testWtid=77828;	//-- if both 0, use currently loaded W
 		int testWpid=0, testWtid=0;				//-- if both 0, use currently loaded W
 		char* testTSdate0="201612300000";
-		int testTShistoryLen=503;				//-- can be different
+		int testTShistoryLen=50003;				//-- can be different
 		int testTS_DT=DT_DELTA;					//-- can be different
-		int batchSamplesCnt_Test=10;			//-- can be different
+		int batchSamplesCnt_Test=100;			//-- can be different
 		
 		//-- VALIDATION timeseries & datasets
 		bool doValid=false;
@@ -74,12 +72,12 @@ int main(int argc, char* argv[]) {
 		tDBConnection* FXDB; safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));
 
 		//-- data params
-		int modelFeature[]={ 0,1,2,3 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
+		int modelFeature[]={ 3 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 
 		//-- net geometry
-		char* levelRatioS= "0.5";//"0.7"
-		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
+		char* levelRatioS= "1,1,1,0.5";//"0.7"
+		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 		bool useContext=false;
 		bool useBias=false;
 
@@ -87,11 +85,11 @@ int main(int argc, char* argv[]) {
 		tDbg* NNdbg; safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 		tNN* myNN;   safeCallEE(myNN=new tNN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
 		//-- 0.1. set training parameters
-		myNN->MaxEpochs=50;
+		myNN->MaxEpochs=250;
 		myNN->NetSaveFreq=200;
 		myNN->TargetMSE=(float)0.0001;
 		myNN->BP_Algo=BP_STD;
-		myNN->LearningRate=(numtype)0.005;
+		myNN->LearningRate=(numtype)0.01;
 		myNN->LearningMomentum=(numtype)0.5;
 		myNN->StopOnDivergence=true;
 
