@@ -3,10 +3,14 @@
 #include "../CommonEnv.h"
 #include "DebugInfo.h"
 
+#define DBUSER_MAXLEN 30
+#define DBPASSWORD_MAXLEN 30
+#define DBCONNSTRING_MAXLEN 30
+
 typedef struct sDBConnection{
-	char DBUser[30];
-	char DBPassword[30];
-	char DBConnString[30];
+	char DBUser[DBUSER_MAXLEN];
+	char DBPassword[DBPASSWORD_MAXLEN];
+	char DBConnString[DBCONNSTRING_MAXLEN];
 	void* DBCtx;
 	tDbg* dbg;
 #ifdef __cplusplus

@@ -279,9 +279,9 @@ void sFileInfo::setModeS(int mode_){
 //=== sDBConnection
 sDBConnection::sDBConnection(char* username, char* password, char* connstring, tDbg* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DBConnection.err"))) : dbg_;
-	strcpy_s(DBUser, 30, username);
-	strcpy_s(DBPassword, 30, password);
-	strcpy_s(DBConnString, 30, connstring);
+	strcpy_s(DBUser, DBUSER_MAXLEN, username);
+	strcpy_s(DBPassword, DBPASSWORD_MAXLEN, password);
+	strcpy_s(DBConnString, DBCONNSTRING_MAXLEN, connstring);
 	DBCtx=NULL;
 }
 sDBConnection::sDBConnection() {}
@@ -344,8 +344,8 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 		if (strcmp(eVal, "ENGINE_WNN")==0) { (*oVal) = ENGINE_WNN; return; }
 		if (strcmp(eVal, "ENGINE_XIE")==0) { (*oVal) = ENGINE_XIE; return; }
 	} else if (strcmp(edesc, "RESULTS.DESTINATION")==0) {
-		if (strcmp(eVal, "LOG_TO_TEXT")==0) { (*oVal) = LOG_TO_TEXT; return; }
-		if (strcmp(eVal, "LOG_TO_ORCL")==0) { (*oVal) = LOG_TO_ORCL; return; }
+		if (strcmp(eVal, "PERSIST_TO_TEXT")==0) { (*oVal) = PERSIST_TO_TEXT; return; }
+		if (strcmp(eVal, "PERSIST_TO_ORCL")==0) { (*oVal) = PERSIST_TO_ORCL; return; }
 /*	} else if (strcmp(edesc, "DATASOURCE.SOURCETYPE")==0) {
 		if (strcmp(eVal, "SOURCE_DATA_FROM_FXDB")==0) { (*oVal) = SOURCE_DATA_FROM_FXDB; return; }
 		if (strcmp(eVal, "SOURCE_DATA_FROM_FILE")==0) { (*oVal) = SOURCE_DATA_FROM_FILE; return; }
@@ -425,7 +425,7 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 }
 
 //-- single value (int, double, char*, enum) paramName should already be UpperCased & Trimmed
-void sParamMgr::get_(numtype* oparamVal, bool isenum) {
+void sParamMgr::get_(numtype* oparamVal, bool isenum, int* oListLen) {
 	for (int p = 1; p < CLparamCount; p++) {
 		if (strcmp(CLparamName[p], pDesc)==0) {
 			(*oparamVal) = (numtype)atof(CLparamVal[p]);
@@ -434,7 +434,7 @@ void sParamMgr::get_(numtype* oparamVal, bool isenum) {
 	}
 	safeCallEE(ReadParamFromFile(oparamVal));
 }
-void sParamMgr::get_(char* oparamVal, bool isenum) {
+void sParamMgr::get_(char* oparamVal, bool isenum, int* oListLen) {
 	for (int p = 1; p < CLparamCount; p++) {
 		if (strcmp(CLparamName[p], pDesc)==0) {
 			strcpy_s(oparamVal, MAX_PARAMDESC_LEN, CLparamVal[p]);
@@ -443,7 +443,7 @@ void sParamMgr::get_(char* oparamVal, bool isenum) {
 	}
 	safeCallEE(ReadParamFromFile(oparamVal));
 }
-void sParamMgr::get_(int* oparamVal, bool isenum) {
+void sParamMgr::get_(int* oparamVal, bool isenum, int* oListLen) {
 	char evals[100];
 	int ret = 0;
 	for (int p = 1; p < CLparamCount; p++) {
@@ -460,7 +460,7 @@ void sParamMgr::get_(int* oparamVal, bool isenum) {
 		safeCallEE(ReadParamFromFile(oparamVal));
 	}
 }
-void sParamMgr::get_(bool* oparamVal, bool isenum) {
+void sParamMgr::get_(bool* oparamVal, bool isenum, int* oListLen) {
 	for (int p = 1; p < CLparamCount; p++) {
 		if (strcmp(CLparamName[p], pDesc)==0) {
 			(*oparamVal) = (strcmp(CLparamVal[p],"TRUE")==0);
@@ -470,34 +470,34 @@ void sParamMgr::get_(bool* oparamVal, bool isenum) {
 	safeCallEE(ReadParamFromFile(oparamVal));
 }
 //-- array values
-void sParamMgr::get_(numtype** oparamVal, bool isenum) {
+void sParamMgr::get_(numtype** oparamVal, bool isenum, int* oListLen) {
 	//-- first, get the list as a regular char* parameter
 	get_(pListDesc);
 	//-- then, split
-	pListLen = cslToArray(pListDesc, ',', pArrDesc);
+	(*oListLen) = cslToArray(pListDesc, ',', pArrDesc);
 	//-- finally, convert
-	for (int i=0; i<pListLen; i++) (*oparamVal)[i] = (numtype)atof(pArrDesc[i]);
+	for (int i=0; i<(*oListLen); i++) (*oparamVal)[i] = (numtype)atof(pArrDesc[i]);
 }
-void sParamMgr::get_(char** oparamVal, bool isenum) {
+void sParamMgr::get_(char** oparamVal, bool isenum, int* oListLen) {
 	//-- first, get the list as a regular char* parameter
 	get_(pListDesc);
 	//-- then, split
-	pListLen = cslToArray(pListDesc, ',', pArrDesc);
+	(*oListLen) = cslToArray(pListDesc, ',', pArrDesc);
 	//-- finally, convert
-	for (int i=0; i<pListLen; i++) strcpy(oparamVal[i], pArrDesc[i]);
+	for (int i=0; i<(*oListLen); i++) strcpy(oparamVal[i], pArrDesc[i]);
 }
-void sParamMgr::get_(int** oparamVal, bool isenum) {
+void sParamMgr::get_(int** oparamVal, bool isenum, int* oListLen) {
 	//-- first, get the list as a regular char* parameter
 	get_(pListDesc);
 	//-- then, split
-	pListLen = cslToArray(pListDesc, ',', pArrDesc);
+	(*oListLen) = cslToArray(pListDesc, ',', pArrDesc);
 	//-- for each element, check if we need enum
-	for (int i=0; i<pListLen; i++){
+	for (int i=0; i<(*oListLen); i++){
 		if (isenum) {
 			safeCallEE(getEnumVal(pDesc, pArrDesc[i], &(*oparamVal)[i]));
 		} else {
 			//-- convert
-			for (int i=0; i<pListLen; i++) (*oparamVal)[i] = atoi(pArrDesc[i]);
+			for (int i=0; i<(*oListLen); i++) (*oparamVal)[i] = atoi(pArrDesc[i]);
 		}
 	}
 }

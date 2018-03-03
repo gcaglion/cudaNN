@@ -7,8 +7,38 @@
 
 int main(int argc, char* argv[]) {
 
+	//-- all variables associated with parameters read from file should be declared here
+	int sampleLen, predictionLen;
+	int modelFeaturesCnt; int* modelFeatures;
+
+	//-- data sources
+	tDBConnection* FXDB; tDataFile* TSdataFile;
+	//-- training parms
+	bool doTrain; bool doTrainRun;
+	int trainTS_DS_type; 
+	char trainTS_DS_FX_DBUser[DBUSER_MAXLEN]; char trainTS_DS_FX_DBPassword[DBPASSWORD_MAXLEN]; char trainTS_DS_FX_DBConnString[DBCONNSTRING_MAXLEN];
+	char trainTSdate0[13]; int trainTShistoryLen; int trainTS_DT; 
+	int trainBatchSamplesCnt; int trainSetFeaturesCnt=0;
+	//-- testing parms
+	bool doTest; 
+	int testTS_DS_type;
+	char testTS_DS_FX_DBUser[DBUSER_MAXLEN]; char testTS_DS_FX_DBPassword[DBPASSWORD_MAXLEN]; char testTS_DS_FX_DBConnString[DBCONNSTRING_MAXLEN];
+	char testTSdate0[13]; int testTShistoryLen; int testTS_DT;
+	int testBatchSamplesCnt; int testSetFeaturesCnt=0;
+	//-- validation parms
+	bool doValid; char validTSdate0[13];
+	int validTS_DS_type;
+	char validTS_DS_FX_DBUser[DBUSER_MAXLEN]; char validTS_DS_FX_DBPassword[DBPASSWORD_MAXLEN]; char validTS_DS_FX_DBConnString[DBCONNSTRING_MAXLEN];
+	int validTShistoryLen; int validTS_DT;
+	int batchSamplesCnt_Valid;
+	//-- persistor(s) For now, just one for all tables
+	int persistorDest;
+	char persistorDBUser[30]; char persistorDBPassword[30]; char persistorDBConnString[30];
+	tDBConnection* persistorDB;	tLogger* persistor;
+	
+
+	//-- start client timer
 	DWORD mainStart=timeGetTime();
-	//--
 
 	//-- main debugger declaration & creation
 	createMainDebugger(DBG_LEVEL_ERR, DBG_DEST_BOTH);
@@ -22,10 +52,10 @@ int main(int argc, char* argv[]) {
 		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.ini", FILE_MODE_READ), argc, argv));
 
 		//-- invariant data shape
-		int sampleLen;		parms->get(&sampleLen, "DataParms.SampleLen");
-		int predictionLen;	parms->get(&predictionLen, "DataParms.PredictionLen");
+		parms->get(&sampleLen, "DataParms.SampleLen");
+		parms->get(&predictionLen, "DaaParms.PredictionLen");
 
-		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
+/*		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
 		char dbuser[30];	parms->get(dbuser, "DataSource.DBConn.DBUser");
 		int EngineType;		parms->get(&EngineType, "Forecaster.Engine", true);
 		int* fileDS=(int*)malloc(MAXDATASETS*sizeof(int));
@@ -36,43 +66,84 @@ int main(int argc, char* argv[]) {
 		parms->get(tsf, "DataParms.TSFeatures");
 		int* tsfid=(int*)malloc(12*sizeof(int));
 		parms->get(&tsfid, "DataParms.TSFeatures", enumlist);
-
-		//-- TRAIN timeseries & datasets
-		bool doTrain; parms->get(&doTrain, "Train.doTrain");
-		bool doTrainRun; parms->get(&doTrainRun, "Train.doTrainRun");
-		char* trainTSdate0="201712300000";
-		int trainTShistoryLen=50003;
-		int trainTS_DT=DT_DELTA;
-		int batchSamplesCnt_Train=10;
-
-		//-- TEST timeseries & datasets
-		bool doTestRun  =true;					//-- Out-of-Sample test. Runs on Test set.
-		//int testWpid=76168, testWtid=77828;	//-- if both 0, use currently loaded W
-		int testWpid=0, testWtid=0;				//-- if both 0, use currently loaded W
-		char* testTSdate0="201612300000";
-		int testTShistoryLen=50003;				//-- can be different
-		int testTS_DT=DT_DELTA;					//-- can be different
-		int batchSamplesCnt_Test=100;			//-- can be different
+*/
 		
-		//-- VALIDATION timeseries & datasets
-		bool doValid=false;
-		char* validTSdate0="201412300000";
-		int validTShistoryLen=trainTShistoryLen;			//-- must be the same (?)
-		int validTS_DT=trainTS_DT;							//-- must be the same (?)
-		int batchSamplesCnt_Valid=batchSamplesCnt_Train;	//-- must be the same (?)
+		//-- Train timeserie
+		parms->get(&doTrain, "Train.doTrain");
+		if (doTrain) {
+			doTrainRun; parms->get(&doTrainRun, "Train.doTrainRun");
+			parms->get(trainTSdate0, "Train.TimeSerie.Date0");
+			parms->get(&trainTShistoryLen, "Train.TimeSerie.HistoryLen");
+			parms->get(&trainTS_DT, "Train.TimeSerie.DataTransformation", enumlist);
+			parms->get(&trainTS_DS_type, "Train.TimeSerie.DataSource.Type", enumlist);
+			if (trainTS_DS_type==SOURCE_DATA_FROM_FXDB) {
+				parms->get(trainTS_DS_FX_DBUser, "Train.TimeSerie.DataSource.FXData.DBUser");
+				parms->get(trainTS_DS_FX_DBPassword, "Train.TimeSerie.DataSource.FXData.DBPassword");
+				parms->get(trainTS_DS_FX_DBConnString, "Train.TimeSerie.DataSource.FXData.DBConnString");
+				safeCallEE(FXDB=new tDBConnection(trainTS_DS_FX_DBUser, trainTS_DS_FX_DBPassword, trainTS_DS_FX_DBConnString));
+			} else {
+				//-- TO DO !
+			}
+			//-- Train DataSet
+			parms->get(&trainBatchSamplesCnt, "Train.DataSet.BatchSamplesCount");
+			int* trainSetFeature; parms->get(&trainSetFeature, "Train.DataSet.SelectedFeatures", false, &trainSetFeaturesCnt);
+		}
+		//-- Test timeserie
+		parms->get(&doTest, "Test.doTest");
+		if (doTest) {
+			parms->get(testTSdate0, "Test.TimeSerie.Date0");
+			parms->get(&testTShistoryLen, "Test.TimeSerie.HistoryLen");
+			parms->get(&testTS_DT, "Test.TimeSerie.DataTransformation", enumlist);
+			parms->get(&testTS_DS_type, "Test.TimeSerie.DataSource.Type", enumlist);
+			if (testTS_DS_type==SOURCE_DATA_FROM_FXDB) {
+				parms->get(testTS_DS_FX_DBUser, "Test.TimeSerie.DataSource.FXData.DBUser");
+				parms->get(testTS_DS_FX_DBPassword, "Test.TimeSerie.DataSource.FXData.DBPassword");
+				parms->get(testTS_DS_FX_DBConnString, "Test.TimeSerie.DataSource.FXData.DBConnString");
+				safeCallEE(FXDB=new tDBConnection(testTS_DS_FX_DBUser, testTS_DS_FX_DBPassword, testTS_DS_FX_DBConnString));
+			} else {
+				//-- TO DO !
+			}
+			//-- Test DataSet
+			parms->get(&testBatchSamplesCnt, "Test.DataSet.BatchSamplesCount");
+			int* testSetFeature; parms->get(&testSetFeature, "Test.DataSet.SelectedFeatures", false, &testSetFeaturesCnt);
+		}
+		//-- Validation timeserie
+		parms->get(&doValid, "Validation.doValidation");
+		if(doValid){
+			parms->get(validTSdate0, "Validation.TimeSerie.Date0");
+			validTShistoryLen=trainTShistoryLen;			//-- must be the same (?)
+			validTS_DT=trainTS_DT;							//-- must be the same (?)
+			batchSamplesCnt_Valid=trainBatchSamplesCnt;		//-- must be the same (?)
+			parms->get(&validTS_DS_type, "Validation.TimeSerie.DataSource.Type", enumlist);
+			if (validTS_DS_type==SOURCE_DATA_FROM_FXDB) {
+				parms->get(validTS_DS_FX_DBUser, "Validation.TimeSerie.DataSource.FXData.DBUser");
+				parms->get(validTS_DS_FX_DBPassword, "Validation.TimeSerie.DataSource.FXData.DBPassword");
+				parms->get(validTS_DS_FX_DBConnString, "Validation.TimeSerie.DataSource.FXData.DBConnString");
+				safeCallEE(FXDB=new tDBConnection(validTS_DS_FX_DBUser, validTS_DS_FX_DBPassword, validTS_DS_FX_DBConnString));
+			} else {
+				//-- TO DO !
+			}
+		}
+		//-- check if model feature selection is coherent among train and test. TO DO!
+
 
 		//-- create persistor, with its own DBConnection, to save results data.
-		tDBConnection*	persistorDB;  safeCallEE(persistorDB=new tDBConnection("cuLogUser", "LogPwd", "ALGO"));
-		tLogger*		persistor;	  safeCallEE(persistor=new tLogger(persistorDB));
-		//-- logger parameters (when different from default settings)
-		persistor->saveImage=true;
-
-		//-- create DBConnection for FX History DB (common to all TimeSeries)
-		tDBConnection* FXDB; safeCallEE(FXDB=new tDBConnection("History", "HistoryPwd", "ALGO"));
-
-		//-- data params
-		int modelFeature[]={ 3 };	//-- features are inserted in Dataset in ascending order, regardless of the order specified here. Should be okay...
-		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
+		parms->get(&persistorDest, "Persistor.Destination", true);
+		if (persistorDest==PERSIST_TO_ORCL) {
+			parms->get(persistorDBUser, "Persistor.DBUser");
+			parms->get(persistorDBPassword, "Persistor.DBPassword");
+			parms->get(persistorDBConnString, "Persistor.DBConnString");
+			safeCallEE(persistorDB=new tDBConnection(persistorDBUser, persistorDBPassword, persistorDBConnString));
+			safeCallEE(persistor=new tLogger(persistorDB));
+			parms->get(&persistor->saveNothing, "Persistor.saveNothing");
+			parms->get(&persistor->saveClient, "Persistor.saveClient");
+			parms->get(&persistor->saveMSE, "Persistor.saveMSE");
+			parms->get(&persistor->saveRun, "Persistor.saveRun");
+			parms->get(&persistor->saveInternals, "Persistor.saveInternals");
+			parms->get(&persistor->saveImage, "Persistor.saveImage");
+		} else {
+			//-- TO DO ...
+		}
 
 		//-- net geometry
 		char* levelRatioS= "1,1,1,0.5";//"0.7"

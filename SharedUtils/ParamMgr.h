@@ -24,7 +24,6 @@ typedef struct sParamMgr {
 	//--
 	char pDesc[MAX_PARAMDESC_LEN];
 	char pListDesc[MAX_PARAMDESC_LEN];	//-- string containing the list of values (of any type) in an array parameter
-	int  pListLen;						//-- number of elements (of any type) found in array parameter
 	char** pArrDesc;
 
 	//-- constructors / destructors
@@ -35,23 +34,23 @@ typedef struct sParamMgr {
 	EXPORT void getEnumVal(char* edesc, char* eVal, int* oVal);
 	
 	//-- generic
-	template <typename T> EXPORT void get(T* opVal, const char* parmDesc, bool isenum=false) {
+	template <typename T> EXPORT void get(T* opVal, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
 		strcpy_s(pDesc, parmDesc); 
 		Trim(pDesc); 
 		UpperCase(pDesc);
 
-		get_(opVal, isenum);
+		get_(opVal, isenum, oListLen);
 
 	}
 	//-- single value: int(with or without enums), numtype, char*
-	EXPORT void get_(int* oparamVal, bool isenum=false);
-	EXPORT void get_(numtype* oparamVal, bool isenum=false);
-	EXPORT void get_(char* oparamVal, bool isenum=false);
-	EXPORT void get_(bool* oparamVal, bool isenum=false);
+	EXPORT void get_(int* oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void get_(numtype* oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void get_(char* oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void get_(bool* oparamVal, bool isenum=false, int* oListLen=nullptr);
 	//-- arrays: int(with or without enums), numtype, char*
-	EXPORT void get_(int** oparamVal, bool isenum=false);
-	EXPORT void get_(numtype** oparamVal, bool isenum=false);
-	EXPORT void get_(char** oparamVal, bool isenum=false);
+	EXPORT void get_(int** oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void get_(numtype** oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void get_(char** oparamVal, bool isenum=false, int* oListLen=nullptr);
 	EXPORT void ReadParamFromFile(int* oParamValue);
 	EXPORT void ReadParamFromFile(numtype* oParamValue);
 	EXPORT void ReadParamFromFile(char* oParamValue);

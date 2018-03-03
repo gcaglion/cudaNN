@@ -23,5 +23,8 @@
     <ClInclude Include="cuNN.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NNparms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

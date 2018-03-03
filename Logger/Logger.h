@@ -10,22 +10,22 @@
 #endif
 
 // Logs Destinations
-#define LOG_TO_TEXT   1
-#define LOG_TO_ORCL	  2
+#define PERSIST_TO_TEXT   1
+#define PERSIST_TO_ORCL	  2
 
 typedef struct sLogger {
 	int dest;
 	tDbg* dbg;
 	tDBConnection* db;
 	tDataFile* file;
-	bool saveNothing=false;
-	bool saveClient=true;
-	bool saveMSE=true;
-	bool saveRun=true;
-	bool saveInternals=false;
-	bool saveImage=true;
+	bool saveNothing;
+	bool saveClient;
+	bool saveMSE;
+	bool saveRun;
+	bool saveInternals;
+	bool saveImage;
 
-	EXPORT sLogger(tDBConnection* logDB, tDbg* dbg_=nullptr);
+	EXPORT sLogger(tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, tDbg* dbg_=nullptr);
 	EXPORT sLogger(tDataFile* logFile);
 	EXPORT ~sLogger();
 
