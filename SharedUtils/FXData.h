@@ -25,7 +25,7 @@ typedef struct sFXData
 	int IsFilled;
 	int BarDataType[FXDATA_FEATURESCNT];
 #ifdef __cplusplus
-	sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_);
+	EXPORT sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_);
 
 #endif
 } tFXData;

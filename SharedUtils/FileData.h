@@ -14,6 +14,6 @@ typedef struct sFileData : public sDataSource {
 	int fieldSep;
 	int featuresCnt;
 
-	sFileData(tFileInfo* srcFile_, int fieldSep_=FILEDATA_SEP_COMMA, bool calcBW_=false, int* BWfeature=nullptr);
+	EXPORT sFileData(tFileInfo* srcFile_, int fieldSep_=FILEDATA_SEP_COMMA, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2);
 
 } tFileData;

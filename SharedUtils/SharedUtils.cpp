@@ -286,6 +286,12 @@ sDBConnection::sDBConnection(char* username, char* password, char* connstring, t
 sDBConnection::sDBConnection() {}
 sDBConnection::~sDBConnection() { delete dbg; }
 
+//=== sDataSource
+sDataSource::sDataSource(int type_, bool calcBW_, int BWfeatureH_, int BWfeatureL_) {
+	type=type_; calcBW=calcBW_; BWfeatureH=BWfeatureH_; BWfeatureL=BWfeatureL_;
+}
+sDataSource::sDataSource(){}
+
 //=== sFXData
 sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_) {
 	//--parent DataSource properties
@@ -293,7 +299,7 @@ sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_) {
 	calcBW=true;
 	//-- the following are fixed (OHLCV), and determined by loadOHLCV query
 	featuresCnt=5;
-	BWfeature[0]=HIGH; BWfeature[1]=LOW;
+	BWfeatureH=HIGH; BWfeatureL=LOW;
 	//--
 	db=db_;
 	strcpy_s(Symbol, FX_SYMBOL_MAX_LEN, symbol_);
@@ -301,12 +307,14 @@ sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_) {
 	IsFilled=isFilled_;
 }
 //=== sFileData
-sFileData::sFileData(tFileInfo* srcFile_, int fieldSep_, bool calcBW_, int* BWfeature_) {
+sFileData::sFileData(tFileInfo* srcFile_, int fieldSep_, bool calcBW_, int BWfeatureH_, int BWfeatureL_) {
 	//--parent DataSource properties
 	type=SOURCE_DATA_FROM_FILE;
-	calcBW=calcBW_; BWfeature[0]=BWfeature_[0]; BWfeature[1]=BWfeature_[1];
+	calcBW=calcBW_; BWfeatureH=BWfeatureH_; BWfeatureL=BWfeatureL_;
 	//--
 	srcFile=srcFile_; fieldSep=fieldSep_; 
+	//-- need to set featuresCnt, but we need to red file to do that!!!
+	featuresCnt=8;
 }
 //=== sMT4Data
 sMT4Data::sMT4Data(int accountId_) {	//--parent DataSource properties
@@ -314,7 +322,7 @@ sMT4Data::sMT4Data(int accountId_) {	//--parent DataSource properties
 	calcBW=true;
 	//-- the following are fixed (OHLCV), and determined by the calling Expert Advisor
 	featuresCnt=5;
-	BWfeature[0]=HIGH; BWfeature[1]=LOW;
+	BWfeatureH=HIGH; BWfeatureL=LOW;
 	//--
 	accountId=accountId_;
 }
@@ -538,7 +546,7 @@ void sParamMgr::ReadParamFromFile(int* oParamValue) {
 			return;
 		}
 	}
-	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pDesc);
+	throwE("Could not find Parameter: %s", 1, pDesc);
 }
 void sParamMgr::ReadParamFromFile(numtype* oParamValue) {
 	char vParamName[1000];
@@ -552,7 +560,7 @@ void sParamMgr::ReadParamFromFile(numtype* oParamValue) {
 			return;
 		}
 	}
-	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pDesc);
+	throwE("Could not find Parameter: %s", 1, pDesc);
 }
 void sParamMgr::ReadParamFromFile(char* oParamValue) {
 	char vParamName[1000];
@@ -566,7 +574,7 @@ void sParamMgr::ReadParamFromFile(char* oParamValue) {
 			return;
 		}
 	}
-	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pDesc);
+	throwE("Could not find Parameter: %s", 1, pDesc);
 }
 void sParamMgr::ReadParamFromFile(bool* oParamValue) {
 	char vParamName[1000];
@@ -581,5 +589,5 @@ void sParamMgr::ReadParamFromFile(bool* oParamValue) {
 			return;
 		}
 	}
-	throwE("ReadParamFromFile() could not find Parameter: %s . Exiting.\n", 1, pDesc);
+	throwE("Could not find Parameter: %s", 1, pDesc);
 }

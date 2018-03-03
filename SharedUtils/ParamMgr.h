@@ -8,7 +8,7 @@
 
 #define MAX_PARAMS_CNT 100
 #define MAX_PARAMDESC_LEN 100	
-#define ARRAY_PARAMETER_MAX_ELEMS	64	// Max length for comma-separated lists of descriptions
+#define ARRAY_PARAMETER_MAX_ELEMS	64	// Max length for comma-separated lisTimeSerie of descriptions
 #define enumlist true
 
 typedef struct sParamMgr {

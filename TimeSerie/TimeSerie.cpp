@@ -2,7 +2,7 @@
 #include "TimeSerie.h"
 
 //-- constructors / destructor
-void sTS::sTScommon(int steps_, int featuresCnt_, tDbg* dbg_) {
+void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, tDbg* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
 	steps=steps_;
 	featuresCnt=featuresCnt_;
@@ -21,22 +21,22 @@ void sTS::sTScommon(int steps_, int featuresCnt_, tDbg* dbg_) {
 	d_tr=(numtype*)malloc(len*sizeof(numtype));
 	d_trs=(numtype*)malloc(len*sizeof(numtype));
 }
-sTS::sTS(int steps_, int featuresCnt_, tDbg* dbg_) {
-	sTScommon(steps_, featuresCnt_, dbg_);
+sTimeSerie::sTimeSerie(int steps_, int featuresCnt_, tDbg* dbg_) {
+	sTimeSeriecommon(steps_, featuresCnt_, dbg_);
 }
-sTS::sTS(tFXData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_){
+sTimeSerie::sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_){
 	//-- 1. create
-	sTScommon(steps_, FXDATA_FEATURESCNT, dbg_);	// no safeCall() because we don't set dbg, here
+	sTimeSeriecommon(steps_, FXDATA_FEATURESCNT, dbg_);	// no safeCall() because we don't set dbg, here
 	//-- 2. load data
 	safeCallEE(load(dataSource_, date0_));
 	//-- 3. transform
 	safeCallEE(transform(dt_));
-	//-- 4. scale
-	safeCallEE(scale(scaleMin_, scaleMax_));
 }
-sTS::sTS(tFileData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_){}
-sTS::sTS(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_){}
-sTS::~sTS() {
+sTimeSerie::sTimeSerie(tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, tDbg* dbg_){
+	featuresCnt=featuresCnt_;
+}
+sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_){}
+sTimeSerie::~sTimeSerie() {
 	free(d);
 	free(bd);
 	free(d_trs);
@@ -46,25 +46,25 @@ sTS::~sTS() {
 	delete dbg;
 }
 
-bool sTS::LoadOHLCVdata(char* date0) {
+bool sTimeSerie::LoadOHLCVdata(char* date0) {
 
 	if (!OraConnect(dbg, FXData->db)) return false;
 	if (!Ora_GetFlatOHLCV(dbg, FXData->db, FXData->Symbol, FXData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)) return false;
 
 	return true;
 }
-void sTS::load(tFXData* tsFXData_, char* pDate0) {
+void sTimeSerie::load(tFXData* tsFXData_, char* pDate0) {
 	FXData=tsFXData_;
 	sourceType=SOURCE_DATA_FROM_FXDB;
 	if (!LoadOHLCVdata(pDate0)) throwE("pDate0=%s", 1, pDate0);
 }
-void sTS::load(tFileData* tsFileData, char* pDate0) {
+void sTimeSerie::load(tFileData* tsFileData, char* pDate0) {
 	throwE("", 0);
 }
-void sTS::load(tMT4Data* tsMT4Data, char* pDate0) {
+void sTimeSerie::load(tMT4Data* tsMT4Data, char* pDate0) {
 	throwE("", 0);
 }
-void sTS::dump(char* dumpFileName) {
+void sTimeSerie::dump(char* dumpFileName) {
 	int s, f;
 	tFileInfo* fdump; safeCallEE(fdump=new tFileInfo(dumpFileName));
 	fprintf(fdump->handle, "i, datetime");
@@ -114,7 +114,7 @@ void sTS::dump(char* dumpFileName) {
 	delete fdump;
 
 }
-void sTS::transform(int dt_) {
+void sTimeSerie::transform(int dt_) {
 	dt=dt_;
 	for (int s=0; s<steps; s++) {
 		for (int f=0; f<featuresCnt; f++) {
@@ -146,14 +146,16 @@ void sTS::transform(int dt_) {
 
 	hasTR=true;
 }
-void sTS::scale(numtype scaleMin_, numtype scaleMax_) {
+void sTimeSerie::scale(numtype scaleMin_, numtype scaleMax_) {
 	//-- ScaleMin/Max depend on the core, scaleM/P are specific for each feature
+
+	scaleMin=scaleMin_; scaleMax=scaleMax_;
 
 	if (!hasTR) throwE("-- must transform before scaling! ---", 0);
 
 	for (int f=0; f<featuresCnt; f++) {
-		scaleM[f] = (scaleMax_-scaleMin_)/(dmax[f]-dmin[f]);
-		scaleP[f] = scaleMax_-scaleM[f]*dmax[f];
+		scaleM[f] = (scaleMax-scaleMin)/(dmax[f]-dmin[f]);
+		scaleP[f] = scaleMax-scaleM[f]*dmax[f];
 	}
 
 	for (int s=0; s<steps; s++) {
@@ -165,7 +167,7 @@ void sTS::scale(numtype scaleMin_, numtype scaleMax_) {
 	hasTRS=true;
 }
 
-void sTS::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
+void sTimeSerie::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
 	dt=dt_;
 	tFileInfo* ftrs=nullptr; safeCallEE(ftrs=new tFileInfo("TransformScale.out"));
 
@@ -217,7 +219,7 @@ void sTS::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
 	delete ftrs;
 
 }
-void sTS::unTrS(numtype scaleMin_, numtype scaleMax_) {
+void sTimeSerie::unTrS(numtype scaleMin_, numtype scaleMax_) {
 }
 
 int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
@@ -225,7 +227,7 @@ int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 	return 0;
 }
 
-sDataSet::sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_) {
+sDataSet::sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"))) : dbg_;
 	sourceTS=sourceTS_;
 	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
@@ -341,7 +343,7 @@ bool sDataSet::isSelected(int ts_f) {
 	}
 	return false;
 }
-void sDataSet::buildFromTS(tTS* ts) {
+void sDataSet::buildFromTS(tTimeSerie* ts) {
 
 	int s, b, f;
 

@@ -9,5 +9,12 @@ typedef struct sDataSource {
 	int type;
 	int featuresCnt;
 	bool calcBW;
-	int BWfeature[2];
+	int BWfeatureH;
+	int BWfeatureL;
+
+#ifdef __cplusplus
+	sDataSource(int type_, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2);
+	sDataSource();
+#endif
+
 } tDataSource;

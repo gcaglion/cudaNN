@@ -11,6 +11,9 @@
 #include "../MyCU/MyCU.h"
 #endif
 
+//-- Data Features limit
+#define MAX_DATA_FEATURES	128
+
 //-- Data Tranformations
 #define DT_NONE		 0
 #define DT_DELTA	 1
@@ -27,7 +30,7 @@
 #define TSF_SHE 6
 #define TSF_HISTVOL 7
 
-typedef struct sTS {
+typedef struct sTimeSerie {
 
 	tDbg* dbg;
 
@@ -40,7 +43,8 @@ typedef struct sTS {
 	int featuresCnt;
 	int len;
 	int dt;						// data transformation
-	// data scaling: different parameters for each feature
+	// data scaling: boundaries depend on core the samples are fed to, M/P are different for each feature
+	numtype scaleMin, scaleMax;
 	numtype *scaleM, *scaleP;
 	numtype *dmin, *dmax;
 
@@ -54,12 +58,12 @@ typedef struct sTS {
 	numtype* d_trs;
 
 	//-- constructors / destructor
-	EXPORT void sTScommon(int steps_, int featuresCnt_, tDbg* dbg_);
-	EXPORT sTS(int steps_, int featuresCnt_, tDbg* dbg_=nullptr);
-	EXPORT sTS(tFXData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
-	EXPORT sTS(tFileData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
-	EXPORT sTS(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
-	EXPORT ~sTS();
+	EXPORT void sTimeSeriecommon(int steps_, int featuresCnt_, tDbg* dbg_);
+	EXPORT sTimeSerie(int steps_, int featuresCnt_, tDbg* dbg_=nullptr);
+	EXPORT sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_=nullptr);
+	EXPORT sTimeSerie(tFileData* dataSource_, int featuresCnt_, int steps_, char* date0_, int dt_, tDbg* dbg_=nullptr);
+	EXPORT sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_=nullptr);
+	EXPORT ~sTimeSerie();
 	
 	EXPORT void load(tFXData* tsFXData, char* pDate0);
 	EXPORT void load(tFileData* tsFileData, char* pDate0);
@@ -76,12 +80,12 @@ typedef struct sTS {
 private:
 	bool LoadOHLCVdata(char* date0);
 
-} tTS;
+} tTimeSerie;
 
 typedef struct sDataSet {
 	tDbg* dbg;
 
-	tTS* sourceTS;
+	tTimeSerie* sourceTS;
 	int sampleLen;
 	int targetLen;
 	int selectedFeaturesCnt;
@@ -107,11 +111,11 @@ typedef struct sDataSet {
 	numtype* prediction0=nullptr;
 
 	//-- constructor / destructor
-	EXPORT sDataSet(sTS* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_=nullptr);
+	EXPORT sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_=nullptr);
 	EXPORT ~sDataSet();
 
 	bool isSelected(int ts_f);
-	EXPORT void buildFromTS(tTS* ts);
+	EXPORT void buildFromTS(tTimeSerie* ts);
 	EXPORT void SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS);
 	EXPORT void BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF);
 	EXPORT void BFS2SFB(int batchId, int barCnt, numtype* fromBFS, numtype* toSFB);
