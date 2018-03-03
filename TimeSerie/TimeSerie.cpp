@@ -34,7 +34,7 @@ sTS::sTS(tFXData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleM
 	//-- 4. scale
 	safeCallEE(scale(scaleMin_, scaleMax_));
 }
-sTS::sTS(tDataFile* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_){}
+sTS::sTS(tFileData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_){}
 sTS::sTS(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_){}
 sTS::~sTS() {
 	free(d);
@@ -58,7 +58,7 @@ void sTS::load(tFXData* tsFXData_, char* pDate0) {
 	sourceType=SOURCE_DATA_FROM_FXDB;
 	if (!LoadOHLCVdata(pDate0)) throwE("pDate0=%s", 1, pDate0);
 }
-void sTS::load(tDataFile* tsFileData, char* pDate0) {
+void sTS::load(tFileData* tsFileData, char* pDate0) {
 	throwE("", 0);
 }
 void sTS::load(tMT4Data* tsMT4Data, char* pDate0) {

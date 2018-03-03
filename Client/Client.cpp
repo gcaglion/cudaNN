@@ -8,29 +8,49 @@
 int main(int argc, char* argv[]) {
 
 	//-- all variables associated with parameters read from file should be declared here
-	int sampleLen, predictionLen;
-	//int modelFeaturesCnt; int* modelFeatures;
+	int modelSampleLen, modelPredictionLen;
+	int modelFeaturesCnt; int* modelFeature;
 
-	//-- data sources
-	tDBConnection* FXDB; tDataFile* TSdataFile;
 	//-- training parms
 	bool doTrain; bool doTrainRun;
-	int trainTS_DS_type; 
-	char trainTS_DS_FX_DBUser[DBUSER_MAXLEN]; char trainTS_DS_FX_DBPassword[DBPASSWORD_MAXLEN]; char trainTS_DS_FX_DBConnString[DBCONNSTRING_MAXLEN];
+	//-- data source
+	int trainTS_DS_type;
+	//-- FXDB-type data source properties
+	tDBConnection* trainTS_DS_FXDB; char trainTS_DS_FX_DBUser[DBUSER_MAXLEN]; char trainTS_DS_FX_DBPassword[DBPASSWORD_MAXLEN]; char trainTS_DS_FX_DBConnString[DBCONNSTRING_MAXLEN];
+	//-- File-type data source properties
+	tFileData* trainTS_DS_File; char trainTS_DS_File_FullName[MAX_PATH]; int trainTS_DS_File_FieldSep;
+	//-- datasource-independent timeserie properties
 	char trainTSdate0[13]; int trainTShistoryLen; int trainTS_DT; 
-	int trainBatchSamplesCnt; int trainSetFeaturesCnt=0;
+	//-- dataset properties
+	int trainBatchSamplesCnt; int trainSetFeaturesCnt; int* trainSetFeature;
+
 	//-- testing parms
 	bool doTest; 
+	bool runFromSavedNet; int testWpid; int testWtid;
+	//-- data source
 	int testTS_DS_type;
-	char testTS_DS_FX_DBUser[DBUSER_MAXLEN]; char testTS_DS_FX_DBPassword[DBPASSWORD_MAXLEN]; char testTS_DS_FX_DBConnString[DBCONNSTRING_MAXLEN];
+	//-- FXDB-type data source properties
+	tDBConnection* testTS_DS_FXDB; char testTS_DS_FX_DBUser[DBUSER_MAXLEN]; char testTS_DS_FX_DBPassword[DBPASSWORD_MAXLEN]; char testTS_DS_FX_DBConnString[DBCONNSTRING_MAXLEN];
+	//-- File-type data source properties
+	tFileData* testTS_DS_File; char testTS_DS_File_FullName[MAX_PATH]; int testTS_DS_File_FieldSep;
+	//-- datasource-independent timeserie properties
 	char testTSdate0[13]; int testTShistoryLen; int testTS_DT;
-	int testBatchSamplesCnt; int testSetFeaturesCnt=0;
+	//-- dataset properties
+	int testBatchSamplesCnt; int testSetFeaturesCnt; int* testSetFeature;
+	
 	//-- validation parms
-	bool doValid; char validTSdate0[13];
+	bool doValid;
+	//-- data source
 	int validTS_DS_type;
-	char validTS_DS_FX_DBUser[DBUSER_MAXLEN]; char validTS_DS_FX_DBPassword[DBPASSWORD_MAXLEN]; char validTS_DS_FX_DBConnString[DBCONNSTRING_MAXLEN];
-	int validTShistoryLen; int validTS_DT;
-	int batchSamplesCnt_Valid;
+	//-- FXDB-type data source properties
+	tDBConnection* validTS_DS_FXDB; char validTS_DS_FX_DBUser[DBUSER_MAXLEN]; char validTS_DS_FX_DBPassword[DBPASSWORD_MAXLEN]; char validTS_DS_FX_DBConnString[DBCONNSTRING_MAXLEN];
+	//-- File-type data source properties
+	tFileData* validTS_DS_File; char validTS_DS_File_FullName[MAX_PATH]; int validTS_DS_File_FieldSep;
+	//-- datasource-independent timeserie properties
+	char validTSdate0[13]; int validTShistoryLen; int validTS_DT;
+	//-- dataset properties
+	int validBatchSamplesCnt; int validSetFeaturesCnt; int* validSetFeature;
+
 	//-- persistor(s) For now, just one for all tables
 	int persistorDest;
 	char persistorDBUser[30]; char persistorDBPassword[30]; char persistorDBConnString[30];
@@ -51,27 +71,16 @@ int main(int argc, char* argv[]) {
 		//-- create client parms, include command-line parms, and read parameters file
 		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.ini", FILE_MODE_READ), argc, argv));
 
-		//-- invariant data shape
-		parms->get(&sampleLen, "DataParms.SampleLen");
-		parms->get(&predictionLen, "DaaParms.PredictionLen");
-
-/*		float targetMSE;	parms->get(&targetMSE, "NNInfo.TargetMSE");
-		char dbuser[30];	parms->get(dbuser, "DataSource.DBConn.DBUser");
-		int EngineType;		parms->get(&EngineType, "Forecaster.Engine", true);
-		int* fileDS=(int*)malloc(MAXDATASETS*sizeof(int));
-		parms->get(&fileDS, "DataSource.FileDatasets");
-		float* lr=(float*)malloc(8*sizeof(float));
-		parms->get(&lr, "NNInfo.LevelRatios");
-		char** tsf=(char**)malloc(12*sizeof(char*)); for (int i=0; i<12; i++) tsf[i]=(char*)malloc(16);
-		parms->get(tsf, "DataParms.TSFeatures");
-		int* tsfid=(int*)malloc(12*sizeof(int));
-		parms->get(&tsfid, "DataParms.TSFeatures", enumlist);
-*/
+		//-- invariant data model properties
+		parms->get(&modelSampleLen, "DataModel.SampleLen");
+		parms->get(&modelPredictionLen, "DataModel.PredictionLen");
+		parms->get(&modelFeaturesCnt, "DataModel.FeaturesCount");
 		
-		//-- Train timeserie
-		parms->get(&doTrain, "Train.doTrain");
+		//-- Train TimeSerie & DataSet
+		parms->get(&doTrain, "Train.dTrain");
 		if (doTrain) {
 			doTrainRun; parms->get(&doTrainRun, "Train.doTrainRun");
+			//-- TimeSerie
 			parms->get(trainTSdate0, "Train.TimeSerie.Date0");
 			parms->get(&trainTShistoryLen, "Train.TimeSerie.HistoryLen");
 			parms->get(&trainTS_DT, "Train.TimeSerie.DataTransformation", enumlist);
@@ -80,17 +89,20 @@ int main(int argc, char* argv[]) {
 				parms->get(trainTS_DS_FX_DBUser, "Train.TimeSerie.DataSource.FXData.DBUser");
 				parms->get(trainTS_DS_FX_DBPassword, "Train.TimeSerie.DataSource.FXData.DBPassword");
 				parms->get(trainTS_DS_FX_DBConnString, "Train.TimeSerie.DataSource.FXData.DBConnString");
-				safeCallEE(FXDB=new tDBConnection(trainTS_DS_FX_DBUser, trainTS_DS_FX_DBPassword, trainTS_DS_FX_DBConnString));
-			} else {
-				//-- TO DO !
+				safeCallEE(trainTS_DS_FXDB=new tDBConnection(trainTS_DS_FX_DBUser, trainTS_DS_FX_DBPassword, trainTS_DS_FX_DBConnString));
+			} else if (trainTS_DS_type==SOURCE_DATA_FROM_FILE) {
+				parms->get(trainTS_DS_File_FullName, "Train.TimeSerie.DataSource.FileData.FileFullName");
+				parms->get(&trainTS_DS_File_FieldSep, "Train.TimeSerie.DataSource.FileData.FieldSep", enumlist);
+				safeCallEE(trainTS_DS_File=new tFileData(new tFileInfo(trainTS_DS_File_FullName, FILE_MODE_READ), trainTS_DS_File_FieldSep));
 			}
-			//-- Train DataSet
+			//-- DataSet
 			parms->get(&trainBatchSamplesCnt, "Train.DataSet.BatchSamplesCount");
 			int* trainSetFeature; parms->get(&trainSetFeature, "Train.DataSet.SelectedFeatures", false, &trainSetFeaturesCnt);
 		}
-		//-- Test timeserie
+		//-- Test TimeSerie & DataSet
 		parms->get(&doTest, "Test.doTest");
 		if (doTest) {
+			//-- TimeSerie
 			parms->get(testTSdate0, "Test.TimeSerie.Date0");
 			parms->get(&testTShistoryLen, "Test.TimeSerie.HistoryLen");
 			parms->get(&testTS_DT, "Test.TimeSerie.DataTransformation", enumlist);
@@ -99,33 +111,43 @@ int main(int argc, char* argv[]) {
 				parms->get(testTS_DS_FX_DBUser, "Test.TimeSerie.DataSource.FXData.DBUser");
 				parms->get(testTS_DS_FX_DBPassword, "Test.TimeSerie.DataSource.FXData.DBPassword");
 				parms->get(testTS_DS_FX_DBConnString, "Test.TimeSerie.DataSource.FXData.DBConnString");
-				safeCallEE(FXDB=new tDBConnection(testTS_DS_FX_DBUser, testTS_DS_FX_DBPassword, testTS_DS_FX_DBConnString));
-			} else {
-				//-- TO DO !
+				safeCallEE(testTS_DS_FXDB=new tDBConnection(testTS_DS_FX_DBUser, testTS_DS_FX_DBPassword, testTS_DS_FX_DBConnString));
+			} else if (testTS_DS_type==SOURCE_DATA_FROM_FILE) {
+				parms->get(testTS_DS_File_FullName, "Test.TimeSerie.DataSource.FileData.FileFullName");
+				parms->get(&testTS_DS_File_FieldSep, "Test.TimeSerie.DataSource.FileData.FieldSep", enumlist);
+				safeCallEE(testTS_DS_File=new tFileData(new tFileInfo(testTS_DS_File_FullName, FILE_MODE_READ), testTS_DS_File_FieldSep));
 			}
-			//-- Test DataSet
+			//-- DataSet
 			parms->get(&testBatchSamplesCnt, "Test.DataSet.BatchSamplesCount");
 			int* testSetFeature; parms->get(&testSetFeature, "Test.DataSet.SelectedFeatures", false, &testSetFeaturesCnt);
+			//-- load saved Net?
+			parms->get(&runFromSavedNet, "Test.RunFromSavedNet");
+			if (runFromSavedNet) {
+				parms->get(&testWpid, "Test.RunFromSavedNet.ProcessId");
+				parms->get(&testWtid, "Test.RunFromSavedNet.ThreadId");
+			}
 		}
-		//-- Validation timeserie
+		//-- Validation TimeSerie
 		parms->get(&doValid, "Validation.doValidation");
 		if(doValid){
+			//-- TimeSerie
 			parms->get(validTSdate0, "Validation.TimeSerie.Date0");
 			validTShistoryLen=trainTShistoryLen;			//-- must be the same (?)
 			validTS_DT=trainTS_DT;							//-- must be the same (?)
-			batchSamplesCnt_Valid=trainBatchSamplesCnt;		//-- must be the same (?)
+			validBatchSamplesCnt=trainBatchSamplesCnt;		//-- must be the same (?)
 			parms->get(&validTS_DS_type, "Validation.TimeSerie.DataSource.Type", enumlist);
 			if (validTS_DS_type==SOURCE_DATA_FROM_FXDB) {
 				parms->get(validTS_DS_FX_DBUser, "Validation.TimeSerie.DataSource.FXData.DBUser");
 				parms->get(validTS_DS_FX_DBPassword, "Validation.TimeSerie.DataSource.FXData.DBPassword");
 				parms->get(validTS_DS_FX_DBConnString, "Validation.TimeSerie.DataSource.FXData.DBConnString");
-				safeCallEE(FXDB=new tDBConnection(validTS_DS_FX_DBUser, validTS_DS_FX_DBPassword, validTS_DS_FX_DBConnString));
-			} else {
-				//-- TO DO !
+				safeCallEE(validTS_DS_FXDB=new tDBConnection(validTS_DS_FX_DBUser, validTS_DS_FX_DBPassword, validTS_DS_FX_DBConnString));
+			} else if (validTS_DS_type==SOURCE_DATA_FROM_FILE) {
+				parms->get(validTS_DS_File_FullName, "Validation.TimeSerie.DataSource.FileData.FileFullName");
+				parms->get(&validTS_DS_File_FieldSep, "Validation.TimeSerie.DataSource.FileData.FieldSep", enumlist);
+				safeCallEE(validTS_DS_File=new tFileData(new tFileInfo(validTS_DS_File_FullName, FILE_MODE_READ), validTS_DS_File_FieldSep));
 			}
 		}
 		//-- check if model feature selection is coherent among train and test. TO DO!
-
 
 		//-- create persistor, with its own DBConnection, to save results data.
 		parms->get(&persistorDest, "Persistor.Destination", true);
@@ -153,7 +175,7 @@ int main(int argc, char* argv[]) {
 
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 		tDbg* NNdbg; safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
-		tNN* myNN;   safeCallEE(myNN=new tNN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
+		tNN* myNN;   safeCallEE(myNN=new tNN(modelSampleLen, modelPredictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
 		//-- 0.1. set training parameters
 		myNN->MaxEpochs=250;
 		myNN->NetSaveFreq=200;
@@ -174,7 +196,7 @@ int main(int argc, char* argv[]) {
 		if (doTrain) {
 			tFXData* trainDataSrc; safeCallEE(trainDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
 			tTS* trainTS; safeCallEE(trainTS=new tTS(trainDataSrc, trainTShistoryLen, trainTSdate0, trainTS_DT, myNN->scaleMin[0], myNN->scaleMax[0]));
-			tDataSet* trainSet; safeCallEE(trainSet=new tDataSet(trainTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchSamplesCnt_Train));
+			tDataSet* trainSet; safeCallEE(trainSet=new tDataSet(trainTS, modelSampleLen, modelPredictionLen, modelFeaturesCnt, modelFeature, trainBatchSamplesCnt));
 			//-- train with training set
 			safeCallEE(myNN->train(trainSet));
 			//-- persist training (MSE + W). Whether or not this gets actually done is controlled by SLogger properties
@@ -190,13 +212,13 @@ int main(int argc, char* argv[]) {
 		if (doValid) {
 			tFXData* validDataSrc; safeCallEE(validDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
 			tTS* validTS; safeCallEE(validTS=new tTS(validDataSrc, validTShistoryLen, validTSdate0, validTS_DT, myNN->scaleMin[0], myNN->scaleMax[0]));
-			tDataSet* validSet; safeCallEE(validSet=new tDataSet(validTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchSamplesCnt_Valid));
+			tDataSet* validSet; safeCallEE(validSet=new tDataSet(validTS, modelSampleLen, modelPredictionLen, modelFeaturesCnt, modelFeature, validBatchSamplesCnt));
 			delete validSet; delete validTS; delete validDataSrc;
 		}
-		if (doTestRun) {
+		if (doTest) {
 			tFXData* testDataSrc; safeCallEE(testDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
 			tTS* testTS; safeCallEE(testTS=new tTS(testDataSrc, testTShistoryLen, testTSdate0, testTS_DT, myNN->scaleMin[0], myNN->scaleMax[0]));
-			tDataSet* testSet; safeCallEE(testSet=new tDataSet(testTS, sampleLen, predictionLen, modelFeaturesCnt, modelFeature, batchSamplesCnt_Test));
+			tDataSet* testSet; safeCallEE(testSet=new tDataSet(testTS, modelSampleLen, modelPredictionLen, modelFeaturesCnt, modelFeature, testBatchSamplesCnt));
 			if (testWpid!=0&&testWtid!=0) {
 				//-- if we specifed both testWpid and testWtid, then load training Weights('-1' stands for 'latest epoch')
 				safeCallEE(persistor->LoadW(testWpid, testWtid, -1, myNN->weightsCntTotal, myNN->W));
@@ -211,7 +233,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		//-- 9. persist Client info
-		safeCallEE(persistor->SaveClient(GetCurrentProcessId(), "Client.cpp", mainStart, (DWORD)(timeGetTime()-mainStart), 1, trainTSdate0, doTrain, doTrainRun, doTestRun));
+		safeCallEE(persistor->SaveClient(GetCurrentProcessId(), "Client.cpp", mainStart, (DWORD)(timeGetTime()-mainStart), 1, trainTSdate0, doTrain, doTrainRun, doTest));
 
 		dbg->write(DBG_LEVEL_STD, "\nTotal Client Elapsed time: %.4f s.\n", 1, ((timeGetTime()-mainStart)/(float)1000));
 		//-- final Commit

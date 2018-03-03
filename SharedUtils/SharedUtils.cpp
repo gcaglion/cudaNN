@@ -257,7 +257,6 @@ sFileInfo::~sFileInfo() {
 
 	if (fsize==0) remove(FullName);
 }
-
 void sFileInfo::setModeS(int mode_){
 	switch (mode_) {
 	case FILE_MODE_READ:
@@ -289,10 +288,35 @@ sDBConnection::~sDBConnection() { delete dbg; }
 
 //=== sFXData
 sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_) {
+	//--parent DataSource properties
+	type=SOURCE_DATA_FROM_FXDB;
+	calcBW=true;
+	//-- the following are fixed (OHLCV), and determined by loadOHLCV query
+	featuresCnt=5;
+	BWfeature[0]=HIGH; BWfeature[1]=LOW;
+	//--
 	db=db_;
 	strcpy_s(Symbol, FX_SYMBOL_MAX_LEN, symbol_);
 	strcpy_s(TimeFrame, FX_TIMEFRAME_MAX_LEN, tf_);
 	IsFilled=isFilled_;
+}
+//=== sFileData
+sFileData::sFileData(tFileInfo* srcFile_, int fieldSep_, bool calcBW_, int* BWfeature_) {
+	//--parent DataSource properties
+	type=SOURCE_DATA_FROM_FILE;
+	calcBW=calcBW_; BWfeature[0]=BWfeature_[0]; BWfeature[1]=BWfeature_[1];
+	//--
+	srcFile=srcFile_; fieldSep=fieldSep_; 
+}
+//=== sMT4Data
+sMT4Data::sMT4Data(int accountId_) {	//--parent DataSource properties
+	type=SOURCE_DATA_FROM_MT4;
+	calcBW=true;
+	//-- the following are fixed (OHLCV), and determined by the calling Expert Advisor
+	featuresCnt=5;
+	BWfeature[0]=HIGH; BWfeature[1]=LOW;
+	//--
+	accountId=accountId_;
 }
 
 //=== ParamMgr

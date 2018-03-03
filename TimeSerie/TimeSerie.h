@@ -11,11 +11,6 @@
 #include "../MyCU/MyCU.h"
 #endif
 
-//-- Source Types
-#define SOURCE_DATA_FROM_FXDB 0
-#define SOURCE_DATA_FROM_FILE 1
-#define SOURCE_DATA_FROM_MT4   2
-
 //-- Data Tranformations
 #define DT_NONE		 0
 #define DT_DELTA	 1
@@ -38,7 +33,7 @@ typedef struct sTS {
 
 	int sourceType;
 	tFXData* FXData;
-	tDataFile* FileData;
+	tFileData* FileData;
 	tMT4Data* MT4Data;
 
 	int steps;
@@ -62,12 +57,12 @@ typedef struct sTS {
 	EXPORT void sTScommon(int steps_, int featuresCnt_, tDbg* dbg_);
 	EXPORT sTS(int steps_, int featuresCnt_, tDbg* dbg_=nullptr);
 	EXPORT sTS(tFXData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
-	EXPORT sTS(tDataFile* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
+	EXPORT sTS(tFileData* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
 	EXPORT sTS(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, numtype scaleMin_, numtype scaleMax_, tDbg* dbg_=nullptr);
 	EXPORT ~sTS();
 	
 	EXPORT void load(tFXData* tsFXData, char* pDate0);
-	EXPORT void load(tDataFile* tsFileData, char* pDate0);
+	EXPORT void load(tFileData* tsFileData, char* pDate0);
 	EXPORT void load(tMT4Data* tsMT4Data, char* pDate0);
 
 	EXPORT void transform(int dt_);

@@ -3,6 +3,7 @@
 #include "..\CommonEnv.h"
 #include "../MyAlgebra/MyAlgebra.h"
 #include "../TimeSerie/TimeSerie.h"
+#include "../MyEngines/MyCores.h"
 
 //-- Training Protocols
 #define TP_STOCHASTIC	0
@@ -23,7 +24,7 @@
 #define BP_SCGD			4 // Scaled Conjugate Gradient Descent
 #define BP_LM			5 // Levenberg-Marquardt
 
-typedef struct sNN {
+typedef struct sNN :public sCore {
 
 	tDbg* dbg;
 
@@ -35,8 +36,8 @@ typedef struct sNN {
 	int tid;
 
 	//-- topology
-	int InputCount;
-	int OutputCount;
+	//int InputCount;
+	//int OutputCount;
 	//--
 	int featuresCnt;
 	int sampleLen;

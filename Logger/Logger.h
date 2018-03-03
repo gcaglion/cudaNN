@@ -17,7 +17,7 @@ typedef struct sLogger {
 	int dest;
 	tDbg* dbg;
 	tDBConnection* db;
-	tDataFile* file;
+	tFileData* file;
 	bool saveNothing;
 	bool saveClient;
 	bool saveMSE;
@@ -26,7 +26,7 @@ typedef struct sLogger {
 	bool saveImage;
 
 	EXPORT sLogger(tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, tDbg* dbg_=nullptr);
-	EXPORT sLogger(tDataFile* logFile);
+	EXPORT sLogger(tFileData* logFile);
 	EXPORT ~sLogger();
 
 	EXPORT void SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV);

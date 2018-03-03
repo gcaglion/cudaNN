@@ -15,36 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SharedUtils.cpp">
+    <ClCompile Include="MyEngines.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SharedUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DBConnection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DebugInfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FileInfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FXData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MT4data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ParamMgr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DataSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FileData.h">
+    <ClInclude Include="MyCores.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

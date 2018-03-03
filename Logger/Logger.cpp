@@ -6,7 +6,7 @@ sLogger::sLogger(tDBConnection* logDB, bool saveNothing_, bool saveClient_, bool
 	db=logDB;
 	saveNothing=saveNothing_; saveClient=saveClient_; saveMSE=saveMSE_; saveRun=saveRun_; saveInternals=saveInternals_; saveImage=saveImage_;
 }
-sLogger::sLogger(tDataFile* logFile) {
+sLogger::sLogger(tFileData* logFile) {
 	dest=PERSIST_TO_TEXT;
 	file=logFile;
 }
@@ -77,6 +77,6 @@ void sLogger::Commit() {
 	if (dest==PERSIST_TO_ORCL) {
 		OraCommit(db);
 	} else {
-		fclose(file->file->handle);
+		fclose(file->srcFile->handle);
 	}
 }
