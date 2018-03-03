@@ -822,7 +822,7 @@ EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int m
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
-	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
+	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name CONTEXT forever, level 4';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
 	/* EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inMSE'; */ 
 
@@ -1188,7 +1188,7 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
-	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
+	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name CONTEXT forever, level 4';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
 	/* EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inCINN'; */ 
 
@@ -1638,7 +1638,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int s
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
-	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
+	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name CONTEXT forever, level 4';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
 	/* EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inRun'; */ 
 

@@ -56,3 +56,19 @@ typedef struct sParamMgr {
 	EXPORT void ReadParamFromFile(bool* oParamValue);
 
 } tParamMgr;
+
+#define getParm(p, varType, varLen, varName, varLabel) \
+	const char* typeDesc=typeid(varType).name(); \
+	printf("%s\n", typeDesc); \
+		varType varName; \
+	if(strcmp(typeDesc,"char")==0) { \
+	} else if(strcmp((typeDesc),"int")==0){ \
+		p->get(&varName, varLabel); \
+	} else if(strcmp(typeDesc,"float")==0||strcmp(typeDesc,"double")==0) { \
+	} else if(strcmp(typeDesc,"char*")==0) { \
+	} else if(strcmp(typeDesc,"int*")==0){ \
+	} else if(strcmp(typeDesc,"float*")==0||strcmp(typeDesc,"double*")==0) { \
+	} else if(strcmp(typeDesc,"char**")==0) { \
+	} else{ \
+		printf("dioporco");\
+	}

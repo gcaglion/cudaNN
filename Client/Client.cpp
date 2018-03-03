@@ -5,10 +5,22 @@
 #include "../Logger/Logger.h"
 #include "../MyAlgebra/MyAlgebra.h"
 
+void clientx(int argc, char* argv[]){
+	tParamMgr* parmsx=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv);
+
+	//int sampleLen; parmsx->getx(&sampleLen, "Data.Model.SampleLen");
+	//printf("sampleLen=%d\n", sampleLen);
+	return;
+}
+
 int main(int argc, char* argv[]) {
 
+	//clientx(argc, argv);
+	//system("pause");
+	//return -1;
+
 	//-- all variables associated with parameters read from file should be declared here
-	int modelSampleLen, modelPredictionLen;
+	int modelSampleLen;	int modelPredictionLen;
 	int modelFeaturesCnt; int* modelFeature=new int(MAX_DATA_FEATURES);
 
 	//-- training parms
@@ -68,6 +80,7 @@ int main(int argc, char* argv[]) {
 	//-- set main debugger properties
 	dbg->timing=false;
 
+
 	//-- everything else must be enclosed in try/catch block
 	try {
 
@@ -97,7 +110,7 @@ int main(int argc, char* argv[]) {
 				parms->get(trainTS_DS_FX_DBUser, "Train.TimeSerie.DataSource.FXData.DBUser");
 				parms->get(trainTS_DS_FX_DBPassword, "Train.TimeSerie.DataSource.FXData.DBPassword");
 				parms->get(trainTS_DS_FX_DBConnString, "Train.TimeSerie.DataSource.FXData.DBConnString");
-				parms->get(trainTS_DS_FX_Symbol, "Train.TimeSerie.DataSource.FXData.Symbol");
+				//parms->get(trainTS_DS_FX_Symbol, "Train.TimeSerie.DataSource.FXData.Symbol");
 				parms->get(trainTS_DS_FX_TimeFrame, "Train.TimeSerie.DataSource.FXData.TimeFrame");
 				parms->get(&trainTS_DS_FX_IsFilled, "Train.TimeSerie.DataSource.FXData.IsFilled");
 				safeCallEE(trainTS_DS_FX_DB=new tDBConnection(trainTS_DS_FX_DBUser, trainTS_DS_FX_DBPassword, trainTS_DS_FX_DBConnString));
@@ -167,7 +180,7 @@ int main(int argc, char* argv[]) {
 
 		//-- create persistor, with its own DBConnection, to save results data.
 		parms->get(&persistorDest, "Persistor.Destination", true);
-		if (persistorDest==PERSIST_TO_ORCL) {
+		if (persistorDest==ORCL) {
 			parms->get(persistorDBUser, "Persistor.DBUser");
 			parms->get(persistorDBPassword, "Persistor.DBPassword");
 			parms->get(persistorDBConnString, "Persistor.DBConnString");
@@ -191,12 +204,12 @@ int main(int argc, char* argv[]) {
 		//-- net geometry
 		char* levelRatioS= "1,1,1,0.5";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
-		bool useContext=true;
+		bool useConTXT=true;
 		bool useBias=true;
 
-		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, context, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
+		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, conTXT, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 		tDbg* NNdbg; safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
-		tNN* myNN;   safeCallEE(myNN=new tNN(modelSampleLen, modelPredictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
+		tNN* myNN;   safeCallEE(myNN=new tNN(modelSampleLen, modelPredictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useConTXT, useBias, NNdbg));
 		//-- 0.1. set training parameters
 		myNN->MaxEpochs=50;
 		myNN->NetSaveFreq=200;

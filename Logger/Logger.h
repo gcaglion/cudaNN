@@ -9,10 +9,6 @@
 #include "../MyCU/MyCU.h"
 #endif
 
-// Logs Destinations
-#define PERSIST_TO_TEXT   1
-#define PERSIST_TO_ORCL	  2
-
 typedef struct sLogger {
 	int dest;
 	tDbg* dbg;

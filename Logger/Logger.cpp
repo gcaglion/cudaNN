@@ -2,19 +2,19 @@
 
 sLogger::sLogger(tDBConnection* logDB, bool saveNothing_, bool saveClient_, bool saveMSE_, bool saveRun_, bool saveInternals_, bool saveImage_, tDbg* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"))) : dbg_;
-	dest=PERSIST_TO_ORCL;
+	dest=ORCL;
 	db=logDB;
 	saveNothing=saveNothing_; saveClient=saveClient_; saveMSE=saveMSE_; saveRun=saveRun_; saveInternals=saveInternals_; saveImage=saveImage_;
 }
 sLogger::sLogger(tFileData* logFile) {
-	dest=PERSIST_TO_TEXT;
+	dest=TXT;
 	file=logFile;
 }
 sLogger::~sLogger() { delete db; delete dbg; }
 
 void sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV) {
 	if (saveMSE) {
-		if (dest==PERSIST_TO_ORCL) {
+		if (dest==ORCL) {
 			safeCallEB(Ora_LogSaveMSE(dbg, db, pid, tid, mseCnt, mseT, mseV));
 		} else {
 		}
@@ -22,7 +22,7 @@ void sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV
 }
 void sLogger::SaveRun(int pid, int tid, int setid, int npid, int ntid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual) {
 	if (saveRun) {
-		if (dest==PERSIST_TO_ORCL) {
+		if (dest==ORCL) {
 			safeCallEB(Ora_LogSaveRun(dbg, db, pid, tid, setid, npid, ntid, runCnt, featuresCnt, feature, prediction, actual));
 		} else {
 		}
@@ -38,7 +38,7 @@ void sLogger::SaveW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
 		#else
 			hW=W;
 		#endif
-		if (dest==PERSIST_TO_ORCL) {
+		if (dest==ORCL) {
 			safeCallEB(Ora_LogSaveW(dbg, db, pid, tid, epoch, Wcnt, hW));
 		} else {
 		}
@@ -56,7 +56,7 @@ void sLogger::LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
 #else
 	hW=W;
 #endif
-	if (dest==PERSIST_TO_ORCL) {
+	if (dest==ORCL) {
 		safeCallEB(Ora_LogLoadW(dbg, db, pid, tid, epoch, Wcnt, hW));
 	} else {
 	}
@@ -67,14 +67,14 @@ void sLogger::LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
 }
 void sLogger::SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun) {
 	if (saveClient) {
-		if (dest==PERSIST_TO_ORCL) {
+		if (dest==ORCL) {
 			safeCallEB(Ora_LogSaveClient(dbg, db, pid, clientName, startTime, duration, simulLen, simulStart, doTrain, doTrainRun, doTestRun));
 		} else {
 		}
 	}
 }
 void sLogger::Commit() {
-	if (dest==PERSIST_TO_ORCL) {
+	if (dest==ORCL) {
 		OraCommit(db);
 	} else {
 		fclose(file->srcFile->handle);

@@ -1,0 +1,176 @@
+<Data>
+	<Model>
+		SampleLen		= 100
+		PredictionLen	= 5
+		FeaturesCount	= 4
+	</Model>
+	<Train>
+		doIt	= true
+		doCheck	= true
+		<TimeSerie>
+			Date0				= 201712300000
+			HistoryLen			= 50000
+			DataTransformation	= DT_DELTA
+			BWCalc				= true
+			<DataSource>
+				type	= SOURCE_DATA_FROM_FXDB
+				<FXData>
+					<DBConnection>
+						DBUser			= History
+						DBPassword		= HistoryPwd
+						DBConnString	= Algo
+					</DBConnection>
+					Symbol				= EURUSD
+					TimeFrame			= H1
+					IsFilled			= false
+				</FXData>
+				<FileData>
+					FileFullName		= c:/temp/timeseriesdata/sunspots.txt
+					FieldSep			= FILEDATA_SEP_COMMA
+					BWFeatureColumns	= 1,2
+				</FileData>
+			</DataSource>
+		</TimeSerie>
+		<DataSet>	
+			BatchSamplesCount	= 50
+			<FXData>
+				SelectedFeatures		= OPEN, HIGH, LOW, CLOSE
+			</FXData>
+			<FileData>
+				SelectedFeatures		= 0, 1, 2, 3
+			</FileData>
+		</DataSet>	
+	</Train>
+	<Test>
+		doIt	= true
+		RunFromSavedNet	= false
+		SavedNetProcessId	= 107654
+		SavedNetThreadId	= 87654
+		<TimeSerie>
+			Date0				= 201612300000
+			HistoryLen			= 50000
+			DataTransformation	= DT_DELTA
+			BWCalc				= true
+			<DataSource>
+				type	= SOURCE_DATA_FROM_FXDB
+				<FXData>
+					<DBConnection>
+						DBUser			= History
+						DBPassword		= HistoryPwd
+						DBConnString	= Algo
+					</DBConnection>
+					Symbol				= EURUSD
+					TimeFrame			= H1
+					IsFilled			= false
+				</FXData>
+				<FileData>
+					FileFullName		= c:/temp/timeseriesdata/sunspots.txt
+					FieldSep			= FILEDATA_SEP_COMMA
+					BWFeatureColumns	= 1,2
+				</FileData>
+			</DataSource>
+		</TimeSerie>
+		<DataSet>	
+			BatchSamplesCount	= 50
+			<FXData>
+				SelectedFeatures	= OPEN, HIGH, LOW, CLOSE
+			</FXData>
+			<FileData>
+				SelectedFeatures		= 0, 1, 2, 3
+			</FileData>
+		</DataSet>	
+	</Test>
+	<Validation>
+		doIt	= true
+		RunFromSavedNet	= false
+		SavedNetProcessId	= 107654
+		SavedNetThreadId	= 87654
+		<TimeSerie>
+			Date0				= 201612300000
+			HistoryLen			= 50000
+			DataTransformation	= DT_DELTA
+			BWCalc				= true
+			<DataSource>
+				type	= SOURCE_DATA_FROM_FXDB
+				<FXData>
+					<DBConnection>
+						DBUser			= History
+						DBPassword		= HistoryPwd
+						DBConnString	= Algo
+					</DBConnection>
+					Symbol				= EURUSD
+					TimeFrame			= H1
+					IsFilled			= false
+				</FXData>
+				<FileData>
+					FileFullName		= c:/temp/timeseriesdata/sunspots.txt
+					FieldSep			= FILEDATA_SEP_COMMA
+					BWFeatureColumns	= 1,2
+				</FileData>
+			</DataSource>
+		</TimeSerie>
+		<DataSet>	
+			<FXData>
+				SelectedFeatures		= OPEN, HIGH, LOW, CLOSE
+			</FXData>
+			<FileData>
+				SelectedFeatures		= 0, 1, 2, 3
+			</FileData>
+		</DataSet>	
+	</Validation>
+</Data>
+
+<Persistor>
+	Destination		= ORCL
+	DBUser			= cuLogUser
+	DBPassword		= LogPwd
+	DBConnString	= Algo
+	saveNothing		= false
+	saveClient		= true
+	saveMSE			= true
+	saveRun			= true
+	saveInternals	= false
+	saveImage		= true
+</Persistor>
+
+<Engine>
+	PresetType	= 
+	<Core>
+		Id			= 0
+		Type		= CORE_NN
+		ParentId	=
+		<Topology>
+			LevelRatioS			= 1,1,1,0.5
+			LevelActivationS	= NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH
+			UseContext			= true
+			UseBias				= true
+		</Topology>
+		<TrainingParms>
+			MaxEpochs			= 50
+			NetSaveFrequency	= 10
+			TargetMSE			= 0.0001
+			StopAtDivergence	= true
+			BP_Algo				= BP_STD
+			<BPparms_Std>
+				LearningRate		= 0.01
+				LearningMomentum	= 0.4
+			</BPparms_Std>
+			<BPparms_Qing>
+			</BPparms_Qing>
+			<BPparms_Qprop>
+			</BPparms_Qprop>
+			<BPparms_RProp>
+			</BPparms_RProp>
+		</TrainingParms>
+	</Core>
+	<Core>
+		id			= 1
+		type		= CORE_NN
+		parentId	=
+	</Core>
+	<Core>
+		id			= 2
+		type		= CORE_NN
+		parentId	= 0, 1
+	</Core>
+</Engine>

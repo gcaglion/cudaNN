@@ -1,0 +1,18 @@
+<Engine>
+	PresetType		= ENGINE_XIE 
+	<Core>
+		id			= 0
+		type		= CORE_NN
+		parentId	=
+	</Core>
+	<Core>
+		id			= 1
+		type		= CORE_SVM
+		parentId	=
+	</Core>
+	<Core>
+		id			= 2
+		type		= CORE_NN
+		parentId	= 0, 1
+	</Core>
+</Engine>

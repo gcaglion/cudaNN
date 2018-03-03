@@ -7,6 +7,10 @@
 
 typedef float numtype;
 
+//-- these are used for both read (SourceData) and write (Logger) operations
+#define ORCL 1
+#define TXT 2
+
 #define DEBUG_DEFAULT_PATH "C:/temp/logs"
 
 #ifndef EXPORT

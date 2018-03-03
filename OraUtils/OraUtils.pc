@@ -243,7 +243,7 @@ EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int m
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	EXEC SQL CONTEXT USE :vCtx;
-	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
+	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name CONTEXT forever, level 4';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
 	EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inMSE';
 	EXEC SQL SET DESCRIPTOR 'inMSE' COUNT = 5;
@@ -324,7 +324,7 @@ EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epo
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	EXEC SQL CONTEXT USE :vCtx;
-	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
+	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name CONTEXT forever, level 4';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
 	EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inCINN';
 	EXEC SQL SET DESCRIPTOR 'inCINN' COUNT = 5;
@@ -451,7 +451,7 @@ EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int s
 	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
 
 	EXEC SQL CONTEXT USE :vCtx;
-	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name context forever, level 4';
+	//EXEC SQL ALTER SESSION SET EVENTS '10046 trace name CONTEXT forever, level 4';
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = TRUE;
 	EXEC SQL FOR :vInsertCount ALLOCATE DESCRIPTOR 'inRun';
 	EXEC SQL SET DESCRIPTOR 'inRun' COUNT = 10;

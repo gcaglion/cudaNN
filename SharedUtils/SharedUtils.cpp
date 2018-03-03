@@ -376,13 +376,13 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 		if (strcmp(eVal, "ENGINE_WNN")==0) { (*oVal) = ENGINE_WNN; return; }
 		if (strcmp(eVal, "ENGINE_XIE")==0) { (*oVal) = ENGINE_XIE; return; }
 */	} else if (strcmp(edesc, "RESULTS.DESTINATION")==0) {
-		if (strcmp(eVal, "PERSIST_TO_TEXT")==0) { (*oVal) = PERSIST_TO_TEXT; return; }
-		if (strcmp(eVal, "PERSIST_TO_ORCL")==0) { (*oVal) = PERSIST_TO_ORCL; return; }
+		if (strcmp(eVal, "TXT")==0) { (*oVal) = TXT; return; }
+		if (strcmp(eVal, "ORCL")==0) { (*oVal) = ORCL; return; }
 /*	} else if (strcmp(edesc, "DATASOURCE.SOURCETYPE")==0) {
 		if (strcmp(eVal, "SOURCE_DATA_FROM_FXDB")==0) { (*oVal) = SOURCE_DATA_FROM_FXDB; return; }
 		if (strcmp(eVal, "SOURCE_DATA_FROM_FILE")==0) { (*oVal) = SOURCE_DATA_FROM_FILE; return; }
 		if (strcmp(eVal, "SOURCE_DATA_FROM_MT")==0) { (*oVal) = SOURCE_DATA_FROM_MT; return; }
-	} else if (strcmp(edesc, "DATASOURCE.TEXTFIELDSEPARATOR")==0) {
+	} else if (strcmp(edesc, "DATASOURCE.TXTFIELDSEPARATOR")==0) {
 		if (strcmp(eVal, "COMMA")==0) { (*oVal) = (int)COMMA; return; }
 		if (strcmp(eVal, "TAB")==0) { (*oVal) = (int)TAB; return; }
 		if (strcmp(eVal, "SPACE")==0) { (*oVal) = (int)SPACE; return; }
