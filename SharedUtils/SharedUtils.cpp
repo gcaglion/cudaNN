@@ -336,14 +336,14 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 		//if (strcmp(eVal, "TRAIN_SAVE_RUN")==0) { (*oVal) = TRAIN_SAVE_RUN; return; }
 		//if (strcmp(eVal, "ADD_SAMPLES")==0) { (*oVal) = ADD_SAMPLES; return; }
 		//if (strcmp(eVal, "JUST_RUN")==0) { (*oVal) = JUST_RUN; return; }
-	} else if (strcmp(edesc, "FORECASTER.ENGINE")==0) {
+/*	} else if (strcmp(edesc, "FORECASTER.ENGINE")==0) {
 		if (strcmp(eVal, "ENGINE_NN")==0) { (*oVal) = ENGINE_NN; return; }
 		if (strcmp(eVal, "ENGINE_GA")==0) { (*oVal) = ENGINE_GA; return; }
 		if (strcmp(eVal, "ENGINE_SVM")==0) { (*oVal) = ENGINE_SVM; return; }
 		if (strcmp(eVal, "ENGINE_SOM")==0) { (*oVal) = ENGINE_SOM; return; }
 		if (strcmp(eVal, "ENGINE_WNN")==0) { (*oVal) = ENGINE_WNN; return; }
 		if (strcmp(eVal, "ENGINE_XIE")==0) { (*oVal) = ENGINE_XIE; return; }
-	} else if (strcmp(edesc, "RESULTS.DESTINATION")==0) {
+*/	} else if (strcmp(edesc, "RESULTS.DESTINATION")==0) {
 		if (strcmp(eVal, "PERSIST_TO_TEXT")==0) { (*oVal) = PERSIST_TO_TEXT; return; }
 		if (strcmp(eVal, "PERSIST_TO_ORCL")==0) { (*oVal) = PERSIST_TO_ORCL; return; }
 /*	} else if (strcmp(edesc, "DATASOURCE.SOURCETYPE")==0) {

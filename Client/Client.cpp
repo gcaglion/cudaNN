@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
 
 	//-- all variables associated with parameters read from file should be declared here
 	int sampleLen, predictionLen;
-	int modelFeaturesCnt; int* modelFeatures;
+	//int modelFeaturesCnt; int* modelFeatures;
 
 	//-- data sources
 	tDBConnection* FXDB; tDataFile* TSdataFile;
