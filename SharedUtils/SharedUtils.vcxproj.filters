@@ -47,5 +47,8 @@
     <ClInclude Include="FileData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UberSet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

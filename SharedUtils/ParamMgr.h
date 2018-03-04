@@ -2,9 +2,9 @@
 #include "../CommonEnv.h"
 #include "DebugInfo.h"
 #include "FileData.h"
-#include "../Logger/Logger.h"
 #include "../TimeSerie/TimeSerie.h"
 #include <typeinfo>
+#include "../Logger/Logger.h"
 
 #define MAX_PARAMS_CNT 100
 #define MAX_PARAMDESC_LEN 100	
@@ -55,9 +55,27 @@ typedef struct sParamMgr {
 	EXPORT void ReadParamFromFile(char* oParamValue);
 	EXPORT void ReadParamFromFile(bool* oParamValue);
 
+	//==== XML stuff
+
+	//-- generic
+	template <typename T> EXPORT void getx(T* opVal, const char* parmSection, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
+		strcpy_s(pDesc, parmDesc);
+		Trim(pDesc);
+		UpperCase(pDesc);
+
+		//-- 1. Navigate to the first parameter of the Section
+		//-- 2. sequentially read all parameters until the end of the Section; return when found
+
+		getx_(opVal, isenum, oListLen);
+
+	}
+	//-- single value: int(with or without enums), numtype, char*
+	EXPORT void getx_(int* oparamVal, bool isenum=false, int* oListLen=nullptr);
+
+
 } tParamMgr;
 
-#define getParm(p, varType, varLen, varName, varLabel) \
+/*#define getParm(p, varType, varLen, varName, varLabel) \
 	const char* typeDesc=typeid(varType).name(); \
 	printf("%s\n", typeDesc); \
 		varType varName; \
@@ -70,5 +88,5 @@ typedef struct sParamMgr {
 	} else if(strcmp(typeDesc,"float*")==0||strcmp(typeDesc,"double*")==0) { \
 	} else if(strcmp(typeDesc,"char**")==0) { \
 	} else{ \
-		printf("dioporco");\
 	}
+*/

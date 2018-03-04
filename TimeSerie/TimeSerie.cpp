@@ -1,5 +1,6 @@
 //#include <vld.h>
 #include "TimeSerie.h"
+#include "../SharedUtils/UberSet.h"
 
 //-- constructors / destructor
 void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, tDbg* dbg_) {
@@ -44,6 +45,69 @@ sTimeSerie::~sTimeSerie() {
 	for (int i=0; i<len; i++) free(dtime[i]);
 	free(dtime); free(bdtime);
 	delete dbg;
+}
+
+//-- UberSet
+sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
+	parms=parms_; dbg=dbg_;
+
+	//-- 0. Data model parms (set-invariant)
+	if(set==MODEL){
+		parms->get(&SampleLen, "DataModel.SampleLen");
+		parms->get(&PredictionLen, "DataModel.PredictionLen");
+		parms->get(&FeaturesCnt, "DataModel.FeaturesCount");
+		return;
+	}
+
+	//-- 1.0. common
+	parms->get(&doIt, "doIt");
+	//-- 1.1. TimeSerie, common
+	parms->get(TSdate0, "TimeSerie.Date0");
+	parms->get(&TShistoryLen, "TimeSerie.HistoryLen");
+	parms->get(&TS_DT, "TimeSerie.DataTransformation", enumlist);
+	parms->get(&TS_BWcalc, "TimeSerie.BWcalc");
+	parms->get(&TS_DS_type, "TimeSerie.DataSource.Type", enumlist);
+	//-- 1.2. TimeSerie, datasource-specific
+	if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
+		parms->get(TS_DS_FX_DBUser, "TimeSerie.DataSource.FXData.DBUser");
+		parms->get(TS_DS_FX_DBPassword, "TimeSerie.DataSource.FXData.DBPassword");
+		parms->get(TS_DS_FX_DBConnString, "TimeSerie.DataSource.FXData.DBConnString");
+		parms->get(TS_DS_FX_Symbol, "TimeSerie.DataSource.FXData.Symbol");
+		parms->get(TS_DS_FX_TimeFrame, "TimeSerie.DataSource.FXData.TimeFrame");
+		parms->get(&TS_DS_FX_IsFilled, "TimeSerie.DataSource.FXData.IsFilled");
+		safeCallEE(TS_DS_FX_DB=new tDBConnection(TS_DS_FX_DBUser, TS_DS_FX_DBPassword, TS_DS_FX_DBConnString));
+		safeCallEE(TS_DS_FX=new tFXData(TS_DS_FX_DB, TS_DS_FX_Symbol, TS_DS_FX_TimeFrame, TS_DS_FX_IsFilled));
+		safeCallEE(TS=new tTimeSerie(TS_DS_FX, TShistoryLen, TSdate0, TS_DT));
+	} else if (TS_DS_type==SOURCE_DATA_FROM_FILE) {
+		parms->get(TS_DS_File_FullName, "TimeSerie.DataSource.FileData.FileFullName");
+		parms->get(&TS_DS_File_FieldSep, "TimeSerie.DataSource.FileData.FieldSep", enumlist);
+		parms->get(&TS_DS_File_BWcol, "TimeSerie.DataSource.FileData.BWFeatureColumns");
+		safeCallEE(TS_DS_File=new tFileData(new tFileInfo(TS_DS_File_FullName, FILE_MODE_READ), TS_DS_File_FieldSep, TS_BWcalc, TS_DS_File_BWcol[HIGH], TS_DS_File_BWcol[LOW]));
+		safeCallEE(TS=new tTimeSerie(TS_DS_File, TS_DS_File->featuresCnt, TShistoryLen, TSdate0, TS_DT));
+	}
+	//-- 1.2. DataSet
+	if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
+		parms->get(&SelectedFeature, "DataSet.FXData.SelectedFeatures", enumlist, &SelectedFeaturesCnt);
+	} else if (TS_DS_type==SOURCE_DATA_FROM_FILE) {
+		parms->get(&SelectedFeature, "DataSet.FileData.SelectedFeatures", false, &SelectedFeaturesCnt);
+	}
+	parms->get(&BatchSamplesCnt, "DataSet.BatchSamplesCount");
+	safeCallEE(DataSet=new tDataSet(TS, SampleLen, PredictionLen, SelectedFeaturesCnt, SelectedFeature, BatchSamplesCnt));
+
+	//-- 2. set-specific parms
+	if (set==TRAIN) {
+		parms->get(&doTrainRun, "doTrainRun");
+	}
+	if (set==TEST) {
+		//-- load saved Net?
+		parms->get(&runFromSavedNet, "RunFromSavedNet");
+		if (runFromSavedNet) {
+			parms->get(&testWpid, "RunFromSavedNet.ProcessId");
+			parms->get(&testWtid, "RunFromSavedNet.ThreadId");
+		}
+	}
+	if (set==VALID) {
+	}
 }
 
 bool sTimeSerie::LoadOHLCVdata(char* date0) {
