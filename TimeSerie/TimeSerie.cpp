@@ -106,14 +106,14 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 	}
 	
 	//-- common to all TimeSeries-DataSets type sets
-	parms->get(&doIt, "doIt");
+	parms->getx(&doIt, "doIt");
 	if (doIt) {
 		//-- 1.1. TimeSerie, common
-		parms->get(TSdate0, "TimeSerie.Date0");
-		parms->get(&TShistoryLen, "TimeSerie.HistoryLen");
-		parms->get(&TS_DT, "TimeSerie.DataTransformation", enumlist);
-		parms->get(&TS_BWcalc, "TimeSerie.BWcalc");
-		parms->get(&TS_DS_type, "TimeSerie.DataSource.Type", enumlist);
+		parms->getx(TSdate0, "TimeSerie.Date0");
+		parms->getx(&TShistoryLen, "TimeSerie.HistoryLen");
+		parms->getx(&TS_DT, "TimeSerie.DataTransformation", enumlist);
+		parms->getx(&TS_BWcalc, "TimeSerie.BWcalc");
+		parms->getx(&TS_DS_type, "TimeSerie.DataSource.Type", enumlist);
 		//-- 1.2. TimeSerie, datasource-specific
 		if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
 			parms->get(TS_DS_FX_DBUser, "TimeSerie.DataSource.FXData.DBUser");

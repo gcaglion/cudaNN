@@ -596,24 +596,3 @@ void sParamMgr::ReadParamFromFile(bool* oParamValue) {
 	}
 	throwE("Could not find Parameter: %s", 1, pDesc);
 }
-
-
-//=== XML stuff
-
-void sParamMgr::getx_(int* oparamVal, bool isenum, int* oListLen) {
-	char evals[100];
-	int ret = 0;
-	for (int p = 1; p < CLparamCount; p++) {
-		if (strcmp(CLparamName[p], pDesc)==0) {
-			strcpy_s(evals, MAX_PARAMDESC_LEN, CLparamVal[p]);
-			safeCallEE(getEnumVal(pDesc, evals, oparamVal));
-			return;
-		}
-	}
-	if (isenum) {
-		safeCallEE(ReadParamFromFile(evals));
-		safeCallEE(getEnumVal(pDesc, evals, oparamVal));
-	} else {
-		safeCallEE(ReadParamFromFile(oparamVal));
-	}
-}

@@ -74,6 +74,8 @@ typedef struct sParamMgr {
 		char ps[XML_MAX_SECTION_DESC_LEN+2];
 		char pdesc[XML_MAX_PARAM_NAME_LEN];
 		char pval[XML_MAX_PARAM_VAL_LEN];
+		
+		const char* pType=typeid(T).name();
 
 		//-- parmSection is case-sensitive. parmDesc is not
 		strcpy_s(pDesc, parmDesc); Trim(pDesc);	UpperCase(pDesc);
@@ -90,23 +92,23 @@ typedef struct sParamMgr {
 				if (strcmp(p, ps)==0) break;
 			}
 		}
-		//-- 2. sequentially read all parameters until the end of the Section; return when found
+		//-- 1. sequentially read all parameters until the end of the Section; return when found
 		while (fscanf(ParamFile->handle, "%s = %s ", pdesc, pval)!=EOF) {
 			Trim(pdesc); UpperCase(pdesc);
 			if (strcmp(pdesc, pDesc)==0) {
-				//-- typeid cases...
-				(*opVal)=atoi(pval);
-				//strcpy_s(parmDesc, XML_MAX_PARAM_VAL_LEN, pval);
-				return;
+				//...
 			}
 		}
 
 
-		getx_(opVal, isenum, oListLen);
 
 	}
 	//-- single value: int(with or without enums), numtype, char*
-	EXPORT void getx_(int* oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void getxx_(char* pvalS, int* oparamVal, bool isenum=false, int* oListLen=nullptr){
+	}
+	EXPORT void getxx_(bool* oparamVal, bool isenum=false, int* oListLen=nullptr){}
+	EXPORT void getxx_(numtype* oparamVal, bool isenum=false, int* oListLen=nullptr){}
+	EXPORT void getxx_(char* oparamVal, bool isenum=false, int* oListLen=nullptr){}
 
 
 } tParamMgr;
