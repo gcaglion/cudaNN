@@ -2,16 +2,24 @@
 #include "DebugInfo.h"
 #include "ParamMgr.h"
 #include "../TimeSerie/TimeSerie.h"
+#include "../MyEngines/CoresParms.h"
 
-#define MODEL 0
-#define TRAIN 1
-#define TEST  2
-#define VALID 3
+//-- predefined Uber-Sets
+#define US_MODEL 0
+#define US_TRAIN 1
+#define US_TEST  2
+#define US_VALID 3
+#define US_CORE_NN  10
+#define US_CORE_SVM 11
+#define US_CORE_GA  12
 
 typedef struct sUberSetParms {
 
 	tDbg* dbg;
 	tParamMgr* parms;
+
+	//-- NN Core parms
+	tNNparms* NN;
 
 	//-- 0. Data model parms (set-invariant)
 	int SampleLen;

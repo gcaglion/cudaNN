@@ -4,6 +4,7 @@
 #include "../MyAlgebra/MyAlgebra.h"
 #include "../TimeSerie/TimeSerie.h"
 #include "../MyEngines/MyCores.h"
+#include "NNparms.h"
 
 //-- Training Protocols
 #define TP_STOCHASTIC	0
@@ -44,15 +45,12 @@ typedef struct sNN :public sCore {
 	int predictionLen;
 	//--
 	int batchCnt;
-	int batchSamplesCnt;	// usually referred to as Batch Size
-	bool useContext;
-	bool useBias;
 
-	float* levelRatio;
-	int levelsCnt;
+	int outputLevel;
 	int* nodesCnt;
 	int* levelFirstNode;
 	int* ctxStart;
+	int ActualEpochs;
 
 	int nodesCntTotal;
 	int* weightsCnt;
@@ -64,15 +62,7 @@ typedef struct sNN :public sCore {
 	float* scaleMax;
 
 	//-- NNParms
-	int* ActivationFunction;	// can be different for each level
-	int MaxEpochs;
-	int ActualEpochs;
-	float TargetMSE;
-	bool StopOnDivergence;	// stops training if MSE turns upwards
-	int NetSaveFreq;	// saves network weights every <n> epochs
-	int BP_Algo;
-	float LearningRate;
-	float LearningMomentum;
+	tNNparms* parms;
 
 	numtype* a;
 	numtype* F;
@@ -108,10 +98,10 @@ typedef struct sNN :public sCore {
 	DWORD WUstart, WUtimeTot=0, WUcnt=0; float WUtimeAvg;
 	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
-	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, char LevelRatioS_[60], int* ActivationFunction, bool useContext_, bool useBias_, tDbg* dbg_=nullptr);
+	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms_, tDbg* dbg_=nullptr);
 	EXPORT ~sNN();
 
-	void setLayout(char LevelRatioS_[60], int batchSamplesCnt_);
+	void setLayout(int batchSamplesCnt_);
 
 	EXPORT void setActivationFunction(int* func_);
 	void FF();

@@ -29,15 +29,12 @@ int main(int argc, char* argv[]) {
 		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.ini", FILE_MODE_READ), argc, argv));
 
 		//-- Uber-parameters for model (set-invariant) parms
-		tUberSetParms* modelParms=new tUberSetParms(parms, MODEL, dbg);
+		tUberSetParms* modelParms=new tUberSetParms(parms, US_MODEL, dbg);
 		//-- Uber-parameters for train, test, validation sets
-		tUberSetParms* trainParms=new tUberSetParms(parms, TRAIN, dbg);
-		tUberSetParms* testParms =new tUberSetParms(parms, TEST , dbg);
-		tUberSetParms* validParms=new tUberSetParms(parms, VALID, dbg);
+		tUberSetParms* trainParms=new tUberSetParms(parms, US_TRAIN, dbg);
+		tUberSetParms* testParms =new tUberSetParms(parms, US_TEST , dbg);
+		tUberSetParms* validParms=new tUberSetParms(parms, US_VALID, dbg);
 		//-- check if model feature selection is coherent among train and test. TO DO!
-
-		//-- Uber-parameters for NN core(s)
-
 
 		//-- create persistor, with its own DBConnection, to save results data.
 		parms->get(&persistorDest, "Persistor.Destination", true);
@@ -61,24 +58,13 @@ int main(int argc, char* argv[]) {
 
 		//-- initialize each core
 		
-
-		//-- net geometry
-		char* levelRatioS= "1,1,1,0.5";//"0.7"
-		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
-		bool useConTXT=true;
-		bool useBias=true;
+		//-- for now, let's say we have just one core, and it's NN
+		tUberSetParms* NNcore0Parms=new tUberSetParms(parms, US_CORE_NN, dbg);
 
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, conTXT, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 		tDbg* NNdbg; safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
-		tNN* myNN;   safeCallEE(myNN=new tNN(modelParms->SampleLen, modelParms->PredictionLen, modelParms->FeaturesCnt, levelRatioS, activationFunction, useConTXT, useBias, NNdbg));
-		//-- 0.1. set training parameters
-		myNN->MaxEpochs=50;
-		myNN->NetSaveFreq=200;
-		myNN->TargetMSE=(float)0.0001;
-		myNN->BP_Algo=BP_STD;
-		myNN->LearningRate=(numtype)0.01;
-		myNN->LearningMomentum=(numtype)0.5;
-		myNN->StopOnDivergence=true;
+
+		tNN* myNN;   safeCallEE(myNN=new tNN(modelParms->SampleLen, modelParms->PredictionLen, modelParms->FeaturesCnt, NNcore0Parms->NN));
 /*
 		//-- 1. For each TimeSerie(Training, Validation, Test), do the following:
 		//-- 1.1. define its DataSource
