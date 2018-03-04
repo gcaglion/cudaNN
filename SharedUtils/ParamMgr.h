@@ -8,8 +8,15 @@
 
 #define MAX_PARAMS_CNT 100
 #define MAX_PARAMDESC_LEN 100	
-#define ARRAY_PARAMETER_MAX_ELEMS	64	// Max length for comma-separated lisTimeSerie of descriptions
+#define ARRAY_PARAMETER_MAX_ELEMS	64	// Max length for comma-separated list of descriptions
 #define enumlist true
+
+//==== XML stuff
+#define XML_MAX_PATH_DEPTH 128
+#define XML_MAX_SECTION_DESC_LEN 64
+#define XML_MAX_PATH_LEN XML_MAX_PATH_DEPTH*XML_MAX_SECTION_DESC_LEN
+#define XML_MAX_PARAM_NAME_LEN	128
+#define XML_MAX_PARAM_VAL_LEN	128
 
 typedef struct sParamMgr {
 
@@ -24,6 +31,11 @@ typedef struct sParamMgr {
 	char pDesc[MAX_PARAMDESC_LEN];
 	char pListDesc[MAX_PARAMDESC_LEN];	//-- string containing the list of values (of any type) in an array parameter
 	char** pArrDesc;
+
+	//==== XML stuff
+	int    parmPath_depth;
+	char*  parmPath_Full;
+	char** parmPath_Step;
 
 	//-- constructors / destructors
 	EXPORT sParamMgr(tFileInfo* ParamFile_=nullptr, int argc=0, char* argv[]=nullptr, tDbg* dbg_=nullptr); //-- directly from command-line
@@ -55,16 +67,40 @@ typedef struct sParamMgr {
 	EXPORT void ReadParamFromFile(char* oParamValue);
 	EXPORT void ReadParamFromFile(bool* oParamValue);
 
-	//==== XML stuff
 
 	//-- generic
-	template <typename T> EXPORT void getx(T* opVal, const char* parmSection, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
-		strcpy_s(pDesc, parmDesc);
-		Trim(pDesc);
-		UpperCase(pDesc);
+	template <typename T> EXPORT void getx(T* opVal, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
+		char p[XML_MAX_SECTION_DESC_LEN]; 
+		char ps[XML_MAX_SECTION_DESC_LEN+2];
+		char pdesc[XML_MAX_PARAM_NAME_LEN];
+		char pval[XML_MAX_PARAM_VAL_LEN];
 
+		//-- parmSection is case-sensitive. parmDesc is not
+		strcpy_s(pDesc, parmDesc); Trim(pDesc);	UpperCase(pDesc);
+
+		//-- REWRITE COMMAND-LINE CHECK!
+
+		//-- 0. Split parmSection
+		parmPath_depth=cslToArray(parmPath_Full, '.', parmPath_Step);
 		//-- 1. Navigate to the first parameter of the Section
+		rewind(ParamFile->handle);
+		for (int d=0; d<parmPath_depth; d++) {
+			sprintf_s(ps, XML_MAX_SECTION_DESC_LEN+2, "<%s>", parmPath_Step[d]);
+			while(fscanf(ParamFile->handle, "%s", p)!=EOF) {
+				if (strcmp(p, ps)==0) break;
+			}
+		}
 		//-- 2. sequentially read all parameters until the end of the Section; return when found
+		while (fscanf(ParamFile->handle, "%s = %s ", pdesc, pval)!=EOF) {
+			Trim(pdesc); UpperCase(pdesc);
+			if (strcmp(pdesc, pDesc)==0) {
+				//-- typeid cases...
+				(*opVal)=atoi(pval);
+				//strcpy_s(parmDesc, XML_MAX_PARAM_VAL_LEN, pval);
+				return;
+			}
+		}
+
 
 		getx_(opVal, isenum, oListLen);
 

@@ -334,6 +334,8 @@ sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) 
 
 	//-- mallocs
 	pArrDesc=(char**)malloc(ARRAY_PARAMETER_MAX_ELEMS*sizeof(char*)); for (int i=0; i<ARRAY_PARAMETER_MAX_ELEMS; i++) pArrDesc[i]=(char*)malloc(MAX_PARAMDESC_LEN);
+	parmPath_Full=(char*)malloc(XML_MAX_PATH_LEN);
+	parmPath_Step=(char**)malloc(XML_MAX_PATH_DEPTH*sizeof(char*)); for (int i=0; i<XML_MAX_PATH_DEPTH; i++) parmPath_Step[i]=(char*)malloc(XML_MAX_SECTION_DESC_LEN);
 
 	bool altIniFile = false;
 	CLparamCount = argc;
@@ -359,6 +361,9 @@ sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) 
 sParamMgr::~sParamMgr() {
 	for (int i=0; i<ARRAY_PARAMETER_MAX_ELEMS; i++) free(pArrDesc[i]);
 	free(pArrDesc);
+	for (int i=0; i<XML_MAX_PATH_DEPTH; i++) free(parmPath_Step[i]);
+	free(parmPath_Step);
+	free(parmPath_Full);
 	delete dbg;
 }
 

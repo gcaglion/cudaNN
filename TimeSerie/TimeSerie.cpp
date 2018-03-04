@@ -53,15 +53,17 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 
 	//-- 0. Data model parms (set-invariant)
 	if(set==US_MODEL){
-		parms->get(&SampleLen, "DataModel.SampleLen");
-		parms->get(&PredictionLen, "DataModel.PredictionLen");
-		parms->get(&FeaturesCnt, "DataModel.FeaturesCount");
+		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Data.Model");
+		parms->getx(&SampleLen, "SampleLen");
+		parms->getx(&PredictionLen, "PredictionLen");
+		parms->getx(&FeaturesCnt, "FeaturesCount");
 		return;
 	}
 
 	//-- Cores parameters
 	int ac;
 	if (set==US_CORE_NN) {
+		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Engine.Core");
 		parms->get(&NN->useContext, "Topology.UseContext");
 		parms->get(&NN->useBias, "Topology.UseBias");
 		parms->get(&NN->levelRatio, "Topology.LevelRatio", false, &NN->levelsCnt); NN->levelsCnt+=2;
@@ -83,7 +85,27 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 		return;
 	}
 
-	//-- 1.0. common to all TimeSeries-DataSets type sets
+	//==========	TimeSeries-DataSets type sets
+	
+	//-- set-specific parms
+	if (set==US_TRAIN) {
+		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Data.Train");
+		parms->get(&doTrainRun, "doCheck");
+	}
+	if (set==US_TEST) {
+		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Data.Test");
+		//-- load saved Net?
+		parms->get(&runFromSavedNet, "RunFromSavedNet");
+		if (runFromSavedNet) {
+			parms->get(&testWpid, "RunFromSavedNet.ProcessId");
+			parms->get(&testWtid, "RunFromSavedNet.ThreadId");
+		}
+	}
+	if (set==US_VALID) {
+		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Data.Valid");
+	}
+	
+	//-- common to all TimeSeries-DataSets type sets
 	parms->get(&doIt, "doIt");
 	if (doIt) {
 		//-- 1.1. TimeSerie, common
@@ -119,20 +141,6 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 		parms->get(&BatchSamplesCnt, "DataSet.BatchSamplesCount");
 		safeCallEE(DataSet=new tDataSet(TS, SampleLen, PredictionLen, SelectedFeaturesCnt, SelectedFeature, BatchSamplesCnt));
 
-		//-- 2. set-specific parms
-		if (set==US_TRAIN) {
-			parms->get(&doTrainRun, "doTrainRun");
-		}
-		if (set==US_TEST) {
-			//-- load saved Net?
-			parms->get(&runFromSavedNet, "RunFromSavedNet");
-			if (runFromSavedNet) {
-				parms->get(&testWpid, "RunFromSavedNet.ProcessId");
-				parms->get(&testWtid, "RunFromSavedNet.ThreadId");
-			}
-		}
-		if (set==US_VALID) {
-		}
 	}
 }
 

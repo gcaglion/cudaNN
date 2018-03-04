@@ -1,3 +1,4 @@
+kaz 
 <Data>
 	<Model>
 		SampleLen		= 100
@@ -145,23 +146,23 @@
 			UseContext			= true
 			UseBias				= true
 		</Topology>
-		<TrainingParms>
+		<Training>
 			MaxEpochs			= 50
-			NetSaveFrequency	= 10
 			TargetMSE			= 0.0001
-			StopAtDivergence	= true
+			NetSaveFrequency	= 10
+			StopOnDivergence	= true
 			BP_Algo				= BP_STD
-			<BPparms_Std>
+			<BP_Std>
 				LearningRate		= 0.01
 				LearningMomentum	= 0.4
-			</BPparms_Std>
-			<BPparms_Qing>
-			</BPparms_Qing>
-			<BPparms_Qprop>
-			</BPparms_Qprop>
-			<BPparms_RProp>
-			</BPparms_RProp>
-		</TrainingParms>
+			</BP_Std>
+			<BP_Qing>
+			</BP_Qing>
+			<BP_Qprop>
+			</BP_Qprop>
+			<BP_RProp>
+			</BP_RProp>
+		</Training>
 	</Core>
 	<Core>
 		id			= 1
