@@ -137,7 +137,7 @@ int main(int argc, char* argv[]) {
 		delete dbg;
 */	}
 	catch (std::exception e) {
-		dbg->write(DBG_LEVEL_ERR, "\nClient failed.\n", 0);
+		dbg->write(DBG_LEVEL_ERR, "\nClient failed with exception: %s\n", 1, e.what());
 		return -1;
 	}
 

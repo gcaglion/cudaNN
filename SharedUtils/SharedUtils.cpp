@@ -245,7 +245,8 @@ sFileInfo::sFileInfo(char* FullName_, int mode_) {
 
 	setModeS(mode_); fopen_s(&handle, FullName, modeS);
 	if (errno!=0) {
-		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d trying to %s file %s\n", __func__, errno, modeDesc, FullName); throw std::runtime_error(errmsg);
+		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d trying to %s file %s\n", __func__, errno, modeDesc, FullName); 
+		throw std::runtime_error(errmsg);
 	}
 
 }
