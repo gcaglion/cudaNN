@@ -75,8 +75,6 @@ typedef struct sParamMgr {
 		char pdesc[XML_MAX_PARAM_NAME_LEN];
 		char pval[XML_MAX_PARAM_VAL_LEN];
 		
-		const char* pType=typeid(T).name();
-
 		//-- parmSection is case-sensitive. parmDesc is not
 		strcpy_s(pDesc, parmDesc); Trim(pDesc);	UpperCase(pDesc);
 
@@ -96,7 +94,8 @@ typedef struct sParamMgr {
 		while (fscanf(ParamFile->handle, "%s = %s ", pdesc, pval)!=EOF) {
 			Trim(pdesc); UpperCase(pdesc);
 			if (strcmp(pdesc, pDesc)==0) {
-				//...
+				//--- here we have the sought parameter value in pval
+				getxx_(pval, opVal, isenum, oListLen);
 			}
 		}
 
@@ -105,10 +104,22 @@ typedef struct sParamMgr {
 	}
 	//-- single value: int(with or without enums), numtype, char*
 	EXPORT void getxx_(char* pvalS, int* oparamVal, bool isenum=false, int* oListLen=nullptr){
+		(*oparamVal)=atoi(pvalS);
+		return;
 	}
-	EXPORT void getxx_(bool* oparamVal, bool isenum=false, int* oListLen=nullptr){}
-	EXPORT void getxx_(numtype* oparamVal, bool isenum=false, int* oListLen=nullptr){}
-	EXPORT void getxx_(char* oparamVal, bool isenum=false, int* oListLen=nullptr){}
+	EXPORT void getxx_(char* pvalS, bool* oparamVal, bool isenum=false, int* oListLen=nullptr){
+		Trim(pvalS); UpperCase(pvalS);
+		(*oparamVal)=(strcmp(pvalS, "TRUE"));
+		return;
+	}
+	EXPORT void getxx_(char* pvalS, numtype* oparamVal, bool isenum=false, int* oListLen=nullptr){
+		(*oparamVal)=atof(pvalS);
+		return;
+	}
+	EXPORT void getxx_(char* pvalS, char** oparamVal, bool isenum=false, int* oListLen=nullptr){
+		strcpy_s((*oparamVal), XML_MAX_PARAM_VAL_LEN, pvalS);
+		return;
+	}
 
 
 } tParamMgr;

@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
+		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\giacomo.caglioni\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
 
 		//-- Uber-parameters for model (set-invariant) parms
 		tUberSetParms* modelParms=new tUberSetParms(parms, US_MODEL, dbg);
