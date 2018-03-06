@@ -41,31 +41,6 @@ typedef struct sParamMgr {
 	EXPORT sParamMgr(tFileInfo* ParamFile_=nullptr, int argc=0, char* argv[]=nullptr, tDbg* dbg_=nullptr); //-- directly from command-line
 	EXPORT ~sParamMgr();
 
-	/*
-	//-- enums
-	EXPORT void getEnumVal(char* edesc, char* eVal, int* oVal);	
-	//-- generic
-	template <typename T> EXPORT void get(T* opVal, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
-		strcpy_s(pDesc, parmDesc); Trim(pDesc); UpperCase(pDesc);
-
-		get_(opVal, isenum, oListLen);
-
-	}
-	//-- single value: int(with or without enums), numtype, char*
-	EXPORT void get_(int* oparamVal, bool isenum=false, int* oListLen=nullptr);
-	EXPORT void get_(numtype* oparamVal, bool isenum=false, int* oListLen=nullptr);
-	EXPORT void get_(char* oparamVal, bool isenum=false, int* oListLen=nullptr);
-	EXPORT void get_(bool* oparamVal, bool isenum=false, int* oListLen=nullptr);
-	//-- arrays: int(with or without enums), numtype, char*
-	EXPORT void get_(int** oparamVal, bool isenum=false, int* oListLen=nullptr);
-	EXPORT void get_(numtype** oparamVal, bool isenum=false, int* oListLen=nullptr);
-	EXPORT void get_(char** oparamVal, bool isenum=false, int* oListLen=nullptr);
-	EXPORT void ReadParamFromFile(int* oParamValue);
-	EXPORT void ReadParamFromFile(numtype* oParamValue);
-	EXPORT void ReadParamFromFile(char* oParamValue);
-	EXPORT void ReadParamFromFile(bool* oParamValue);
-	*/
-
 	EXPORT void setSection(const char* sectionLabel);
 	template <typename T> EXPORT void getx(T* opVal, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
 		char p[XML_MAX_SECTION_DESC_LEN];
@@ -88,9 +63,7 @@ typedef struct sParamMgr {
 				if (strcmp(p, ps)==0) break;
 			}
 		}
-		/**/
 		//-- 1. sequentially read all parameters until the end of the Section; return when found
-		//while (fscanf(ParamFile->handle, "%s = %s ", pdesc, pval)!=EOF) {
 		while (fscanf(ParamFile->handle, "%s = %[^\n]", pdesc, pval)!=EOF) {
 			Trim(pdesc); UpperCase(pdesc);
 			if (strcmp(pdesc, pDesc)==0) {

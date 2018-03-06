@@ -28,11 +28,6 @@ int main(int argc, char* argv[]) {
 		//-- create client parms, include command-line parms, and read parameters file
 		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
 
-		int dt; parms->getx(&dt, "Data.Train.TimeSerie", "DataTransformation", true);
-		int* traintsf=(int*)malloc(10*sizeof(int));
-		int tsfcnt;
-		parms->getx(&traintsf, "Data.Train.TimeSerie", "StatisticalFeatures", true, &tsfcnt);
-
 		//-- Uber-parameters for model (set-invariant) parms
 		tUberSetParms* modelParms=new tUberSetParms(parms, US_MODEL, dbg);
 		//-- Uber-parameters for train, test, validation sets
@@ -61,6 +56,26 @@ int main(int argc, char* argv[]) {
 		}
 
 		//-- determine Engine Architecture (number of cores, type and position for every core)
+		tCore* core[ENGINE_MAX_CORES];
+		parms->setSection("Engine");
+		//-- first, read general, core-independent engine parms
+		char CoreSectionDesc[10];
+		int coreType;
+		int parentsCnt; int* parentId=(int*)malloc(ENGINE_MAX_CORES*sizeof(int));
+		int connectorsCnt; int* connectorType=(int*)malloc(ENGINE_MAX_CORES*sizeof(int));
+		for (int c=0; c<ENGINE_MAX_CORES; c++) {
+			sprintf_s(CoreSectionDesc, 10, "Engine.Core.%d", c);	parms->setSection(CoreSectionDesc);
+			try { parms->getx(&coreType, "Type", true); } catch (std::exception e) { break; }
+			//-- if successful, keep reading core properties required for creation
+			parentsCnt=0; connectorsCnt=0;
+			parms->getx(&parentId, "ParentId", false, &parentsCnt);
+			parms->getx(&connectorType, "Connector", false, &connectorsCnt);
+			if (parentsCnt!=connectorsCnt) throwE("parents / connectors count mismatch (%d vs. %d) for Core.%d", 3, parentsCnt, connectorsCnt, c);
+
+			//-- finally, create new core
+			safeCallEE(core[c]=new tCore(coreType, parentsCnt, parentId, connectorType));
+
+		}
 
 		//-- initialize each core
 		

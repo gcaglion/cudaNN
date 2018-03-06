@@ -123,10 +123,10 @@
 
 <Engine>
 	PresetType	= 
-	<Core>
-		Id			= 0
+	<Core.0>
 		Type		= CORE_NN
 		ParentId	=
+		Connector	=
 		<Topology>
 			LevelRatio			= 1,1,1,0.5
 			LevelActivation		= NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH
@@ -150,17 +150,27 @@
 			<BP_RProp>
 			</BP_RProp>
 		</Training>
-	</Core>
-	<Core>
-		id			= 1
+	</Core.0>
+	<Core.1>
 		type		= CORE_NN
 		parentId	=
-	</Core>
-	<Core>
-		id			= 2
+		Connector	=
+	</Core.1>
+	<Core.2>
 		type		= CORE_NN
 		parentId	= 0, 1
-	</Core>
+		Connector	= CORE_CONN_DENSE, CORE_CONN_LINEAR
+	</Core.2>
+	<Core.3>
+		type		= CORE_SVM
+		parentId	= 0, 2
+		Connector	= CORE_CONN_DENSE, CORE_CONN_LINEAR
+	</Core.3>
+	<Core.4>
+		type		= CORE_SVM
+		parentId	= 0, 2, 3
+		Connector	= CORE_CONN_DENSE, CORE_CONN_LINEAR
+	</Core.3>
 </Engine>
 
 <Persistor>
