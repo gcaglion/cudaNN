@@ -1,4 +1,3 @@
-kaz 
 <Data>
 	<Model>
 		SampleLen		= 100
@@ -11,8 +10,9 @@ kaz
 		<TimeSerie>
 			Date0				= 201712300000
 			HistoryLen			= 50000
-			DataTransformation	= DT_DELTA
+			DataTransformation	= DT_DELTALOG
 			BWCalc				= true
+			StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
 			<DataSource>
 				type	= SOURCE_DATA_FROM_FXDB
 				<FXData>
@@ -121,19 +121,6 @@ kaz
 	</Validation>
 </Data>
 
-<Persistor>
-	Destination		= ORCL
-	DBUser			= cuLogUser
-	DBPassword		= LogPwd
-	DBConnString	= Algo
-	saveNothing		= false
-	saveClient		= true
-	saveMSE			= true
-	saveRun			= true
-	saveInternals	= false
-	saveImage		= true
-</Persistor>
-
 <Engine>
 	PresetType	= 
 	<Core>
@@ -175,3 +162,17 @@ kaz
 		parentId	= 0, 1
 	</Core>
 </Engine>
+
+<Persistor>
+	Destination		= ORCL
+	DBUser			= cuLogUser
+	DBPassword		= LogPwd
+	DBConnString	= Algo
+	saveNothing		= false
+	saveClient		= true
+	saveMSE			= true
+	saveRun			= true
+	saveInternals	= false
+	saveImage		= true
+</Persistor>
+

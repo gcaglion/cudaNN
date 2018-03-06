@@ -368,23 +368,24 @@ sParamMgr::~sParamMgr() {
 	delete dbg;
 }
 
+/* OLD (pre-XML)
 //-- enums
 void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 	if (strcmp(edesc, "FORECASTER.ACTION")==0) {
 		//if (strcmp(eVal, "TRAIN_SAVE_RUN")==0) { (*oVal) = TRAIN_SAVE_RUN; return; }
 		//if (strcmp(eVal, "ADD_SAMPLES")==0) { (*oVal) = ADD_SAMPLES; return; }
 		//if (strcmp(eVal, "JUST_RUN")==0) { (*oVal) = JUST_RUN; return; }
-/*	} else if (strcmp(edesc, "FORECASTER.ENGINE")==0) {
+	} else if (strcmp(edesc, "FORECASTER.ENGINE")==0) {
 		if (strcmp(eVal, "ENGINE_NN")==0) { (*oVal) = ENGINE_NN; return; }
 		if (strcmp(eVal, "ENGINE_GA")==0) { (*oVal) = ENGINE_GA; return; }
 		if (strcmp(eVal, "ENGINE_SVM")==0) { (*oVal) = ENGINE_SVM; return; }
 		if (strcmp(eVal, "ENGINE_SOM")==0) { (*oVal) = ENGINE_SOM; return; }
 		if (strcmp(eVal, "ENGINE_WNN")==0) { (*oVal) = ENGINE_WNN; return; }
 		if (strcmp(eVal, "ENGINE_XIE")==0) { (*oVal) = ENGINE_XIE; return; }
-*/	} else if (strcmp(edesc, "RESULTS.DESTINATION")==0) {
+	} else if (strcmp(edesc, "RESULTS.DESTINATION")==0) {
 		if (strcmp(eVal, "TXT")==0) { (*oVal) = TXT; return; }
 		if (strcmp(eVal, "ORCL")==0) { (*oVal) = ORCL; return; }
-/*	} else if (strcmp(edesc, "DATASOURCE.SOURCETYPE")==0) {
+	} else if (strcmp(edesc, "DATASOURCE.SOURCETYPE")==0) {
 		if (strcmp(eVal, "SOURCE_DATA_FROM_FXDB")==0) { (*oVal) = SOURCE_DATA_FROM_FXDB; return; }
 		if (strcmp(eVal, "SOURCE_DATA_FROM_FILE")==0) { (*oVal) = SOURCE_DATA_FROM_FILE; return; }
 		if (strcmp(eVal, "SOURCE_DATA_FROM_MT")==0) { (*oVal) = SOURCE_DATA_FROM_MT; return; }
@@ -392,19 +393,19 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 		if (strcmp(eVal, "COMMA")==0) { (*oVal) = (int)COMMA; return; }
 		if (strcmp(eVal, "TAB")==0) { (*oVal) = (int)TAB; return; }
 		if (strcmp(eVal, "SPACE")==0) { (*oVal) = (int)SPACE; return; }
-*/	} else if (strcmp(edesc, "DATAPARMS.DATATRANSFORMATION")==0) {
+	} else if (strcmp(edesc, "DATAPARMS.DATATRANSFORMATION")==0) {
 		if (strcmp(eVal, "DT_NONE")==0) { (*oVal) = DT_NONE; return; }
 		if (strcmp(eVal, "DT_DELTA")==0) { (*oVal) = DT_DELTA; return; }
 		if (strcmp(eVal, "DT_LOG")==0) { (*oVal) = DT_LOG; return; }
 		if (strcmp(eVal, "DT_DELTALOG")==0) { (*oVal) = DT_DELTALOG; return; }
-/*	} else if (strcmp(edesc, "DATASOURCE.BARDATATYPES")==0) {
+	} else if (strcmp(edesc, "DATASOURCE.BARDATATYPES")==0) {
 		if (strcmp(eVal, "OPEN")==0) { (*oVal) = OPEN; return; }
 		if (strcmp(eVal, "HIGH")==0) { (*oVal) = HIGH; return; }
 		if (strcmp(eVal, "LOW")==0) { (*oVal) = LOW; return; }
 		if (strcmp(eVal, "CLOSE")==0) { (*oVal) = CLOSE; return; }
 		if (strcmp(eVal, "VOLUME")==0) { (*oVal) = VOLUME; return; }
 		if (strcmp(eVal, "OTHER")==0) { (*oVal) = OTHER; return; }
-*/	} else if (strcmp(edesc, "DATAPARMS.TSFEATURES")==0) {
+	} else if (strcmp(edesc, "DATAPARMS.TSFEATURES")==0) {
 		if (strcmp(eVal, "TSF_MEAN")==0) { (*oVal) = TSF_MEAN; return; }
 		if (strcmp(eVal, "TSF_MAD")==0) { (*oVal) = TSF_MAD; return; }
 		if (strcmp(eVal, "TSF_VARIANCE")==0) { (*oVal) = TSF_VARIANCE; return; }
@@ -413,7 +414,7 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 		if (strcmp(eVal, "TSF_TURNINGPOINTS")==0) { (*oVal) = TSF_TURNINGPOINTS; return; }
 		if (strcmp(eVal, "TSF_SHE")==0) { (*oVal) = TSF_SHE; return; }
 		if (strcmp(eVal, "TSF_HISTVOL")==0) { (*oVal) = TSF_HISTVOL; return; }
-/*	} else if (strcmp(right(edesc, 7), "BP_ALGO")==0) {
+	} else if (strcmp(right(edesc, 7), "BP_ALGO")==0) {
 		if (strcmp(eVal, "BP_STD")==0) { (*oVal) = BP_STD; return; }
 		if (strcmp(eVal, "BP_QING")==0) { (*oVal) = BP_QING; return; }
 		if (strcmp(eVal, "BP_SCGD")==0) { (*oVal) = BP_SCGD; return; }
@@ -456,8 +457,7 @@ void sParamMgr::getEnumVal(char* edesc, char* eVal, int* oVal) {
 		if (strcmp(eVal, "LEARNING_ALGO_1SLACK_DUAL")==0) { (*oVal) = LEARNING_ALGO_1SLACK_DUAL; return; }
 		if (strcmp(eVal, "LEARNING_ALGO_1SLACK_DUAL_CONSTR")==0) { (*oVal) = LEARNING_ALGO_1SLACK_DUAL_CONSTR; return; }
 		if (strcmp(eVal, "LEARNING_ALGO_CUSTOM")==0) { (*oVal) = LEARNING_ALGO_CUSTOM; return; }
-*/	}
-
+	}
 	throwE("getEnumVal() could not resolve Parameter: %s = %s . Exiting.\n", 2, edesc, eVal);
 
 }
@@ -596,4 +596,68 @@ void sParamMgr::ReadParamFromFile(bool* oParamValue) {
 		}
 	}
 	throwE("Could not find Parameter: %s", 1, pDesc);
+}
+*/
+
+//=== XML stuff
+void sParamMgr::setSection(const char* sectionLabel){ strcpy_s(parmPath_Full, XML_MAX_PATH_LEN, sectionLabel); }
+void sParamMgr::enumDecode(char* pName, char* pVal, int* opvalIdx) {
+	int decodedVal=-1;
+	if (strcmp(pName, "DATATRANSFORMATION")==0) {
+		if (strcmp(pVal, "DT_NONE")==0) decodedVal=DT_NONE;
+		if (strcmp(pVal, "DT_DELTA")==0) decodedVal=DT_DELTA;
+		if (strcmp(pVal, "DT_LOG")==0) decodedVal=DT_LOG;
+		if (strcmp(pVal, "DT_DELTALOG")==0) decodedVal=DT_DELTALOG;
+	} else if (strcmp(pName, "STATISTICALFEATURES")==0) {
+		if (strcmp(pVal, "TSF_MEAN")==0) decodedVal=TSF_MEAN; 
+		if (strcmp(pVal, "TSF_MAD")==0) decodedVal=TSF_MAD; 
+		if (strcmp(pVal, "TSF_VARIANCE")==0) decodedVal=TSF_VARIANCE; 
+		if (strcmp(pVal, "TSF_SKEWNESS")==0) decodedVal=TSF_SKEWNESS; 
+		if (strcmp(pVal, "TSF_KURTOSIS")==0) decodedVal=TSF_KURTOSIS; 
+		if (strcmp(pVal, "TSF_TURNINGPOINTS")==0) decodedVal=TSF_TURNINGPOINTS; 
+		if (strcmp(pVal, "TSF_SHE")==0) decodedVal=TSF_SHE; 
+		if (strcmp(pVal, "TSF_HISTVOL")==0) decodedVal=TSF_HISTVOL; 
+	} else {
+
+	}
+	if (decodedVal==-1) {
+		throwE("enumDecode() could not decode %s = %s", 2, pName, pVal);
+	} else {
+		(*opvalIdx)=decodedVal;
+	}
+}
+//-- specific, single value: int(with or without enums), numtype, char*
+void sParamMgr::getxx_(char* pvalS, int* oparamVal, bool isenum, int* oListLen) {
+	if (isenum) {
+		enumDecode(pDesc, pvalS, oparamVal);
+	} else {
+		(*oparamVal)=atoi(pvalS);
+	}
+}
+void sParamMgr::getxx_(char* pvalS, bool* oparamVal, bool isenum, int* oListLen) {
+	Trim(pvalS); UpperCase(pvalS);
+	(*oparamVal)=(strcmp(pvalS, "TRUE")==0);
+}
+void sParamMgr::getxx_(char* pvalS, numtype* oparamVal, bool isenum, int* oListLen) {
+	(*oparamVal)=(numtype)atof(pvalS);
+}
+void sParamMgr::getxx_(char* pvalS, char* oparamVal, bool isenum, int* oListLen) {
+	strcpy_s(oparamVal, XML_MAX_PARAM_VAL_LEN, pvalS);
+}
+//-- specific, arrays: int(with or without enums), numtype, char*
+void sParamMgr::getxx_(char* pvalS, int** oparamVal, bool isenum, int* oListLen){
+	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
+	for (int p=0; p<(*oListLen); p++) getxx_(pArrDesc[p], &(*oparamVal)[p], isenum, oListLen);
+}
+void sParamMgr::getxx_(char* pvalS, bool** oparamVal, bool isenum, int* oListLen) {
+	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
+	for (int p=0; p<(*oListLen); p++) getxx_(pArrDesc[p], oparamVal[p], isenum, oListLen);
+}
+void sParamMgr::getxx_(char* pvalS, numtype** oparamVal, bool isenum, int* oListLen) {
+	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
+	for (int p=0; p<(*oListLen); p++) getxx_(pArrDesc[p], oparamVal[p], isenum, oListLen);
+}
+void sParamMgr::getxx_(char* pvalS, char** oparamVal, bool isenum, int* oListLen) {
+	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
+	for (int p=0; p<(*oListLen); p++) getxx_(pArrDesc[p], oparamVal[p], isenum, oListLen);
 }

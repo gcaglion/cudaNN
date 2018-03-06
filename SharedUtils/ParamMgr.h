@@ -41,14 +41,12 @@ typedef struct sParamMgr {
 	EXPORT sParamMgr(tFileInfo* ParamFile_=nullptr, int argc=0, char* argv[]=nullptr, tDbg* dbg_=nullptr); //-- directly from command-line
 	EXPORT ~sParamMgr();
 
+	/*
 	//-- enums
-	EXPORT void getEnumVal(char* edesc, char* eVal, int* oVal);
-	
+	EXPORT void getEnumVal(char* edesc, char* eVal, int* oVal);	
 	//-- generic
 	template <typename T> EXPORT void get(T* opVal, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
-		strcpy_s(pDesc, parmDesc); 
-		Trim(pDesc); 
-		UpperCase(pDesc);
+		strcpy_s(pDesc, parmDesc); Trim(pDesc); UpperCase(pDesc);
 
 		get_(opVal, isenum, oListLen);
 
@@ -66,15 +64,15 @@ typedef struct sParamMgr {
 	EXPORT void ReadParamFromFile(numtype* oParamValue);
 	EXPORT void ReadParamFromFile(char* oParamValue);
 	EXPORT void ReadParamFromFile(bool* oParamValue);
+	*/
 
-
-	//-- generic
+	EXPORT void setSection(const char* sectionLabel);
 	template <typename T> EXPORT void getx(T* opVal, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
-		char p[XML_MAX_SECTION_DESC_LEN]; 
+		char p[XML_MAX_SECTION_DESC_LEN];
 		char ps[XML_MAX_SECTION_DESC_LEN+2];
 		char pdesc[XML_MAX_PARAM_NAME_LEN];
 		char pval[XML_MAX_PARAM_VAL_LEN];
-		
+
 		//-- parmSection is case-sensitive. parmDesc is not
 		strcpy_s(pDesc, parmDesc); Trim(pDesc);	UpperCase(pDesc);
 
@@ -86,56 +84,39 @@ typedef struct sParamMgr {
 		rewind(ParamFile->handle);
 		for (int d=0; d<parmPath_depth; d++) {
 			sprintf_s(ps, XML_MAX_SECTION_DESC_LEN+2, "<%s>", parmPath_Step[d]);
-			while(fscanf(ParamFile->handle, "%s", p)!=EOF) {
+			while (fscanf(ParamFile->handle, "%s", p)!=EOF) {
 				if (strcmp(p, ps)==0) break;
 			}
 		}
+		/**/
 		//-- 1. sequentially read all parameters until the end of the Section; return when found
-		while (fscanf(ParamFile->handle, "%s = %s ", pdesc, pval)!=EOF) {
+		//while (fscanf(ParamFile->handle, "%s = %s ", pdesc, pval)!=EOF) {
+		while (fscanf(ParamFile->handle, "%s = %[^\n]", pdesc, pval)!=EOF) {
 			Trim(pdesc); UpperCase(pdesc);
 			if (strcmp(pdesc, pDesc)==0) {
 				//--- here we have the sought parameter value in pval
 				getxx_(pval, opVal, isenum, oListLen);
+				return;
 			}
 		}
-
-
-
+		throwE("could not find parameter %s in section [%s]", 2, parmDesc, parmPath_Full);
 	}
-	//-- single value: int(with or without enums), numtype, char*
-	EXPORT void getxx_(char* pvalS, int* oparamVal, bool isenum=false, int* oListLen=nullptr){
-		(*oparamVal)=atoi(pvalS);
-		return;
+	template <typename T> EXPORT void getx(T* opVal, const char* sectionDesc, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
+		setSection(sectionDesc);
+		getx(opVal, parmDesc, isenum, oListLen);
 	}
-	EXPORT void getxx_(char* pvalS, bool* oparamVal, bool isenum=false, int* oListLen=nullptr){
-		Trim(pvalS); UpperCase(pvalS);
-		(*oparamVal)=(strcmp(pvalS, "TRUE"));
-		return;
-	}
-	EXPORT void getxx_(char* pvalS, numtype* oparamVal, bool isenum=false, int* oListLen=nullptr){
-		(*oparamVal)=atof(pvalS);
-		return;
-	}
-	EXPORT void getxx_(char* pvalS, char** oparamVal, bool isenum=false, int* oListLen=nullptr){
-		strcpy_s((*oparamVal), XML_MAX_PARAM_VAL_LEN, pvalS);
-		return;
-	}
+	
+	//-- specific, single value: int(with or without enums), numtype, char*
+	EXPORT void getxx_(char* pvalS, int* oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void getxx_(char* pvalS, bool* oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void getxx_(char* pvalS, numtype* oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void getxx_(char* pvalS, char* oparamVal, bool isenum=false, int* oListLen=nullptr);
+	//-- specific, arrays: int(with or without enums), numtype, char*
+	EXPORT void getxx_(char* pvalS, int** oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void getxx_(char* pvalS, bool** oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void getxx_(char* pvalS, numtype** oparamVal, bool isenum=false, int* oListLen=nullptr);
+	EXPORT void getxx_(char* pvalS, char** oparamVal, bool isenum=false, int* oListLen=nullptr);
 
-
+	//-- enum(s) decoder
+	void enumDecode(char* pName, char* pVal, int* opvalIdx);
 } tParamMgr;
-
-/*#define getParm(p, varType, varLen, varName, varLabel) \
-	const char* typeDesc=typeid(varType).name(); \
-	printf("%s\n", typeDesc); \
-		varType varName; \
-	if(strcmp(typeDesc,"char")==0) { \
-	} else if(strcmp((typeDesc),"int")==0){ \
-		p->get(&varName, varLabel); \
-	} else if(strcmp(typeDesc,"float")==0||strcmp(typeDesc,"double")==0) { \
-	} else if(strcmp(typeDesc,"char*")==0) { \
-	} else if(strcmp(typeDesc,"int*")==0){ \
-	} else if(strcmp(typeDesc,"float*")==0||strcmp(typeDesc,"double*")==0) { \
-	} else if(strcmp(typeDesc,"char**")==0) { \
-	} else{ \
-	}
-*/

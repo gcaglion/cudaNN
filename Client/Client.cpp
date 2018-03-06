@@ -26,7 +26,12 @@ int main(int argc, char* argv[]) {
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\giacomo.caglioni\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
+		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
+
+		int dt; parms->getx(&dt, "Data.Train.TimeSerie", "DataTransformation", true);
+		int* traintsf=(int*)malloc(10*sizeof(int));
+		int tsfcnt;
+		parms->getx(&traintsf, "Data.Train.TimeSerie", "StatisticalFeatures", true, &tsfcnt);
 
 		//-- Uber-parameters for model (set-invariant) parms
 		tUberSetParms* modelParms=new tUberSetParms(parms, US_MODEL, dbg);
@@ -37,19 +42,20 @@ int main(int argc, char* argv[]) {
 		//-- check if model feature selection is coherent among train and test. TO DO!
 
 		//-- create persistor, with its own DBConnection, to save results data.
-		parms->get(&persistorDest, "Persistor.Destination", true);
+		parms->setSection("Persistor");
+		parms->getx(&persistorDest, "Destination", true);
 		if (persistorDest==ORCL) {
-			parms->get(persistorDBUser, "Persistor.DBUser");
-			parms->get(persistorDBPassword, "Persistor.DBPassword");
-			parms->get(persistorDBConnString, "Persistor.DBConnString");
+			parms->getx(persistorDBUser, "DBUser");
+			parms->getx(persistorDBPassword, "DBPassword");
+			parms->getx(persistorDBConnString, "DBConnString");
 			safeCallEE(persistorDB=new tDBConnection(persistorDBUser, persistorDBPassword, persistorDBConnString));
 			safeCallEE(persistor=new tLogger(persistorDB));
-			parms->get(&persistor->saveNothing, "Persistor.saveNothing");
-			parms->get(&persistor->saveClient, "Persistor.saveClient");
-			parms->get(&persistor->saveMSE, "Persistor.saveMSE");
-			parms->get(&persistor->saveRun, "Persistor.saveRun");
-			parms->get(&persistor->saveInternals, "Persistor.saveInternals");
-			parms->get(&persistor->saveImage, "Persistor.saveImage");
+			parms->getx(&persistor->saveNothing, "saveNothing");
+			parms->getx(&persistor->saveClient, "saveClient");
+			parms->getx(&persistor->saveMSE, "saveMSE");
+			parms->getx(&persistor->saveRun, "saveRun");
+			parms->getx(&persistor->saveInternals, "saveInternals");
+			parms->getx(&persistor->saveImage, "saveImage");
 		} else {
 			//-- TO DO ...
 		}

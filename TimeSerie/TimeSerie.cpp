@@ -53,7 +53,7 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 
 	//-- 0. Data model parms (set-invariant)
 	if(set==US_MODEL){
-		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Data.Model");
+		parms->setSection("Data.Model");
 		parms->getx(&SampleLen, "SampleLen");
 		parms->getx(&PredictionLen, "PredictionLen");
 		parms->getx(&FeaturesCnt, "FeaturesCount");
@@ -63,19 +63,19 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 	//-- Cores parameters
 	int ac;
 	if (set==US_CORE_NN) {
-		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Engine.Core");
-		parms->get(&NN->useContext, "Topology.UseContext");
-		parms->get(&NN->useBias, "Topology.UseBias");
-		parms->get(&NN->levelRatio, "Topology.LevelRatio", false, &NN->levelsCnt); NN->levelsCnt+=2;
-		parms->get(&NN->ActivationFunction, "Topology.LevelActivation", true, &ac);
+		parms->setSection("Engine.Core");
+		parms->getx(&NN->useContext, "Topology.UseContext");
+		parms->getx(&NN->useBias, "Topology.UseBias");
+		parms->getx(&NN->levelRatio, "Topology.LevelRatio", false, &NN->levelsCnt); NN->levelsCnt+=2;
+		parms->getx(&NN->ActivationFunction, "Topology.LevelActivation", true, &ac);
 		if (ac!=(NN->levelsCnt)) throwE("Levels count (%d) and LevelActivation count (%d) are incompatible.", NN->levelsCnt, ac);
-		parms->get(&NN->MaxEpochs, "Training.MaxEpochs");
-		parms->get(&NN->TargetMSE, "Training.TargetMSE");
-		parms->get(&NN->NetSaveFreq, "Training.NetSaveFrequency");
-		parms->get(&NN->StopOnDivergence, "Training.StopOnDivergence");
-		parms->get(&NN->BP_Algo, "Training.BP_Algo");
-		parms->get(&NN->LearningRate, "Training.BP_Std.LearningRate");
-		parms->get(&NN->LearningMomentum, "Training.BP_Std.LearningMomentum");
+		parms->getx(&NN->MaxEpochs, "Training.MaxEpochs");
+		parms->getx(&NN->TargetMSE, "Training.TargetMSE");
+		parms->getx(&NN->NetSaveFreq, "Training.NetSaveFrequency");
+		parms->getx(&NN->StopOnDivergence, "Training.StopOnDivergence");
+		parms->getx(&NN->BP_Algo, "Training.BP_Algo");
+		parms->getx(&NN->LearningRate, "Training.BP_Std.LearningRate");
+		parms->getx(&NN->LearningMomentum, "Training.BP_Std.LearningMomentum");
 		return;
 	}
 	if (set==US_CORE_SVM) {
@@ -89,20 +89,18 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 	
 	//-- set-specific parms
 	if (set==US_TRAIN) {
-		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Data.Train");
-		parms->get(&doTrainRun, "doCheck");
+		parms->getx(&doTrainRun, "Data.Train", "doCheck");
 	}
 	if (set==US_TEST) {
-		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Data.Test");
 		//-- load saved Net?
-		parms->get(&runFromSavedNet, "RunFromSavedNet");
+		parms->setSection("Data.Test");
+		parms->getx(&runFromSavedNet, "RunFromSavedNet");
 		if (runFromSavedNet) {
-			parms->get(&testWpid, "RunFromSavedNet.ProcessId");
-			parms->get(&testWtid, "RunFromSavedNet.ThreadId");
+			parms->getx(&testWpid, "RunFromSavedNet.ProcessId");
+			parms->getx(&testWtid, "RunFromSavedNet.ThreadId");
 		}
 	}
 	if (set==US_VALID) {
-		strcpy_s(parms->parmPath_Full, XML_MAX_PATH_LEN, "Data.Valid");
 	}
 	
 	//-- common to all TimeSeries-DataSets type sets
@@ -116,29 +114,29 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 		parms->getx(&TS_DS_type, "TimeSerie.DataSource.Type", enumlist);
 		//-- 1.2. TimeSerie, datasource-specific
 		if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
-			parms->get(TS_DS_FX_DBUser, "TimeSerie.DataSource.FXData.DBUser");
-			parms->get(TS_DS_FX_DBPassword, "TimeSerie.DataSource.FXData.DBPassword");
-			parms->get(TS_DS_FX_DBConnString, "TimeSerie.DataSource.FXData.DBConnString");
-			parms->get(TS_DS_FX_Symbol, "TimeSerie.DataSource.FXData.Symbol");
-			parms->get(TS_DS_FX_TimeFrame, "TimeSerie.DataSource.FXData.TimeFrame");
-			parms->get(&TS_DS_FX_IsFilled, "TimeSerie.DataSource.FXData.IsFilled");
+			parms->getx(TS_DS_FX_DBUser, "TimeSerie.DataSource.FXData.DBUser");
+			parms->getx(TS_DS_FX_DBPassword, "TimeSerie.DataSource.FXData.DBPassword");
+			parms->getx(TS_DS_FX_DBConnString, "TimeSerie.DataSource.FXData.DBConnString");
+			parms->getx(TS_DS_FX_Symbol, "TimeSerie.DataSource.FXData.Symbol");
+			parms->getx(TS_DS_FX_TimeFrame, "TimeSerie.DataSource.FXData.TimeFrame");
+			parms->getx(&TS_DS_FX_IsFilled, "TimeSerie.DataSource.FXData.IsFilled");
 			safeCallEE(TS_DS_FX_DB=new tDBConnection(TS_DS_FX_DBUser, TS_DS_FX_DBPassword, TS_DS_FX_DBConnString));
 			safeCallEE(TS_DS_FX=new tFXData(TS_DS_FX_DB, TS_DS_FX_Symbol, TS_DS_FX_TimeFrame, TS_DS_FX_IsFilled));
 			safeCallEE(TS=new tTimeSerie(TS_DS_FX, TShistoryLen, TSdate0, TS_DT));
 		} else if (TS_DS_type==SOURCE_DATA_FROM_FILE) {
-			parms->get(TS_DS_File_FullName, "TimeSerie.DataSource.FileData.FileFullName");
-			parms->get(&TS_DS_File_FieldSep, "TimeSerie.DataSource.FileData.FieldSep", enumlist);
-			parms->get(&TS_DS_File_BWcol, "TimeSerie.DataSource.FileData.BWFeatureColumns");
+			parms->getx(TS_DS_File_FullName, "TimeSerie.DataSource.FileData.FileFullName");
+			parms->getx(&TS_DS_File_FieldSep, "TimeSerie.DataSource.FileData.FieldSep", enumlist);
+			parms->getx(&TS_DS_File_BWcol, "TimeSerie.DataSource.FileData.BWFeatureColumns");
 			safeCallEE(TS_DS_File=new tFileData(new tFileInfo(TS_DS_File_FullName, FILE_MODE_READ), TS_DS_File_FieldSep, TS_BWcalc, TS_DS_File_BWcol[HIGH], TS_DS_File_BWcol[LOW]));
 			safeCallEE(TS=new tTimeSerie(TS_DS_File, TS_DS_File->featuresCnt, TShistoryLen, TSdate0, TS_DT));
 		}
 		//-- 1.2. DataSet
 		if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
-			parms->get(&SelectedFeature, "DataSet.FXData.SelectedFeatures", enumlist, &SelectedFeaturesCnt);
+			parms->getx(&SelectedFeature, "DataSet.FXData.SelectedFeatures", enumlist, &SelectedFeaturesCnt);
 		} else if (TS_DS_type==SOURCE_DATA_FROM_FILE) {
-			parms->get(&SelectedFeature, "DataSet.FileData.SelectedFeatures", false, &SelectedFeaturesCnt);
+			parms->getx(&SelectedFeature, "DataSet.FileData.SelectedFeatures", false, &SelectedFeaturesCnt);
 		}
-		parms->get(&BatchSamplesCnt, "DataSet.BatchSamplesCount");
+		parms->getx(&BatchSamplesCnt, "DataSet.BatchSamplesCount");
 		safeCallEE(DataSet=new tDataSet(TS, SampleLen, PredictionLen, SelectedFeaturesCnt, SelectedFeature, BatchSamplesCnt));
 
 	}
