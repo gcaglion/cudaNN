@@ -47,6 +47,7 @@ typedef struct sUberSetParms {
 	bool runFromSavedNet; int testWpid; int testWtid;
 
 	EXPORT sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_);
+	~sUberSetParms();
 
 } tUberSetParms;
 

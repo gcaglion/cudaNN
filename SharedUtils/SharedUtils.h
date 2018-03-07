@@ -20,7 +20,7 @@
 EXPORT char* MyGetCurrentDirectory();
 EXPORT void UpperCase(char* str);
 EXPORT void Trim(char* str);
-EXPORT int cslToArray(char* csl, char Separator, char** StrList);
+EXPORT int cslToArray(const char* csl, char Separator, char** StrList);
 EXPORT char* substr(char* str, int start, int len);
 EXPORT char* right(char* str, int len);
 EXPORT char* left(char* str, int len);

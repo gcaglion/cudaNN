@@ -51,6 +51,8 @@ sTimeSerie::~sTimeSerie() {
 sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 	parms=parms_; dbg=dbg_;
 
+	SelectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
+
 	//-- 0. Data model parms (set-invariant)
 	if(set==US_MODEL){
 		parms->setSection("Data.Model");
@@ -113,7 +115,7 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 			parms->getx(&TShistoryLen, "TimeSerie.HistoryLen");
 			parms->getx(&TS_DT, "TimeSerie.DataTransformation", enumlist);
 			parms->getx(&TS_BWcalc, "TimeSerie.BWcalc");
-			parms->getx(&TS_DS_type, "TimeSerie.DataSource.Type", enumlist);
+			parms->getx(&TS_DS_type, "TimeSerie.DataSource.DataSourceType", enumlist);
 			//-- 1.2. TimeSerie, datasource-specific
 			if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
 				parms->getx(TS_DS_FX_DBUser, "TimeSerie.DataSource.FXData.DBUser");
@@ -143,7 +145,9 @@ sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
 		}
 	}
 }
-
+sUberSetParms::~sUberSetParms() {
+	free(SelectedFeature);
+}
 bool sTimeSerie::LoadOHLCVdata(char* date0) {
 
 	if (!OraConnect(dbg, FXData->db)) return false;

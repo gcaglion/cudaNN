@@ -28,6 +28,9 @@ int main(int argc, char* argv[]) {
 		//-- create client parms, include command-line parms, and read parameters file
 		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
 
+		int tsfcnt; int* tsf=(int*)malloc(12*sizeof(int));
+		parms->getx(&tsf, "Data.Train", "TimeSerie.StatisticalFeatures", true, &tsfcnt);
+
 		//-- Uber-parameters for model (set-invariant) parms
 		tUberSetParms* modelParms=new tUberSetParms(parms, US_MODEL, dbg);
 		//-- Uber-parameters for train, test, validation sets

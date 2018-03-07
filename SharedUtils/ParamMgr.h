@@ -36,6 +36,9 @@ typedef struct sParamMgr {
 	int    parmPath_depth;
 	char*  parmPath_Full;
 	char** parmPath_Step;
+	int    parmDesc_depth;
+	char*  parmDesc_Full;
+	char** parmDesc_Step;
 
 	//-- constructors / destructors
 	EXPORT sParamMgr(tFileInfo* ParamFile_=nullptr, int argc=0, char* argv[]=nullptr, tDbg* dbg_=nullptr); //-- directly from command-line
@@ -47,11 +50,21 @@ typedef struct sParamMgr {
 		char ps[XML_MAX_SECTION_DESC_LEN+2];
 		char pdesc[XML_MAX_PARAM_NAME_LEN];
 		char pval[XML_MAX_PARAM_VAL_LEN];
-
-		//-- parmSection is case-sensitive. parmDesc is not
-		strcpy_s(pDesc, parmDesc); Trim(pDesc);	UpperCase(pDesc);
+		char parmPath_Full_Bkp[XML_MAX_PATH_LEN];
 
 		//-- REWRITE COMMAND-LINE CHECK!
+
+		//-- Split parmDesc
+		parmDesc_depth=cslToArray(parmDesc, '.', parmDesc_Step);
+		//-- backup parmPath_Full
+		strcpy_s(parmPath_Full_Bkp, XML_MAX_PATH_LEN, parmPath_Full);
+		//-- add all but last steps of parmDesc to parmPath
+		for (int d=0; d<(parmDesc_depth-1); d++) {
+			strcat(parmPath_Full, "."); strcat(parmPath_Full, parmDesc_Step[d]);
+		}
+		//-- parmSection is case-sensitive. parmDesc is not
+		strcpy_s(pDesc, parmDesc_Step[parmDesc_depth-1]); Trim(pDesc);	UpperCase(pDesc);
+
 
 		//-- 0. Split parmSection
 		parmPath_depth=cslToArray(parmPath_Full, '.', parmPath_Step);
@@ -63,12 +76,15 @@ typedef struct sParamMgr {
 				if (strcmp(p, ps)==0) break;
 			}
 		}
+
 		//-- 1. sequentially read all parameters until the end of the Section; return when found
 		while (fscanf(ParamFile->handle, "%s = %[^\n]", pdesc, pval)!=EOF) {
 			Trim(pdesc); UpperCase(pdesc);
 			if (strcmp(pdesc, pDesc)==0) {
 				//--- here we have the sought parameter value in pval
 				getxx_(pval, opVal, isenum, oListLen);
+				//-- restore before exiting
+				strcpy_s(parmPath_Full, XML_MAX_PATH_LEN, parmPath_Full_Bkp);
 				return;
 			}
 		}

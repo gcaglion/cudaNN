@@ -33,7 +33,7 @@ EXPORT void Trim(char* str) {
 	ret[r-l] = '\0';
 	strcpy(str, ret);
 }
-EXPORT int cslToArray(char* csl, char Separator, char** StrList) {
+EXPORT int cslToArray(const char* csl, char Separator, char** StrList) {
 	//-- 1. Put a <separator>-separated list of string values into an array of strings, and returns list length
 	int i = 0;
 	int prevSep = 0;
@@ -315,7 +315,7 @@ sFileData::sFileData(tFileInfo* srcFile_, int fieldSep_, bool calcBW_, int BWfea
 	//--
 	srcFile=srcFile_; fieldSep=fieldSep_; 
 	//-- need to set featuresCnt, but we need to red file to do that!!!
-	featuresCnt=8;
+	featuresCnt=MAX_DATA_FEATURES;
 }
 //=== sMT4Data
 sMT4Data::sMT4Data(int accountId_) {	//--parent DataSource properties
@@ -337,6 +337,8 @@ sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) 
 	pArrDesc=(char**)malloc(ARRAY_PARAMETER_MAX_ELEMS*sizeof(char*)); for (int i=0; i<ARRAY_PARAMETER_MAX_ELEMS; i++) pArrDesc[i]=(char*)malloc(MAX_PARAMDESC_LEN);
 	parmPath_Full=(char*)malloc(XML_MAX_PATH_LEN);
 	parmPath_Step=(char**)malloc(XML_MAX_PATH_DEPTH*sizeof(char*)); for (int i=0; i<XML_MAX_PATH_DEPTH; i++) parmPath_Step[i]=(char*)malloc(XML_MAX_SECTION_DESC_LEN);
+	parmDesc_Full=(char*)malloc(XML_MAX_PATH_LEN);
+	parmDesc_Step=(char**)malloc(XML_MAX_PATH_DEPTH*sizeof(char*)); for (int i=0; i<XML_MAX_PATH_DEPTH; i++) parmDesc_Step[i]=(char*)malloc(XML_MAX_SECTION_DESC_LEN);
 
 	bool altIniFile = false;
 	CLparamCount = argc;
@@ -362,9 +364,14 @@ sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDbg* dbg_) 
 sParamMgr::~sParamMgr() {
 	for (int i=0; i<ARRAY_PARAMETER_MAX_ELEMS; i++) free(pArrDesc[i]);
 	free(pArrDesc);
-	for (int i=0; i<XML_MAX_PATH_DEPTH; i++) free(parmPath_Step[i]);
+	for (int i=0; i<XML_MAX_PATH_DEPTH; i++) {
+		free(parmPath_Step[i]);
+		free(parmDesc_Step[i]);
+	}
 	free(parmPath_Step);
 	free(parmPath_Full);
+	free(parmDesc_Step);
+	free(parmDesc_Full);
 	delete dbg;
 }
 
@@ -617,6 +624,16 @@ void sParamMgr::enumDecode(char* pName, char* pVal, int* opvalIdx) {
 		if (strcmp(pVal, "TSF_TURNINGPOINTS")==0) decodedVal=TSF_TURNINGPOINTS; 
 		if (strcmp(pVal, "TSF_SHE")==0) decodedVal=TSF_SHE; 
 		if (strcmp(pVal, "TSF_HISTVOL")==0) decodedVal=TSF_HISTVOL; 
+	} else if (strcmp(pName, "DATASOURCETYPE")==0) {
+		if (strcmp(pVal, "SOURCE_DATA_FROM_FXDB")==0) decodedVal=SOURCE_DATA_FROM_FXDB;
+		if (strcmp(pVal, "SOURCE_DATA_FROM_FILE")==0) decodedVal=SOURCE_DATA_FROM_FILE;
+		if (strcmp(pVal, "SOURCE_DATA_FROM_MT4")==0) decodedVal=SOURCE_DATA_FROM_MT4;
+	} else if (strcmp(pName, "SELECTEDFEATURES")==0) {
+		if (strcmp(pVal, "OPEN")==0) decodedVal=OPEN;
+		if (strcmp(pVal, "HIGH")==0) decodedVal=HIGH;
+		if (strcmp(pVal, "LOW")==0) decodedVal=LOW;
+		if (strcmp(pVal, "CLOSE")==0) decodedVal=CLOSE;
+		if (strcmp(pVal, "VOLUME")==0) decodedVal=VOLUME;
 	} else {
 
 	}

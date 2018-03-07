@@ -14,7 +14,7 @@
 			BWCalc				= true
 			StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
 			<DataSource>
-				type	= SOURCE_DATA_FROM_FXDB
+				DataSourceType	= SOURCE_DATA_FROM_FXDB
 				<FXData>
 					<DBConnection>
 						DBUser			= History
