@@ -1,0 +1,4 @@
+#pragma once
+#define DBUSER_MAXLEN 30
+#define DBPASSWORD_MAXLEN 30
+#define DBCONNSTRING_MAXLEN 30

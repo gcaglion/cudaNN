@@ -3,11 +3,7 @@
 #include "../CommonEnv.h"
 #include "DataSource.h"
 #include "FileInfo.h"
-
-//-- field separators
-#define FILEDATA_SEP_COMMA 0
-#define FILEDATA_SEP_TAB 1
-#define FILEDATA_SEP_SPACE 2
+#include "FileData_enums.h"
 
 typedef struct sFileData : public sDataSource {
 	tFileInfo* srcFile;

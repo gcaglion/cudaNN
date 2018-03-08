@@ -1,10 +1,7 @@
 #pragma once
 #include "../CommonEnv.h"
 #include <stdio.h>
-
-#define FILE_MODE_READ   0
-#define FILE_MODE_WRITE  1
-#define FILE_MODE_APPEND 2
+#include "FileInfo_enums.h"
 
 typedef struct sFileInfo {
 	char Path[MAX_PATH];

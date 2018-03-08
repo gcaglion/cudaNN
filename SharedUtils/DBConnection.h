@@ -3,10 +3,7 @@
 #include "../CommonEnv.h"
 #include "DebugInfo.h"
 #include "ParamMgr.h"
-
-#define DBUSER_MAXLEN 30
-#define DBPASSWORD_MAXLEN 30
-#define DBCONNSTRING_MAXLEN 30
+#include "DBConnection_enums.h"
 
 typedef struct sDBConnection{
 	char DBUser[DBUSER_MAXLEN];

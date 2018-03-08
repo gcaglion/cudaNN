@@ -4,35 +4,11 @@
 #include "../MyEngines/MyCores.h"
 #include "../Logger/Logger.h"
 
-int decode(char* enumdesc) {
-	if (strcmp(pVal, "TSF_MEAN")==0) decodedVal=TSF_MEAN;
-	if (strcmp(pVal, "TSF_MAD")==0) decodedVal=TSF_MAD;
-	if (strcmp(pVal, "TSF_VARIANCE")==0) decodedVal=TSF_VARIANCE;
-	if (strcmp(pVal, "TSF_SKEWNESS")==0) decodedVal=TSF_SKEWNESS;
-	if (strcmp(pVal, "TSF_KURTOSIS")==0) decodedVal=TSF_KURTOSIS;
-	if (strcmp(pVal, "TSF_TURNINGPOINTS")==0) decodedVal=TSF_TURNINGPOINTS;
-	if (strcmp(pVal, "TSF_SHE")==0) decodedVal=TSF_SHE;
-	if (strcmp(pVal, "TSF_HISTVOL")==0) decodedVal=TSF_HISTVOL;
-
-}
-void enumcli() {
-	enum eTSF{MEAN, MAD, VARIANCE, SKEWNESS, KURTOSIS, TURNINGPOINTS, SHE, HISTVOL};
-
-
-	int code;
-	char* desc="HISTVOL";		printf("desc=%s -> code=%d \n", desc, decode(desc));
-	char* desc="KURTOSIS";		printf("desc=%s -> code=%d \n", desc, decode(desc));
-	char* desc="VARIANCE";		printf("desc=%s -> code=%d \n", desc, decode(desc));
-	char* desc="MAD";			printf("desc=%s -> code=%d \n", desc, decode(desc));
-	char* desc="TURNINGPOINTS";	printf("desc=%s -> code=%d \n", desc, decode(desc));
-	char* desc="MEAN";			printf("desc=%s -> code=%d \n", desc, decode(desc));
-}
-
 int main(int argc, char* argv[]) {
 
-	enumcli();
-	system("pause");
-	return -1;
+	//enumcli();
+	//system("pause");
+	//return -1;
 
 	//-- persistor(s) For now, just one for all tables
 	int persistorDest;
@@ -51,7 +27,7 @@ int main(int argc, char* argv[]) {
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
+		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\giacomo.caglioni\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
 
 		//-- create Data Model from parms
 		tDataModel* dataModel; safeCallEE(dataModel=new tDataModel(parms));

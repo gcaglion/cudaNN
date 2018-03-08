@@ -161,6 +161,7 @@
     <ClCompile Include="DataSource.cpp" />
     <ClCompile Include="DBConnection.cpp" />
     <ClCompile Include="DebugInfo.cpp" />
+    <ClCompile Include="Enums.cpp" />
     <ClCompile Include="FileData.cpp" />
     <ClCompile Include="FileInfo.cpp" />
     <ClCompile Include="FXData.cpp" />
@@ -170,16 +171,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataModel.h" />
+    <ClInclude Include="DataSource_enums.h" />
+    <ClInclude Include="DBConnection_enums.h" />
+    <ClInclude Include="DebugInfo_enums.h" />
+    <ClInclude Include="Enums.h" />
     <ClInclude Include="FileData.h" />
     <ClInclude Include="DataSource.h" />
     <ClInclude Include="DBConnection.h" />
     <ClInclude Include="DebugInfo.h" />
+    <ClInclude Include="FileData_enums.h" />
     <ClInclude Include="FileInfo.h" />
+    <ClInclude Include="FileInfo_enums.h" />
     <ClInclude Include="FXData.h" />
+    <ClInclude Include="FXData_enums.h" />
     <ClInclude Include="Generic.h" />
     <ClInclude Include="MT4data.h" />
     <ClInclude Include="ParamMgr.h" />
-    <ClInclude Include="SharedUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

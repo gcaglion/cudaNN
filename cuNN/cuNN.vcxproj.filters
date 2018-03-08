@@ -23,7 +23,10 @@
     <ClInclude Include="cuNN.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="NNparms.h">
+    <ClInclude Include="NN_parms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NN_enums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,10 +2,7 @@
 #include "../CommonEnv.h"
 #include "DebugInfo.h"
 #include "Generic.h"
-
-//-- enumerators for ALL classes
-#include "../TimeSerie/TimeSerie_enums.h"
-//...
+#include "Enums.h"
 
 #define MAX_PARAMS_CNT 100
 #define MAX_PARAMDESC_LEN 100	
@@ -111,8 +108,6 @@ typedef struct sParamMgr {
 	EXPORT void getxx_(char* pvalS, numtype** oparamVal, bool isenum=false, int* oListLen=nullptr);
 	EXPORT void getxx_(char* pvalS, char** oparamVal, bool isenum=false, int* oListLen=nullptr);
 
-	//-- enum(s) decoder
-	void enumDecode(char* pName, char* pVal, int* opvalIdx);
 #endif
 
 } tParamMgr;

@@ -39,7 +39,7 @@ sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_,
 }
 sTimeSerie::sTimeSerie(tParamMgr* parms, int set_, tDbg* dbg_){
 	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
-	set=set;
+	set=set_;
 	
 	//-- 1. set xml section according to set (Train/Test/Validation)
 	switch (set) {

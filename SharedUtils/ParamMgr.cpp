@@ -64,46 +64,11 @@ void sParamMgr::sectionSetParent() {
 	//-- 3. remove last "."
 	parmPath_Full[strlen(parmPath_Full)-1]='\0';
 }
-void sParamMgr::enumDecode(char* pName, char* pVal, int* opvalIdx) {
-	int decodedVal=-1;
-	/*	if (strcmp(pName, "DATATRANSFORMATION")==0) {
-	if (strcmp(pVal, "DT_NONE")==0) decodedVal=DT_NONE;
-	if (strcmp(pVal, "DT_DELTA")==0) decodedVal=DT_DELTA;
-	if (strcmp(pVal, "DT_LOG")==0) decodedVal=DT_LOG;
-	if (strcmp(pVal, "DT_DELTALOG")==0) decodedVal=DT_DELTALOG;
-	} else if (strcmp(pName, "STATISTICALFEATURES")==0) {
-	if (strcmp(pVal, "TSF_MEAN")==0) decodedVal=TSF_MEAN;
-	if (strcmp(pVal, "TSF_MAD")==0) decodedVal=TSF_MAD;
-	if (strcmp(pVal, "TSF_VARIANCE")==0) decodedVal=TSF_VARIANCE;
-	if (strcmp(pVal, "TSF_SKEWNESS")==0) decodedVal=TSF_SKEWNESS;
-	if (strcmp(pVal, "TSF_KURTOSIS")==0) decodedVal=TSF_KURTOSIS;
-	if (strcmp(pVal, "TSF_TURNINGPOINTS")==0) decodedVal=TSF_TURNINGPOINTS;
-	if (strcmp(pVal, "TSF_SHE")==0) decodedVal=TSF_SHE;
-	if (strcmp(pVal, "TSF_HISTVOL")==0) decodedVal=TSF_HISTVOL;
-	} else if (strcmp(pName, "DATASOURCETYPE")==0) {
-	if (strcmp(pVal, "SOURCE_DATA_FROM_FXDB")==0) decodedVal=SOURCE_DATA_FROM_FXDB;
-	if (strcmp(pVal, "SOURCE_DATA_FROM_FILE")==0) decodedVal=SOURCE_DATA_FROM_FILE;
-	if (strcmp(pVal, "SOURCE_DATA_FROM_MT4")==0) decodedVal=SOURCE_DATA_FROM_MT4;
-	} else if (strcmp(pName, "SELECTEDFEATURES")==0) {
-	if (strcmp(pVal, "OPEN")==0) decodedVal=OPEN;
-	if (strcmp(pVal, "HIGH")==0) decodedVal=HIGH;
-	if (strcmp(pVal, "LOW")==0) decodedVal=LOW;
-	if (strcmp(pVal, "CLOSE")==0) decodedVal=CLOSE;
-	if (strcmp(pVal, "VOLUME")==0) decodedVal=VOLUME;
-	} else {
 
-	}
-	*/
-	if (decodedVal==-1) {
-		throwE("enumDecode() could not decode %s = %s", 2, pName, pVal);
-	} else {
-		(*opvalIdx)=decodedVal;
-	}
-}
 //-- specific, single value: int(with or without enums), numtype, char*
 void sParamMgr::getxx_(char* pvalS, int* oparamVal, bool isenum, int* oListLen) {
 	if (isenum) {
-		enumDecode(pDesc, pvalS, oparamVal);
+		decode(pDesc, pvalS, oparamVal);
 	} else {
 		(*oparamVal)=atoi(pvalS);
 	}
