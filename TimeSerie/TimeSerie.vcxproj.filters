@@ -23,5 +23,8 @@
     <ClInclude Include="TimeSerie.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TimeSerie_enums.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

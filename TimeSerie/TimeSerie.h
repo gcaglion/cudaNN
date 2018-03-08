@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../SharedUtils/SharedUtils.h"
+#include "../SharedUtils/FXData.h"
+#include "../SharedUtils/FileData.h"
+#include "../SharedUtils/MT4Data.h"
 
 #ifdef USE_ORCL
 #include "../OraUtils/OraUtils.h"
@@ -11,38 +13,24 @@
 #include "../MyCU/MyCU.h"
 #endif
 
-//-- Data Features limit
-#define MAX_DATA_FEATURES	128
-
-//-- Data Tranformations
-#define DT_NONE		 0
-#define DT_DELTA	 1
-#define DT_LOG		 2
-#define DT_DELTALOG	 3
-
-//-- Statistical Features
-#define TSF_MEAN 0
-#define TSF_MAD 1
-#define TSF_VARIANCE 2
-#define TSF_SKEWNESS 3
-#define TSF_KURTOSIS 4
-#define TSF_TURNINGPOINTS 5
-#define TSF_SHE 6
-#define TSF_HISTVOL 7
-
+#include "TimeSerie_enums.h"
 typedef struct sTimeSerie {
 
 	tDbg* dbg;
 
+	//-- data set
+	int set;
+	//-- data source
 	int sourceType;
-	tFXData* FXData;
-	tFileData* FileData;
-	tMT4Data* MT4Data;
+	tFXData* fxData;
+	tFileData* fileData;
+	tMT4Data* mt4Data;
 
 	int steps;
 	int featuresCnt;
 	int len;
-	int dt;						// data transformation
+	int dt;	// data transformation
+
 	// data scaling: boundaries depend on core the samples are fed to, M/P are different for each feature
 	numtype scaleMin, scaleMax;
 	numtype *scaleM, *scaleP;
@@ -63,6 +51,7 @@ typedef struct sTimeSerie {
 	EXPORT sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_=nullptr);
 	EXPORT sTimeSerie(tFileData* dataSource_, int featuresCnt_, int steps_, char* date0_, int dt_, tDbg* dbg_=nullptr);
 	EXPORT sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_=nullptr);
+	EXPORT sTimeSerie(tParamMgr* parms, int set_, tDbg* dbg_);
 	EXPORT ~sTimeSerie();
 	
 	EXPORT void load(tFXData* tsFXData, char* pDate0);
@@ -112,6 +101,7 @@ typedef struct sDataSet {
 
 	//-- constructor / destructor
 	EXPORT sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_=nullptr);
+	EXPORT sDataSet(tParamMgr* parms, sTimeSerie* sourceTS_, tDbg* dbg_);
 	EXPORT ~sDataSet();
 
 	bool isSelected(int ts_f);

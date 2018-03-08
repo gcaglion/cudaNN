@@ -2,6 +2,7 @@
 #pragma once
 #include "../CommonEnv.h"
 #include "DebugInfo.h"
+#include "ParamMgr.h"
 
 #define DBUSER_MAXLEN 30
 #define DBPASSWORD_MAXLEN 30
@@ -15,7 +16,9 @@ typedef struct sDBConnection{
 	tDbg* dbg;
 #ifdef __cplusplus
 	EXPORT sDBConnection(char* username, char* password, char* connstring, tDbg* dbg_=nullptr);
+	EXPORT sDBConnection(tParamMgr* iniParms, tDbg* dbg_=nullptr);
 	EXPORT sDBConnection();
 	EXPORT ~sDBConnection();
 #endif
+
 } tDBConnection;

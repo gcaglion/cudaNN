@@ -157,19 +157,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="SharedUtils.cpp" />
+    <ClCompile Include="DataModel.cpp" />
+    <ClCompile Include="DataSource.cpp" />
+    <ClCompile Include="DBConnection.cpp" />
+    <ClCompile Include="DebugInfo.cpp" />
+    <ClCompile Include="FileData.cpp" />
+    <ClCompile Include="FileInfo.cpp" />
+    <ClCompile Include="FXData.cpp" />
+    <ClCompile Include="Generic.cpp" />
+    <ClCompile Include="MT4Data.cpp" />
+    <ClCompile Include="ParamMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DataModel.h" />
     <ClInclude Include="FileData.h" />
     <ClInclude Include="DataSource.h" />
     <ClInclude Include="DBConnection.h" />
     <ClInclude Include="DebugInfo.h" />
     <ClInclude Include="FileInfo.h" />
     <ClInclude Include="FXData.h" />
+    <ClInclude Include="Generic.h" />
     <ClInclude Include="MT4data.h" />
     <ClInclude Include="ParamMgr.h" />
     <ClInclude Include="SharedUtils.h" />
-    <ClInclude Include="UberSet.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

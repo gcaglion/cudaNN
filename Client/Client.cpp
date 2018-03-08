@@ -1,12 +1,38 @@
-#include "..\CommonEnv.h"
-#include "../SharedUtils/SharedUtils.h"
+#include "../CommonEnv.h"
+#include "../SharedUtils/DataModel.h"
 #include "../TimeSerie/TimeSerie.h"
-#include "../SharedUtils/UberSet.h"
-#include "..\cuNN\cuNN.h"
+#include "../MyEngines/MyCores.h"
 #include "../Logger/Logger.h"
-#include "../MyAlgebra/MyAlgebra.h"
+
+int decode(char* enumdesc) {
+	if (strcmp(pVal, "TSF_MEAN")==0) decodedVal=TSF_MEAN;
+	if (strcmp(pVal, "TSF_MAD")==0) decodedVal=TSF_MAD;
+	if (strcmp(pVal, "TSF_VARIANCE")==0) decodedVal=TSF_VARIANCE;
+	if (strcmp(pVal, "TSF_SKEWNESS")==0) decodedVal=TSF_SKEWNESS;
+	if (strcmp(pVal, "TSF_KURTOSIS")==0) decodedVal=TSF_KURTOSIS;
+	if (strcmp(pVal, "TSF_TURNINGPOINTS")==0) decodedVal=TSF_TURNINGPOINTS;
+	if (strcmp(pVal, "TSF_SHE")==0) decodedVal=TSF_SHE;
+	if (strcmp(pVal, "TSF_HISTVOL")==0) decodedVal=TSF_HISTVOL;
+
+}
+void enumcli() {
+	enum eTSF{MEAN, MAD, VARIANCE, SKEWNESS, KURTOSIS, TURNINGPOINTS, SHE, HISTVOL};
+
+
+	int code;
+	char* desc="HISTVOL";		printf("desc=%s -> code=%d \n", desc, decode(desc));
+	char* desc="KURTOSIS";		printf("desc=%s -> code=%d \n", desc, decode(desc));
+	char* desc="VARIANCE";		printf("desc=%s -> code=%d \n", desc, decode(desc));
+	char* desc="MAD";			printf("desc=%s -> code=%d \n", desc, decode(desc));
+	char* desc="TURNINGPOINTS";	printf("desc=%s -> code=%d \n", desc, decode(desc));
+	char* desc="MEAN";			printf("desc=%s -> code=%d \n", desc, decode(desc));
+}
 
 int main(int argc, char* argv[]) {
+
+	enumcli();
+	system("pause");
+	return -1;
 
 	//-- persistor(s) For now, just one for all tables
 	int persistorDest;
@@ -17,10 +43,9 @@ int main(int argc, char* argv[]) {
 	DWORD mainStart=timeGetTime();
 
 	//-- main debugger declaration & creation
-	createMainDebugger(DBG_LEVEL_ERR, DBG_DEST_BOTH);
+	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH);
 	//-- set main debugger properties
 	dbg->timing=false;
-
 
 	//-- everything else must be enclosed in try/catch block
 	try {
@@ -28,19 +53,20 @@ int main(int argc, char* argv[]) {
 		//-- create client parms, include command-line parms, and read parameters file
 		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
 
-		int tsfcnt; int* tsf=(int*)malloc(12*sizeof(int));
-		parms->getx(&tsf, "Data.Train", "TimeSerie.StatisticalFeatures", true, &tsfcnt);
+		//-- create Data Model from parms
+		tDataModel* dataModel; safeCallEE(dataModel=new tDataModel(parms));
 
-		//-- Uber-parameters for model (set-invariant) parms
-		tUberSetParms* modelParms=new tUberSetParms(parms, US_MODEL, dbg);
-		//-- Uber-parameters for train, test, validation sets
-		tUberSetParms* trainParms=new tUberSetParms(parms, US_TRAIN, dbg);
-		tUberSetParms* testParms =new tUberSetParms(parms, US_TEST , dbg);
-		tUberSetParms* validParms=new tUberSetParms(parms, US_VALID, dbg);
-		//-- check if model feature selection is coherent among train and test. TO DO!
+		//-- create TimeSeries and DataSets from parms (Train, Test, Validation)
+		tTimeSerie* trainTS; tDataSet* trainDS;
+		if (dataModel->doTrain) {
+			safeCallEE(trainTS=new tTimeSerie(parms, TRAIN_SET, dbg));
+			safeCallEE(trainDS=new tDataSet  (parms, trainTS, dbg));
+		}
+		tTimeSerie* testTS =new tTimeSerie(parms, TEST_SET, dbg);
+		tTimeSerie* validTS=new tTimeSerie(parms, VALID_SET, dbg);
 
 		//-- create persistor, with its own DBConnection, to save results data.
-		parms->setSection("Persistor");
+		parms->sectionSet("Persistor");
 		parms->getx(&persistorDest, "Destination", true);
 		if (persistorDest==ORCL) {
 			parms->getx(persistorDBUser, "DBUser");
@@ -60,14 +86,14 @@ int main(int argc, char* argv[]) {
 
 		//-- determine Engine Architecture (number of cores, type and position for every core)
 		tCore* core[ENGINE_MAX_CORES];
-		parms->setSection("Engine");
+		parms->sectionSet("Engine");
 		//-- first, read general, core-independent engine parms
 		char CoreSectionDesc[10];
 		int coreType;
 		int parentsCnt; int* parentId=(int*)malloc(ENGINE_MAX_CORES*sizeof(int));
 		int connectorsCnt; int* connectorType=(int*)malloc(ENGINE_MAX_CORES*sizeof(int));
 		for (int c=0; c<ENGINE_MAX_CORES; c++) {
-			sprintf_s(CoreSectionDesc, 10, "Engine.Core.%d", c);	parms->setSection(CoreSectionDesc);
+			sprintf_s(CoreSectionDesc, 10, "Engine.Core.%d", c);	parms->sectionSet(CoreSectionDesc);
 			try { parms->getx(&coreType, "Type", true); } catch (std::exception e) { break; }
 			//-- if successful, keep reading core properties required for creation
 			parentsCnt=0; connectorsCnt=0;
@@ -79,6 +105,7 @@ int main(int argc, char* argv[]) {
 			safeCallEE(core[c]=new tCore(coreType, parentsCnt, parentId, connectorType));
 
 		}
+		/*
 
 		//-- initialize each core
 		
@@ -89,7 +116,7 @@ int main(int argc, char* argv[]) {
 		tDbg* NNdbg; safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 
 		tNN* myNN;   safeCallEE(myNN=new tNN(modelParms->SampleLen, modelParms->PredictionLen, modelParms->FeaturesCnt, NNcore0Parms->NN));
-/*
+
 		//-- 1. For each TimeSerie(Training, Validation, Test), do the following:
 		//-- 1.1. define its DataSource
 		//-- 1.2. call specific constructor to "Prepare" it : Create, LoadData, Transform, Scale

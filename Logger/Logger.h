@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../SharedUtils/SharedUtils.h"
+#include "../SharedUtils/DebugInfo.h"
+#include "../SharedUtils/DBConnection.h"
+#include "../SharedUtils/FileData.h"
 #ifdef USE_ORCL
 #include "../OraUtils/OraUtils.h"
 #endif

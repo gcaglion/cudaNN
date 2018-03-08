@@ -3,10 +3,13 @@
 		SampleLen		= 100
 		PredictionLen	= 5
 		FeaturesCount	= 4
+		doTrain			= true
+		doTestOnTrain	= true
+		doValid			= false
+		doTest			= true
 	</Model>
+	
 	<Train>
-		doIt	= true
-		doCheck	= true
 		<TimeSerie>
 			Date0				= 201712300000
 			HistoryLen			= 50000
@@ -28,17 +31,17 @@
 				<FileData>
 					FileFullName		= c:/temp/timeseriesdata/sunspots.txt
 					FieldSep			= FILEDATA_SEP_COMMA
-					BWFeatureColumns	= 1,2
 				</FileData>
 			</DataSource>
 		</TimeSerie>
 		<DataSet>	
 			BatchSamplesCount	= 50
 			<FXData>
-				SelectedFeatures		= OPEN, HIGH, LOW, CLOSE
+				SelectedFeatures	= OPEN, HIGH, LOW, CLOSE
 			</FXData>
 			<FileData>
-				SelectedFeatures		= 0, 1, 2, 3
+				SelectedFeatures	= 0, 1, 2, 3
+				BWFeatures			= 1,2
 			</FileData>
 		</DataSet>	
 	</Train>

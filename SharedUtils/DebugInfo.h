@@ -1,6 +1,7 @@
 #pragma once
 
 #include "..\CommonEnv.h"
+#include "Generic.h"
 #include "FileInfo.h"
 #include <stdio.h>
 #include <time.h>

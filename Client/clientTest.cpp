@@ -1,5 +1,4 @@
 #include "..\CommonEnv.h"
-#include "../SharedUtils/SharedUtils.h"
 #include "../TimeSerie/TimeSerie.h"
 #include "..\cuNN\cuNN.h"
 #include "../Logger/Logger.h"

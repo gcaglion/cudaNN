@@ -1,8 +1,7 @@
 //#include <vld.h>
 #include "TimeSerie.h"
-#include "../SharedUtils/UberSet.h"
 
-//-- constructors / destructor
+//-- sTimeSerie, constructors / destructor
 void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, tDbg* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
 	steps=steps_;
@@ -36,7 +35,41 @@ sTimeSerie::sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, 
 sTimeSerie::sTimeSerie(tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, tDbg* dbg_){
 	featuresCnt=featuresCnt_;
 }
-sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_){}
+sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_){
+}
+sTimeSerie::sTimeSerie(tParamMgr* parms, int set_, tDbg* dbg_){
+	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
+	set=set;
+	
+	//-- 1. set xml section according to set (Train/Test/Validation)
+	switch (set) {
+	case TRAIN_SET:
+		parms->sectionSet("Data.Train.TimeSerie");
+		break;
+	case TEST_SET:
+		parms->sectionSet("Data.Test.TimeSerie");
+		break;
+	case VALID_SET:
+		parms->sectionSet("Data.Validation.TimeSerie");
+		break;
+	default:
+		break;
+	}
+
+	//-- 1.1. First, create sub-object DataSource from sub-key <DataSource>
+	parms->getx(&sourceType, "DataSourceType", true);
+	if (sourceType==SOURCE_DATA_FROM_FXDB) {
+		safeCallEE(fxData=new tFXData(parms));
+	} else if (sourceType==SOURCE_DATA_FROM_FILE) {
+		safeCallEE(fileData=new tFileData(parms));
+	} else if (sourceType==SOURCE_DATA_FROM_MT4) {
+		safeCallEE(mt4Data=new tMT4Data(parms));
+	} else {
+		throwE("invalid DataSourceType in section %s", 1, parms->parmPath_Full);
+	}
+	//-- 1.2 <TimeSerie> root parms
+
+}
 sTimeSerie::~sTimeSerie() {
 	free(d);
 	free(bd);
@@ -46,117 +79,16 @@ sTimeSerie::~sTimeSerie() {
 	free(dtime); free(bdtime);
 	delete dbg;
 }
-
-//-- UberSet
-sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
-	parms=parms_; dbg=dbg_;
-
-	SelectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
-
-	//-- 0. Data model parms (set-invariant)
-	if(set==US_MODEL){
-		parms->setSection("Data.Model");
-		parms->getx(&SampleLen, "SampleLen");
-		parms->getx(&PredictionLen, "PredictionLen");
-		parms->getx(&FeaturesCnt, "FeaturesCount");
-		return;
-	}
-
-	//-- Cores parameters
-	if (set==US_CORE_NN) {
-		parms->setSection("Engine.Core");
-		parms->getx(&NN->useContext, "Topology.UseContext");
-		parms->getx(&NN->useBias, "Topology.UseBias");
-		parms->getx(&NN->levelRatio, "Topology.LevelRatio", false, &NN->levelsCnt); NN->levelsCnt+=2;
-		int ac;
-		parms->getx(&NN->ActivationFunction, "Topology.LevelActivation", true, &ac);
-		if (ac!=(NN->levelsCnt)) throwE("Levels count (%d) and LevelActivation count (%d) are incompatible.", NN->levelsCnt, ac);
-		parms->getx(&NN->MaxEpochs, "Training.MaxEpochs");
-		parms->getx(&NN->TargetMSE, "Training.TargetMSE");
-		parms->getx(&NN->NetSaveFreq, "Training.NetSaveFrequency");
-		parms->getx(&NN->StopOnDivergence, "Training.StopOnDivergence");
-		parms->getx(&NN->BP_Algo, "Training.BP_Algo");
-		parms->getx(&NN->LearningRate, "Training.BP_Std.LearningRate");
-		parms->getx(&NN->LearningMomentum, "Training.BP_Std.LearningMomentum");
-		return;
-	}
-	if (set==US_CORE_SVM) {
-		return;
-	}
-	if (set==US_CORE_GA) {
-		return;
-	}
-
-	//==========	TimeSeries-DataSets type sets
-	
-	//-- set-specific parms
-	if (set==US_TRAIN) {
-		parms->getx(&doTrainRun, "Data.Train", "doCheck");
-	}
-	if (set==US_TEST) {
-		//-- load saved Net?
-		parms->setSection("Data.Test");
-		parms->getx(&runFromSavedNet, "RunFromSavedNet");
-		if (runFromSavedNet) {
-			parms->getx(&testWpid, "RunFromSavedNet.ProcessId");
-			parms->getx(&testWtid, "RunFromSavedNet.ThreadId");
-		}
-	}
-	if (set==US_VALID) {
-		parms->setSection("Data.Validation");
-	}
-	
-	//-- common to all TimeSeries-DataSets type sets
-	if(set==US_TRAIN ||set==US_TEST || set==US_VALID){
-		parms->getx(&doIt, "doIt");
-		if (doIt) {
-			//-- 1.1. TimeSerie, common
-			parms->getx(TSdate0, "TimeSerie.Date0");
-			parms->getx(&TShistoryLen, "TimeSerie.HistoryLen");
-			parms->getx(&TS_DT, "TimeSerie.DataTransformation", enumlist);
-			parms->getx(&TS_BWcalc, "TimeSerie.BWcalc");
-			parms->getx(&TS_DS_type, "TimeSerie.DataSource.DataSourceType", enumlist);
-			//-- 1.2. TimeSerie, datasource-specific
-			if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
-				parms->getx(TS_DS_FX_DBUser, "TimeSerie.DataSource.FXData.DBUser");
-				parms->getx(TS_DS_FX_DBPassword, "TimeSerie.DataSource.FXData.DBPassword");
-				parms->getx(TS_DS_FX_DBConnString, "TimeSerie.DataSource.FXData.DBConnString");
-				parms->getx(TS_DS_FX_Symbol, "TimeSerie.DataSource.FXData.Symbol");
-				parms->getx(TS_DS_FX_TimeFrame, "TimeSerie.DataSource.FXData.TimeFrame");
-				parms->getx(&TS_DS_FX_IsFilled, "TimeSerie.DataSource.FXData.IsFilled");
-				safeCallEE(TS_DS_FX_DB=new tDBConnection(TS_DS_FX_DBUser, TS_DS_FX_DBPassword, TS_DS_FX_DBConnString));
-				safeCallEE(TS_DS_FX=new tFXData(TS_DS_FX_DB, TS_DS_FX_Symbol, TS_DS_FX_TimeFrame, TS_DS_FX_IsFilled));
-				safeCallEE(TS=new tTimeSerie(TS_DS_FX, TShistoryLen, TSdate0, TS_DT));
-			} else if (TS_DS_type==SOURCE_DATA_FROM_FILE) {
-				parms->getx(TS_DS_File_FullName, "TimeSerie.DataSource.FileData.FileFullName");
-				parms->getx(&TS_DS_File_FieldSep, "TimeSerie.DataSource.FileData.FieldSep", enumlist);
-				parms->getx(&TS_DS_File_BWcol, "TimeSerie.DataSource.FileData.BWFeatureColumns");
-				safeCallEE(TS_DS_File=new tFileData(new tFileInfo(TS_DS_File_FullName, FILE_MODE_READ), TS_DS_File_FieldSep, TS_BWcalc, TS_DS_File_BWcol[HIGH], TS_DS_File_BWcol[LOW]));
-				safeCallEE(TS=new tTimeSerie(TS_DS_File, TS_DS_File->featuresCnt, TShistoryLen, TSdate0, TS_DT));
-			}
-			//-- 1.2. DataSet
-			if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
-				parms->getx(&SelectedFeature, "DataSet.FXData.SelectedFeatures", enumlist, &SelectedFeaturesCnt);
-			} else if (TS_DS_type==SOURCE_DATA_FROM_FILE) {
-				parms->getx(&SelectedFeature, "DataSet.FileData.SelectedFeatures", false, &SelectedFeaturesCnt);
-			}
-			parms->getx(&BatchSamplesCnt, "DataSet.BatchSamplesCount");
-			safeCallEE(DataSet=new tDataSet(TS, SampleLen, PredictionLen, SelectedFeaturesCnt, SelectedFeature, BatchSamplesCnt));
-		}
-	}
-}
-sUberSetParms::~sUberSetParms() {
-	free(SelectedFeature);
-}
+//-- sTimeSerie, other methods
 bool sTimeSerie::LoadOHLCVdata(char* date0) {
 
-	if (!OraConnect(dbg, FXData->db)) return false;
-	if (!Ora_GetFlatOHLCV(dbg, FXData->db, FXData->Symbol, FXData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)) return false;
+	if (!OraConnect(dbg, fxData->db)) return false;
+	if (!Ora_GetFlatOHLCV(dbg, fxData->db, fxData->Symbol, fxData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)) return false;
 
 	return true;
 }
 void sTimeSerie::load(tFXData* tsFXData_, char* pDate0) {
-	FXData=tsFXData_;
+	fxData=tsFXData_;
 	sourceType=SOURCE_DATA_FROM_FXDB;
 	if (!LoadOHLCVdata(pDate0)) throwE("pDate0=%s", 1, pDate0);
 }
@@ -268,7 +200,6 @@ void sTimeSerie::scale(numtype scaleMin_, numtype scaleMax_) {
 
 	hasTRS=true;
 }
-
 void sTimeSerie::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
 	dt=dt_;
 	tFileInfo* ftrs=nullptr; safeCallEE(ftrs=new tFileInfo("TransformScale.out"));
@@ -324,11 +255,111 @@ void sTimeSerie::TrS(int dt_, numtype scaleMin_, numtype scaleMax_) {
 void sTimeSerie::unTrS(numtype scaleMin_, numtype scaleMax_) {
 }
 
-int getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
-	for (int y=0; y<Ay; y++) oCol[y]=A[y*Ax+col];
-	return 0;
-}
+//-- UberSet
+/*
+sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
+	parms=parms_; dbg=dbg_;
 
+	SelectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
+
+	//-- 0. Data model parms (set-invariant)
+	if(set==US_MODEL){
+		parms->sectionSet("Data.Model");
+		parms->getx(&SampleLen, "SampleLen");
+		parms->getx(&PredictionLen, "PredictionLen");
+		parms->getx(&FeaturesCnt, "FeaturesCount");
+		return;
+	}
+
+	//-- Cores parameters
+	if (set==US_CORE_NN) {
+		parms->sectionSet("Engine.Core");
+		parms->getx(&NN->useContext, "Topology.UseContext");
+		parms->getx(&NN->useBias, "Topology.UseBias");
+		parms->getx(&NN->levelRatio, "Topology.LevelRatio", false, &NN->levelsCnt); NN->levelsCnt+=2;
+		int ac;
+		parms->getx(&NN->ActivationFunction, "Topology.LevelActivation", true, &ac);
+		if (ac!=(NN->levelsCnt)) throwE("Levels count (%d) and LevelActivation count (%d) are incompatible.", NN->levelsCnt, ac);
+		parms->getx(&NN->MaxEpochs, "Training.MaxEpochs");
+		parms->getx(&NN->TargetMSE, "Training.TargetMSE");
+		parms->getx(&NN->NetSaveFreq, "Training.NetSaveFrequency");
+		parms->getx(&NN->StopOnDivergence, "Training.StopOnDivergence");
+		parms->getx(&NN->BP_Algo, "Training.BP_Algo");
+		parms->getx(&NN->LearningRate, "Training.BP_Std.LearningRate");
+		parms->getx(&NN->LearningMomentum, "Training.BP_Std.LearningMomentum");
+		return;
+	}
+	if (set==US_CORE_SVM) {
+		return;
+	}
+	if (set==US_CORE_GA) {
+		return;
+	}
+
+	//==========	TimeSeries-DataSets type sets
+	
+	//-- set-specific parms
+	if (set==US_TRAIN) {
+		parms->getx(&doTrainRun, "Data.Train", "doCheck");
+	}
+	if (set==US_TEST) {
+		//-- load saved Net?
+		parms->sectionSet("Data.Test");
+		parms->getx(&runFromSavedNet, "RunFromSavedNet");
+		if (runFromSavedNet) {
+			parms->getx(&testWpid, "RunFromSavedNet.ProcessId");
+			parms->getx(&testWtid, "RunFromSavedNet.ThreadId");
+		}
+	}
+	if (set==US_VALID) {
+		parms->sectionSet("Data.Validation");
+	}
+	
+	//-- common to all TimeSeries-DataSets type sets
+	if(set==US_TRAIN ||set==US_TEST || set==US_VALID){
+		parms->getx(&doIt, "doIt");
+		if (doIt) {
+			//-- 1.1. TimeSerie, common
+			parms->getx(TSdate0, "TimeSerie.Date0");
+			parms->getx(&TShistoryLen, "TimeSerie.HistoryLen");
+			parms->getx(&TS_DT, "TimeSerie.DataTransformation", enumlist);
+			parms->getx(&TS_BWcalc, "TimeSerie.BWcalc");
+			parms->getx(&TS_DS_type, "TimeSerie.DataSource.DataSourceType", enumlist);
+			//-- 1.2. TimeSerie, datasource-specific
+			if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
+				parms->getx(TS_DS_FX_DBUser, "TimeSerie.DataSource.FXData.DBUser");
+				parms->getx(TS_DS_FX_DBPassword, "TimeSerie.DataSource.FXData.DBPassword");
+				parms->getx(TS_DS_FX_DBConnString, "TimeSerie.DataSource.FXData.DBConnString");
+				parms->getx(TS_DS_FX_Symbol, "TimeSerie.DataSource.FXData.Symbol");
+				parms->getx(TS_DS_FX_TimeFrame, "TimeSerie.DataSource.FXData.TimeFrame");
+				parms->getx(&TS_DS_FX_IsFilled, "TimeSerie.DataSource.FXData.IsFilled");
+				safeCallEE(TS_DS_FX_DB=new tDBConnection(TS_DS_FX_DBUser, TS_DS_FX_DBPassword, TS_DS_FX_DBConnString));
+				safeCallEE(TS_DS_FX=new tFXData(TS_DS_FX_DB, TS_DS_FX_Symbol, TS_DS_FX_TimeFrame, TS_DS_FX_IsFilled));
+				safeCallEE(TS=new tTimeSerie(TS_DS_FX, TShistoryLen, TSdate0, TS_DT));
+			} else if (TS_DS_type==SOURCE_DATA_FROM_FILE) {
+				parms->getx(TS_DS_File_FullName, "TimeSerie.DataSource.FileData.FileFullName");
+				parms->getx(&TS_DS_File_FieldSep, "TimeSerie.DataSource.FileData.FieldSep", enumlist);
+				parms->getx(&TS_DS_File_BWcol, "TimeSerie.DataSource.FileData.BWFeatureColumns");
+				safeCallEE(TS_DS_File=new tFileData(new tFileInfo(TS_DS_File_FullName, FILE_MODE_READ), TS_DS_File_FieldSep, TS_BWcalc, TS_DS_File_BWcol[HIGH], TS_DS_File_BWcol[LOW]));
+				safeCallEE(TS=new tTimeSerie(TS_DS_File, TS_DS_File->featuresCnt, TShistoryLen, TSdate0, TS_DT));
+			}
+			//-- 1.2. DataSet
+			if (TS_DS_type==SOURCE_DATA_FROM_FXDB) {
+				parms->getx(&SelectedFeature, "DataSet.FXData.SelectedFeatures", enumlist, &SelectedFeaturesCnt);
+			} else if (TS_DS_type==SOURCE_DATA_FROM_FILE) {
+				parms->getx(&SelectedFeature, "DataSet.FileData.SelectedFeatures", false, &SelectedFeaturesCnt);
+			}
+			parms->getx(&BatchSamplesCnt, "DataSet.BatchSamplesCount");
+			safeCallEE(DataSet=new tDataSet(TS, SampleLen, PredictionLen, SelectedFeaturesCnt, SelectedFeature, BatchSamplesCnt));
+		}
+	}
+}
+sUberSetParms::~sUberSetParms() {
+	free(SelectedFeature);
+}
+*/
+
+//-- sDataSet, constructors  /destructor
 sDataSet::sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"))) : dbg_;
 	sourceTS=sourceTS_;
@@ -365,6 +396,40 @@ sDataSet::sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int se
 		BFS2SFB(b, targetLen, targetBFS, targetSFB);
 	}
 }
+sDataSet::sDataSet(tParamMgr* parms, sTimeSerie* sourceTS_, tDbg* dbg_) {
+	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSets.err"))) : dbg_;
+	sourceTS=sourceTS_;
+
+	switch (sourceTS->set) {
+	case TRAIN_SET:
+		parms->sectionSet("Data.Train.DataSet");
+		break;
+	case TEST_SET:
+		parms->sectionSet("Data.Test.DataSet");
+		break;
+	case VALID_SET:
+		parms->sectionSet("Data.Validation.DataSet");
+		break;
+	default:
+		break;
+	}
+	parms->getx(&batchSamplesCnt, "BatchSamplesCount");
+	switch (sourceTS->sourceType) {
+	case SOURCE_DATA_FROM_FILE:
+		parms->getx(&selectedFeature, "SelectedFeatures", false, &selectedFeaturesCnt);
+		break;
+	case SOURCE_DATA_FROM_FXDB:
+		parms->getx(&selectedFeature, "SelectedFeatures", true, &selectedFeaturesCnt);
+		break;
+	case SOURCE_DATA_FROM_MT4:
+		//-- ...... ?? boh ??? ...
+		break;
+	default:
+		break;
+	}
+
+}
+
 sDataSet::~sDataSet() {
 	free(sample);
 	if (target!=nullptr) free(target);
@@ -377,7 +442,7 @@ sDataSet::~sDataSet() {
 
 	delete dbg;
 }
-
+//-- sDataSet, other methods
 void sDataSet::dump(char* filename) {
 	int s, i, b, f;
 	char LogFileName[MAX_PATH];
@@ -438,7 +503,6 @@ void sDataSet::dump(char* filename) {
 	}
 	fclose(LogFile);
 }
-
 bool sDataSet::isSelected(int ts_f) {
 	for (int ds_f=0; ds_f<selectedFeaturesCnt; ds_f++) {
 		if (selectedFeature[ds_f]==ts_f) return true;
@@ -477,7 +541,6 @@ void sDataSet::buildFromTS(tTimeSerie* ts) {
 	}
 
 }
-
 void sDataSet::SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS) {
 	int S=batchSamplesCnt;
 	int F=selectedFeaturesCnt;
@@ -513,7 +576,6 @@ void sDataSet::BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF
 	}
 
 }
-
 void sDataSet::BFS2SFBfull(int barCnt, numtype* fromBFS, numtype* toSFB) {
 	int S=batchSamplesCnt;
 	int F=selectedFeaturesCnt;

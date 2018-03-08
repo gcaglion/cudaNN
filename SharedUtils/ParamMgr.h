@@ -1,10 +1,11 @@
 #pragma once
 #include "../CommonEnv.h"
 #include "DebugInfo.h"
-#include "FileData.h"
-#include "../TimeSerie/TimeSerie.h"
-#include <typeinfo>
-#include "../Logger/Logger.h"
+#include "Generic.h"
+
+//-- enumerators for ALL classes
+#include "../TimeSerie/TimeSerie_enums.h"
+//...
 
 #define MAX_PARAMS_CNT 100
 #define MAX_PARAMDESC_LEN 100	
@@ -40,11 +41,15 @@ typedef struct sParamMgr {
 	char*  parmDesc_Full;
 	char** parmDesc_Step;
 
+#ifdef __cplusplus
 	//-- constructors / destructors
 	EXPORT sParamMgr(tFileInfo* ParamFile_=nullptr, int argc=0, char* argv[]=nullptr, tDbg* dbg_=nullptr); //-- directly from command-line
 	EXPORT ~sParamMgr();
 
-	EXPORT void setSection(const char* sectionLabel);
+	EXPORT void sectionSet(const char* sectionLabel);
+	EXPORT void sectionSetChild(const char* child);
+	EXPORT void sectionSetParent();
+
 	template <typename T> EXPORT void getx(T* opVal, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
 		char p[XML_MAX_SECTION_DESC_LEN];
 		char ps[XML_MAX_SECTION_DESC_LEN+2];
@@ -91,7 +96,7 @@ typedef struct sParamMgr {
 		throwE("could not find parameter %s in section [%s]", 2, parmDesc, parmPath_Full);
 	}
 	template <typename T> EXPORT void getx(T* opVal, const char* sectionDesc, const char* parmDesc, bool isenum=false, int* oListLen=nullptr) {
-		setSection(sectionDesc);
+		sectionSet(sectionDesc);
 		getx(opVal, parmDesc, isenum, oListLen);
 	}
 	
@@ -108,4 +113,6 @@ typedef struct sParamMgr {
 
 	//-- enum(s) decoder
 	void enumDecode(char* pName, char* pVal, int* opvalIdx);
+#endif
+
 } tParamMgr;
