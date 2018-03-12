@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../SharedUtils/DebugInfo.h"
+#include "../SharedUtils/Debugger.h"
 #include "../SharedUtils/DBConnection.h"
 #include "../SharedUtils/FileData.h"
 #ifdef USE_ORCL
@@ -13,7 +13,7 @@
 
 typedef struct sLogger {
 	int dest;
-	tDbg* dbg;
+	tDebugger* dbg;
 	tDBConnection* db;
 	tFileData* file;
 	bool saveNothing;
@@ -23,9 +23,12 @@ typedef struct sLogger {
 	bool saveInternals;
 	bool saveImage;
 
-	EXPORT sLogger(tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, tDbg* dbg_=nullptr);
+	EXPORT sLogger(tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, tDebugger* dbg_=nullptr);
 	EXPORT sLogger(tFileData* logFile);
-	EXPORT ~sLogger();
+	EXPORT ~sLogger() {
+		delete db;
+		delete dbg;
+	}
 
 	EXPORT void SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV);
 	EXPORT void SaveRun(int pid, int tid, int setid, int npid, int ntid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);

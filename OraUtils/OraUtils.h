@@ -12,25 +12,25 @@ typedef int bool;
 
 #include "../CommonEnv.h"
 #include "../SharedUtils/DBConnection.h"
-#include "../SharedUtils/DebugInfo.h"
+#include "../SharedUtils/Debugger.h"
 #include <math.h>
 
 
 
 //=== DB common functions
-EXPORT bool OraConnect(tDbg* DebugInfo, tDBConnection* DBConnInfo);
+EXPORT bool OraConnect(tDebugger* Debugger, tDBConnection* DBConnInfo);
 EXPORT void OraDisconnect(tDBConnection* DBConnInfo, int Commit);
 EXPORT void OraCommit(tDBConnection* DBConnInfo);
 
 //=== Retrieval functions
-EXPORT bool Ora_GetFlatOHLCV(tDbg* dbg, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar);
+EXPORT bool Ora_GetFlatOHLCV(tDebugger* dbg, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar);
 
 //=== Logging functions
-EXPORT bool Ora_LogSaveMSE(tDbg* dbg, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV);
-EXPORT bool Ora_LogSaveW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W);
-EXPORT bool Ora_LogSaveClient(tDbg* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun);
-EXPORT bool Ora_LogSaveRun(tDbg* dbg, tDBConnection* db, int pid, int tid, int setid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
-EXPORT bool Ora_LogLoadW(tDbg* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW);
+EXPORT bool Ora_LogSaveMSE(tDebugger* dbg, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV);
+EXPORT bool Ora_LogSaveW(tDebugger* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W);
+EXPORT bool Ora_LogSaveClient(tDebugger* dbg, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun);
+EXPORT bool Ora_LogSaveRun(tDebugger* dbg, tDBConnection* db, int pid, int tid, int setid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
+EXPORT bool Ora_LogLoadW(tDebugger* dbg, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW);
 
 #ifdef __cplusplus
 #undef EXPORT

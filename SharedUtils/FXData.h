@@ -1,6 +1,6 @@
 #pragma once
 #include "../CommonEnv.h"
-#include "DebugInfo.h"
+#include "Debugger.h"
 #include "DataSource.h"
 #include "DBConnection.h"
 #include "FXData_enums.h"
@@ -16,9 +16,9 @@ typedef struct sFXData
 	int IsFilled;
 	int BarDataType[FXDATA_FEATURESCNT];
 #ifdef __cplusplus
-	EXPORT sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_, tDbg* dbg_=nullptr);
-	EXPORT sFXData(tParamMgr* parms, tDbg* dbg_=nullptr);
-	EXPORT void sFXData_common(tDbg* dbg_=nullptr);
+	EXPORT sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_, tDebugger* dbg_=nullptr);
+	EXPORT sFXData(tParmsSource* parms, tDebugger* dbg_=nullptr);
+	EXPORT void sFXData_common(tDebugger* dbg_=nullptr);
 #endif
 } tFXData;
 

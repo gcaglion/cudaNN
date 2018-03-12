@@ -1,7 +1,7 @@
 #include "../CommonEnv.h"
-#include "../SharedUtils/DataModel.h"
+#include "../SharedUtils/Model.h"
 #include "../TimeSerie/TimeSerie.h"
-#include "../MyEngines/MyCores.h"
+#include "../MyEngines/Core.h"
 #include "../Logger/Logger.h"
 
 int main(int argc, char* argv[]) {
@@ -27,14 +27,17 @@ int main(int argc, char* argv[]) {
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		tParamMgr* parms; safeCallEE(parms=new tParamMgr(new tFileInfo("C:\\Users\\giacomo.caglioni\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
+		tParmsSource* XMLparms; safeCallEE(XMLparms=new tParmsSource("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
 
 		//-- create Data Model from parms
-		tDataModel* dataModel; safeCallEE(dataModel=new tDataModel(parms));
+		tModel* model; safeCallEE(model=new tModel(XMLparms));
 
+		//tParmsSource* parms; safeCallEE(parms=new tParmsSource(new tFileInfo("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", FILE_MODE_READ), argc, argv));
+
+/*
 		//-- create TimeSeries and DataSets from parms (Train, Test, Validation)
 		tTimeSerie* trainTS; tDataSet* trainDS;
-		if (dataModel->doTrain) {
+		if (model->doTrain) {
 			safeCallEE(trainTS=new tTimeSerie(parms, TRAIN_SET, dbg));
 			safeCallEE(trainDS=new tDataSet  (parms, trainTS, dbg));
 		}
@@ -73,15 +76,15 @@ int main(int argc, char* argv[]) {
 			try { parms->getx(&coreType, "Type", true); } catch (std::exception e) { break; }
 			//-- if successful, keep reading core properties required for creation
 			parentsCnt=0; connectorsCnt=0;
-			parms->getx(&parentId, "ParentId", false, &parentsCnt);
-			parms->getx(&connectorType, "Connector", false, &connectorsCnt);
+			parms->getx(&parentId, "ParentId", false, false, &parentsCnt);
+			parms->getx(&connectorType, "Connector", false, false, &connectorsCnt);
 			if (parentsCnt!=connectorsCnt) throwE("parents / connectors count mismatch (%d vs. %d) for Core.%d", 3, parentsCnt, connectorsCnt, c);
 
 			//-- finally, create new core
 			safeCallEE(core[c]=new tCore(coreType, parentsCnt, parentId, connectorType));
 
 		}
-		/*
+		
 
 		//-- initialize each core
 		
@@ -89,7 +92,7 @@ int main(int argc, char* argv[]) {
 		tUberSetParms* NNcore0Parms=new tUberSetParms(parms, US_CORE_NN, dbg);
 
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, conTXT, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
-		tDbg* NNdbg; safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
+		tDebugger* NNdbg; safeCallEE(NNdbg=new tDebugger(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 
 		tNN* myNN;   safeCallEE(myNN=new tNN(modelParms->SampleLen, modelParms->PredictionLen, modelParms->FeaturesCnt, NNcore0Parms->NN));
 
@@ -155,7 +158,7 @@ int main(int argc, char* argv[]) {
 		}
 		
 
-		//-- destroy all objects (therefore all tDbg* objects, therefore all empty debug files)
+		//-- destroy all objects (therefore all tDebugger* objects, therefore all empty debug files)
 		delete FXDB;
 		delete persistor;
 		delete myNN;

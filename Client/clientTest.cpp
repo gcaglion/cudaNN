@@ -5,7 +5,7 @@
 
 void dbgcli() {
 	try {
-		tDbg* dbg1=new tDbg();
+		tDebugger* dbg1=new tDebugger();
 	}
 	catch (std::exception e) {
 		printf("%s\n", e.what());
@@ -13,7 +13,7 @@ void dbgcli() {
 }
 void dbgcli2() {
 	char* msg="%s returned %d, with double=%f\n";
-	tDbg* dbg=new tDbg();
+	tDebugger* dbg=new tDebugger();
 	dbg->write(DBG_LEVEL_STD, msg, 3, "myfunc()", -3, 1.345);
 	dbg->compose(msg, 3, "myfunc()", -3, -0.1);
 	printf("%s\n", dbg->errmsg);
@@ -691,10 +691,10 @@ int client10() {
 /* Debug Tests
 //-- case 1a: throw exception from constructor / method
 typedef struct sMyClass {
-tDbg* dbg;
+tDebugger* dbg;
 
 sMyClass(char* cpname, int cpval) {
-dbg=new tDbg();
+dbg=new tDebugger();
 }
 
 void fail() {
@@ -702,8 +702,8 @@ throwE("--reason-for-failure---, paramName=%s , paramValue=%d \n", 2, "Cparam1",
 }
 } tMyClass;
 //-- case 2a: return error from boolean function
-bool calcErr(char* cp, int ip, sDbg* dbg=nullptr) {
-if (dbg==nullptr) dbg=new sDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH);
+bool calcErr(char* cp, int ip, sDebugger* dbg=nullptr) {
+if (dbg==nullptr) dbg=new sDebugger(DBG_LEVEL_ERR, DBG_DEST_BOTH);
 throwB("--reason-for-failure--- , cp=%s , ip=%d", 2, cp, ip);
 return true;
 }
@@ -711,12 +711,12 @@ return true;
 int main() {
 
 //-- client debugger declaration
-sDbg* dbg=nullptr;
+sDebugger* dbg=nullptr;
 
 //-- enclose everything that might throw anything
 try {
 //-- create client debugger. need to proof with 3a/3b
-dbg=new sDbg(DBG_LEVEL_STD, DBG_DEST_BOTH, nullptr, true);
+dbg=new sDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH, nullptr, true);
 
 //-- objects created by this client
 tMyClass* mycl;

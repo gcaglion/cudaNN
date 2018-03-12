@@ -1,11 +1,11 @@
 #pragma once
 #include "../CommonEnv.h"
-#include "DebugInfo.h"
+#include "Debugger.h"
 #include "ParamMgr.h"
 
 typedef struct sDataSource {
 	
-	tDbg* dbg;
+	tDebugger* dbg;
 
 	int type;
 
@@ -15,8 +15,8 @@ typedef struct sDataSource {
 	int BWfeatureL;
 
 #ifdef __cplusplus
-	sDataSource(int type_, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, tDbg* dbg_=nullptr);
-	sDataSource(tParamMgr* parms, tDbg* dbg_=nullptr);
+	sDataSource(int type_, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, tDebugger* dbg_=nullptr);
+	sDataSource(tParmsSource* parms, tDebugger* dbg_=nullptr);
 	sDataSource(){}
 #endif
 

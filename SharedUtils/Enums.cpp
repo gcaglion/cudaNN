@@ -30,15 +30,6 @@ EXPORT int decode(char* paramName, char* stringToCheck, int* oCode) {
 		if (strcmp(stringToCheck, "SOURCE_DATA_FROM_FILE")==0) return SOURCE_DATA_FROM_FILE;
 		if (strcmp(stringToCheck, "SOURCE_DATA_FROM_MT4")==0) return SOURCE_DATA_FROM_MT4;
 	}
-	
-	return -1;
 
-#define MAX_ENUMS_CNT 32
-#define kkk(pNameVar, pNameStr, pCheckStr, pValStrArray, pValVarArray){ \
-	for(int i=0; i<MAX_ENUMS_CNT; i++) { \
-#ifndef (pValArrayVar)[i])
-	break;
-#endif
-		if(strcmp((pNameVar, (pValArrayVar)[i])==0)) return (pValVarArray)[i]; \
-	} \
+	return -1;
 }

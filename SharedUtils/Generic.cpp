@@ -30,7 +30,8 @@ EXPORT void Trim(char* str) {
 	while (isspace(str[r-1])>0) r--;
 	for (i = 0; i<(r-l); i++) ret[i] = str[l+i];
 	ret[r-l] = '\0';
-	strcpy(str, ret);
+	//strcpy(str, ret);
+	strcpy_s(str, MAX_PATH, ret);
 }
 EXPORT int cslToArray(const char* csl, char Separator, char** StrList) {
 	//-- 1. Put a <separator>-separated list of string values into an array of strings, and returns list length

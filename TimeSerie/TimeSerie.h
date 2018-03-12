@@ -16,7 +16,7 @@
 #include "TimeSerie_enums.h"
 typedef struct sTimeSerie {
 
-	tDbg* dbg;
+	tDebugger* dbg;
 
 	//-- data set
 	int set;
@@ -46,12 +46,12 @@ typedef struct sTimeSerie {
 	numtype* d_trs;
 
 	//-- constructors / destructor
-	EXPORT void sTimeSeriecommon(int steps_, int featuresCnt_, tDbg* dbg_);
-	EXPORT sTimeSerie(int steps_, int featuresCnt_, tDbg* dbg_=nullptr);
-	EXPORT sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_=nullptr);
-	EXPORT sTimeSerie(tFileData* dataSource_, int featuresCnt_, int steps_, char* date0_, int dt_, tDbg* dbg_=nullptr);
-	EXPORT sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_=nullptr);
-	EXPORT sTimeSerie(tParamMgr* parms, int set_, tDbg* dbg_);
+	EXPORT void sTimeSeriecommon(int steps_, int featuresCnt_, tDebugger* dbg_);
+	EXPORT sTimeSerie(int steps_, int featuresCnt_, tDebugger* dbg_=nullptr);
+	EXPORT sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_=nullptr);
+	EXPORT sTimeSerie(tFileData* dataSource_, int featuresCnt_, int steps_, char* date0_, int dt_, tDebugger* dbg_=nullptr);
+	EXPORT sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_=nullptr);
+	EXPORT sTimeSerie(tParmsSource* parms, int set_, tDebugger* dbg_);
 	EXPORT ~sTimeSerie();
 	
 	EXPORT void load(tFXData* tsFXData, char* pDate0);
@@ -72,7 +72,7 @@ private:
 } tTimeSerie;
 
 typedef struct sDataSet {
-	tDbg* dbg;
+	tDebugger* dbg;
 
 	tTimeSerie* sourceTS;
 	int sampleLen;
@@ -100,8 +100,8 @@ typedef struct sDataSet {
 	numtype* prediction0=nullptr;
 
 	//-- constructor / destructor
-	EXPORT sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_=nullptr);
-	EXPORT sDataSet(tParamMgr* parms, sTimeSerie* sourceTS_, tDbg* dbg_);
+	EXPORT sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDebugger* dbg_=nullptr);
+	EXPORT sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_);
 	EXPORT ~sDataSet();
 
 	bool isSelected(int ts_f);

@@ -3,13 +3,13 @@
 #include "..\CommonEnv.h"
 #include "../MyAlgebra/MyAlgebra.h"
 #include "../TimeSerie/TimeSerie.h"
-#include "../MyEngines/MyCores.h"
+#include "../MyEngines/Core.h"
 #include "NN_parms.h"
 #include "NN_enums.h"
 
 typedef struct sNN :public sCore {
 
-	tDbg* dbg;
+	tDebugger* dbg;
 
 	//-- MyAlgebra common structures
 	Algebra* Alg;
@@ -80,7 +80,7 @@ typedef struct sNN :public sCore {
 	DWORD WUstart, WUtimeTot=0, WUcnt=0; float WUtimeAvg;
 	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
-	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms_, tDbg* dbg_=nullptr);
+	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms_, tDebugger* dbg_=nullptr);
 	EXPORT ~sNN();
 
 	void setLayout(int batchSamplesCnt_);

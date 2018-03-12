@@ -1,14 +1,61 @@
 <Model>
-  <Debugger>
+ 
+  <Debugger>  
     Level = DBG_LEVEL_STD
     Dest  = DBG_DEST_BOTH
     DestFileFullName  = C:\temp\logs\mainDebugger.log
   </Debugger>
+	doTrain       = true
+	doValidation  = false
+	doTest        = true
   <Data>
-    SampleLen		= 100
-    PredictionLen	= 5
-    FeaturesCount	= 4
+	  <Shape>
+      SampleLen		= 100
+      PredictionLen	= 5
+      FeaturesCount	= 4
+    </Shape>
+    <Train>
+        <TimeSerie>
+          Date0				        = 201712300000
+          HistoryLen			    = 50000
+          DataTransformation	= DT_DELTALOG
+          BWCalc				      = true
+          StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
+          <DataSource>
+            Type	  = FXData
+            <FXData>
+              <DBConnection>
+                DBUser			  = History
+                DBPassword		= HistoryPwd
+                DBConnString	= Algo
+              </DBConnection>
+              Symbol				= EURUSD
+              TimeFrame			= H1
+              IsFilled			= false
+            </FXData>
+            <FileData>
+              FileFullName	= c:/temp/timeseriesdata/sunspots.txt
+              FieldSep			= FILEDATA_SEP_COMMA
+            </FileData>
+          </DataSource>
+        </TimeSerie>
+        <DataSet>
+          BatchSamplesCount	= 50
+          <FXData>
+            SelectedFeatures	= OPEN, HIGH, LOW, CLOSE
+          </FXData>
+          <FileData>
+            SelectedFeatures	= 0, 1, 2, 3
+            BWFeatures			= 1,2
+          </FileData>
+        </DataSet>
+      </Train>
+    <Test>  
+    </Test>
+    <Validation>      
+    </Validation>
   </Data>
+
   <Engine>
     PresetType	=
     <Core.0>
@@ -60,51 +107,6 @@
       Connector	= CORE_CONN_DENSE, CORE_CONN_LINEAR
       </Core.4>
     </Engine>
-  <Action>
-    Train       = true
-    Validation  = false
-    Test        = true
-    <Train>
-      <TimeSerie>
-        Date0				        = 201712300000
-        HistoryLen			    = 50000
-        DataTransformation	= DT_DELTALOG
-        BWCalc				      = true
-        StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
-        <DataSource>
-          Type	  = FXData
-          <FXData>
-            <DBConnection>
-              DBUser			  = History
-              DBPassword		= HistoryPwd
-              DBConnString	= Algo
-            </DBConnection>
-            Symbol				= EURUSD
-            TimeFrame			= H1
-            IsFilled			= false
-          </FXData>
-          <FileData>
-            FileFullName	= c:/temp/timeseriesdata/sunspots.txt
-            FieldSep			= FILEDATA_SEP_COMMA
-          </FileData>
-        </DataSource>
-      </TimeSerie>
-      <DataSet>
-        BatchSamplesCount	= 50
-        <FXData>
-          SelectedFeatures	= OPEN, HIGH, LOW, CLOSE
-        </FXData>
-        <FileData>
-          SelectedFeatures	= 0, 1, 2, 3
-          BWFeatures			= 1,2
-        </FileData>
-      </DataSet>
-    </Train>
-    <Test>      
-    </Test>
-    <Validation>      
-    </Validation>
-  </Action>
   <Persistor>
     <Action>
       saveNothing		= false
@@ -123,6 +125,7 @@
     <DestFiles>      
     </DestFiles>
   </Persistor>
+
 </Model>
 
 

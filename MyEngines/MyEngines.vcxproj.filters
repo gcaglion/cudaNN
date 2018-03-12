@@ -20,10 +20,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MyCores.h">
+    <ClInclude Include="Engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CoresParms.h">
+    <ClInclude Include="Core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core_parms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core_enums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
