@@ -164,6 +164,7 @@ typedef struct sParmsSource {
 			decode(soughtParm->val, pvalS, oparamVal);
 		} else {
 			(*oparamVal)=atoi(pvalS);
+
 		}
 	}
 
