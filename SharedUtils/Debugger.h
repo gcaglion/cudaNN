@@ -5,11 +5,11 @@
 #include "FileInfo.h"
 #include <stdio.h>
 #include <time.h>
-#include "DebugInfo_enums.h"
+#include "Debugger_enums.h"
 
-typedef struct sDbg {
-	int level;
-	int dest;
+typedef struct sDebugger {
+	int level;	// DBG_LEVEL_ERR ||DBG_LEVEL_STD || DBG_LEVEL_DET
+	int dest;	// DBG_DEST_SCREEN || DBG_DEST_FILE || DBG_DEST_BOTH
 	tFileInfo* outFile;
 	bool PauseOnError;
 	char errmsg[1024];
@@ -25,8 +25,8 @@ typedef struct sDbg {
 
 #ifdef __cplusplus
 	//-- constructor (fully defaulted)
-	EXPORT sDbg(int level_=DBG_LEVEL_DEFAULT, int dest_=DBG_DEST_DEFAULT, tFileInfo* outFile_=nullptr, bool timing_=false, bool PauseOnError_=true, bool ThreadSafeLogging_=false);
-	EXPORT ~sDbg();
+	EXPORT sDebugger(int level_=DBG_LEVEL_DEFAULT, int dest_=DBG_DEST_DEFAULT, tFileInfo* outFile_=nullptr, bool timing_=false, bool PauseOnError_=true, bool ThreadSafeLogging_=false);
+	EXPORT ~sDebugger();
 
 	EXPORT void write(int LogType, const char* msg, int argcount, ...);
 	EXPORT void compose(char* mask, int argcount, ...);	//-- writes resulting message into errmsg
@@ -39,7 +39,7 @@ private:
 
 #endif
 
-} tDbg;
+} tDebugger;
 
 //-- 0. all messages need to be parametric
 
@@ -55,9 +55,9 @@ private:
 
 //-- main debugger declaration & creation
 #define createMainDebugger(level, dest) \
-sDbg* dbg=nullptr; \
+sDebugger* dbg=nullptr; \
 try { \
-	dbg=new tDbg(level, dest, new tFileInfo("mainDebugger.log", DEBUG_DEFAULT_PATH)); \
+	dbg=new tDebugger(level, dest, new tFileInfo("mainDebugger.log", DEBUG_DEFAULT_PATH)); \
 } \
 catch (std::exception e) { \
 	if (dbg==nullptr) { \

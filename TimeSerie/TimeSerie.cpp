@@ -2,8 +2,8 @@
 #include "TimeSerie.h"
 
 //-- sTimeSerie, constructors / destructor
-void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, tDbg* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
+void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, tDebugger* dbg_) {
+	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
 	steps=steps_;
 	featuresCnt=featuresCnt_;
 	len=steps*featuresCnt;
@@ -21,10 +21,10 @@ void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, tDbg* dbg_) {
 	d_tr=(numtype*)malloc(len*sizeof(numtype));
 	d_trs=(numtype*)malloc(len*sizeof(numtype));
 }
-sTimeSerie::sTimeSerie(int steps_, int featuresCnt_, tDbg* dbg_) {
+sTimeSerie::sTimeSerie(int steps_, int featuresCnt_, tDebugger* dbg_) {
 	sTimeSeriecommon(steps_, featuresCnt_, dbg_);
 }
-sTimeSerie::sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_){
+sTimeSerie::sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_){
 	//-- 1. create
 	sTimeSeriecommon(steps_, FXDATA_FEATURESCNT, dbg_);	// no safeCall() because we don't set dbg, here
 	//-- 2. load data
@@ -32,32 +32,32 @@ sTimeSerie::sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, 
 	//-- 3. transform
 	safeCallEE(transform(dt_));
 }
-sTimeSerie::sTimeSerie(tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, tDbg* dbg_){
+sTimeSerie::sTimeSerie(tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, tDebugger* dbg_){
 	featuresCnt=featuresCnt_;
 }
-sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDbg* dbg_){
+sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_){
 }
-sTimeSerie::sTimeSerie(tParamMgr* parms, int set_, tDbg* dbg_){
-	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
+sTimeSerie::sTimeSerie(tParmsSource* parms, int set_, tDebugger* dbg_){
+	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
 	set=set_;
 	
 	//-- 1. set xml section according to set (Train/Test/Validation)
 	switch (set) {
 	case TRAIN_SET:
-		parms->sectionSet("Data.Train.TimeSerie");
+		parms->gotoKey("Data.Train.TimeSerie");
 		break;
 	case TEST_SET:
-		parms->sectionSet("Data.Test.TimeSerie");
+		parms->gotoKey("Data.Test.TimeSerie");
 		break;
 	case VALID_SET:
-		parms->sectionSet("Data.Validation.TimeSerie");
+		parms->gotoKey("Data.Validation.TimeSerie");
 		break;
 	default:
 		break;
 	}
 
 	//-- 1.1. First, create sub-object DataSource from sub-key <DataSource>
-	parms->getx(&sourceType, "DataSourceType", true);
+	parms->get(&sourceType, "DataSourceType", true);
 	if (sourceType==SOURCE_DATA_FROM_FXDB) {
 		safeCallEE(fxData=new tFXData(parms));
 	} else if (sourceType==SOURCE_DATA_FROM_FILE) {
@@ -65,7 +65,7 @@ sTimeSerie::sTimeSerie(tParamMgr* parms, int set_, tDbg* dbg_){
 	} else if (sourceType==SOURCE_DATA_FROM_MT4) {
 		safeCallEE(mt4Data=new tMT4Data(parms));
 	} else {
-		throwE("invalid DataSourceType in section %s", 1, parms->parmPath_Full);
+		throwE("invalid DataSourceType in section %s", 1, "SALCAZZO");
 	}
 	//-- 1.2 <TimeSerie> root parms
 
@@ -257,7 +257,7 @@ void sTimeSerie::unTrS(numtype scaleMin_, numtype scaleMax_) {
 
 //-- UberSet
 /*
-sUberSetParms::sUberSetParms(tParamMgr* parms_, int set, tDbg* dbg_) {
+sUberSetParms::sUberSetParms(tParmsSource* parms_, int set, tDebugger* dbg_) {
 	parms=parms_; dbg=dbg_;
 
 	SelectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
@@ -360,8 +360,8 @@ sUberSetParms::~sUberSetParms() {
 */
 
 //-- sDataSet, constructors  /destructor
-sDataSet::sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDbg* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"))) : dbg_;
+sDataSet::sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDebugger* dbg_) {
+	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"))) : dbg_;
 	sourceTS=sourceTS_;
 	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
 	sampleLen=sampleLen_;
@@ -396,30 +396,30 @@ sDataSet::sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int se
 		BFS2SFB(b, targetLen, targetBFS, targetSFB);
 	}
 }
-sDataSet::sDataSet(tParamMgr* parms, sTimeSerie* sourceTS_, tDbg* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSets.err"))) : dbg_;
+sDataSet::sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_) {
+	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSets.err"))) : dbg_;
 	sourceTS=sourceTS_;
 
 	switch (sourceTS->set) {
 	case TRAIN_SET:
-		parms->sectionSet("Data.Train.DataSet");
+		parms->gotoKey("Data.Train.DataSet");
 		break;
 	case TEST_SET:
-		parms->sectionSet("Data.Test.DataSet");
+		parms->gotoKey("Data.Test.DataSet");
 		break;
 	case VALID_SET:
-		parms->sectionSet("Data.Validation.DataSet");
+		parms->gotoKey("Data.Validation.DataSet");
 		break;
 	default:
 		break;
 	}
-	parms->getx(&batchSamplesCnt, "BatchSamplesCount");
+	parms->get(&batchSamplesCnt, "BatchSamplesCount");
 	switch (sourceTS->sourceType) {
 	case SOURCE_DATA_FROM_FILE:
-		parms->getx(&selectedFeature, "SelectedFeatures", false, &selectedFeaturesCnt);
+		parms->get(&selectedFeature, "SelectedFeatures", false, false, &selectedFeaturesCnt);
 		break;
 	case SOURCE_DATA_FROM_FXDB:
-		parms->getx(&selectedFeature, "SelectedFeatures", true, &selectedFeaturesCnt);
+		parms->get(&selectedFeature, "SelectedFeatures", false, true, &selectedFeaturesCnt);
 		break;
 	case SOURCE_DATA_FROM_MT4:
 		//-- ...... ?? boh ??? ...

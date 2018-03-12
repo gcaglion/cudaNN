@@ -1,7 +1,6 @@
-#include "DebugInfo.h"
+#include "Debugger.h"
 
-//=== sDbg
-sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
+sDebugger::sDebugger(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
 	//-- outFile is created and opened by constructor (if not passed).
 	if (outFile_==nullptr) {
@@ -15,14 +14,14 @@ sDbg::sDbg(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseO
 		outFile=outFile_;
 	}
 }
-sDbg::~sDbg() {
+sDebugger::~sDebugger() {
 	delete outFile;
 }
 //-- timing methods
-void sDbg::setStartTime() { startTime=timeGetTime(); }
-void sDbg::setElapsedTime() { elapsedTime=(DWORD)(timeGetTime()-startTime); }
+void sDebugger::setStartTime() { startTime=timeGetTime(); }
+void sDebugger::setElapsedTime() { elapsedTime=(DWORD)(timeGetTime()-startTime); }
 //-- logging methods
-void sDbg::write(int LogType, const char* msg, int argcount, ...) {
+void sDebugger::write(int LogType, const char* msg, int argcount, ...) {
 	if (LogType>level) return;
 
 	char*			arg_s;
@@ -84,7 +83,7 @@ void sDbg::write(int LogType, const char* msg, int argcount, ...) {
 
 	if (ThreadSafeLogging) ReleaseMutex(Mtx);
 }
-void sDbg::compose(char* msg_, int argcount, ...) {
+void sDebugger::compose(char* msg_, int argcount, ...) {
 	va_list			arguments;
 	char submsg[MAX_PATH];
 	char*			arg_s;
@@ -125,7 +124,7 @@ void sDbg::compose(char* msg_, int argcount, ...) {
 
 	va_end(arguments);
 }
-template <typename T> void sDbg::argOut(int msgType, char* submsg, T arg) {
+template <typename T> void sDebugger::argOut(int msgType, char* submsg, T arg) {
 	if (msgType==DBG_LEVEL_ERR) {
 		//-- both file and screen log are mandatory in case of error
 		fprintf(outFile->handle, submsg, arg);

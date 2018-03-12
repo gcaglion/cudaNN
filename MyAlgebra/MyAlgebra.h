@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../SharedUtils/DebugInfo.h"
+#include "../SharedUtils/Debugger.h"
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
@@ -201,7 +201,7 @@ EXPORT bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr,
 
 typedef struct s_Algebra {
 	
-	tDbg* dbg;
+	tDebugger* dbg;
 
 	void* cublasH;
 	void* cuRandH;
@@ -209,7 +209,7 @@ typedef struct s_Algebra {
 	numtype* ss;	// shared scalar
 
 	//-- class constructor/destructor
-	EXPORT s_Algebra(tDbg* dbg_=nullptr);
+	EXPORT s_Algebra(tDebugger* dbg_=nullptr);
 	EXPORT ~s_Algebra();
 
 	//-- class methods

@@ -11,6 +11,7 @@ sFileInfo::sFileInfo(char* Name_, char* Path_, int mode_) {
 	if (errno!=0) {
 		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d trying to %s file %s\n", __func__, errno, modeDesc, FullName); throw std::runtime_error(errmsg);
 	}
+	savePos();
 }
 sFileInfo::sFileInfo(char* FullName_, int mode_) {
 	strcpy_s(FullName, MAX_PATH-1, FullName_);	//-- should also split Path/Name, and save them...
@@ -20,7 +21,7 @@ sFileInfo::sFileInfo(char* FullName_, int mode_) {
 		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d trying to %s file %s\n", __func__, errno, modeDesc, FullName);
 		throw std::runtime_error(errmsg);
 	}
-
+	savePos();
 }
 sFileInfo::~sFileInfo() {
 	fseek(handle, 0, SEEK_END); // seek to end of file
@@ -29,6 +30,12 @@ sFileInfo::~sFileInfo() {
 	fclose(handle);
 
 	if (fsize==0) remove(FullName);
+}
+void sFileInfo::savePos() {
+	fgetpos(handle, &pos);
+}
+void sFileInfo::restorePos(){
+	fsetpos(handle, &pos);
 }
 void sFileInfo::setModeS(int mode_) {
 	switch (mode_) {

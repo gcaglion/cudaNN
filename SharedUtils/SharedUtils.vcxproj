@@ -90,7 +90,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_WINDOWS;_USRDLL;SHAREDUTILS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SHAREDUTILS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(CUDA_PATH)\include</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
@@ -108,7 +108,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;SHAREDUTILS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;SHAREDUTILS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(CUDA_PATH)\include</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
@@ -157,34 +157,36 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DataModel.cpp" />
+    <ClCompile Include="Data.cpp" />
     <ClCompile Include="DataSource.cpp" />
     <ClCompile Include="DBConnection.cpp" />
-    <ClCompile Include="DebugInfo.cpp" />
+    <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="Enums.cpp" />
     <ClCompile Include="FileData.cpp" />
     <ClCompile Include="FileInfo.cpp" />
     <ClCompile Include="FXData.cpp" />
     <ClCompile Include="Generic.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="MT4Data.cpp" />
     <ClCompile Include="ParamMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DataModel.h" />
+    <ClInclude Include="Data.h" />
     <ClInclude Include="DataSource_enums.h" />
     <ClInclude Include="DBConnection_enums.h" />
-    <ClInclude Include="DebugInfo_enums.h" />
+    <ClInclude Include="Debugger_enums.h" />
     <ClInclude Include="Enums.h" />
     <ClInclude Include="FileData.h" />
     <ClInclude Include="DataSource.h" />
     <ClInclude Include="DBConnection.h" />
-    <ClInclude Include="DebugInfo.h" />
+    <ClInclude Include="Debugger.h" />
     <ClInclude Include="FileData_enums.h" />
     <ClInclude Include="FileInfo.h" />
     <ClInclude Include="FileInfo_enums.h" />
     <ClInclude Include="FXData.h" />
     <ClInclude Include="FXData_enums.h" />
     <ClInclude Include="Generic.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="MT4data.h" />
     <ClInclude Include="ParamMgr.h" />
   </ItemGroup>

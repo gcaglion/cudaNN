@@ -1,7 +1,7 @@
 #include "Logger.h"
 
-sLogger::sLogger(tDBConnection* logDB, bool saveNothing_, bool saveClient_, bool saveMSE_, bool saveRun_, bool saveInternals_, bool saveImage_, tDbg* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDbg(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"))) : dbg_;
+sLogger::sLogger(tDBConnection* logDB, bool saveNothing_, bool saveClient_, bool saveMSE_, bool saveRun_, bool saveInternals_, bool saveImage_, tDebugger* dbg_) {
+	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"))) : dbg_;
 	dest=ORCL;
 	db=logDB;
 	saveNothing=saveNothing_; saveClient=saveClient_; saveMSE=saveMSE_; saveRun=saveRun_; saveInternals=saveInternals_; saveImage=saveImage_;
@@ -10,7 +10,6 @@ sLogger::sLogger(tFileData* logFile) {
 	dest=TXT;
 	file=logFile;
 }
-sLogger::~sLogger() { delete db; delete dbg; }
 
 void sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV) {
 	if (saveMSE) {

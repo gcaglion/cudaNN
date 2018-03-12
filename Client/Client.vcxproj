@@ -164,6 +164,9 @@
   <ItemGroup>
     <None Include="Client.ini" />
   </ItemGroup>
+  <ItemGroup>
+    <Xml Include="client.xml" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

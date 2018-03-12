@@ -8,6 +8,8 @@ typedef struct sFileInfo {
 	char Name[MAX_PATH];
 	char FullName[MAX_PATH];
 	FILE* handle;
+	fpos_t pos;
+
 	char creationTime[13];
 	int mode;
 	char modeS[2];
@@ -17,6 +19,8 @@ typedef struct sFileInfo {
 	EXPORT sFileInfo(char* Name_, char* Path_=DEBUG_DEFAULT_PATH, int mode_=FILE_MODE_WRITE);
 	EXPORT sFileInfo(char* FullName_, int mode_);
 	EXPORT ~sFileInfo();
+	EXPORT void savePos();
+	EXPORT void restorePos();
 
 private:
 	char errmsg[1024]; 
