@@ -12,8 +12,9 @@ sParmsSource::sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLove
 	soughtParm=new tParm();
 	tmpParm=new tParm();
 
-}
+	pArrDesc=(char**)malloc(ARRAY_PARAMETER_MAX_ELEMS*sizeof(char*)); for (int i=0; i<ARRAY_PARAMETER_MAX_ELEMS; i++) pArrDesc[i]=(char*)malloc(MAX_PARAMDESC_LEN);
 
+}
 void sParmsSource::newDebugger(tDebugger* dbg_) {
 	int dbg_level, dbg_dest; char dbg_fname[MAX_PATH];
 
@@ -24,143 +25,127 @@ void sParmsSource::newDebugger(tDebugger* dbg_) {
 	safeCallEE(dbg_=new tDebugger(dbg_level, dbg_dest, new tFileInfo(dbg_fname, FILE_MODE_WRITE)));
 
 }
+bool sParmsSource::gotoKey(char* soughtKeyDesc, bool fromRoot, bool ignoreError) {
 
-/*
-//=== ParamMgr
-sParamMgr::sParamMgr(tFileInfo* ParamFile_, int argc, char* argv[], tDebugger* dbg_) {
-	ParamFile=ParamFile_;
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("ParamMgr.err"))) : dbg_;
+	soughtKey->setFromDesc(soughtKeyDesc, fromRoot);
 
-	bool altIniFile = false;
-	CLparamCount = argc;
-	for (int p = 1; p < CLparamCount; p++) {
-		char* pch = strchr(argv[p], '=');
-		if (pch==NULL||argv[p][0]!='-'||argv[p][1]!='-') throwE("Command Line Fail on parameter %d !\nExiting...\n", 1, p);
-		memcpy(&CLparamName[p][0], &argv[p][2], (pch-argv[p]-2)); CLparamName[p][pch-argv[p]-2] = '\0';
-		memcpy(&CLparamVal[p][0], &argv[p][pch-argv[p]+1], strlen(pch));
+	if (fromRoot) rewind(parmsFile->handle);
 
-		//-- if --IniFileName is specified, then set IniFileName global variable
-		UpperCase(CLparamName[p]);
-		if (strcmp(CLparamName[p], "INIFILE")==0) {
-			altIniFile = true;
-			safeCallEE(ParamFile=new tFileInfo(CLparamVal[p], FILE_MODE_READ));
+	//-- go to current key start
+	if (soughtKey->find(parmsFile)) {
+		//-- if found, set it as current
+		if (fromRoot) {
+			soughtKey->copyTo(currentKey);
+		} else {
+			soughtKey->appendTo(currentKey);
 		}
-	}
-	//-- if -- ParamFile is not passed, and IniFileName is not specified, then set look for default ini file in current directory
-	if (!altIniFile && ParamFile==nullptr) {
-		safeCallEE(ParamFile=new tFileInfo("Tester.ini", MyGetCurrentDirectory(), FILE_MODE_READ));
-	}
-}
-sParamMgr::~sParamMgr() {
-	delete dbg;
-}
-bool sParamMgr::sectionSet(const char* keyDesc, bool fromRoot, bool ignoreError) {
-	soughtKey= new tXmlKey(keyDesc, fromRoot);
-	bool found=soughtKey->find();
-	if (!found&&!ignoreError) throwE("keyDesc=%s ; fromRoot=%s", 2, keyDesc, (fromRoot) ? "true" : "false");
-	return found;
-}
-
-//--- create a new Debugger from ParmFile
-void sParamMgr::newDebugger(tDebugger* dbg_) {
-	int dbg_level, dbg_dest; char dbg_fname[MAX_PATH];
-
-	getx(&dbg_level, "Level", enumlist);
-	getx(&dbg_dest, "Dest", enumlist);
-	getx(dbg_fname, "DestFileFullName");
-
-	safeCallEE(dbg_=new tDebugger(dbg_level, dbg_dest, new tFileInfo(dbg_fname, FILE_MODE_WRITE)));
-
-}
-
-//=== XML stuff
-void sXmlKey::sXmlKey_common() {
-	step=(char**)malloc(XML_MAX_PATH_DEPTH*sizeof(char*)); for (int i=0; i<XML_MAX_PATH_DEPTH; i++) step[i]=(char*)malloc(XML_MAX_PARAM_NAME_LEN);
-	full=(char*)malloc(XML_MAX_PATH_LEN);
-	//-- init
-	full[0]='\0';
-	depth=0;
-}
-sXmlKey::sXmlKey() {
-	sXmlKey_common();
-}
-
-sXmlKey::sXmlKey(const char* Key_, bool rootKey) {
-	sXmlKey_common();
-	if (rootKey) full[0]='\0';
-	if (rootKey) {
-		strcpy_s(full, XML_MAX_PATH_LEN, Key_);
 	} else {
-		if(strlen(full)>0) strcat_s(full, XML_MAX_PATH_LEN, ".");
-		strcat_s(full, XML_MAX_PATH_LEN, Key_);
+		throwE("could not find key", 0);
 	}
-	depth=cslToArray(full, '.', step);
-
+	return true;
 }
-sXmlKey::~sXmlKey() {
-	for (int i=0; i<XML_MAX_PATH_DEPTH; i++) free(step[i]);
+
+//-- specific, single value: int(with or without enums), numtype, char*
+void sParmsSource::get_(char* pvalS, int* oparamVal, bool isenum, int* oListLen) {
+	if (isenum) {
+		(*oListLen)=decode(soughtParm->val, pvalS, oparamVal);
+	} else {
+		(*oparamVal)=atoi(pvalS);
+	}
+}
+void sParmsSource::get_(char* pvalS, bool* oparamVal, bool isenum, int* oListLen) {
+	Trim(pvalS); UpperCase(pvalS);
+	(*oparamVal)=(strcmp(pvalS, "TRUE")==0);
+}
+void sParmsSource::get_(char* pvalS, char* oparamVal, bool isenum, int* oListLen) {
+	strcpy_s(oparamVal, XML_MAX_PARAM_VAL_LEN, pvalS);
+}
+void sParmsSource::get_(char* pvalS, numtype* oparamVal, bool isenum, int* oListLen) {
+	(*oparamVal)=(numtype)atof(pvalS);
+}
+
+//-- specific, arrays: int(with or without enums), numtype, char*
+void sParmsSource::get_(char* pvalS, int** oparamVal, bool isenum, int* oListLen) {
+	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
+	for (int p=0; p<(*oListLen); p++) get_(pArrDesc[p], &(*oparamVal)[p], isenum, oListLen);
+}
+void sParmsSource::get_(char* pvalS, bool** oparamVal, bool isenum, int* oListLen) {
+	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
+	for (int p=0; p<(*oListLen); p++) get_(pArrDesc[p], oparamVal[p], isenum, oListLen);
+}
+void sParmsSource::get_(char* pvalS, numtype** oparamVal, bool isenum, int* oListLen) {
+	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
+	for (int p=0; p<(*oListLen); p++) get_(pArrDesc[p], oparamVal[p], isenum, oListLen);
+}
+void sParmsSource::get_(char* pvalS, char** oparamVal, bool isenum, int* oListLen) {
+	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
+	for (int p=0; p<(*oListLen); p++) get_(pArrDesc[p], oparamVal[p], isenum, oListLen);
+}
+
+sXMLelement::sXMLelement() {
+	depth=0;
+	step=(char**)malloc(XML_MAX_PATH_DEPTH*sizeof(char*)); for (int i=0; i<XML_MAX_PATH_DEPTH; i++) step[i]=(char*)malloc(XML_MAX_SECTION_DESC_LEN);
+}
+sXMLelement::~sXMLelement() {
+	for (int i=0; i<XML_MAX_PATH_DEPTH; i++) step[i];
 	free(step);
-	free(full);
 }
-bool sXmlKey::find() {
-	char keyStepTagStart[XML_MAX_SECTION_DESC_LEN+2];
-	char keyStepTagEnd[XML_MAX_SECTION_DESC_LEN+3];
-	bool startTagFound;
+void sXMLelement::setFromDesc(const char* desc, bool fromRoot) {
+	depth=cslToArray(desc, '.', step);
+}
+void sXMLelement::copyTo(sXMLelement* destElement) {
+	for (int d=0; d<depth; d++) {
+		memcpy_s(destElement->step[d], XML_MAX_SECTION_DESC_LEN, step[d], XML_MAX_SECTION_DESC_LEN);
+		destElement->depth=depth;
+	}
+	//memcpy_s((void*)destElement, sizeof(sXMLelement), this, sizeof(sXMLelement));
+}
+void sXMLelement::appendTo(sXMLelement* destParm) {
+	for (int d=0; d<depth; d++) {
+		strcpy_s(destParm->step[destParm->depth+d], XML_MAX_SECTION_DESC_LEN, step[d]);
+		destParm->depth++;
+	}
+}
 
-	//-- save current file pos
-	fgetpos(parmFile, &parmFileKeyLocation);
+bool sKey::find(tFileInfo* parmsFile) {
 
+	//-- backup
+	parmsFile->savePos();
+	//--
 	for (int d=0; d<depth; d++) {
 		sprintf_s(keyStepTagStart, XML_MAX_SECTION_DESC_LEN+2, "<%s>", step[d]);
 		sprintf_s(keyStepTagEnd, XML_MAX_SECTION_DESC_LEN+3, "</%s>", step[d]);
 
 		//-- locate tag start
-		startTagFound=false;
-		while (fscanf(parmFile, "%s", keyStepTagStart)!=EOF) {
-			if (strcmp(step[d], keyStepTagStart)==0) {
-				startTagFound=true;
+		found=false;
+		while (fscanf_s(parmsFile->handle, "%s", vLine, XML_MAX_SECTION_DESC_LEN+3)!=EOF) {
+			if (strcmp(vLine, keyStepTagStart)==0) {
+				found=true;
 				break;
 			}
 		}
-		//-- on failure, restore file pos
-		if (!startTagFound) fsetpos(parmFile, &parmFileKeyLocation);
 	}
-	return (startTagFound);
+	//-- restore
+	if (!found) parmsFile->restorePos();
+	//--
+	return (found);
 }
+bool sParm::find(tFileInfo* parmsFile) {
 
-//-- specific, single value: int(with or without enums), numtype, char*
-void sParamMgr::getxx_(char* pvalS, int* oparamVal, bool isenum, int* oListLen) {
-	if (isenum) {
-		decode(pDesc, pvalS, oparamVal);
-	} else {
-		(*oparamVal)=atoi(pvalS);
+	//-- backup
+	parmsFile->savePos();
+	//--
+	//-- locate param name
+	found=false;
+
+	while (fscanf_s(parmsFile->handle, "%s = %[^\n]", name, XML_MAX_PARAM_NAME_LEN, val, XML_MAX_PARAM_VAL_LEN)!=EOF) {
+		if (strcmp(name, step[depth-1])==0) {
+			found=true;
+			break;
+		}
 	}
+	//-- restore
+	if (!found) parmsFile->restorePos();
+	//--
+	return (found);
 }
-void sParamMgr::getxx_(char* pvalS, bool* oparamVal, bool isenum, int* oListLen) {
-	Trim(pvalS); UpperCase(pvalS);
-	(*oparamVal)=(strcmp(pvalS, "TRUE")==0);
-}
-void sParamMgr::getxx_(char* pvalS, numtype* oparamVal, bool isenum, int* oListLen) {
-	(*oparamVal)=(numtype)atof(pvalS);
-}
-void sParamMgr::getxx_(char* pvalS, char* oparamVal, bool isenum, int* oListLen) {
-	strcpy_s(oparamVal, XML_MAX_PARAM_VAL_LEN, pvalS);
-}
-//-- specific, arrays: int(with or without enums), numtype, char*
-void sParamMgr::getxx_(char* pvalS, int** oparamVal, bool isenum, int* oListLen) {
-	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
-	for (int p=0; p<(*oListLen); p++) getxx_(pArrDesc[p], &(*oparamVal)[p], isenum, oListLen);
-}
-void sParamMgr::getxx_(char* pvalS, bool** oparamVal, bool isenum, int* oListLen) {
-	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
-	for (int p=0; p<(*oListLen); p++) getxx_(pArrDesc[p], oparamVal[p], isenum, oListLen);
-}
-void sParamMgr::getxx_(char* pvalS, numtype** oparamVal, bool isenum, int* oListLen) {
-	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
-	for (int p=0; p<(*oListLen); p++) getxx_(pArrDesc[p], oparamVal[p], isenum, oListLen);
-}
-void sParamMgr::getxx_(char* pvalS, char** oparamVal, bool isenum, int* oListLen) {
-	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
-	for (int p=0; p<(*oListLen); p++) getxx_(pArrDesc[p], oparamVal[p], isenum, oListLen);
-}
-*/

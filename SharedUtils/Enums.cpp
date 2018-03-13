@@ -1,35 +1,53 @@
 #include "Enums.h"
 
-EXPORT int decode(char* paramName, char* stringToCheck, int* oCode) {
-	//-- Data Tranformations
-	if (strcmp(paramName, "DATATRANSFORMATION")==0) {
-		if (strcmp(stringToCheck, "DT_NONE")==0) return DT_NONE;
-		if (strcmp(stringToCheck, "DT_DELTA")==0) return DT_DELTA;
-		if (strcmp(stringToCheck, "DT_LOG")==0) return DT_LOG;
-		if (strcmp(stringToCheck, "DT_DELTALOG")==0) return DT_DELTALOG;
-	}
-	//-- Statistical Features
-	if (strcmp(paramName, "STATISTICALFEATURES")==0) {
-		if (strcmp(stringToCheck, "TSF_MEAN")==0) return TSF_MEAN;
-		if (strcmp(stringToCheck, "TSF_MAD")==0) return TSF_MAD;
-		if (strcmp(stringToCheck, "TSF_VARIANCE")==0) return TSF_VARIANCE;
-		if (strcmp(stringToCheck, "TSF_SKEWNESS")==0) return TSF_SKEWNESS;
-		if (strcmp(stringToCheck, "TSF_KURTOSIS")==0) return TSF_KURTOSIS;
-		if (strcmp(stringToCheck, "TSF_SHE")==0) return TSF_SHE;
-		if (strcmp(stringToCheck, "TSF_HISTVOL")==0) return TSF_HISTVOL;
-	}
-	//-- data sets
-	if (strcmp(paramName, "DATASET")==0) {
-		if (strcmp(stringToCheck, "TRAIN_SET")==0) return TRAIN_SET;
-		if (strcmp(stringToCheck, "TEST_SET")==0) return TEST_SET;
-		if (strcmp(stringToCheck, "VALID_SET")==0) return VALID_SET;
-	}
-	//-- data source types
-	if (strcmp(paramName, "DATASOURCETYPE")==0) {
-		if (strcmp(stringToCheck, "SOURCE_DATA_FROM_FXDB")==0) return SOURCE_DATA_FROM_FXDB;
-		if (strcmp(stringToCheck, "SOURCE_DATA_FROM_FILE")==0) return SOURCE_DATA_FROM_FILE;
-		if (strcmp(stringToCheck, "SOURCE_DATA_FROM_MT4")==0) return SOURCE_DATA_FROM_MT4;
-	}
+//-- in each <class>_enums.h
+enumdeclare(SOURCE_DATA, FXDB_SOURCE, FILE_SOURCE, MT4_SOURCE);
+//enumdeclare( "SOURCE_DATA", "FXDB_SOURCE", "FILE_SOURCE", "MT4_SOURCE");
 
-	return -1;
+//--
+
+bool dd2(char* enumNameS, char* stringToCheck,  int pOptionsCnt, ...) {
+	
+	va_list			option;
+	va_start(option, pOptionsCnt);
+	char* option_s;
+	bool ret=false;
+
+	for (int o=0; o<pOptionsCnt; o++) {
+		option_s= va_arg(option, char*);
+		if (strcmp(stringToCheck, option_s)==0) {
+			ret=true;
+		}
+	}
+	va_end(option);
+	return ret;
 }
+
+#define setOptionsCnt(enumName) int optionsCnt=enumName(cnt);
+
+bool dd3m(enumName, stringToCheck, ... ) {
+	va_list	option; 
+	char* option_s; 
+	bool found=false; 
+	va_start(option, optionsCnt); 
+	printf("cnt=%dn",(cnt)); 
+	for(int o=0; o<(cnt); o++){ 
+		option_s= va_arg(option, char*); 
+		printf("option_s=%sn", option_s); 
+		if (strcmp(stringToCheck, option_s)==0) { 
+			found=true; 
+		} 
+	} 
+	va_end(option); 
+}
+
+EXPORT bool decode(char* paramName, char* stringToCheck, int* oCode, ...) {
+
+	setOptionsCnt(SOURCE_DATA);
+
+	dd3m(SOURCE_DATA, "MT4_SOURCE");
+
+
+	return true;
+}
+

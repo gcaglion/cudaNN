@@ -10,4 +10,14 @@
 #include "../TimeSerie/TimeSerie_enums.h"
 #include "../cuNN/NN_parms.h"
 
-EXPORT int decode(char* paramName, char* stringToCheck, int* oCode);
+
+typedef struct sDecoder {
+
+} tDecoder;
+
+EXPORT bool decode(char* paramName, char* stringToCheck, int* oCode, ...);
+
+//-- in Enums.h
+#define enumdeclare(name, ...) enum name { __VA_ARGS__, cnt }; 
+//--
+

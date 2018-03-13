@@ -10,6 +10,12 @@ int main(int argc, char* argv[]) {
 	//system("pause");
 	//return -1;
 
+	char* pName="SOURCE_DATA";
+	int val;
+
+	bool ret=decode(pName, "MT4_SOURCE", &val);
+	return ret;
+
 	//-- persistor(s) For now, just one for all tables
 	int persistorDest;
 	char persistorDBUser[30]; char persistorDBPassword[30]; char persistorDBConnString[30];
