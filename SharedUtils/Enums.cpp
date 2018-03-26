@@ -25,27 +25,7 @@ bool dd2(char* enumNameS, char* stringToCheck,  int pOptionsCnt, ...) {
 
 #define setOptionsCnt(enumName) int optionsCnt=enumName(cnt);
 
-bool dd3m(enumName, stringToCheck, ... ) {
-	va_list	option; 
-	char* option_s; 
-	bool found=false; 
-	va_start(option, optionsCnt); 
-	printf("cnt=%dn",(cnt)); 
-	for(int o=0; o<(cnt); o++){ 
-		option_s= va_arg(option, char*); 
-		printf("option_s=%sn", option_s); 
-		if (strcmp(stringToCheck, option_s)==0) { 
-			found=true; 
-		} 
-	} 
-	va_end(option); 
-}
-
 EXPORT bool decode(char* paramName, char* stringToCheck, int* oCode, ...) {
-
-	setOptionsCnt(SOURCE_DATA);
-
-	dd3m(SOURCE_DATA, "MT4_SOURCE");
 
 
 	return true;
