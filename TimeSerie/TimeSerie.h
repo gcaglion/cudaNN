@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
+#include "TimeSerie_enums.h"
 #include "../SharedUtils/FXData.h"
 #include "../SharedUtils/FileData.h"
 #include "../SharedUtils/MT4Data.h"
@@ -13,7 +14,6 @@
 #include "../MyCU/MyCU.h"
 #endif
 
-#include "TimeSerie_enums.h"
 typedef struct sTimeSerie {
 
 	tDebugger* dbg;

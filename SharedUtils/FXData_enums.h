@@ -1,12 +1,12 @@
 #pragma once
 
-// Bar data
+//-- FxData.Features
 #define FXDATA_FEATURESCNT 5	//-- OHLCV
-#define OPEN 0
-#define HIGH 1
-#define LOW 2
-#define CLOSE 3
-#define VOLUME 4
+#define FXDATA_OPEN 0
+#define FXDATA_HIGH 1
+#define FXDATA_LOW 2
+#define FXDATA_CLOSE 3
+#define FXDATA_VOLUME 4
 
 //-- limits
 #define FX_SYMBOL_MAX_LEN 12

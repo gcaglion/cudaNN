@@ -1,5 +1,6 @@
 #pragma once
 #include "../CommonEnv.h"
+#include "DataSource_enums.h"
 #include "Debugger.h"
 #include "ParamMgr.h"
 

@@ -1,13 +1,13 @@
 #pragma once
 #include "../CommonEnv.h"
 
-//-- Data Tranformations
+//-- Data.Transformation
 #define DT_NONE		 0
 #define DT_DELTA	 1
 #define DT_LOG		 2
 #define DT_DELTALOG	 3
 
-//-- Statistical Features
+//-- Statistical.Features
 #define TSF_MEAN 0
 #define TSF_MAD 1
 #define TSF_VARIANCE 2
@@ -17,7 +17,7 @@
 #define TSF_SHE 6
 #define TSF_HISTVOL 7
 
-//-- data sets
+//-- Data.Set
 #define TRAIN_SET 0
 #define TEST_SET  1
 #define VALID_SET 2

@@ -1,6 +1,17 @@
 #pragma once
-#include "../CommonEnv.h"
+/*#include "../CommonEnv.h"
+#include "Generic.h"
+#include "XMLstuff.h"
+*/
+#include "DataSource_enums.h"
+#include "DBConnection_enums.h"
+#include "Debugger_enums.h"
+#include "FileData_enums.h"
+#include "FileInfo_enums.h"
+#include "FXData_enums.h"
+#include "../TimeSerie/TimeSerie_enums.h"
 
+/*
 typedef struct sEnum {
 	char*  name;
 	int optionsCnt;
@@ -30,3 +41,6 @@ typedef struct sEnum {
 	}
 
 } tEnum;
+
+EXPORT bool decode(char* stringToCheck, tParm* enumParm, int* oValsCnt, int* oVal);
+*/

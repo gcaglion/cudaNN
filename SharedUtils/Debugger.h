@@ -8,6 +8,7 @@
 #include "Debugger_enums.h"
 
 typedef struct sDebugger {
+
 	int level;	// DBG_LEVEL_ERR ||DBG_LEVEL_STD || DBG_LEVEL_DET
 	int dest;	// DBG_DEST_SCREEN || DBG_DEST_FILE || DBG_DEST_BOTH
 	tFileInfo* outFile;
@@ -26,6 +27,7 @@ typedef struct sDebugger {
 #ifdef __cplusplus
 	//-- constructor (fully defaulted)
 	EXPORT sDebugger(int level_=DBG_LEVEL_DEFAULT, int dest_=DBG_DEST_DEFAULT, tFileInfo* outFile_=nullptr, bool timing_=false, bool PauseOnError_=true, bool ThreadSafeLogging_=false);
+	EXPORT sDebugger(tFileInfo* outFile_);
 	EXPORT ~sDebugger();
 
 	EXPORT void write(int LogType, const char* msg, int argcount, ...);
@@ -33,6 +35,8 @@ typedef struct sDebugger {
 
 	EXPORT void setStartTime();
 	EXPORT void setElapsedTime();
+
+	void setOutFile(tFileInfo* outFile_);
 
 private:
 	template <typename T> void argOut(int msgType, char* submsg, T arg);

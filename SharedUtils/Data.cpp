@@ -1,13 +1,13 @@
 #include "Data.h"
 
 sData::sData(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("Data.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Data.err"))) : dbg_;
 	sampleLen=sampleLen_; predictionLen=predictionLen_; featuresCnt=featuresCnt_;
 
 	mallocSets();
 }
 sData::sData(tParmsSource* parms, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("Data.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Data.err"))) : dbg_;
 
 	parms->gotoKey("Data");
 	parms->get(&sampleLen, "SampleLen");

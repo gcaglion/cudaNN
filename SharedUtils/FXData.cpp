@@ -2,12 +2,12 @@
 
 //=== sFXData
 void sFXData::sFXData_common(tDebugger* dbg_){	//--parent DataSource properties
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("FXData.err"))) : dbg_;
-	type=SOURCE_DATA_FROM_FXDB;
+	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("FXData.err"))) : dbg_;
+	type=FXDB_SOURCE;
 	calcBW=true;
 	//-- the following are fixed (OHLCV), and determined by loadOHLCV query
 	featuresCnt=5;
-	BWfeatureH=HIGH; BWfeatureL=LOW;
+	BWfeatureH=FXDATA_HIGH; BWfeatureL=FXDATA_LOW;
 }
 sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_, tDebugger* dbg_) {
 	sFXData_common(dbg_);

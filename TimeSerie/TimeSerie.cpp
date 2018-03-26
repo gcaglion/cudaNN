@@ -20,6 +20,9 @@ void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, tDebugger* dbg_)
 	bd=(numtype*)malloc(featuresCnt*sizeof(numtype));
 	d_tr=(numtype*)malloc(len*sizeof(numtype));
 	d_trs=(numtype*)malloc(len*sizeof(numtype));
+
+	//-- enums
+
 }
 sTimeSerie::sTimeSerie(int steps_, int featuresCnt_, tDebugger* dbg_) {
 	sTimeSeriecommon(steps_, featuresCnt_, dbg_);
@@ -58,11 +61,11 @@ sTimeSerie::sTimeSerie(tParmsSource* parms, int set_, tDebugger* dbg_){
 
 	//-- 1.1. First, create sub-object DataSource from sub-key <DataSource>
 	parms->get(&sourceType, "DataSourceType", true);
-	if (sourceType==SOURCE_DATA_FROM_FXDB) {
+	if (sourceType==FXDB_SOURCE) {
 		safeCallEE(fxData=new tFXData(parms));
-	} else if (sourceType==SOURCE_DATA_FROM_FILE) {
+	} else if (sourceType==FILE_SOURCE) {
 		safeCallEE(fileData=new tFileData(parms));
-	} else if (sourceType==SOURCE_DATA_FROM_MT4) {
+	} else if (sourceType==MT4_SOURCE) {
 		safeCallEE(mt4Data=new tMT4Data(parms));
 	} else {
 		throwE("invalid DataSourceType in section %s", 1, "SALCAZZO");
@@ -89,7 +92,7 @@ bool sTimeSerie::LoadOHLCVdata(char* date0) {
 }
 void sTimeSerie::load(tFXData* tsFXData_, char* pDate0) {
 	fxData=tsFXData_;
-	sourceType=SOURCE_DATA_FROM_FXDB;
+	sourceType=FXDB_SOURCE;
 	if (!LoadOHLCVdata(pDate0)) throwE("pDate0=%s", 1, pDate0);
 }
 void sTimeSerie::load(tFileData* tsFileData, char* pDate0) {
@@ -415,13 +418,13 @@ sDataSet::sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_) 
 	}
 	parms->get(&batchSamplesCnt, "BatchSamplesCount");
 	switch (sourceTS->sourceType) {
-	case SOURCE_DATA_FROM_FILE:
+	case FILE_SOURCE:
 		parms->get(&selectedFeature, "SelectedFeatures", false, false, &selectedFeaturesCnt);
 		break;
-	case SOURCE_DATA_FROM_FXDB:
+	case FXDB_SOURCE:
 		parms->get(&selectedFeature, "SelectedFeatures", false, true, &selectedFeaturesCnt);
 		break;
-	case SOURCE_DATA_FROM_MT4:
+	case MT4_SOURCE:
 		//-- ...... ?? boh ??? ...
 		break;
 	default:

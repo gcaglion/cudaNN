@@ -1,7 +1,8 @@
 #include "ParamMgr.h"
+#include "MyEnums.h"
 
 sParmsSource::sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("ParmsSource.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("ParmsSource.err"))) : dbg_;
 	CLoverridesCnt=CLoverridesCnt_; CLoverride=CLoverride_;
 	safeCallEE(parmsFile=new tFileInfo(pFileFullName, FILE_MODE_READ));
 
@@ -48,7 +49,7 @@ bool sParmsSource::gotoKey(char* soughtKeyDesc, bool fromRoot, bool ignoreError)
 //-- specific, single value: int(with or without enums), numtype, char*
 void sParmsSource::get_(char* pvalS, int* oparamVal, bool isenum, int* oListLen) {
 	if (isenum) {
-		(*oListLen)=decode(soughtParm->val, pvalS, oparamVal);
+		safeCallEB(decode(soughtParm->val, pvalS, oListLen, oparamVal));
 	} else {
 		(*oparamVal)=atoi(pvalS);
 	}
@@ -80,72 +81,4 @@ void sParmsSource::get_(char* pvalS, numtype** oparamVal, bool isenum, int* oLis
 void sParmsSource::get_(char* pvalS, char** oparamVal, bool isenum, int* oListLen) {
 	(*oListLen)=cslToArray(pvalS, ',', pArrDesc);
 	for (int p=0; p<(*oListLen); p++) get_(pArrDesc[p], oparamVal[p], isenum, oListLen);
-}
-
-sXMLelement::sXMLelement() {
-	depth=0;
-	step=(char**)malloc(XML_MAX_PATH_DEPTH*sizeof(char*)); for (int i=0; i<XML_MAX_PATH_DEPTH; i++) step[i]=(char*)malloc(XML_MAX_SECTION_DESC_LEN);
-}
-sXMLelement::~sXMLelement() {
-	for (int i=0; i<XML_MAX_PATH_DEPTH; i++) step[i];
-	free(step);
-}
-void sXMLelement::setFromDesc(const char* desc, bool fromRoot) {
-	depth=cslToArray(desc, '.', step);
-}
-void sXMLelement::copyTo(sXMLelement* destElement) {
-	for (int d=0; d<depth; d++) {
-		memcpy_s(destElement->step[d], XML_MAX_SECTION_DESC_LEN, step[d], XML_MAX_SECTION_DESC_LEN);
-		destElement->depth=depth;
-	}
-	//memcpy_s((void*)destElement, sizeof(sXMLelement), this, sizeof(sXMLelement));
-}
-void sXMLelement::appendTo(sXMLelement* destParm) {
-	for (int d=0; d<depth; d++) {
-		strcpy_s(destParm->step[destParm->depth+d], XML_MAX_SECTION_DESC_LEN, step[d]);
-		destParm->depth++;
-	}
-}
-
-bool sKey::find(tFileInfo* parmsFile) {
-
-	//-- backup
-	parmsFile->savePos();
-	//--
-	for (int d=0; d<depth; d++) {
-		sprintf_s(keyStepTagStart, XML_MAX_SECTION_DESC_LEN+2, "<%s>", step[d]);
-		sprintf_s(keyStepTagEnd, XML_MAX_SECTION_DESC_LEN+3, "</%s>", step[d]);
-
-		//-- locate tag start
-		found=false;
-		while (fscanf_s(parmsFile->handle, "%s", vLine, XML_MAX_SECTION_DESC_LEN+3)!=EOF) {
-			if (strcmp(vLine, keyStepTagStart)==0) {
-				found=true;
-				break;
-			}
-		}
-	}
-	//-- restore
-	if (!found) parmsFile->restorePos();
-	//--
-	return (found);
-}
-bool sParm::find(tFileInfo* parmsFile) {
-
-	//-- backup
-	parmsFile->savePos();
-	//--
-	//-- locate param name
-	found=false;
-
-	while (fscanf_s(parmsFile->handle, "%s = %[^\n]", name, XML_MAX_PARAM_NAME_LEN, val, XML_MAX_PARAM_VAL_LEN)!=EOF) {
-		if (strcmp(name, step[depth-1])==0) {
-			found=true;
-			break;
-		}
-	}
-	//-- restore
-	if (!found) parmsFile->restorePos();
-	//--
-	return (found);
 }

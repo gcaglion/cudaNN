@@ -3,7 +3,7 @@
 //=== sFileData
 sFileData::sFileData(tFileInfo* srcFile_, int fieldSep_, bool calcBW_, int BWfeatureH_, int BWfeatureL_, tDebugger* dbg_) {
 	//--parent DataSource properties
-	type=SOURCE_DATA_FROM_FILE;
+	type=FILE_SOURCE;
 	calcBW=calcBW_; BWfeatureH=BWfeatureH_; BWfeatureL=BWfeatureL_;
 	//--
 	srcFile=srcFile_; fieldSep=fieldSep_;
@@ -11,7 +11,7 @@ sFileData::sFileData(tFileInfo* srcFile_, int fieldSep_, bool calcBW_, int BWfea
 	featuresCnt=-99;
 }
 sFileData::sFileData(tParmsSource* parms, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("FileData.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("FileData.err"))) : dbg_;
 	parms->gotoKey("FileData", false, false);
 	char ffname[MAX_PATH];
 	safeCallEE(srcFile=new tFileInfo(ffname, FILE_MODE_READ));

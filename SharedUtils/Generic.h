@@ -2,7 +2,6 @@
 #include "../CommonEnv.h"
 
 EXPORT char* MyGetCurrentDirectory();
-EXPORT void UpperCase(char* str);
 EXPORT void Trim(char* str);
 EXPORT int cslToArray(const char* csl, char Separator, char** StrList);
 EXPORT char* substr(char* str, int start, int len);

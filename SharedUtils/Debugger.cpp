@@ -1,7 +1,6 @@
 #include "Debugger.h"
 
-sDebugger::sDebugger(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
-	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
+void sDebugger::setOutFile(tFileInfo* outFile_) {
 	//-- outFile is created and opened by constructor (if not passed).
 	if (outFile_==nullptr) {
 		try {
@@ -13,6 +12,15 @@ sDebugger::sDebugger(int level_, int dest_, tFileInfo* outFile_, bool timing_, b
 	} else {
 		outFile=outFile_;
 	}
+}
+sDebugger::sDebugger(tFileInfo* outFile_) {
+	level=DBG_LEVEL_DEFAULT; dest=DBG_DEST_DEFAULT; timing=false; PauseOnError=true; ThreadSafeLogging=false;
+	setOutFile(outFile_);
+}
+
+sDebugger::sDebugger(int level_, int dest_, tFileInfo* outFile_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
+	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
+	setOutFile(outFile_);
 }
 sDebugger::~sDebugger() {
 	delete outFile;

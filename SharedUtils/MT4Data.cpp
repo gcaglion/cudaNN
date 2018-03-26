@@ -2,8 +2,8 @@
 
 //=== sMT4Data
 void sMT4Data::sMT4Data_common(tDebugger* dbg_){	//--parent DataSource properties
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("MT4Data.err"))) : dbg_;
-	type=SOURCE_DATA_FROM_MT4;
+	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("MT4Data.err"))) : dbg_;
+	type=MT4_SOURCE;
 	calcBW=true;
 	//-- the following are fixed (OHLCV), and determined by loadOHLCV query
 	featuresCnt=5;

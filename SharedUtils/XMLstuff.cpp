@@ -1,9 +1,78 @@
-#include "MyEnums.h"
-/*
-EXPORT bool decode(char* stringToCheck, tParm* enumParm, int* oValsCnt, int* oVal) {
-	bool ret=false;
+#include "XMLstuff.h"
 
-	if (strcmp(enumName, "DATASOURCE.TYPE")==0) {
+sXMLelement::sXMLelement() {
+	depth=0;
+	step=(char**)malloc(XML_MAX_PATH_DEPTH*sizeof(char*)); for (int i=0; i<XML_MAX_PATH_DEPTH; i++) step[i]=(char*)malloc(XML_MAX_SECTION_DESC_LEN);
+}
+sXMLelement::~sXMLelement() {
+	for (int i=0; i<XML_MAX_PATH_DEPTH; i++) step[i];
+	free(step);
+}
+void sXMLelement::setFromDesc(const char* desc, bool fromRoot) {
+	depth=cslToArray(desc, '.', step);
+	for (int d=0; d<depth; d++) UpperCase(step[d]);
+}
+void sXMLelement::copyTo(sXMLelement* destElement) {
+	for (int d=0; d<depth; d++) {
+		memcpy_s(destElement->step[d], XML_MAX_SECTION_DESC_LEN, step[d], XML_MAX_SECTION_DESC_LEN);
+		destElement->depth=depth;
+	}
+	//memcpy_s((void*)destElement, sizeof(sXMLelement), this, sizeof(sXMLelement));
+}
+void sXMLelement::appendTo(sXMLelement* destParm) {
+	for (int d=0; d<depth; d++) {
+		strcpy_s(destParm->step[destParm->depth+d], XML_MAX_SECTION_DESC_LEN, step[d]);
+		destParm->depth++;
+	}
+}
+
+bool sKey::find(tFileInfo* parmsFile) {
+
+	//-- backup
+	parmsFile->savePos();
+	//--
+	for (int d=0; d<depth; d++) {
+		sprintf_s(keyStepTagStart, XML_MAX_SECTION_DESC_LEN+2, "<%s>", step[d]);
+		sprintf_s(keyStepTagEnd, XML_MAX_SECTION_DESC_LEN+3, "</%s>", step[d]);
+
+		//-- locate tag start
+		found=false;
+		while (fscanf_s(parmsFile->handle, "%s", vLine, XML_MAX_SECTION_DESC_LEN+3)!=EOF) {
+			UpperCase(vLine);
+			if (strcmp(vLine, keyStepTagStart)==0) {
+				found=true;
+				break;
+			}
+		}
+	}
+	//-- restore
+	if (!found) parmsFile->restorePos();
+	//--
+	return (found);
+}
+bool sParm::find(tFileInfo* parmsFile) {
+
+	//-- backup
+	parmsFile->savePos();
+	//--
+	//-- locate param name
+	found=false;
+
+	while (fscanf_s(parmsFile->handle, "%s = %[^\n]", name, XML_MAX_PARAM_NAME_LEN, val, XML_MAX_PARAM_VAL_LEN)!=EOF) {
+		UpperCase(name);
+		if (strcmp(name, step[depth-1])==0) {
+			found=true;
+			break;
+		}
+	}
+	//-- restore
+	if (!found) parmsFile->restorePos();
+	//--
+	return (found);
+}
+bool sParm::decode() {
+	bool ret=false;
+	if (strcmp(name, "DATASOURCE.TYPE")==0) {
 		if (strcmp(stringToCheck, "FXDB_SOURCE")==0) { (*oVal)=FXDB_SOURCE; ret=true; }
 		if (strcmp(stringToCheck, "FILE_SOURCE")==0) { (*oVal)=FILE_SOURCE; ret=true; }
 		if (strcmp(stringToCheck, "MT4_SOURCE")==0) { (*oVal)=MT4_SOURCE; ret=true; }
@@ -50,4 +119,3 @@ EXPORT bool decode(char* stringToCheck, tParm* enumParm, int* oValsCnt, int* oVa
 	}
 	return ret;
 }
-*/
