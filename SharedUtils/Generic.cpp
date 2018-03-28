@@ -25,6 +25,7 @@ EXPORT void Trim(char* str) {
 	int l = 0;
 	int i;
 	int r = (int)strlen(str);
+	if (r==0) return;
 	char ret[MAX_PATH];
 	while (isspace(str[l])>0) l++;
 	while (isspace(str[r-1])>0) r--;
@@ -38,7 +39,7 @@ EXPORT int cslToArray(const char* csl, char Separator, char** StrList) {
 	int i = 0;
 	int prevSep = 0;
 	int ListLen = 0;
-	int kaz;
+	int kaz=0;
 
 	while (csl[i]!='\0') {
 		kaz = (prevSep==0) ? 0 : 1;
@@ -71,6 +72,19 @@ EXPORT char* right(char* str, int len) {
 EXPORT char* left(char* str, int len) {
 	return(substr(str, 0, len));
 }
+EXPORT int  instr(char soughtChar, char* intoStr, bool fromRight) {
+	int i;
+	if (fromRight) {
+		for (i=(int)strlen(intoStr)-1; i>=0; i--) {
+			if (intoStr[i]==soughtChar) return i;
+		}
+	} else {
+		for (i=0; i<strlen(intoStr); i++) {
+			if (intoStr[i]==soughtChar) return i;
+		}
+	}
+	return -1;
+}
 int argcnt(const char* mask) {
 	int cnt=0;
 	for (int i=0; i<strlen(mask); i++) {
@@ -90,4 +104,24 @@ EXPORT void removeQuotes(char* istr, char* ostr) {
 	}
 	ostr[ri]='\0';
 }
-
+EXPORT void stripChar(char* istr, char c) {
+	size_t slen=strlen(istr);
+	char ostr[1024];
+	int ri=0;
+	for (int si=0; si<slen; si++) {
+		if (istr[si]!=c) {
+			ostr[ri]=istr[si];
+			ri++;
+		}
+	}
+	ostr[ri]='\0';
+	strcpy_s(istr, 1024, ostr);
+}
+EXPORT bool getValuePair(char* istr, char* oName, char* oVal, char eqSign) {
+	int eqpos=instr(eqSign, istr, false); if (eqpos<0) return false;
+	memcpy_s(oName, eqpos, istr, eqpos);
+	oName[eqpos]='\0';
+	memcpy_s(oVal, strlen(istr)-eqpos+1, &istr[eqpos+1], strlen(istr)-eqpos);
+	oVal[strlen(istr)-eqpos]='\0';
+	return true;
+}

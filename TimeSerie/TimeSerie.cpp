@@ -47,13 +47,13 @@ sTimeSerie::sTimeSerie(tParmsSource* parms, int set_, tDebugger* dbg_){
 	//-- 1. set xml section according to set (Train/Test/Validation)
 	switch (set) {
 	case TRAIN_SET:
-		parms->gotoKey("Data.Train.TimeSerie");
+		safeCallEB(parms->setKey("Data.Train.TimeSerie"));
 		break;
 	case TEST_SET:
-		parms->gotoKey("Data.Test.TimeSerie");
+		safeCallEB(parms->setKey("Data.Test.TimeSerie"));
 		break;
 	case VALID_SET:
-		parms->gotoKey("Data.Validation.TimeSerie");
+		safeCallEB(parms->setKey("Data.Validation.TimeSerie"));
 		break;
 	default:
 		break;
@@ -405,13 +405,13 @@ sDataSet::sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_) 
 
 	switch (sourceTS->set) {
 	case TRAIN_SET:
-		parms->gotoKey("Data.Train.DataSet");
+		safeCallEB(parms->setKey("Data.Train.DataSet"));
 		break;
 	case TEST_SET:
-		parms->gotoKey("Data.Test.DataSet");
+		safeCallEB(parms->setKey("Data.Test.DataSet"));
 		break;
 	case VALID_SET:
-		parms->gotoKey("Data.Validation.DataSet");
+		safeCallEB(parms->setKey("Data.Validation.DataSet"));
 		break;
 	default:
 		break;

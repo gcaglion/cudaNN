@@ -7,15 +7,17 @@ sModel::sModel(bool doTrain_, bool doValidation_, bool doTest_, tDebugger* dbg_)
 sModel::sModel(tParmsSource* parms, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Model.err"))) : dbg_;
 
-	safeCallEB(parms->gotoKey("Model", true, false));
+	safeCallEE(parms->setKey("Model", true, false));
 	
-	if (parms->gotoKey("Debugger", false, true)) {
+	if (parms->setKey("Debugger", false, true)) {
 		parms->newDebugger(dbg);
 	} else {
 	}
-	parms->get(&doTrain, "Model", "doTrain");
-	parms->get(&doValidation, "Model", "doValidation");
-	parms->get(&doTest, "Model", "doTest");
+	//-- define model actions
+	safeCallEE(parms->setKey("Model.Action", true, false));
+	parms->get(&doTrain, "Train", true);
+	parms->get(&doValidation, "Validation", true);
+	parms->get(&doTest, "Test", true);
 
 }
 sModel::~sModel() {

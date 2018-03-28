@@ -167,9 +167,8 @@
     <ClCompile Include="Generic.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="MT4Data.cpp" />
-    <ClCompile Include="MyEnums.cpp" />
+    <ClCompile Include="ParamDecoder.cpp" />
     <ClCompile Include="ParamMgr.cpp" />
-    <ClCompile Include="XMLstuff.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Data.h" />
@@ -188,9 +187,7 @@
     <ClInclude Include="Generic.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="MT4data.h" />
-    <ClInclude Include="MyEnums.h" />
     <ClInclude Include="ParamMgr.h" />
-    <ClInclude Include="XMLstuff.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

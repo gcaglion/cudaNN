@@ -30,6 +30,8 @@ int main(int argc, char* argv[]) {
 		//-- create client parms, include command-line parms, and read parameters file
 		tParmsSource* XMLparms; safeCallEE(XMLparms=new tParmsSource("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
 
+		XMLparms->parse();
+
 		//-- create Data Model from parms
 		tModel* model; safeCallEE(model=new tModel(XMLparms));
 
@@ -43,7 +45,7 @@ int main(int argc, char* argv[]) {
 		tTimeSerie* validTS=new tTimeSerie(XMLparms, VALID_SET, dbg);
 
 		//-- create persistor, with its own DBConnection, to save results data.
-		XMLparms->gotoKey("Persistor", true);
+		safeCallEB(XMLparms->setKey("Persistor", true));
 		XMLparms->get(&persistorDest, "Destination", true);
 		if (persistorDest==ORCL) {
 			XMLparms->get(persistorDBUser, "DBUser");
@@ -63,14 +65,14 @@ int main(int argc, char* argv[]) {
 
 		//-- determine Engine Architecture (number of cores, type and position for every core)
 		tCore* core[ENGINE_MAX_CORES];
-		XMLparms->gotoKey("Engine");
+		safeCallEB(XMLparms->setKey("Engine"));
 		//-- first, read general, core-independent engine parms
 		char CoreSectionDesc[10];
 		int coreType;
 		int parentsCnt; int* parentId=(int*)malloc(ENGINE_MAX_CORES*sizeof(int));
 		int connectorsCnt; int* connectorType=(int*)malloc(ENGINE_MAX_CORES*sizeof(int));
 		for (int c=0; c<ENGINE_MAX_CORES; c++) {
-			sprintf_s(CoreSectionDesc, 10, "Engine.Core.%d", c);	XMLparms->gotoKey(CoreSectionDesc);
+			sprintf_s(CoreSectionDesc, 10, "Engine.Core.%d", c);	safeCallEB(XMLparms->setKey(CoreSectionDesc));
 			try { XMLparms->get(&coreType, "Type", true); } catch (std::exception e) { break; }
 			//-- if successful, keep reading core properties required for creation
 			parentsCnt=0; connectorsCnt=0;

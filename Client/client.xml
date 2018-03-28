@@ -85,7 +85,7 @@
           </FXData>
           <FileData>
             FileFullName	= c:/temp/timeseriesdata/sunspots.txt
-            FieldSep			= FILEDATA_SEP_COMMA
+            FieldSep			= COMMA
           </FileData>
         </DataSource>
       </TimeSerie>

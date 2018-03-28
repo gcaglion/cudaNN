@@ -12,7 +12,7 @@ sFileData::sFileData(tFileInfo* srcFile_, int fieldSep_, bool calcBW_, int BWfea
 }
 sFileData::sFileData(tParmsSource* parms, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("FileData.err"))) : dbg_;
-	parms->gotoKey("FileData", false, false);
+	safeCallEB(parms->setKey("FileData", false, false));
 	char ffname[MAX_PATH];
 	safeCallEE(srcFile=new tFileInfo(ffname, FILE_MODE_READ));
 	parms->get(&fieldSep, "FieldSep", false, true);

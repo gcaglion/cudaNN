@@ -23,7 +23,7 @@ sFXData::sFXData(tParmsSource* parms, tDebugger* dbg_) {
 	parms->get(Symbol, "Symbol");
 	parms->get(TimeFrame, "TimeFrame");
 	parms->get(&IsFilled, "IsFilled");
-	parms->gotoKey("DBConnection");
+	safeCallEB(parms->setKey("DBConnection"));
 	safeCallEE(db=new tDBConnection(parms));
 }
 

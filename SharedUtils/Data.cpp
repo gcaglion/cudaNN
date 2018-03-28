@@ -9,7 +9,7 @@ sData::sData(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* db
 sData::sData(tParmsSource* parms, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Data.err"))) : dbg_;
 
-	parms->gotoKey("Data");
+	safeCallEB(parms->setKey("Data"));
 	parms->get(&sampleLen, "SampleLen");
 	parms->get(&predictionLen, "PredictionLen");
 	parms->get(&featuresCnt, "FeaturesCount");
