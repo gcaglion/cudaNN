@@ -9,7 +9,7 @@ void sFXData::sFXData_common(tDebugger* dbg_){	//--parent DataSource properties
 	featuresCnt=5;
 	BWfeatureH=FXDATA_HIGH; BWfeatureL=FXDATA_LOW;
 }
-sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_, tDebugger* dbg_) {
+sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, tDebugger* dbg_) {
 	sFXData_common(dbg_);
 	//--
 	db=db_;
@@ -20,10 +20,10 @@ sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, int isFilled_, tD
 sFXData::sFXData(tParmsSource* parms, tDebugger* dbg_) {
 	sFXData_common(dbg_);
 	//--
+	safeCallEB(parms->setKey("FXDATA"));
 	parms->get(Symbol, "Symbol");
 	parms->get(TimeFrame, "TimeFrame");
 	parms->get(&IsFilled, "IsFilled");
-	safeCallEB(parms->setKey("DBConnection"));
 	safeCallEE(db=new tDBConnection(parms));
 }
 

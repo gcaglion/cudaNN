@@ -11,7 +11,10 @@
 #define XML_MAX_PARAM_VAL_LEN	128
 #define XML_MAX_LINE_SIZE XML_MAX_PARAM_NAME_LEN+XML_MAX_PARAM_VAL_LEN
 #define XML_MAX_ARRAY_PARAM_ELEM_CNT 32
-#define enumlist true
+
+//-- get options
+#define SimpleVal 8
+#define EnumVal   9
 
 typedef struct sParmsSource {
 
@@ -40,19 +43,19 @@ typedef struct sParmsSource {
 	char soughtParmFull[XML_MAX_PATH_LEN];
 
 	//--
-	EXPORT bool setKey(char* KeyDesc, bool fromRoot=false, bool ignoreError=false);
+	EXPORT bool setKey(char* KeyDesc, bool ignoreError=false);
 	bool findKey(char* KeyFullDesc);
 
 	EXPORT bool parse();
 	//--
 	EXPORT bool decode(int elementId, int* oVal);
 
-	template <typename T> EXPORT void get(T* oVar, const char* soughtParmDesc, bool fromRoot=false, bool isenum=false, int* oListLen=nullptr) {
+	template <typename T> EXPORT void get(T* oVar, const char* soughtParmDesc, int* oListLen=nullptr) {
 
-		if (fromRoot || strlen(currentKey)==0) {
+		if (soughtParmDesc[0]=='.' || strlen(currentKey)==0) {
 			soughtKey[0]='\0';
 		} else {
-			strcpy_s(soughtKey, XML_MAX_PATH_LEN, currentKey);
+			strcpy_s(soughtKey, XML_MAX_SECTION_DESC_LEN, currentKey);
 			strcat_s(soughtKey, ".");
 		}
 		strcpy_s(soughtParmFull, XML_MAX_PATH_LEN, soughtKey);
@@ -69,20 +72,22 @@ typedef struct sParmsSource {
 		}
 		if (foundParmId<0) throwE("could not find parm %s. currentKey=%s", 1, soughtParmDesc, currentKey);
 
+		//-- set oListLen (if passed)
+		if (oListLen!=nullptr) (*oListLen)=parmValsCnt[foundParmId];
 		//-- call type-specific getx(), which in turn uses Fully-qualified parameter name
-		getx(oVar, isenum, oListLen);
+		getx(oVar);
 
 	}
 
 	//-- type-specific: int(with or without enums), numtype, char*
-	EXPORT void getx(int* oVar, bool isenum, int* oArrLen);
-	EXPORT void getx(bool* oVar, bool isenum, int* oArrLen);
-	EXPORT void getx(char* oVar, bool isenum, int* oArrLen);
-	EXPORT void getx(numtype* oVar, bool isenum, int* oArrLen);
+	EXPORT void getx(int* oVar);
+	EXPORT void getx(bool* oVar);
+	EXPORT void getx(char* oVar);
+	EXPORT void getx(numtype* oVar);
 	//-- type-specific, arrays: int(with or without enums), numtype, char*
-	EXPORT void getx(int** oVar, bool isenum, int* oArrLen);
-	EXPORT void getx(bool** oVar, bool isenum, int* oArrLen);
-	EXPORT void getx(char** oVar, bool isenum, int* oArrLen);
-	EXPORT void getx(numtype** oVar, bool isenum, int* oArrLen);
+	EXPORT void getx(int** oVar);
+	EXPORT void getx(bool** oVar);
+	EXPORT void getx(char** oVar);
+	EXPORT void getx(numtype** oVar);
 
 } tParmsSource;

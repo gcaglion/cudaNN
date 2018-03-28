@@ -45,8 +45,8 @@ int main(int argc, char* argv[]) {
 		tTimeSerie* validTS=new tTimeSerie(XMLparms, VALID_SET, dbg);
 
 		//-- create persistor, with its own DBConnection, to save results data.
-		safeCallEB(XMLparms->setKey("Persistor", true));
-		XMLparms->get(&persistorDest, "Destination", true);
+		safeCallEB(XMLparms->setKey(".Model.Persistor"));
+		XMLparms->get(&persistorDest, "Destination");
 		if (persistorDest==ORCL) {
 			XMLparms->get(persistorDBUser, "DBUser");
 			XMLparms->get(persistorDBPassword, "DBPassword");
@@ -73,11 +73,11 @@ int main(int argc, char* argv[]) {
 		int connectorsCnt; int* connectorType=(int*)malloc(ENGINE_MAX_CORES*sizeof(int));
 		for (int c=0; c<ENGINE_MAX_CORES; c++) {
 			sprintf_s(CoreSectionDesc, 10, "Engine.Core.%d", c);	safeCallEB(XMLparms->setKey(CoreSectionDesc));
-			try { XMLparms->get(&coreType, "Type", true); } catch (std::exception e) { break; }
+			try { XMLparms->get(&coreType, "Type"); } catch (std::exception e) { break; }
 			//-- if successful, keep reading core properties required for creation
 			parentsCnt=0; connectorsCnt=0;
-			XMLparms->get(&parentId, "ParentId", false, false, &parentsCnt);
-			XMLparms->get(&connectorType, "Connector", false, false, &connectorsCnt);
+			XMLparms->get(&parentId, "ParentId", &parentsCnt);
+			XMLparms->get(&connectorType, "Connector", &connectorsCnt);
 			if (parentsCnt!=connectorsCnt) throwE("parents / connectors count mismatch (%d vs. %d) for Core.%d", 3, parentsCnt, connectorsCnt, c);
 
 			//-- finally, create new core

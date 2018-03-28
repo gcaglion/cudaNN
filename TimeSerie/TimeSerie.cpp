@@ -47,20 +47,21 @@ sTimeSerie::sTimeSerie(tParmsSource* parms, int set_, tDebugger* dbg_){
 	//-- 1. set xml section according to set (Train/Test/Validation)
 	switch (set) {
 	case TRAIN_SET:
-		safeCallEB(parms->setKey("Data.Train.TimeSerie"));
+		safeCallEB(parms->setKey(".Model.Data.TrainSet.TimeSerie"));
 		break;
 	case TEST_SET:
-		safeCallEB(parms->setKey("Data.Test.TimeSerie"));
+		safeCallEB(parms->setKey(".Model.Data.TestSet.TimeSerie"));
 		break;
 	case VALID_SET:
-		safeCallEB(parms->setKey("Data.Validation.TimeSerie"));
+		safeCallEB(parms->setKey(".Model.Data.ValidationSet.TimeSerie"));
 		break;
 	default:
 		break;
 	}
 
 	//-- 1.1. First, create sub-object DataSource from sub-key <DataSource>
-	parms->get(&sourceType, "DataSourceType", true);
+	safeCallEB(parms->setKey("DataSource"));
+	parms->get(&sourceType, "Type");
 	if (sourceType==FXDB_SOURCE) {
 		safeCallEE(fxData=new tFXData(parms));
 	} else if (sourceType==FILE_SOURCE) {
@@ -405,13 +406,13 @@ sDataSet::sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_) 
 
 	switch (sourceTS->set) {
 	case TRAIN_SET:
-		safeCallEB(parms->setKey("Data.Train.DataSet"));
+		safeCallEB(parms->setKey(".Model.Data.TrainSet.DataSet"));
 		break;
 	case TEST_SET:
-		safeCallEB(parms->setKey("Data.Test.DataSet"));
+		safeCallEB(parms->setKey(".Model.Data.TestSet.DataSet"));
 		break;
 	case VALID_SET:
-		safeCallEB(parms->setKey("Data.Validation.DataSet"));
+		safeCallEB(parms->setKey(".Model.Data.ValidationSet.DataSet"));
 		break;
 	default:
 		break;
@@ -419,10 +420,10 @@ sDataSet::sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_) 
 	parms->get(&batchSamplesCnt, "BatchSamplesCount");
 	switch (sourceTS->sourceType) {
 	case FILE_SOURCE:
-		parms->get(&selectedFeature, "SelectedFeatures", false, false, &selectedFeaturesCnt);
+		parms->get(&selectedFeature, "SelectedFeatures", &selectedFeaturesCnt);
 		break;
 	case FXDB_SOURCE:
-		parms->get(&selectedFeature, "SelectedFeatures", false, true, &selectedFeaturesCnt);
+		parms->get(&selectedFeature, "SelectedFeatures", &selectedFeaturesCnt);
 		break;
 	case MT4_SOURCE:
 		//-- ...... ?? boh ??? ...

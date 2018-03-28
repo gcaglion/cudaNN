@@ -1,7 +1,7 @@
 #include "ParamMgr.h"
 
 sParmsSource::sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("ParmsSource.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH, new tFileInfo("ParmsSource.err"))) : dbg_;
 	CLoverridesCnt=CLoverridesCnt_; CLoverride=CLoverride_;
 	safeCallEE(parmsFile=new tFileInfo(pFileFullName, FILE_MODE_READ));
 
@@ -29,94 +29,83 @@ sParmsSource::~sParmsSource() {
 void sParmsSource::newDebugger(tDebugger* dbg_) {
 	int dbg_level, dbg_dest; char dbg_fname[MAX_PATH];
 
-	get(&dbg_level,"Level", false, enumlist);
-	get(&dbg_dest, "Dest", false, enumlist);
+	get(&dbg_level,"Level");
+	get(&dbg_dest, "Dest");
 	get(dbg_fname, "DestFileFullName");
 
 	safeCallEE(dbg_=new tDebugger(dbg_level, dbg_dest, new tFileInfo(dbg_fname, FILE_MODE_WRITE)));
 
 }
 
-void stripLastStep(char* fullDesc, char* oStrippedDesc) {
+bool stripLastStep(char* fullDesc, char* oStrippedDesc) {
 	int lastDotPos=instr('.', fullDesc, true);
-	//if (lastDotPos<0) return false;
-	memcpy_s(oStrippedDesc, strlen(fullDesc), fullDesc, strlen(fullDesc)-lastDotPos-1);
+	if (lastDotPos<0) return false;
+	memcpy_s(oStrippedDesc, strlen(fullDesc), fullDesc, lastDotPos);
 	oStrippedDesc[lastDotPos]='\0';
+	return true;
 }
-bool sParmsSource::setKey(char* KeyDesc, bool fromRoot, bool ignoreError) {
-	if (fromRoot) {
+bool sParmsSource::setKey(char* KeyDesc, bool ignoreError) {
+	
+	//-- "." before KeyDesc makes search start from root; otherwise from current pos
+	if (KeyDesc[0]=='.') {
 		currentKey[0]='\0';
+		strcat_s(currentKey, XML_MAX_PATH_LEN, &KeyDesc[1]);
 	} else {
 		strcat_s(currentKey, XML_MAX_PATH_LEN, ".");
+		strcat_s(currentKey, XML_MAX_PATH_LEN, KeyDesc);
 	}
-	strcat_s(currentKey, XML_MAX_PATH_LEN, KeyDesc);
 	UpperCase(currentKey);
 
 	bool found=findKey(currentKey);
-	return(found);
+	return(found || ignoreError);
 }
 bool sParmsSource::findKey(char* KeyFullDesc){
 	char keyDescFromParmDesc[XML_MAX_PATH_LEN];
 	for (int p=0; p<parmsCnt; p++) {
-		stripLastStep(parmName[p], keyDescFromParmDesc);
-		if (strcmp(keyDescFromParmDesc, KeyFullDesc)==0) return true;
+		strcpy_s(keyDescFromParmDesc, XML_MAX_PATH_LEN, parmName[p]);
+		while (stripLastStep(keyDescFromParmDesc, keyDescFromParmDesc)) {
+			if (strcmp(keyDescFromParmDesc, KeyFullDesc)==0) return true;
+		}
 	}
 	return false;
 }
 
 //-- specific, single value: int(with or without enums), numtype, char*
-/*void sParmsSource::getx(int* oVar, bool isenum, int* oArrLen) {
-	if (isenum) {
-		safeCallEB(decode(oVar));
-	} else {
-		(*oVar)=atoi(parmVal[foundParmId]);
-	}
+void sParmsSource::getx(int* oVar){
+	getx(&oVar);
 }
-void sParmsSource::getx(bool* oVar, bool isenum, int* oArrLen) {
-	(*oVar)=(strcmp(parmVal[foundParmId], "TRUE")==0);
+void sParmsSource::getx(bool* oVar){
+	getx(&oVar);
 }
-void sParmsSource::getx(char* oVar, bool isenum, int* oArrLen) {
-	strcpy_s(oVar, XML_MAX_PARAM_VAL_LEN, parmVal[foundParmId]);
+void sParmsSource::getx(char* oVar){
+	getx(&oVar);
 }
-void sParmsSource::getx(numtype* oVar, bool isenum, int* oArrLen) {
-	(*oVar)=(numtype)atof(parmVal[foundParmId]);
-}
-*/
-void sParmsSource::getx(int* oVar, bool isenum, int* oArrLen){
-	getx(&oVar, isenum, oArrLen);
-}
-void sParmsSource::getx(bool* oVar, bool isenum, int* oArrLen){
-	getx(&oVar, isenum, oArrLen);
-}
-void sParmsSource::getx(char* oVar, bool isenum, int* oArrLen){
-	getx(&oVar, isenum, oArrLen);
-}
-void sParmsSource::getx(numtype* oVar, bool isenum, int* oArrLen){
-	getx(&oVar, isenum, oArrLen);
+void sParmsSource::getx(numtype* oVar){
+	getx(&oVar);
 }
 
 
 //-- specific, arrays: int(with or without enums), numtype, char*
-void sParmsSource::getx(int** oVar, bool isenum, int* oArrLen){
+void sParmsSource::getx(int** oVar){
 	for (int e=0; e<parmValsCnt[foundParmId]; e++) {
-		if (isenum) {
-			safeCallEB(decode(e, &(*oVar[e])));
-		} else {
+		if (isnumber(parmVal[foundParmId][e])) {
 			(*oVar[e])=atoi(parmVal[foundParmId][e]);
+		} else {
+			safeCallEB(decode(e, &(*oVar[e])));
 		}
 	}
 }
-void sParmsSource::getx(bool** oVar, bool isenum, int* oArrLen) {
+void sParmsSource::getx(bool** oVar) {
 	for (int e=0; e<parmValsCnt[foundParmId]; e++) {
 		(*oVar[e])=(strcmp(parmVal[foundParmId][e], "TRUE")==0);
 	}
 }
-void sParmsSource::getx(char** oVar, bool isenum, int* oArrLen){
+void sParmsSource::getx(char** oVar){
 	for (int e=0; e<parmValsCnt[foundParmId]; e++) {
 		strcpy_s(oVar[e], XML_MAX_PARAM_VAL_LEN, parmVal[foundParmId][e]);
 	}
 }
-void sParmsSource::getx(numtype** oVar, bool isenum, int* oArrLen){
+void sParmsSource::getx(numtype** oVar){
 	for(int e=0; e<parmValsCnt[foundParmId]; e++){
 		(*oVar[e])=(numtype)atof(parmVal[foundParmId][e]);
 	}
@@ -124,7 +113,7 @@ void sParmsSource::getx(numtype** oVar, bool isenum, int* oArrLen){
 
 
 bool sParmsSource::parse() {
-	char vLine[1024];
+	char vLine[XML_MAX_LINE_SIZE];
 	size_t llen;
 	char readKeyDesc[XML_MAX_SECTION_DESC_LEN];
 	char readParmDesc[XML_MAX_PARAM_NAME_LEN];
@@ -139,6 +128,7 @@ bool sParmsSource::parse() {
 		stripChar(vLine, '\t');
 		stripChar(vLine, '\n');
 		llen=strlen(vLine);
+		if (llen==0) continue;
 		UpperCase(vLine);
 
 		if (vLine[0]=='<' && vLine[1]!='/' && vLine[llen-1]=='>') {
@@ -164,7 +154,5 @@ bool sParmsSource::parse() {
 		}
 
 	}
-
-
-	return false;
+	return true;
 }

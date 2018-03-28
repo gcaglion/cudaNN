@@ -21,19 +21,6 @@ EXPORT void UpperCase(char* str) {
 		pos++;
 	}
 }
-EXPORT void Trim(char* str) {
-	int l = 0;
-	int i;
-	int r = (int)strlen(str);
-	if (r==0) return;
-	char ret[MAX_PATH];
-	while (isspace(str[l])>0) l++;
-	while (isspace(str[r-1])>0) r--;
-	for (i = 0; i<(r-l); i++) ret[i] = str[l+i];
-	ret[r-l] = '\0';
-	//strcpy(str, ret);
-	strcpy_s(str, MAX_PATH, ret);
-}
 EXPORT int cslToArray(const char* csl, char Separator, char** StrList) {
 	//-- 1. Put a <separator>-separated list of string values into an array of strings, and returns list length
 	int i = 0;
@@ -47,7 +34,7 @@ EXPORT int cslToArray(const char* csl, char Separator, char** StrList) {
 			// separator
 			memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
 			StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
-			Trim(StrList[ListLen]);
+			stripChar(StrList[ListLen], ' '); stripChar(StrList[ListLen], '\t');
 			ListLen++;
 			prevSep = i;
 		}
@@ -56,7 +43,7 @@ EXPORT int cslToArray(const char* csl, char Separator, char** StrList) {
 	//-- portion of pDesc after the last comma
 	memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
 	StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
-	Trim(StrList[ListLen]);
+	stripChar(StrList[ListLen], ' '); stripChar(StrList[ListLen], '\t');
 
 	return (ListLen+1);
 }
@@ -105,17 +92,19 @@ EXPORT void removeQuotes(char* istr, char* ostr) {
 	ostr[ri]='\0';
 }
 EXPORT void stripChar(char* istr, char c) {
-	size_t slen=strlen(istr);
-	char ostr[1024];
+	size_t ilen=strlen(istr);
+	char* ostr=(char*)malloc(ilen+1);
 	int ri=0;
-	for (int si=0; si<slen; si++) {
+	for (int si=0; si<ilen; si++) {
 		if (istr[si]!=c) {
 			ostr[ri]=istr[si];
 			ri++;
 		}
 	}
 	ostr[ri]='\0';
-	strcpy_s(istr, 1024, ostr);
+	memcpy_s(istr, ri, ostr, ri);
+	istr[ri]='\0';
+	free(ostr);
 }
 EXPORT bool getValuePair(char* istr, char* oName, char* oVal, char eqSign) {
 	int eqpos=instr(eqSign, istr, false); if (eqpos<0) return false;
@@ -123,5 +112,11 @@ EXPORT bool getValuePair(char* istr, char* oName, char* oVal, char eqSign) {
 	oName[eqpos]='\0';
 	memcpy_s(oVal, strlen(istr)-eqpos+1, &istr[eqpos+1], strlen(istr)-eqpos);
 	oVal[strlen(istr)-eqpos]='\0';
+	return true;
+}
+EXPORT bool isnumber(char* str) {
+	for (int i=0; i<strlen(str); i++) {
+		if (str[i]>'9'||str[i]<'0') return false;
+	}
 	return true;
 }

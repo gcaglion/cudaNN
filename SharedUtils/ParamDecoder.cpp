@@ -51,10 +51,5 @@ bool sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(TEST_SET, elementId);
 	optionLookup(VALID_SET, elementId);
 
-
-/*	if (strcmp(parmVal[foundParmId], "FXDB_SOURCE")==0) { (*oVal)=FXDB_SOURCE; return true; }
-	if (strcmp(parmVal[foundParmId], "FILE_SOURCE")==0) { (*oVal)=FILE_SOURCE; return true; }
-	if (strcmp(parmVal[foundParmId], "MT4_SOURCE")==0) { (*oVal)=MT4_SOURCE; return true; }
-*/
 	return false;
 }

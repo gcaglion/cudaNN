@@ -10,9 +10,11 @@ sDBConnection::sDBConnection(char* username, char* password, char* connstring, t
 }
 sDBConnection::sDBConnection(tParmsSource* iniParms, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("DBConnection.err"))) : dbg_;
-	iniParms->get(DBUser, "DBConnection.DBUser");
-	iniParms->get(DBPassword, "DBConnection.DBPassword");
-	iniParms->get(DBConnString, "DBConnection.DBConnString");
+	
+	safeCallEB(iniParms->setKey("DBConnection"));
+	iniParms->get(DBUser, "DBUser");
+	iniParms->get(DBPassword, "DBPassword");
+	iniParms->get(DBConnString, "DBConnString");
 	DBCtx=NULL;
 }
 sDBConnection::sDBConnection() {}
