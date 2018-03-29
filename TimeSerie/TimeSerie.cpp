@@ -63,9 +63,9 @@ sTimeSerie::sTimeSerie(tParmsSource* parms, int set_, tDebugger* dbg_){
 	safeCallEB(parms->setKey("DataSource"));
 	parms->get(&sourceType, "Type");
 	if (sourceType==FXDB_SOURCE) {
-		safeCallEE(fxData=new tFXData(parms));
+		safeCallEE(fxData=new tFXData(parms, "FXData"));
 	} else if (sourceType==FILE_SOURCE) {
-		safeCallEE(fileData=new tFileData(parms));
+		safeCallEE(fileData=new tFileData(parms, "FileData"));
 	} else if (sourceType==MT4_SOURCE) {
 		safeCallEE(mt4Data=new tMT4Data(parms));
 	} else {
@@ -364,10 +364,15 @@ sUberSetParms::~sUberSetParms() {
 */
 
 //-- sDataSet, constructors  /destructor
-sDataSet::sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDebugger* dbg_) {
+sDataSet::sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* datafileBWFeature_, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"))) : dbg_;
 	sourceTS=sourceTS_;
-	selectedFeaturesCnt=selectedFeaturesCnt_; selectedFeature=selectedFeature_;
+	//--
+	selectedFeaturesCnt=selectedFeaturesCnt_; 
+	for (int f=0; f<selectedFeaturesCnt; f++) selectedFeature[f]=selectedFeature_[f];
+	datafileBWFeature=(int*)malloc(2*sizeof(int));
+	datafileBWFeature[0]=datafileBWFeature_[0]; datafileBWFeature[1]=datafileBWFeature_[1];
+	//--
 	sampleLen=sampleLen_;
 	targetLen=targetLen_;
 	samplesCnt=sourceTS->steps-sampleLen-targetLen;// +1;
@@ -403,7 +408,6 @@ sDataSet::sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int se
 sDataSet::sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSets.err"))) : dbg_;
 	sourceTS=sourceTS_;
-
 	switch (sourceTS->set) {
 	case TRAIN_SET:
 		safeCallEB(parms->setKey(".Model.Data.TrainSet.DataSet"));
@@ -417,13 +421,18 @@ sDataSet::sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_) 
 	default:
 		break;
 	}
+	
 	parms->get(&batchSamplesCnt, "BatchSamplesCount");
+
+	selectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
 	switch (sourceTS->sourceType) {
 	case FILE_SOURCE:
-		parms->get(&selectedFeature, "SelectedFeatures", &selectedFeaturesCnt);
+		parms->get(&selectedFeature, "FileData.SelectedFeatures", &selectedFeaturesCnt);
+		datafileBWFeature=(int*)malloc(2*sizeof(int));
+		parms->get(&datafileBWFeature, "FileData.BWFeatures", new int);
 		break;
 	case FXDB_SOURCE:
-		parms->get(&selectedFeature, "SelectedFeatures", &selectedFeaturesCnt);
+		parms->get(&selectedFeature, "FXData.SelectedFeatures", &selectedFeaturesCnt);
 		break;
 	case MT4_SOURCE:
 		//-- ...... ?? boh ??? ...
@@ -435,6 +444,8 @@ sDataSet::sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_) 
 }
 
 sDataSet::~sDataSet() {
+	free(selectedFeature);
+	free(datafileBWFeature);
 	free(sample);
 	if (target!=nullptr) free(target);
 	free(prediction);

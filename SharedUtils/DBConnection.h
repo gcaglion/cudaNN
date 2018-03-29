@@ -15,7 +15,7 @@ typedef struct sDBConnection{
 	tDebugger* dbg;
 #ifdef __cplusplus
 	EXPORT sDBConnection(char* username, char* password, char* connstring, tDebugger* dbg_=nullptr);
-	EXPORT sDBConnection(tParmsSource* iniParms, tDebugger* dbg_=nullptr);
+	EXPORT sDBConnection(tParmsSource* iniParms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT sDBConnection();
 	EXPORT ~sDBConnection();
 #endif

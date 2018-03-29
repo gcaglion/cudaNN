@@ -7,6 +7,7 @@
 #include "FileInfo_enums.h"
 #include "FXData_enums.h"
 #include "../TimeSerie/TimeSerie_enums.h"
+#include "../Logger/Logger_enums.h"
 
 #define optionLookup(option, e) { \
 	if (strcmp(parmVal[foundParmId][e], #option)==0) { \
@@ -18,6 +19,8 @@ bool sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(FXDB_SOURCE, elementId);
 	optionLookup(FILE_SOURCE, elementId);
 	optionLookup(MT4_SOURCE, elementId);
+	optionLookup(ORCL_DEST, elementId);
+	optionLookup(FILE_DEST, elementId);
 	optionLookup(DBG_LEVEL_ERR, elementId);
 	optionLookup(DBG_LEVEL_STD, elementId);
 	optionLookup(DBG_LEVEL_DET, elementId);
@@ -30,11 +33,11 @@ bool sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(FILE_MODE_READ, elementId);
 	optionLookup(FILE_MODE_WRITE, elementId);
 	optionLookup(FILE_MODE_APPEND, elementId);
-	optionLookup(FXDATA_OPEN, elementId);
-	optionLookup(FXDATA_HIGH, elementId);
-	optionLookup(FXDATA_LOW, elementId);
-	optionLookup(FXDATA_CLOSE, elementId);
-	optionLookup(FXDATA_VOLUME, elementId);
+	optionLookup(FXOPEN, elementId);
+	optionLookup(FXHIGH, elementId);
+	optionLookup(FXLOW, elementId);
+	optionLookup(FXCLOSE, elementId);
+	optionLookup(FXVOLUME, elementId);
 	optionLookup(DT_NONE, elementId);
 	optionLookup(DT_DELTA, elementId);
 	optionLookup(DT_LOG, elementId);

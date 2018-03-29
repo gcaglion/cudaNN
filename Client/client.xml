@@ -43,7 +43,7 @@
 			<DataSet>
 				BatchSamplesCount	= 50
 				<FXDATA>
-					SelectedFeatures	= OPEN, HIGH, LOW, CLOSE
+					SelectedFeatures	= FXOPEN, FXHIGH, FXLOW, FXCLOSE
 				</FXDATA>
 				<FILEDATA>
 					SelectedFeatures	= 0, 1, 2, 3
@@ -54,6 +54,40 @@
 		<ValidationSet>
 		</ValidationSet>
 		<TestSet>
+			<TimeSerie>
+				Date0				= 201612300000
+				HistoryLen			= 50000
+				DataTransformation	= DT_DELTALOG
+				BWCalc				= true
+				StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
+				<DataSource>
+					Type	  = FXDB_SOURCE
+					<FXDATA>
+						Symbol				= EURUSD
+						TimeFrame			= H1
+						IsFilled			= false
+						<DBConnection>
+							DBUser			  = History
+							DBPassword		= HistoryPwd
+							DBConnString	= Algo
+						</DBConnection>
+					</FXDATA>
+					<FILEDATA>
+						FileFullName	= c:/temp/timeseriesdata/sunspots.txt
+						FieldSep			= COMMA
+					</FILEDATA>
+				</DataSource>
+			</TimeSerie>
+			<DataSet>
+				BatchSamplesCount	= 50
+				<FXDATA>
+					SelectedFeatures	= FXOPEN, FXHIGH, FXLOW, FXCLOSE
+				</FXDATA>
+				<FILEDATA>
+					SelectedFeatures	= 0, 1, 2, 3
+					BWFeatures			= 1,2
+				</FILEDATA>
+			</DataSet>
 		</TestSet>
 	</Data>
 	<Engine>
@@ -113,24 +147,19 @@
 	  </Core-4>
 	</Engine>
 	<Persistor>
-	<Action>
-	  saveNothing		= false
-	  saveClient		= true
-	  saveMSE			  = true
-	  saveRun			  = true
-	  saveInternals	= false
-	  saveImage		  = true
-	</Action>
-	DestType      = ORCL
-	<DestDB>
-	  DBUser			  = cuLogUser
-	  DBPassword		= LogPwd
-	  DBConnString	= Algo
-	</DestDB>
-	<DestFiles>      
-	</DestFiles>
+		saveNothing		= false
+		saveClient		= true
+		saveMSE			  = true
+		saveRun			  = true
+		saveInternals	= false
+		saveImage		  = true
+		Destination      = ORCL_DEST
+		<DestDB>
+			DBUser			  = cuLogUser
+			DBPassword		= LogPwd
+			DBConnString	= Algo
+		</DestDB>
+		<DestFiles>      
+		</DestFiles>
 	</Persistor>
 </Model>
-
-
-

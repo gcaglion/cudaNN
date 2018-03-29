@@ -11,11 +11,6 @@ int main(int argc, char* argv[]) {
 	//system("pause");
 	//return -1;
 
-	//-- persistor(s) For now, just one for all tables
-	int persistorDest;
-	char persistorDBUser[30]; char persistorDBPassword[30]; char persistorDBConnString[30];
-	tDBConnection* persistorDB;	tLogger* persistor;	
-
 	//-- start client timer
 	DWORD mainStart=timeGetTime();
 
@@ -41,31 +36,23 @@ int main(int argc, char* argv[]) {
 			safeCallEE(trainTS=new tTimeSerie(XMLparms, TRAIN_SET, dbg));
 			safeCallEE(trainDS=new tDataSet  (XMLparms, trainTS, dbg));
 		}
-		tTimeSerie* testTS =new tTimeSerie(XMLparms, TEST_SET, dbg);
-		tTimeSerie* validTS=new tTimeSerie(XMLparms, VALID_SET, dbg);
-
-		//-- create persistor, with its own DBConnection, to save results data.
-		safeCallEB(XMLparms->setKey(".Model.Persistor"));
-		XMLparms->get(&persistorDest, "Destination");
-		if (persistorDest==ORCL) {
-			XMLparms->get(persistorDBUser, "DBUser");
-			XMLparms->get(persistorDBPassword, "DBPassword");
-			XMLparms->get(persistorDBConnString, "DBConnString");
-			safeCallEE(persistorDB=new tDBConnection(persistorDBUser, persistorDBPassword, persistorDBConnString));
-			safeCallEE(persistor=new tLogger(persistorDB));
-			XMLparms->get(&persistor->saveNothing, "saveNothing");
-			XMLparms->get(&persistor->saveClient, "saveClient");
-			XMLparms->get(&persistor->saveMSE, "saveMSE");
-			XMLparms->get(&persistor->saveRun, "saveRun");
-			XMLparms->get(&persistor->saveInternals, "saveInternals");
-			XMLparms->get(&persistor->saveImage, "saveImage");
-		} else {
-			//-- TO DO ...
+		tTimeSerie* testTS; tDataSet* testDS;
+		if (model->doTest) {
+			safeCallEE(testTS=new tTimeSerie(XMLparms, TEST_SET, dbg));
+			safeCallEE(testDS=new tDataSet(XMLparms, testTS, dbg));
 		}
+		tTimeSerie* validTS; tDataSet* validDS;
+		if (model->doValidation) {
+			safeCallEE(validTS=new tTimeSerie(XMLparms, VALID_SET, dbg));
+			safeCallEE(validDS=new tDataSet(XMLparms, validTS, dbg));
+		}
+
+		//-- create single persistor, with its own DBConnection, to save results data.
+		tLogger* persistor; safeCallEE(persistor=new tLogger(XMLparms, ".Model.Persistor", dbg));
 
 		//-- determine Engine Architecture (number of cores, type and position for every core)
 		tCore* core[ENGINE_MAX_CORES];
-		safeCallEB(XMLparms->setKey("Engine"));
+		safeCallEB(XMLparms->setKey(".Model.Engine"));
 		//-- first, read general, core-independent engine parms
 		char CoreSectionDesc[10];
 		int coreType;

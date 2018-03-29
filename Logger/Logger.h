@@ -4,6 +4,8 @@
 #include "../SharedUtils/Debugger.h"
 #include "../SharedUtils/DBConnection.h"
 #include "../SharedUtils/FileData.h"
+#include "Logger_enums.h"
+
 #ifdef USE_ORCL
 #include "../OraUtils/OraUtils.h"
 #endif
@@ -23,8 +25,9 @@ typedef struct sLogger {
 	bool saveInternals;
 	bool saveImage;
 
+	EXPORT sLogger(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT sLogger(tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, tDebugger* dbg_=nullptr);
-	EXPORT sLogger(tFileData* logFile);
+	EXPORT sLogger(tFileData* logFile, tDebugger* dbg_=nullptr);
 	EXPORT ~sLogger() {
 		delete db;
 		delete dbg;

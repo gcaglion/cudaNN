@@ -14,6 +14,8 @@
 #include "../MyCU/MyCU.h"
 #endif
 
+#define MAX_DATA_FEATURES 128
+
 typedef struct sTimeSerie {
 
 	tDebugger* dbg;
@@ -79,6 +81,7 @@ typedef struct sDataSet {
 	int targetLen;
 	int selectedFeaturesCnt;
 	int* selectedFeature;
+	int* datafileBWFeature;
 
 	int samplesCnt;
 	int batchSamplesCnt;
@@ -100,7 +103,7 @@ typedef struct sDataSet {
 	numtype* prediction0=nullptr;
 
 	//-- constructor / destructor
-	EXPORT sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int selectedFeaturesCnt_, int* selectedFeature_, int batchSamplesCnt_, tDebugger* dbg_=nullptr);
+	EXPORT sDataSet(sTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* datafileBWFeature_, tDebugger* dbg_=nullptr);
 	EXPORT sDataSet(tParmsSource* parms, sTimeSerie* sourceTS_, tDebugger* dbg_);
 	EXPORT ~sDataSet();
 

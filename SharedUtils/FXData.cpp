@@ -7,7 +7,7 @@ void sFXData::sFXData_common(tDebugger* dbg_){	//--parent DataSource properties
 	calcBW=true;
 	//-- the following are fixed (OHLCV), and determined by loadOHLCV query
 	featuresCnt=5;
-	BWfeatureH=FXDATA_HIGH; BWfeatureL=FXDATA_LOW;
+	BWfeatureH=FXHIGH; BWfeatureL=FXLOW;
 }
 sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, tDebugger* dbg_) {
 	sFXData_common(dbg_);
@@ -17,13 +17,13 @@ sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, t
 	strcpy_s(TimeFrame, FX_TIMEFRAME_MAX_LEN, tf_);
 	IsFilled=isFilled_;
 }
-sFXData::sFXData(tParmsSource* parms, tDebugger* dbg_) {
+sFXData::sFXData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	sFXData_common(dbg_);
 	//--
-	safeCallEB(parms->setKey("FXDATA"));
+	safeCallEB(parms->setKey(parmKey));
 	parms->get(Symbol, "Symbol");
 	parms->get(TimeFrame, "TimeFrame");
 	parms->get(&IsFilled, "IsFilled");
-	safeCallEE(db=new tDBConnection(parms));
+	safeCallEE(db=new tDBConnection(parms, "DBConnection"));
 }
 

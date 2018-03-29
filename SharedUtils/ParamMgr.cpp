@@ -91,7 +91,7 @@ void sParmsSource::getx(int** oVar){
 		if (isnumber(parmVal[foundParmId][e])) {
 			(*oVar[e])=atoi(parmVal[foundParmId][e]);
 		} else {
-			safeCallEB(decode(e, &(*oVar[e])));
+			safeCallEB(decode(e, &oVar[0][e] ));
 		}
 	}
 }
@@ -129,21 +129,24 @@ bool sParmsSource::parse() {
 		stripChar(vLine, '\n');
 		llen=strlen(vLine);
 		if (llen==0) continue;
-		UpperCase(vLine);
+		//UpperCase(vLine);
 
 		if (vLine[0]=='<' && vLine[1]!='/' && vLine[llen-1]=='>') {
 			//-- key start
 			memcpy_s(readKeyDesc, XML_MAX_SECTION_DESC_LEN, &vLine[1], llen-2); readKeyDesc[llen-2]='\0';
+			UpperCase(readKeyDesc);
 			if(strlen(fullKey)>0) strcat_s(fullKey, XML_MAX_PATH_LEN, ".");
 			strcat_s(fullKey, XML_MAX_PATH_LEN, readKeyDesc);
 		} else 	if (vLine[0]=='<' && vLine[1]=='/' && vLine[llen-1]=='>') {
 			//-- key end
 			memcpy_s(readKeyDesc, XML_MAX_SECTION_DESC_LEN, &vLine[2], llen-3); readKeyDesc[llen-3]='\0';
+			UpperCase(readKeyDesc);
 			//-- strip fullKey of the rightmost key
 			stripLastStep(fullKey, fullKey);
 		} else {
 			//-- parameter
 			if (!getValuePair(vLine, readParmDesc, readParmVal, '=')) return false;
+			UpperCase(readParmDesc);
 			//-- add parameter full name to parmName[][]
 			strcpy_s(parmName[parmsCnt], XML_MAX_PATH_LEN, fullKey);
 			strcat_s(parmName[parmsCnt], XML_MAX_PATH_LEN, ".");
