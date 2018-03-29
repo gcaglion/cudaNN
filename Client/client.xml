@@ -10,7 +10,7 @@
 			PredictionLen	= 5
 			FeaturesCount	= 4
 		</Shape>
-		<Action>
+		<Action>		
 			Train       = true
 			Validate	= false
 			Test        = true
@@ -24,7 +24,7 @@
 				StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
 				<DataSource>
 					Type	  = FXDB_SOURCE
-					<FXDATA>
+					<FXData>
 						Symbol				= EURUSD
 						TimeFrame			= H1
 						IsFilled			= false
@@ -33,11 +33,11 @@
 							DBPassword		= HistoryPwd
 							DBConnString	= Algo
 						</DBConnection>
-					</FXDATA>
-					<FILEDATA>
+					</FXData>
+					<FILEData>
 						FileFullName	= c:/temp/timeseriesdata/sunspots.txt
 						FieldSep			= COMMA
-					</FILEDATA>
+					</FILEData>
 				</DataSource>
 			</TimeSerie>
 			<DataSet>

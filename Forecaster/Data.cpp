@@ -22,24 +22,15 @@ sData::sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	parms->get(&doValidation, "Validate");
 	parms->get(&doTest, "Test");
 
-	//-- Train Set
-	safeCallEE(parms->setKey("..TrainSet"));
-
-	//-- Validation Set
-	//-- Test Set
+	//-- TimeSerie(s)
+	if (doTrain)		safeCallEE(trainTS=new tTimeSerie(parms, "..TrainSet"));
+	if (doTest)			safeCallEE(testTS =new tTimeSerie(parms, "..TestSet"));
+	if (doValidation)	safeCallEE(validTS=new tTimeSerie(parms, "..ValidationSet"));
 
 }
 sData::~sData() {
 	delete dbg;
-	/*for (int s=0; s<3; s++) {
-		delete ts[s];
-		delete ds[s];
-	}*/
-	delete ts;
-	delete ds;
-}
-
-void sData::mallocSets() {
-	ts=(tTimeSerie**)malloc(3*sizeof(tTimeSerie*));
-	ds=(tDataSet**)malloc(3*sizeof(tDataSet*));
+	if (doTrain) delete trainTS;
+	if (doTest) delete testTS;
+	if (doValidation) delete validTS;
 }

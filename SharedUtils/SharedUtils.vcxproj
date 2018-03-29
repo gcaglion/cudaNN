@@ -157,7 +157,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Data.cpp" />
     <ClCompile Include="DataSource.cpp" />
     <ClCompile Include="DBConnection.cpp" />
     <ClCompile Include="Debugger.cpp" />
@@ -170,7 +169,6 @@
     <ClCompile Include="ParamMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Data.h" />
     <ClInclude Include="DataSource_enums.h" />
     <ClInclude Include="DBConnection_enums.h" />
     <ClInclude Include="Debugger_enums.h" />

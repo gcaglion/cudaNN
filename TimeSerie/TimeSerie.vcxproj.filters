@@ -18,12 +18,18 @@
     <ClCompile Include="TimeSerie.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DataSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TimeSerie.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TimeSerie_enums.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DataSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

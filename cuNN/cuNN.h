@@ -3,6 +3,7 @@
 #include "..\CommonEnv.h"
 #include "../MyAlgebra/MyAlgebra.h"
 #include "../TimeSerie/TimeSerie.h"
+#include "../TimeSerie/DataSet.h"
 #include "../MyEngines/Core.h"
 #include "NN_parms.h"
 #include "NN_enums.h"

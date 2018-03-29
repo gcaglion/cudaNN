@@ -155,9 +155,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DataSet.cpp" />
     <ClCompile Include="TimeSerie.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DataSet.h" />
     <ClInclude Include="TimeSerie.h" />
     <ClInclude Include="TimeSerie_enums.h" />
   </ItemGroup>
