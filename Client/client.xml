@@ -1,20 +1,20 @@
-<Model>
+<Forecaster>
 	<Debugger>
 		Level = DBG_LEVEL_STD
 		Dest  = DBG_DEST_BOTH
 		DestFileFullName  = C:\temp\logs\mainDebugger.log
 	</Debugger>
-	<Action>
-		Train       = true
-		Validate	= false
-		Test        = true
-	</Action>
 	<Data>
 		<Shape>
 			SampleLen		= 100
 			PredictionLen	= 5
 			FeaturesCount	= 4
 		</Shape>
+		<Action>
+			Train       = true
+			Validate	= false
+			Test        = true
+		</Action>
 		<TrainSet>
 			<TimeSerie>
 				Date0				= 201712300000
@@ -91,60 +91,78 @@
 		</TestSet>
 	</Data>
 	<Engine>
-	  <Debugger>
-		Level = DBG_LEVEL_DET
-		Dest  = DBG_DEST_BOTH
-		DestFileFullName  = C:\temp\logs\mainDebugger.log
-	  </Debugger>
-	PresetType	=
-	<Core-0>
-	  Type		= CORE_NN
-	  ParentId	=
-	  Connector	=
-	  <Topology>
-		LevelRatio			= 1,1,1,0.5
-		LevelActivation		= NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH
-		UseContext			= true
-		UseBias				= true
-	  </Topology>
-	  <Training>
-		MaxEpochs			= 50
-		TargetMSE			= 0.0001
-		NetSaveFrequency	= 10
-		StopOnDivergence	= true
-		BP_Algo				= BP_STD
-		<BP_Std>
-		  LearningRate		= 0.01
-		  LearningMomentum	= 0.4
-		</BP_Std>
-		<BP_Qing>
-		</BP_Qing>
-		<BP_Qprop>
-		</BP_Qprop>
-		<BP_RProp>
-		</BP_RProp>
-	  </Training>
-	</Core-0>
-	<Core-1>
-	  type		= CORE_NN
-	  parentId	=
-	  Connector	=
-	</Core-1>
-	<Core-2>
-	  type		= CORE_NN
-	  parentId	= 0, 1
-	  Connector	= CORE_CONN_DENSE, CORE_CONN_LINEAR
-	</Core-2>
-	<Core-3>
-	  type		= CORE_SVM
-	  parentId	= 0, 2
-	  Connector	= CORE_CONN_DENSE, CORE_CONN_LINEAR
-	</Core-3>
-	<Core-4>
-	  type		= CORE_SVM
-	  parentId	= 0, 2, 3
-	  Connector	= CORE_CONN_DENSE, CORE_CONN_LINEAR
-	  </Core-4>
+		<Debugger>
+			Level = DBG_LEVEL_DET
+			Dest  = DBG_DEST_BOTH
+			DestFileFullName  = C:\temp\logs\mainDebugger.log
+		</Debugger>
+		Type 		= ENGINE_CUSTOM
+		<XIE>
+		</XIE>
+		<WNN>
+		</WNN>
+		<Custom>
+			CoresCount	= 5
+			<Core0>
+				Type		= CORE_NN
+				<Topology>
+					LevelRatio			= 1,1,1,0.5
+					LevelActivation		= NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH
+					UseContext			= true
+					UseBias				= true
+				</Topology>
+				<Training>
+					MaxEpochs			= 50
+					TargetMSE			= 0.0001
+					NetSaveFrequency	= 10
+					StopOnDivergence	= true
+					BP_Algo				= BP_STD
+					<BP_Std>
+						LearningRate		= 0.01
+						LearningMomentum	= 0.4
+					</BP_Std>
+					<BP_Qing>
+					</BP_Qing>
+					<BP_Qprop>
+					</BP_Qprop>
+					<BP_RProp>
+					</BP_RProp>
+				</Training>
+			</Core0>
+			<Core1>
+				type		= CORE_NN
+			</Core1>
+			<Core2>
+				type		= CORE_NN
+			</Core2>
+			<Core3>
+				type		= CORE_GA
+			</Core3>
+			<Core4>			
+				type		= CORE_SVM
+			</Core4>
+			ConnectorsCount	= 4
+			<Connector0>
+				FromCore	= 0
+				ToCore		= 2
+				Type		= CONN_DENSE
+			</Connector0>
+			<Connector1>
+				FromCore	= 1
+				ToCore		= 3
+				Type		= CONN_DENSE
+			</Connector1>
+			<Connector2>
+				FromCore	= 2
+				ToCore		= 4
+				Type		= CONN_DENSE
+			</Connector2>
+			<Connector3>
+				FromCore	= 3
+				ToCore		= 4
+				Type		= CONN_DENSE
+			</Connector3>
+		</Custom>
 	</Engine>
 	<Persistor>
 		saveNothing		= false
@@ -162,4 +180,4 @@
 		<DestFiles>      
 		</DestFiles>
 	</Persistor>
-</Model>
+</Forecaster>

@@ -1,9 +1,6 @@
 #include "../CommonEnv.h"
 #include "../SharedUtils/Debugger.h"
-#include "../SharedUtils/Model.h"
-#include "../TimeSerie/TimeSerie.h"
-#include "../MyEngines/Core.h"
-#include "../Logger/Logger.h"
+#include "../Forecaster/Forecaster.h"
 
 int main(int argc, char* argv[]) {
 
@@ -27,51 +24,32 @@ int main(int argc, char* argv[]) {
 
 		XMLparms->parse();
 
-		//-- create Data Model from parms
-		tModel* model; safeCallEE(model=new tModel(XMLparms));
-
+		//-- create Data Forecaster from parms
+		tForecaster* forecaster; safeCallEE(forecaster=new tForecaster(XMLparms, "Forecaster", dbg));
+/*
 		//-- create TimeSeries and DataSets from parms (Train, Test, Validation)
 		tTimeSerie* trainTS; tDataSet* trainDS;
-		if (model->doTrain) {
+		if (forecaster->doTrain) {
 			safeCallEE(trainTS=new tTimeSerie(XMLparms, TRAIN_SET, dbg));
 			safeCallEE(trainDS=new tDataSet  (XMLparms, trainTS, dbg));
 		}
 		tTimeSerie* testTS; tDataSet* testDS;
-		if (model->doTest) {
+		if (forecaster->doTest) {
 			safeCallEE(testTS=new tTimeSerie(XMLparms, TEST_SET, dbg));
 			safeCallEE(testDS=new tDataSet(XMLparms, testTS, dbg));
 		}
 		tTimeSerie* validTS; tDataSet* validDS;
-		if (model->doValidation) {
+		if (forecaster->doValidation) {
 			safeCallEE(validTS=new tTimeSerie(XMLparms, VALID_SET, dbg));
 			safeCallEE(validDS=new tDataSet(XMLparms, validTS, dbg));
 		}
 
 		//-- create single persistor, with its own DBConnection, to save results data.
-		tLogger* persistor; safeCallEE(persistor=new tLogger(XMLparms, ".Model.Persistor", dbg));
+		tLogger* persistor; safeCallEE(persistor=new tLogger(XMLparms, ".Forecaster.Persistor", dbg));
 
-		//-- determine Engine Architecture (number of cores, type and position for every core)
-		tCore* core[ENGINE_MAX_CORES];
-		safeCallEB(XMLparms->setKey(".Model.Engine"));
-		//-- first, read general, core-independent engine parms
-		char CoreSectionDesc[10];
-		int coreType;
-		int parentsCnt; int* parentId=(int*)malloc(ENGINE_MAX_CORES*sizeof(int));
-		int connectorsCnt; int* connectorType=(int*)malloc(ENGINE_MAX_CORES*sizeof(int));
-		for (int c=0; c<ENGINE_MAX_CORES; c++) {
-			sprintf_s(CoreSectionDesc, 10, "Engine.Core.%d", c);	safeCallEB(XMLparms->setKey(CoreSectionDesc));
-			try { XMLparms->get(&coreType, "Type"); } catch (std::exception e) { break; }
-			//-- if successful, keep reading core properties required for creation
-			parentsCnt=0; connectorsCnt=0;
-			XMLparms->get(&parentId, "ParentId", &parentsCnt);
-			XMLparms->get(&connectorType, "Connector", &connectorsCnt);
-			if (parentsCnt!=connectorsCnt) throwE("parents / connectors count mismatch (%d vs. %d) for Core.%d", 3, parentsCnt, connectorsCnt, c);
-
-			//-- finally, create new core
-			safeCallEE(core[c]=new tCore(coreType, parentsCnt, parentId, connectorType));
-
-		}
-		
+		//-- create Engine from parms
+		tEngine* engine=new tEngine(XMLparms, ".Forecaster.Engine", dbg);
+*/
 /*
 		//-- initialize each core
 		
@@ -81,15 +59,15 @@ int main(int argc, char* argv[]) {
 		//-- 0. Create network based only on sampleLen, predictionLen, geometry (level ratios, conTXT, bias). This sets scaleMin[] and ScaleMax[] needed to proceed with datasets
 		tDebugger* NNdbg; safeCallEE(NNdbg=new tDebugger(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 
-		tNN* myNN;   safeCallEE(myNN=new tNN(modelXMLparms->SampleLen, modelXMLparms->PredictionLen, modelXMLparms->FeaturesCnt, NNcore0XMLparms->NN));
+		tNN* myNN;   safeCallEE(myNN=new tNN(forecasterXMLparms->SampleLen, forecasterXMLparms->PredictionLen, forecasterXMLparms->FeaturesCnt, NNcore0XMLparms->NN));
 
 		//-- 1. For each TimeSerie(Training, Validation, Test), do the following:
 		//-- 1.1. define its DataSource
 		//-- 1.2. call specific constructor to "Prepare" it : Create, LoadData, Transform, Scale
 		//-- 1.3. create dataset (1:1 ??)
 		//--		sampleLen/predictionLen is taken from nn
-		//--		model features cnt must be taken from nn
-		//--		model features list is defined here.
+		//--		forecaster features cnt must be taken from nn
+		//--		forecaster features list is defined here.
 		//--		batch size is defined here, and can be different between train and test datasets
 		if (doTrain) {
 			//-- train with training set
@@ -100,20 +78,20 @@ int main(int argc, char* argv[]) {
 			//-- inference from training set (run + persist)
 			if (doTrainRun) {
 				safeCallEE(myNN->run(trainSet));
-				safeCallEE(persistor->SaveRun(myNN->pid, myNN->tid, 0, myNN->pid, myNN->tid, trainSet->samplesCnt, modelFeaturesCnt, modelFeature, trainSet->prediction0, trainSet->target0));
+				safeCallEE(persistor->SaveRun(myNN->pid, myNN->tid, 0, myNN->pid, myNN->tid, trainSet->samplesCnt, forecasterFeaturesCnt, forecasterFeature, trainSet->prediction0, trainSet->target0));
 			}
 			delete trainSet; delete trainTS; delete trainDataSrc;
 		}
 		if (doValid) {
 			tFXData* validDataSrc; safeCallEE(validDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
 			tTS* validTS; safeCallEE(validTS=new tTS(validDataSrc, validTShistoryLen, validTSdate0, validTS_DT, myNN->scaleMin[0], myNN->scaleMax[0]));
-			tDataSet* validSet; safeCallEE(validSet=new tDataSet(validTS, modelSampleLen, modelPredictionLen, modelFeaturesCnt, modelFeature, validBatchSamplesCnt));
+			tDataSet* validSet; safeCallEE(validSet=new tDataSet(validTS, forecasterSampleLen, forecasterPredictionLen, forecasterFeaturesCnt, forecasterFeature, validBatchSamplesCnt));
 			delete validSet; delete validTS; delete validDataSrc;
 		}
 		if (doTest) {
 			tFXData* testDataSrc; safeCallEE(testDataSrc=new tFXData(FXDB, "EURUSD", "H1", false));
 			tTS* testTS; safeCallEE(testTS=new tTS(testDataSrc, testTShistoryLen, testTSdate0, testTS_DT, myNN->scaleMin[0], myNN->scaleMax[0]));
-			tDataSet* testSet; safeCallEE(testSet=new tDataSet(testTS, modelSampleLen, modelPredictionLen, modelFeaturesCnt, modelFeature, testBatchSamplesCnt));
+			tDataSet* testSet; safeCallEE(testSet=new tDataSet(testTS, forecasterSampleLen, forecasterPredictionLen, forecasterFeaturesCnt, forecasterFeature, testBatchSamplesCnt));
 			if (testWpid!=0&&testWtid!=0) {
 				//-- if we specifed both testWpid and testWtid, then load training Weights('-1' stands for 'latest epoch')
 				safeCallEE(persistor->LoadW(testWpid, testWtid, -1, myNN->weightsCntTotal, myNN->W));
@@ -123,7 +101,7 @@ int main(int argc, char* argv[]) {
 			}
 			//-- Inference from Test Set (run + persist)
 			safeCallEE(myNN->run(testSet));
-			safeCallEE(persistor->SaveRun(myNN->pid, myNN->tid, 1, testWpid, testWtid, testSet->samplesCnt, modelFeaturesCnt, modelFeature, testSet->prediction0, testSet->target0));
+			safeCallEE(persistor->SaveRun(myNN->pid, myNN->tid, 1, testWpid, testWtid, testSet->samplesCnt, forecasterFeaturesCnt, forecasterFeature, testSet->prediction0, testSet->target0));
 			delete testSet; delete testTS; delete testDataSrc;
 		}
 

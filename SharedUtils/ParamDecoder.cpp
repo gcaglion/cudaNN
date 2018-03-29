@@ -8,6 +8,7 @@
 #include "FXData_enums.h"
 #include "../TimeSerie/TimeSerie_enums.h"
 #include "../Logger/Logger_enums.h"
+#include "../MyEngines/Engine_enums.h"
 
 #define optionLookup(option, e) { \
 	if (strcmp(parmVal[foundParmId][e], #option)==0) { \
@@ -53,6 +54,9 @@ bool sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(TRAIN_SET, elementId);
 	optionLookup(TEST_SET, elementId);
 	optionLookup(VALID_SET, elementId);
+	optionLookup(ENGINE_XIE, elementId);
+	optionLookup(ENGINE_WNN, elementId);
+	optionLookup(ENGINE_CUSTOM, elementId);
 
 	return false;
 }

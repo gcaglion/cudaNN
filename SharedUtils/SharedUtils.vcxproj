@@ -165,7 +165,6 @@
     <ClCompile Include="FileInfo.cpp" />
     <ClCompile Include="FXData.cpp" />
     <ClCompile Include="Generic.cpp" />
-    <ClCompile Include="Model.cpp" />
     <ClCompile Include="MT4Data.cpp" />
     <ClCompile Include="ParamDecoder.cpp" />
     <ClCompile Include="ParamMgr.cpp" />
@@ -185,7 +184,6 @@
     <ClInclude Include="FXData.h" />
     <ClInclude Include="FXData_enums.h" />
     <ClInclude Include="Generic.h" />
-    <ClInclude Include="Model.h" />
     <ClInclude Include="MT4data.h" />
     <ClInclude Include="ParamMgr.h" />
   </ItemGroup>

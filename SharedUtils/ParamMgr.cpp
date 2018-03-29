@@ -44,16 +44,29 @@ bool stripLastStep(char* fullDesc, char* oStrippedDesc) {
 	oStrippedDesc[lastDotPos]='\0';
 	return true;
 }
-bool sParmsSource::setKey(char* KeyDesc, bool ignoreError) {
+bool sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 	
-	//-- "." before KeyDesc makes search start from root; otherwise from current pos
-	if (KeyDesc[0]=='.') {
+	//-- KeyDesc may be passed as literal, therefore we need a buffer to copy KeyDesc_ to, so we can overwrite it
+	char KeyDesc[XML_MAX_PATH_LEN];	strcpy_s(KeyDesc, XML_MAX_PATH_LEN, KeyDesc_);
+
+	//-- "." before KeyDesc makes search start from root;
+	if (KeyDesc[0]=='.' && KeyDesc[1]!='.') {
 		currentKey[0]='\0';
-		strcat_s(currentKey, XML_MAX_PATH_LEN, &KeyDesc[1]);
-	} else {
-		strcat_s(currentKey, XML_MAX_PATH_LEN, ".");
-		strcat_s(currentKey, XML_MAX_PATH_LEN, KeyDesc);
+		memcpy_s(KeyDesc, XML_MAX_PATH_LEN, &KeyDesc[1], XML_MAX_PATH_LEN-1);
+		return (setKey(KeyDesc, ignoreError));
 	}
+
+	//-- ".." before KeyDesc makes search start from one level up;
+	if (KeyDesc[0]=='.' && KeyDesc[1]=='.') {
+		stripLastStep(currentKey, currentKey);
+		memcpy_s(KeyDesc, XML_MAX_PATH_LEN, &KeyDesc[2], XML_MAX_PATH_LEN-2);
+		return (setKey(KeyDesc, ignoreError));
+	}
+
+	//--  otherwise search starts from current pos
+	if(strlen(currentKey)>0) strcat_s(currentKey, XML_MAX_PATH_LEN, ".");
+	strcat_s(currentKey, XML_MAX_PATH_LEN, KeyDesc);
+
 	UpperCase(currentKey);
 
 	bool found=findKey(currentKey);

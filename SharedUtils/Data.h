@@ -12,13 +12,19 @@ typedef struct sData {
 	int predictionLen;
 	int featuresCnt;
 
+	//-- actions
+	bool doTrain;
+	bool doValidation;
+	bool doTest;
+
 	//-- TimeSeries and DataSets
 	tTimeSerie** ts;
 	tDataSet**   ds;
 
 	EXPORT sData(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_=nullptr);
-	EXPORT sData(tParmsSource* parms, tDebugger* dbg_=nullptr);
-	~sData();
+	EXPORT sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT ~sData();
+
 private:
 	void mallocSets();
 

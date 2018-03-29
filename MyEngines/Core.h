@@ -1,6 +1,10 @@
 #pragma once
 #include "../CommonEnv.h"
+#include "../SharedUtils/Debugger.h"
+#include "../SharedUtils/ParamMgr.h"
+#include "Core_enums.h"
 
+/*
 //-- Limits
 #define ENGINE_MAX_CORES 16
 
@@ -28,4 +32,21 @@ typedef struct sCore {
 		}
 
 	}
+} tCore;
+
+*/
+
+typedef struct sCore {
+
+	tDebugger* dbg;
+
+	int type;
+
+	int InputCount;
+	int OutputCount;
+
+	EXPORT sCore(int type_=-1, tDebugger* dbg_=nullptr);
+	EXPORT sCore(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT ~sCore();
+
 } tCore;
