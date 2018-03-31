@@ -8,13 +8,16 @@ sDBConnection::sDBConnection(char* username, char* password, char* connstring, t
 	strcpy_s(DBConnString, DBCONNSTRING_MAXLEN, connstring);
 	DBCtx=NULL;
 }
-sDBConnection::sDBConnection(tParmsSource* iniParms, char* parmKey, tDebugger* dbg_) {
+sDBConnection::sDBConnection(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("DBConnection.err"))) : dbg_;
-	
-	safeCallEB(iniParms->setKey(parmKey));
-	iniParms->get(DBUser, "DBUser");
-	iniParms->get(DBPassword, "DBPassword");
-	iniParms->get(DBConnString, "DBConnString");
+	DBUser[DBUSER_MAXLEN]='\0';
+	DBPassword[DBPASSWORD_MAXLEN]='\0';
+	DBConnString[DBCONNSTRING_MAXLEN]='\0';
+
+	safeCallEB(parms->setKey(parmKey));
+	parms->get(DBUser, "DBUser");
+	parms->get(DBPassword, "DBPassword");
+	parms->get(DBConnString, "DBConnString");
 	DBCtx=NULL;
 }
 sDBConnection::sDBConnection() {}

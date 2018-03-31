@@ -27,7 +27,8 @@ sParmsSource::~sParmsSource() {
 	free(parmVal);
 }
 void sParmsSource::newDebugger(tDebugger* dbg_) {
-	int dbg_level, dbg_dest; char dbg_fname[MAX_PATH];
+	int dbg_level, dbg_dest; 
+	char dbg_fname[MAX_PATH]; dbg_fname[MAX_PATH-1]='\0';
 
 	get(&dbg_level,"Level");
 	get(&dbg_dest, "Dest");
@@ -110,12 +111,17 @@ void sParmsSource::getx(int** oVar){
 }
 void sParmsSource::getx(bool** oVar) {
 	for (int e=0; e<parmValsCnt[foundParmId]; e++) {
+		UpperCase(parmVal[foundParmId][e]);
 		(*oVar[e])=(strcmp(parmVal[foundParmId][e], "TRUE")==0);
 	}
 }
 void sParmsSource::getx(char** oVar){
 	for (int e=0; e<parmValsCnt[foundParmId]; e++) {
-		strcpy_s(oVar[e], XML_MAX_PARAM_VAL_LEN, parmVal[foundParmId][e]);
+		for (int i=0; i<strlen(oVar[e]); i++) oVar[e][i]=parmVal[foundParmId][e][i];
+		//memcpy_s(oVar[e], strlen(oVar[e])+1, parmVal[foundParmId][e], XML_MAX_PARAM_VAL_LEN);
+		//strcpy_s(oVar[e], strlen(oVar[e])+1, parmVal[foundParmId][e]);
+		//strcpy(oVar[e], parmVal[foundParmId][e]);
+		//strcpy_s(oVar[e], XML_MAX_PARAM_VAL_LEN, parmVal[foundParmId][e]);
 	}
 }
 void sParmsSource::getx(numtype** oVar){

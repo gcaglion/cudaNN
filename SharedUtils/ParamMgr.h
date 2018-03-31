@@ -38,7 +38,7 @@ typedef struct sParmsSource {
 
 	char currentKey[XML_MAX_PATH_LEN];
 
-	char soughtKey[XML_MAX_SECTION_DESC_LEN];
+	char soughtKey[XML_MAX_PATH_LEN];
 	char soughtParm[XML_MAX_PARAM_NAME_LEN];
 	char soughtParmFull[XML_MAX_PATH_LEN];
 
@@ -55,7 +55,7 @@ typedef struct sParmsSource {
 		if (soughtParmDesc[0]=='.' || strlen(currentKey)==0) {
 			soughtKey[0]='\0';
 		} else {
-			strcpy_s(soughtKey, XML_MAX_SECTION_DESC_LEN, currentKey);
+			strcpy_s(soughtKey, XML_MAX_PATH_LEN, currentKey);
 			strcat_s(soughtKey, ".");
 		}
 		strcpy_s(soughtParmFull, XML_MAX_PATH_LEN, soughtKey);

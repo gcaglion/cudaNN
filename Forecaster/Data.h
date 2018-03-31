@@ -5,6 +5,11 @@
 #include "../TimeSerie/TimeSerie.h"
 #include "../TimeSerie/DataSet.h"
 
+//-- Actions on data
+#define TRAIN 0
+#define TEST  1
+#define VALID 2
+
 typedef struct sData {
 	tDebugger* dbg;
 
@@ -14,21 +19,14 @@ typedef struct sData {
 	int featuresCnt;
 
 	//-- actions
-	bool doTrain;
-	bool doValidation;
-	bool doTest;
+	bool ActionDo[3];
+	char ActionDesc[3][XML_MAX_SECTION_DESC_LEN]={"Train","Test","Validation"};
 
-	//-- TimeSeries and DataSets
-	tTimeSerie* trainTS; tDataSet* trainDS;
-	tTimeSerie* testTS; tDataSet* testDS;
-	tTimeSerie* validTS; tDataSet* validDS;
-
+	//-- DataSets (each include its own source TimeSerie)
+	tDataSet* ds[3];
 
 	EXPORT sData(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_=nullptr);
 	EXPORT sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT ~sData();
-
-private:
-	void mallocSets();
 
 } tData;

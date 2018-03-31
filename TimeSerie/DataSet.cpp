@@ -1,14 +1,13 @@
 #include "DataSet.h"
 
 //-- sDataSet, constructors  /destructor
-sDataSet::sDataSet(tTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* datafileBWFeature_, tDebugger* dbg_) {
+sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* BWFeature_, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"))) : dbg_;
-	sourceTS=sourceTS_;
 	//--
 	selectedFeaturesCnt=selectedFeaturesCnt_;
 	for (int f=0; f<selectedFeaturesCnt; f++) selectedFeature[f]=selectedFeature_[f];
-	datafileBWFeature=(int*)malloc(2*sizeof(int));
-	datafileBWFeature[0]=datafileBWFeature_[0]; datafileBWFeature[1]=datafileBWFeature_[1];
+	BWFeature=(int*)malloc(2*sizeof(int));
+	BWFeature[0]=BWFeature_[0]; BWFeature[1]=BWFeature_[1];
 	//--
 	sampleLen=sampleLen_;
 	targetLen=targetLen_;
@@ -32,7 +31,7 @@ sDataSet::sDataSet(tTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int ba
 	prediction0=(numtype*)malloc(samplesCnt*selectedFeaturesCnt*sizeof(numtype));
 
 	//-- fill sample/target data right at creation time. TS has data in SBF format
-	buildFromTS(sourceTS);
+	buildFromTS();
 
 	for (int b=0; b<batchCnt; b++) {
 		//-- populate BFS sample/target for every batch
@@ -42,34 +41,27 @@ sDataSet::sDataSet(tTimeSerie* sourceTS_, int sampleLen_, int targetLen_, int ba
 		BFS2SFB(b, targetLen, targetBFS, targetSFB);
 	}
 }
-sDataSet::sDataSet(tParmsSource* parms, tTimeSerie* sourceTS_, tDebugger* dbg_) {
+sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSets.err"))) : dbg_;
-	sourceTS=sourceTS_;
-/*	switch (sourceTS->set) {
-	case TRAIN_SET:
-		safeCallEB(parms->setKey(".Model.Data.TrainSet.DataSet"));
-		break;
-	case TEST_SET:
-		safeCallEB(parms->setKey(".Model.Data.TestSet.DataSet"));
-		break;
-	case VALID_SET:
-		safeCallEB(parms->setKey(".Model.Data.ValidationSet.DataSet"));
-		break;
-	default:
-		break;
-	}
-*/
-	parms->get(&batchSamplesCnt, "BatchSamplesCount");
-
 	selectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
+	BWFeature=(int*)malloc(2*sizeof(int));
+
+	safeCallEB(parms->setKey(parmKey));
+
+	//-- 0. common parameters
+	parms->get(&batchSamplesCnt, "BatchSamplesCount");
+	parms->get(&selectedFeature, "SelectedFeatures", &selectedFeaturesCnt);
+
+	//-- 1. TimeSerie parameters
+	safeCallEE(sourceTS=new tTimeSerie(parms, "TimeSerie", dbg));
+
+	//-- 2. DataSource-specific parameters (so far, only BWFeature)
 	switch (sourceTS->sourceType) {
 	case FILE_SOURCE:
-		parms->get(&selectedFeature, "FileData.SelectedFeatures", &selectedFeaturesCnt);
-		datafileBWFeature=(int*)malloc(2*sizeof(int));
-		parms->get(&datafileBWFeature, "FileData.BWFeatures", new int);
+		parms->get(&BWFeature, "BWFeatures", new int);
 		break;
 	case FXDB_SOURCE:
-		parms->get(&selectedFeature, "FXData.SelectedFeatures", &selectedFeaturesCnt);
+		BWFeature[0]=FXHIGH; BWFeature[1]=FXLOW;
 		break;
 	case MT4_SOURCE:
 		//-- ...... ?? boh ??? ...
@@ -82,7 +74,7 @@ sDataSet::sDataSet(tParmsSource* parms, tTimeSerie* sourceTS_, tDebugger* dbg_) 
 
 sDataSet::~sDataSet() {
 	free(selectedFeature);
-	free(datafileBWFeature);
+	free(BWFeature);
 	free(sample);
 	if (target!=nullptr) free(target);
 	free(prediction);
@@ -161,7 +153,7 @@ bool sDataSet::isSelected(int ts_f) {
 	}
 	return false;
 }
-void sDataSet::buildFromTS(tTimeSerie* ts) {
+void sDataSet::buildFromTS() {
 
 	int s, b, f;
 
@@ -169,11 +161,11 @@ void sDataSet::buildFromTS(tTimeSerie* ts) {
 	si=0; ti=0;
 	for (s=0; s<samplesCnt; s++) {
 		//-- samples
-		sidx=s*ts->featuresCnt;
+		sidx=s*sourceTS->featuresCnt;
 		for (b=0; b<sampleLen; b++) {
-			for (f=0; f<ts->featuresCnt; f++) {
+			for (f=0; f<sourceTS->featuresCnt; f++) {
 				if (isSelected(f)) {
-					sample[si]=ts->d_trs[sidx];
+					sample[si]=sourceTS->d_trs[sidx];
 					si++;
 				}
 				sidx++;
@@ -182,9 +174,9 @@ void sDataSet::buildFromTS(tTimeSerie* ts) {
 		//-- targets
 		tidx=sidx;
 		for (b=0; b<targetLen; b++) {
-			for (f=0; f<ts->featuresCnt; f++) {
+			for (f=0; f<sourceTS->featuresCnt; f++) {
 				if (isSelected(f)) {
-					target[ti]=ts->d_trs[tidx];
+					target[ti]=sourceTS->d_trs[tidx];
 					ti++;
 				}
 				tidx++;

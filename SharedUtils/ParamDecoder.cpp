@@ -51,9 +51,6 @@ bool sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(TSF_TURNINGPOINTS, elementId);
 	optionLookup(TSF_SHE, elementId);
 	optionLookup(TSF_HISTVOL, elementId);
-	optionLookup(TRAIN_SET, elementId);
-	optionLookup(TEST_SET, elementId);
-	optionLookup(VALID_SET, elementId);
 	optionLookup(ENGINE_XIE, elementId);
 	optionLookup(ENGINE_WNN, elementId);
 	optionLookup(ENGINE_CUSTOM, elementId);

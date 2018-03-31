@@ -5,12 +5,14 @@
 #include "DBConnection.h"
 #include "FXData_enums.h"
 
+#define FX_SYMBOL_MAXLEN 8
+#define FX_TIMEFRAME_MAXLEN 4
+
 typedef struct sFXData : public sDataSource {
 	tDBConnection* db;
-	char Symbol[XML_MAX_PARAM_VAL_LEN];
-	char TimeFrame[XML_MAX_PARAM_VAL_LEN];
+	char Symbol[FX_SYMBOL_MAXLEN];
+	char TimeFrame[FX_TIMEFRAME_MAXLEN];
 	bool IsFilled;
-	int BarDataType[FXDATA_FEATURESCNT];
 #ifdef __cplusplus
 	EXPORT sFXData(tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, tDebugger* dbg_=nullptr);
 	EXPORT sFXData(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);

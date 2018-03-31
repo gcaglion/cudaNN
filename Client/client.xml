@@ -10,85 +10,73 @@
 			PredictionLen	= 5
 			FeaturesCount	= 4
 		</Shape>
-		<Action>		
-			Train       = true
-			Validate	= false
-			Test        = true
-		</Action>
-		<TrainSet>
-			<TimeSerie>
-				Date0				= 201712300000
-				HistoryLen			= 50000
-				DataTransformation	= DT_DELTALOG
-				BWCalc				= true
-				StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
-				<DataSource>
-					Type	  = FXDB_SOURCE
-					<FXData>
-						Symbol				= EURUSD
-						TimeFrame			= H1
-						IsFilled			= false
-						<DBConnection>
-							DBUser			  = History
-							DBPassword		= HistoryPwd
-							DBConnString	= Algo
-						</DBConnection>
-					</FXData>
-					<FILEData>
-						FileFullName	= c:/temp/timeseriesdata/sunspots.txt
-						FieldSep			= COMMA
-					</FILEData>
-				</DataSource>
-			</TimeSerie>
+		<Train>
+			Do	= true
 			<DataSet>
+				<TimeSerie>
+					Date0				= 201712300000abc
+					HistoryLen			= 50000
+					DataTransformation	= DT_DELTALOG
+					BWCalc				= true
+					StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
+					<DataSource>
+						Type	  = FXDB_SOURCE
+						<FXData>
+							Symbol				= EURUSD
+							TimeFrame			= H1
+							IsFilled			= false
+							<DBConnection>
+								DBUser			= History
+								DBPassword		= HistoryPwd
+								DBConnString	= Algo
+							</DBConnection>
+						</FXData>
+						<FILEData>
+							FileFullName		= c:/temp/timeseriesdata/sunspots.txt
+							FieldSep			= COMMA
+						</FILEData>
+					</DataSource>
+				</TimeSerie>
 				BatchSamplesCount	= 50
-				<FXDATA>
-					SelectedFeatures	= FXOPEN, FXHIGH, FXLOW, FXCLOSE
-				</FXDATA>
-				<FILEDATA>
-					SelectedFeatures	= 0, 1, 2, 3
-					BWFeatures			= 1,2
-				</FILEDATA>
+				SelectedFeatures	= FXOPEN, FXHIGH, FXLOW, FXCLOSE
+				BWFeatures			= 1,2
 			</DataSet>
-		</TrainSet>
-		<ValidationSet>
-		</ValidationSet>
-		<TestSet>
-			<TimeSerie>
-				Date0				= 201612300000
-				HistoryLen			= 50000
-				DataTransformation	= DT_DELTALOG
-				BWCalc				= true
-				StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
-				<DataSource>
-					Type	  = FXDB_SOURCE
-					<FXDATA>
-						Symbol				= EURUSD
-						TimeFrame			= H1
-						IsFilled			= false
-						<DBConnection>
-							DBUser			  = History
-							DBPassword		= HistoryPwd
-							DBConnString	= Algo
-						</DBConnection>
-					</FXDATA>
-					<FILEDATA>
-						FileFullName	= c:/temp/timeseriesdata/sunspots.txt
-						FieldSep			= COMMA
-					</FILEDATA>
-				</DataSource>
-			</TimeSerie>
+		</Train>
+		<Validation>
+			Do	= false
+		</Validation>
+		<Test>
+			Do	= true
 			<DataSet>
+				<TimeSerie>
+					Date0				= 201612300000abc
+					HistoryLen			= 10000
+					DataTransformation	= DT_DELTALOG
+					BWCalc				= true
+					StatisticalFeatures	= TSF_HISTVOL, TSF_KURTOSIS, TSF_MEAN
+					<DataSource>
+						Type	  = FXDB_SOURCE
+						<FXData>
+							Symbol				= EURUSD
+							TimeFrame			= H1
+							IsFilled			= false
+							<DBConnection>
+								DBUser			= History
+								DBPassword		= HistoryPwd
+								DBConnString	= Algo
+							</DBConnection>
+						</FXData>
+						<FILEData>
+							FileFullName		= c:/temp/timeseriesdata/sunspots.txt
+							FieldSep			= COMMA
+						</FILEData>
+					</DataSource>
+				</TimeSerie>
 				BatchSamplesCount	= 50
-				<FXDATA>
-					SelectedFeatures	= FXOPEN, FXHIGH, FXLOW, FXCLOSE
-				</FXDATA>
-				<FILEDATA>
-					SelectedFeatures	= 0, 1, 2, 3
-					BWFeatures			= 1,2
-				</FILEDATA>
+				SelectedFeatures	= FXOPEN, FXHIGH, FXLOW, FXCLOSE
+				BWFeatures			= 1,2
 			</DataSet>
-		</TestSet>
+		</Test>
 	</Data>
 	<Engine>
 		<Debugger>

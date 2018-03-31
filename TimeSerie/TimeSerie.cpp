@@ -45,21 +45,23 @@ sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_,
 sTimeSerie::sTimeSerie(tParmsSource* parms, char* parmKey, tDebugger* dbg_){
 	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("TimeSeries.err"))) : dbg_;
 	tsf=(int*)malloc(MAX_TSF_CNT*sizeof(int));
+	date0[DATE_FORMAT_LEN]='\0';
 
 	safeCallEB(parms->setKey(parmKey));
 
 	//-- 0. common parameters
-	parms->get(date0, "Date0");
-	parms->get(&steps, "HistoryLen");
-	parms->get(&dt, "DataTransformation");
-	parms->get(&BWcalc, "BWCalc");
-	parms->get(&tsf, "StatisticalFeatures", &tsfCnt);
+	safeCallEE(parms->get(date0, "Date0"));
+	safeCallEE(parms->get(&steps, "HistoryLen"));
+	safeCallEE(parms->get(&dt, "DataTransformation"));
+	safeCallEE(parms->get(&BWcalc, "BWCalc"));
+	safeCallEE(parms->get(&tsf, "StatisticalFeatures", &tsfCnt));
 
 	//-- 1. Find DataSource.Type
-	int dsType; parms->get(&dsType, "DataSource.Type");
+	safeCallEB(parms->setKey("DataSource"));
+	safeCallEE(parms->get(&sourceType, "Type"));
 
 	//-- 2. create DataSource according to Type
-	switch (dsType) {
+	switch (sourceType) {
 	case FXDB_SOURCE:
 		safeCallEE(fxData=new tFXData(parms, "FXData"));
 		featuresCnt=FXDATA_FEATURESCNT;
@@ -73,7 +75,7 @@ sTimeSerie::sTimeSerie(tParmsSource* parms, char* parmKey, tDebugger* dbg_){
 		featuresCnt=mt4Data->featuresCnt;
 		break;
 	default:
-		throwE("invalid DataSource Type: %d", 1, dsType);
+		throwE("invalid DataSource Type: %d", 1, sourceType);
 	}
 
 	//-- 3. common stuff (mallocs, ...)

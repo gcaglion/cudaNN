@@ -7,6 +7,11 @@
 #include "ParamMgr.h"
 #endif
 
+//-- limits
+#define DBUSER_MAXLEN 30
+#define DBPASSWORD_MAXLEN 30
+#define DBCONNSTRING_MAXLEN 30
+
 typedef struct sDBConnection{
 	char DBUser[DBUSER_MAXLEN];
 	char DBPassword[DBPASSWORD_MAXLEN];
@@ -15,7 +20,7 @@ typedef struct sDBConnection{
 	tDebugger* dbg;
 #ifdef __cplusplus
 	EXPORT sDBConnection(char* username, char* password, char* connstring, tDebugger* dbg_=nullptr);
-	EXPORT sDBConnection(tParmsSource* iniParms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT sDBConnection(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT sDBConnection();
 	EXPORT ~sDBConnection();
 #endif

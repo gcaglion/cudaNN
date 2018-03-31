@@ -8,29 +8,28 @@ sData::sData(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* db
 sData::sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Data.err"))) : dbg_;
 
-	safeCallEB(parms->setKey(parmKey));
+	//-- Shape
+	safeCallEB(parms->setKey(parmKey));	safeCallEB(parms->setKey("Shape"));
+	safeCallEE(parms->get(&sampleLen, "SampleLen"));
+	safeCallEE(parms->get(&predictionLen, "PredictionLen"));
+	safeCallEE(parms->get(&featuresCnt, "FeaturesCount"));
 
-	//-- Data Shape
-	safeCallEB(parms->setKey("Shape"));
-	parms->get(&sampleLen, "SampleLen");
-	parms->get(&predictionLen, "PredictionLen");
-	parms->get(&featuresCnt, "FeaturesCount");
-
-	//-- Data Actions
-	safeCallEE(parms->setKey("..Action"));
-	parms->get(&doTrain, "Train");
-	parms->get(&doValidation, "Validate");
-	parms->get(&doTest, "Test");
-
-	//-- TimeSerie(s)
-	if (doTrain)		safeCallEE(trainTS=new tTimeSerie(parms, "..TrainSet"));
-	if (doTest)			safeCallEE(testTS =new tTimeSerie(parms, "..TestSet"));
-	if (doValidation)	safeCallEE(validTS=new tTimeSerie(parms, "..ValidationSet"));
+	//-- Actions, TimeSeries and DataSets
+	for(int a=0; a<3; a++) {
+		safeCallEB(parms->setKey(parmKey)); safeCallEE(parms->setKey(ActionDesc[a]));
+		safeCallEE(parms->get(&ActionDo[a], "Do"));
+		if(ActionDo[a]) {
+			safeCallEE(ds[a]=new tDataSet(parms, "DataSet"));
+		}
+	}
 
 }
 sData::~sData() {
+	for (int a=0; a<3; a++) {
+		if (ActionDo[a]) {
+			delete ds[a];
+		}
+	}
+
 	delete dbg;
-	if (doTrain) delete trainTS;
-	if (doTest) delete testTS;
-	if (doValidation) delete validTS;
 }

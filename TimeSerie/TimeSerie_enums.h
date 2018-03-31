@@ -16,8 +16,3 @@
 #define TSF_TURNINGPOINTS 5
 #define TSF_SHE 6
 #define TSF_HISTVOL 7
-
-//-- Data.Set
-#define TRAIN_SET 0
-#define TEST_SET  1
-#define VALID_SET 2
