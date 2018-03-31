@@ -83,7 +83,12 @@ bool sParmsSource::findKey(char* KeyFullDesc){
 	}
 	return false;
 }
-
+bool sParmsSource::backupKey() {
+	return(strcpy_s(bkpKey, XML_MAX_PATH_LEN, currentKey)==0);
+}
+bool sParmsSource::restoreKey() {
+	return(strcpy_s(currentKey, XML_MAX_PATH_LEN, bkpKey)==0);
+}
 //-- specific, single value: int(with or without enums), numtype, char*
 void sParmsSource::getx(int* oVar){
 	getx(&oVar);

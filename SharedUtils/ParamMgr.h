@@ -37,6 +37,7 @@ typedef struct sParmsSource {
 	char*** parmVal;	// [XML_MAX_PARAMS_CNT][XML_MAX_ARRAY_PARAM_ELEM_CNT][XML_MAX_PARAM_VAL_LEN];
 
 	char currentKey[XML_MAX_PATH_LEN];
+	char bkpKey[XML_MAX_PATH_LEN];
 
 	char soughtKey[XML_MAX_PATH_LEN];
 	char soughtParm[XML_MAX_PARAM_NAME_LEN];
@@ -44,6 +45,8 @@ typedef struct sParmsSource {
 
 	//--
 	EXPORT bool setKey(char* KeyDesc, bool ignoreError=false);
+	EXPORT bool backupKey();
+	EXPORT bool restoreKey();
 	bool findKey(char* KeyFullDesc);
 
 	EXPORT bool parse();

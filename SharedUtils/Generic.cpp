@@ -120,3 +120,9 @@ EXPORT bool isnumber(char* str) {
 	}
 	return true;
 }
+EXPORT bool isInList(int soughtVal, int listLen, int* list) {
+	for(int i=0; i<listLen; i++) {
+		if (list[i]==soughtVal) return true;
+	}
+	return false;
+}

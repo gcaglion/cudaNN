@@ -12,3 +12,4 @@ EXPORT void removeQuotes(char* istr, char* ostr);
 EXPORT void stripChar(char* istr, char c);
 EXPORT bool getValuePair(char* istr, char* oName, char* oVal, char eqSign);
 EXPORT bool isnumber(char* str);
+EXPORT bool isInList(int soughtVal, int listLen, int* list);

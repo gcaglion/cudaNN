@@ -9,6 +9,8 @@
 #include "../TimeSerie/TimeSerie_enums.h"
 #include "../Logger/Logger_enums.h"
 #include "../MyEngines/Engine_enums.h"
+#include "../MyEngines/Core_enums.h"
+#include "../MyEngines/Connector_enums.h"
 
 #define optionLookup(option, e) { \
 	if (strcmp(parmVal[foundParmId][e], #option)==0) { \
@@ -54,6 +56,13 @@ bool sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(ENGINE_XIE, elementId);
 	optionLookup(ENGINE_WNN, elementId);
 	optionLookup(ENGINE_CUSTOM, elementId);
+	optionLookup(CORE_NN, elementId);
+	optionLookup(CORE_GA, elementId);
+	optionLookup(CORE_SVM, elementId);
+	optionLookup(CORE_SOM, elementId);
+	optionLookup(CONN_DENSE, elementId);
+	optionLookup(CONN_LINEAR, elementId);
+	optionLookup(CONN_TRANSFORM, elementId);
 
 	return false;
 }

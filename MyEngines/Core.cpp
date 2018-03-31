@@ -1,8 +1,8 @@
 #include "Core.h"
 
-sCore::sCore(int type_, tDebugger* dbg_) {
+sCore::sCore(int type_, int inputCnt_, int outputCnt_, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Core.err"))) : dbg_;
-	type=type_;
+	type=type_; inputCnt=inputCnt_; outputCnt=outputCnt_;
 
 }
 sCore::sCore(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
@@ -26,3 +26,7 @@ sCore::sCore(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	}
 }
 sCore::~sCore() {}
+
+void sCore::setLayout(int inputCnt_, int outputCnt_) {
+	inputCnt=inputCnt_; outputCnt=outputCnt_;
+}

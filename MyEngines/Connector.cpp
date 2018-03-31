@@ -10,6 +10,8 @@ sConnector::sConnector(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 
 	safeCallEB(parms->setKey(parmKey));
 	parms->get(&type, "Type");
+	parms->get(&fromCore, "FromCore");
+	parms->get(&toCore, "ToCore");
 
 	switch (type) {
 	case CONN_DENSE:

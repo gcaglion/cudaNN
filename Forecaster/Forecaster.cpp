@@ -10,10 +10,12 @@ sForecaster::sForecaster(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	safeCallEE(data=new tData(parms, ".Forecaster.Data", dbg))
 
 	//-- define forecaster Engine
-	safeCallEE(parms->setKey(".Forecaster.Engine"));
+	safeCallEE(engine=new tEngine(parms, ".Forecaster.Engine"));
+	//-- set Engine Input/Output count
+	safeCallEE(engine->setLayout(data->sampleLen*data->featuresCnt, data->predictionLen*data->featuresCnt));
 
 	//-- define forecaster Persistor
-	safeCallEE(parms->setKey(".Forecaster.Persistor"));
+	safeCallEE(persistor=new tLogger(parms, ".Forecaster.Persistor", dbg));
 
 }
 sForecaster::~sForecaster() {
