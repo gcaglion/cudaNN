@@ -7,10 +7,6 @@
 #include "EngineLayout.h"
 #include "../SharedUtils/ParamMgr.h"
 #include "Core.h"
-#include "Connector.h"
-
-#define MAX_CORES_CNT		128
-#define MAX_CONNECTORS_CNT	MAX_CORES_CNT*MAX_CORES_CNT
 
 typedef struct sEngine {
 

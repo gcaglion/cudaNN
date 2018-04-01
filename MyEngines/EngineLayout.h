@@ -5,6 +5,7 @@
 //-- this is used by both Engine.h and Core.h
 
 #define MAX_ENGINE_LAYERS	16
+#define MAX_CORES_CNT		128
 
 typedef struct sEngineLayout {
 	int layersCnt=0;

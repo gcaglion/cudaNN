@@ -10,6 +10,7 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 	shape=shape_;
 	int coresCnt_; 
 	int c;
+	char coreKey[XML_MAX_PARAM_NAME_LEN];
 
 	safeCallEB(parms->setKey(parmKey));
 	parms->get(&type, "Type");
@@ -25,7 +26,6 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 		//-- 1. create layout object
 		safeCallEE(layout=new tEngineLayout(coresCnt_));
 		//-- 1.1. set layout, and outputCnt for each Core
-		char coreKey[XML_MAX_PARAM_NAME_LEN];
 		for(c=0; c<layout->coresCnt; c++) {
 			sprintf_s(coreKey, XML_MAX_PARAM_NAME_LEN, "Core%d", c);
 			safeCallEB(parms->setKey(coreKey));
@@ -56,8 +56,11 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 		}
 
 		//-- 2. create Cores
+		core=(tCore**)malloc(layout->coresCnt*sizeof(tCore*));
 		for (c=0; c<layout->coresCnt; c++) {
-			//core[c]=new tCore(layout->coreType[c],)
+			safeCallEB(parms->restoreKey());
+			sprintf_s(coreKey, XML_MAX_PARAM_NAME_LEN, "Core%d", c);
+			safeCallEE(core[c]=new tCore(parms, coreKey, c, layout, dbg));
 		}
 
 		//-- 
