@@ -17,6 +17,4 @@ typedef struct sCore {
 	EXPORT sCore(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT ~sCore();
 
-	EXPORT void setLayout(int inputCnt_, int outputCnt_);
-
 } tCore;

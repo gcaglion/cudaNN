@@ -103,7 +103,6 @@ void sParmsSource::getx(numtype* oVar){
 	getx(&oVar);
 }
 
-
 //-- specific, arrays: int(with or without enums), numtype, char*
 void sParmsSource::getx(int** oVar){
 	for (int e=0; e<parmValsCnt[foundParmId]; e++) {

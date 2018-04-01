@@ -2,32 +2,28 @@
 #include "../CommonEnv.h"
 #include "../SharedUtils/Debugger.h"
 #include "../SharedUtils/Generic.h"
+#include "../SharedUtils/DataShape.h"
 #include "Engine_enums.h"
+#include "EngineLayout.h"
 #include "../SharedUtils/ParamMgr.h"
 #include "Core.h"
 #include "Connector.h"
 
 #define MAX_CORES_CNT		128
-#define MAX_CONNECTORS_CNT	32768
+#define MAX_CONNECTORS_CNT	MAX_CORES_CNT*MAX_CORES_CNT
 
 typedef struct sEngine {
 
 	tDebugger* dbg;
 
 	int type;
-	int inputCnt;
-	int outputCnt;
 
-	int coresCnt;
-	int coreId[MAX_CORES_CNT];
-	tCore* core[MAX_CORES_CNT];
-	int connectorsCnt;
-	tConnector* connector[MAX_CONNECTORS_CNT];
+	tDataShape* shape;
+	tEngineLayout* layout;
+	tCore** core;
 
-	EXPORT sEngine(int type_, int inputCnt_, int outputCnt_, tDebugger* dbg_=nullptr);
-	EXPORT sEngine(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT sEngine(int type_, tDataShape* shape_, tDebugger* dbg_=nullptr);
+	EXPORT sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_=nullptr);
 	EXPORT ~sEngine();
-
-	EXPORT void setLayout(int inputCnt_, int outputCnt_);
 
 } tEngine;

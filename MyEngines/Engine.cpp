@@ -1,71 +1,83 @@
 #include "Engine.h"
 
-
-sEngine::sEngine(int type_, int inputCnt_, int outputCnt_, tDebugger* dbg_){
+sEngine::sEngine(int type_, tDataShape* shape_, tDebugger* dbg_){
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Engine.err"))) : dbg_;
-	type=type_; inputCnt=inputCnt_; outputCnt=outputCnt_;
+	type=type_; shape=shape_;
 
 }
-sEngine::sEngine(tParmsSource* parms, char* parmKey, tDebugger* dbg_){
+sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_){
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Engine.err"))) : dbg_; //-- TO DO: How to handle specific <Debugger>/</Debugger> info??
-	
+	shape=shape_;
+	int coresCnt_; 
+	int c;
+
 	safeCallEB(parms->setKey(parmKey));
 	parms->get(&type, "Type");
 
 	switch (type) {
+	case ENGINE_CUSTOM:
+		safeCallEB(parms->setKey("Custom"));
+		safeCallEB(parms->backupKey());
+
+		//-- 0. temporary coresCnt
+		safeCallEE(parms->get(&coresCnt_, "CoresCount"));
+
+		//-- 1. create layout object
+		safeCallEE(layout=new tEngineLayout(coresCnt_));
+		//-- 1.1. set layout, and outputCnt for each Core
+		char coreKey[XML_MAX_PARAM_NAME_LEN];
+		for(c=0; c<layout->coresCnt; c++) {
+			sprintf_s(coreKey, XML_MAX_PARAM_NAME_LEN, "Core%d", c);
+			safeCallEB(parms->setKey(coreKey));
+			safeCallEE(parms->get(&layout->coreType[c], "Type"));
+			safeCallEE(parms->get(layout->coreParentDesc[c], "Parents"));
+			safeCallEE(parms->get(&layout->coreParentConnType[c], "ParentsConnType", &layout->coreParentsCnt[c]));
+			//-- outputCnt is assumed to be the same across all Cores, and dependent on DataShape
+			layout->coreOutputCnt[c]=shape->predictionLen*shape->featuresCnt;
+
+			safeCallEB(parms->restoreKey());
+		}
+		//-- 1.2. determine Layer for each Core, and cores count for each layer
+		for (c=0; c<layout->coresCnt; c++) {
+			layout->coreLayer[c]=layout->getCoreLayer(c);
+			layout->layerCoresCnt[layout->coreLayer[c]]++;
+		}
+		//-- 1.3. determine layersCnt, and InputCnt for each Core
+		for(int l=0; l<MAX_ENGINE_LAYERS; l++) {
+			for(c=0; c<layout->layerCoresCnt[l]; c++) {
+				if(l==0) {
+					layout->coreInputCnt[c]=shape->sampleLen*shape->featuresCnt;
+				} else {
+					layout->coreInputCnt[c]=layout->layerCoresCnt[l-1]*layout->coreOutputCnt[c];
+				}				
+			}
+			if (c==0) break;
+			layout->layersCnt++;
+		}
+
+		//-- 2. create Cores
+		for (c=0; c<layout->coresCnt; c++) {
+			//core[c]=new tCore(layout->coreType[c],)
+		}
+
+		//-- 
+		break;
 	case ENGINE_WNN:
 		safeCallEB(parms->setKey("WNN"));
 		//... get() ...
 		break;
 	case ENGINE_XIE:
 		safeCallEB(parms->setKey("XIE"));
-		coresCnt=3;
+		layout->coresCnt=3;
 		//... get() ...
-		break;
-	case ENGINE_CUSTOM:
-		safeCallEB(parms->setKey("Custom"));
-		safeCallEB(parms->backupKey());
-		coresCnt=0;
-
-		//-- 1. Connectors
-		char connectorKey[XML_MAX_PARAM_NAME_LEN];
-		parms->get(&connectorsCnt, "ConnectorsCount"); if (connectorsCnt>MAX_CONNECTORS_CNT) throwE("Engine ConnectorsCount (%d) is larger than maximum allowed (%d)", 2, connectorsCnt, MAX_CONNECTORS_CNT);
-		for (int c=0; c<connectorsCnt; c++) {
-			sprintf_s(connectorKey, XML_MAX_PARAM_NAME_LEN, "Connector%d", c);
-			safeCallEE(connector[c]=new tConnector(parms, connectorKey, dbg));
-			//-- list of CoreIds to load is determined by all unique FromCore and ToCore values
-			if (!isInList(connector[c]->fromCore, coresCnt, coreId)) {
-				coreId[coresCnt]=connector[c]->fromCore;
-				coresCnt++;
-			}
-			if (!isInList(connector[c]->toCore, coresCnt, coreId)) {
-				coreId[coresCnt]=connector[c]->toCore;
-				coresCnt++;
-			}
-			safeCallEB(parms->restoreKey());
-		}
-
-		// ... TODO ... coresCnt, CoreKeys to load, as well as inputCnt,outputCnt for all Cores should be calcd based on connectors config ....
-
-
-
-		//-- 2. Cores
-		char coreKey[XML_MAX_PARAM_NAME_LEN];
-		parms->get(&coresCnt, "CoresCount"); if (coresCnt>MAX_CORES_CNT) throwE("Engine CoresCount (%d) is larger than maximum allowed (%d)", 2, coresCnt, MAX_CORES_CNT);
-		for (int c=0; c<coresCnt; c++) {
-			sprintf_s(coreKey, XML_MAX_PARAM_NAME_LEN, "Core%d", c);
-			safeCallEE(core[c]=new tCore(parms, coreKey, dbg));
-			safeCallEB(parms->restoreKey());
-		}
-
 		break;
 	default:
 		throwE("Invalid Engine Type: %d", 1, type);
 		break;
 	}
 }
-sEngine::~sEngine(){}
-
-void sEngine::setLayout(int inputCnt_, int outputCnt_) {
-	inputCnt=inputCnt_; outputCnt=outputCnt_;
+sEngine::~sEngine(){
+	delete layout;
+	delete dbg;
 }
+

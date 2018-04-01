@@ -157,6 +157,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DataShape.cpp" />
     <ClCompile Include="DataSource.cpp" />
     <ClCompile Include="DBConnection.cpp" />
     <ClCompile Include="Debugger.cpp" />
@@ -169,6 +170,7 @@
     <ClCompile Include="ParamMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DataShape.h" />
     <ClInclude Include="DataSource_enums.h" />
     <ClInclude Include="DBConnection_enums.h" />
     <ClInclude Include="Debugger_enums.h" />
@@ -184,6 +186,7 @@
     <ClInclude Include="Generic.h" />
     <ClInclude Include="MT4data.h" />
     <ClInclude Include="ParamMgr.h" />
+    <ClInclude Include="ParamMgr_limits.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

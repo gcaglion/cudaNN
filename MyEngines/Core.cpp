@@ -26,7 +26,3 @@ sCore::sCore(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	}
 }
 sCore::~sCore() {}
-
-void sCore::setLayout(int inputCnt_, int outputCnt_) {
-	inputCnt=inputCnt_; outputCnt=outputCnt_;
-}

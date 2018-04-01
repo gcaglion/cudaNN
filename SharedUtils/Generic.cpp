@@ -35,7 +35,7 @@ EXPORT int cslToArray(const char* csl, char Separator, char** StrList) {
 			memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
 			StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
 			stripChar(StrList[ListLen], ' '); stripChar(StrList[ListLen], '\t');
-			ListLen++;
+			if(strlen(StrList[ListLen])>0) ListLen++;
 			prevSep = i;
 		}
 		i++;
@@ -44,6 +44,7 @@ EXPORT int cslToArray(const char* csl, char Separator, char** StrList) {
 	memcpy(StrList[ListLen], &csl[prevSep+kaz], i-prevSep-kaz);
 	StrList[ListLen][i-prevSep-kaz] = '\0';	// add null terminator
 	stripChar(StrList[ListLen], ' '); stripChar(StrList[ListLen], '\t');
+	if (strlen(StrList[ListLen])==0) ListLen--;
 
 	return (ListLen+1);
 }

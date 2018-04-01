@@ -83,14 +83,16 @@
 			Level = DBG_LEVEL_DET
 			Dest  = DBG_DEST_BOTH
 			DestFileFullName  = C:\temp\logs\mainDebugger.log
-		</Debugger>		
+		</Debugger>
 		Type 		= ENGINE_CUSTOM
+		<XIE>
+		</XIE>
+		<WNN>
+		</WNN>
 		<Custom>
 			CoresCount	= 5
 			<Core0>
-				Type			= CORE_NN
-				Parents			= 
-				ParentsConnType	= 
+				Type		= CORE_NN
 				<Topology>
 					LevelRatio			= 1,1,1,0.5
 					LevelActivation		= NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH
@@ -116,30 +118,39 @@
 				</Training>
 			</Core0>
 			<Core1>
-				Type			= CORE_NN
-				Parents			= 
-				ParentsConnType	= 
+				type		= CORE_NN
 			</Core1>
 			<Core2>
-				Type			= CORE_GA
-				Parents			= Core0
-				ParentsConnType	= CONN_DENSE
+				type		= CORE_NN
 			</Core2>
 			<Core3>
-				Type			= CORE_SVM
-				Parents			= Core1
-				ParentsConnType	= CONN_DENSE
+				type		= CORE_GA
 			</Core3>
 			<Core4>			
-				Type			= CORE_NN
-				Parents			= Core2, Core3
-				ParentsConnType	= CONN_DENSE, CONN_LINEAR
+				type		= CORE_SVM
 			</Core4>
+			ConnectorsCount	= 4
+			<Connector0>
+				FromCore	= 0
+				ToCore		= 2
+				Type		= CONN_DENSE
+			</Connector0>
+			<Connector1>
+				FromCore	= 1
+				ToCore		= 3
+				Type		= CONN_DENSE
+			</Connector1>
+			<Connector2>
+				FromCore	= 2
+				ToCore		= 4
+				Type		= CONN_DENSE
+			</Connector2>
+			<Connector3>
+				FromCore	= 3
+				ToCore		= 4
+				Type		= CONN_DENSE
+			</Connector3>
 		</Custom>
-		<XIE>
-		</XIE>
-		<WNN>
-		</WNN>
 	</Engine>
 	<Persistor>
 		saveNothing		= false

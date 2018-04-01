@@ -2,6 +2,7 @@
 #include "../CommonEnv.h"
 #include "../SharedUtils/Debugger.h"
 #include "../SharedUtils/ParamMgr.h"
+#include "../SharedUtils/DataShape.h"
 #include "../TimeSerie/TimeSerie.h"
 #include "../TimeSerie/DataSet.h"
 
@@ -14,9 +15,7 @@ typedef struct sData {
 	tDebugger* dbg;
 
 	//-- shape
-	int sampleLen;
-	int predictionLen;
-	int featuresCnt;
+	tDataShape* shape;
 
 	//-- actions
 	bool ActionDo[3];
@@ -25,7 +24,7 @@ typedef struct sData {
 	//-- DataSets (each include its own source TimeSerie)
 	tDataSet* ds[3];
 
-	EXPORT sData(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_=nullptr);
+	EXPORT sData(tDataShape* shape_=nullptr, bool doTrain=true, bool doTest=true, bool doValidation=false, tDebugger* dbg_=nullptr);
 	EXPORT sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT ~sData();
 
