@@ -4,9 +4,9 @@
 #include "../SharedUtils/Generic.h"
 #include "../SharedUtils/DataShape.h"
 #include "Engine_enums.h"
-#include "EngineLayout.h"
-#include "../SharedUtils/ParamMgr.h"
+#include "Layout.h"
 #include "Core.h"
+#include "../SharedUtils/ParamMgr.h"
 
 typedef struct sEngine {
 
@@ -16,7 +16,9 @@ typedef struct sEngine {
 
 	tDataShape* shape;
 	tEngineLayout* layout;
+
 	tCore** core;
+	tCoreLayout** coreLayout;
 
 	EXPORT sEngine(int type_, tDataShape* shape_, tDebugger* dbg_=nullptr);
 	EXPORT sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_=nullptr);

@@ -1,5 +1,8 @@
 #include "cuNN.h"
 
+sNN::sNN(tParmsSource* parms, char* parmKey, tEngineLayout* engineLayout, tDebugger* dbg_) {
+
+}
 sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms_, tDebugger* dbg_) {
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
@@ -74,15 +77,15 @@ void sNN::setLayout(int batchSamplesCnt_) {
 	weightsCnt=(int*)malloc((outputLevel)*sizeof(int));
 	levelFirstWeight=(int*)malloc((outputLevel)*sizeof(int));
 
-	//-- 0.2. Input-OutputCount moved here, so can be reset when called by run()
+	//-- 0.2. Input-layout->outputCnt moved here, so can be reset when called by run()
 	parms->batchSamplesCnt=batchSamplesCnt_;
-	InputCount=sampleLen*featuresCnt*parms->batchSamplesCnt;
-	OutputCount=predictionLen*featuresCnt*parms->batchSamplesCnt;
+	layout->inputCnt=sampleLen*featuresCnt*parms->batchSamplesCnt;
+	layout->outputCnt=predictionLen*featuresCnt*parms->batchSamplesCnt;
 
 
 	//-- 0.3. set nodesCnt (single sample)
-	nodesCnt[0] = InputCount;
-	nodesCnt[outputLevel] = OutputCount;
+	nodesCnt[0] = layout->inputCnt;
+	nodesCnt[outputLevel] = layout->outputCnt;
 	for (nl = 0; nl<(levelsCnt-2); nl++) nodesCnt[nl+1] = (int)floor(nodesCnt[nl]*parms->levelRatio[nl]);
 
 	//-- add context neurons
@@ -325,9 +328,9 @@ void sNN::ForwardPass(tDataSet* ds, int batchId, bool haveTargets) {
 
 	//-- 1. load samples (and targets, if passed) from single batch in dataset onto input layer
 	LDstart=timeGetTime(); LDcnt++;
-	safeCallEE(Alg->h2d(&F[(parms->useBias)?1:0], &ds->sampleBFS[batchId*InputCount], InputCount*sizeof(numtype), true));
+	safeCallEE(Alg->h2d(&F[(parms->useBias)?1:0], &ds->sampleBFS[batchId*layout->inputCnt], layout->inputCnt*sizeof(numtype), true));
 	if (haveTargets) {
-		safeCallEE(Alg->h2d(&u[0], &ds->targetBFS[batchId*OutputCount], OutputCount*sizeof(numtype), true));
+		safeCallEE(Alg->h2d(&u[0], &ds->targetBFS[batchId*layout->outputCnt], layout->outputCnt*sizeof(numtype), true));
 	}
 	LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
@@ -478,14 +481,14 @@ void sNN::run(tDataSet* runSet) {
 	for (int b=0; b<batchCnt; b++) {
 
 		//-- 1.1.1.  load samples/targets onto GPU
-		safeCallEE(Alg->h2d(&F[(parms->useBias) ? 1 : 0], &runSet->sampleBFS[b*InputCount], InputCount*sizeof(numtype), true));
-		safeCallEE(Alg->h2d(&u[0], &runSet->targetBFS[b*OutputCount], OutputCount*sizeof(numtype), true));
+		safeCallEE(Alg->h2d(&F[(parms->useBias) ? 1 : 0], &runSet->sampleBFS[b*layout->inputCnt], layout->inputCnt*sizeof(numtype), true));
+		safeCallEE(Alg->h2d(&u[0], &runSet->targetBFS[b*layout->outputCnt], layout->outputCnt*sizeof(numtype), true));
 
 		//-- 1.1.2. Feed Forward
 		safeCallEE(FF());
 
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
-		safeCallEE(Alg->d2h(&runSet->predictionBFS[b*OutputCount], &F[levelFirstNode[outputLevel]], OutputCount*sizeof(numtype)));
+		safeCallEE(Alg->d2h(&runSet->predictionBFS[b*layout->outputCnt], &F[levelFirstNode[outputLevel]], layout->outputCnt*sizeof(numtype)));
 
 		safeCallEE(calcErr());
 	}

@@ -150,19 +150,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Connector.h" />
-    <ClInclude Include="Connector_enums.h" />
     <ClInclude Include="Core_enums.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Core.h" />
-    <ClInclude Include="EngineLayout.h" />
     <ClInclude Include="Engine_enums.h" />
+    <ClInclude Include="Layout.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Connector.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="Engine.cpp" />
-    <ClCompile Include="EngineLayout.cpp" />
+    <ClCompile Include="Layout.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

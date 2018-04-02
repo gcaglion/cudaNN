@@ -27,13 +27,7 @@
     <ClInclude Include="Engine_enums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Connector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Connector_enums.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EngineLayout.h">
+    <ClInclude Include="Layout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,10 +38,7 @@
     <ClCompile Include="Core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Connector.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EngineLayout.cpp">
+    <ClCompile Include="Layout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

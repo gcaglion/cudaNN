@@ -11,5 +11,6 @@ typedef struct sDataShape {
 	int featuresCnt;
 
 	EXPORT sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT sDataShape(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_=nullptr);
 
 } tDataShape;

@@ -8,3 +8,7 @@
 #define CORE_SVM 2
 #define CORE_SOM 3
 
+//-- Core Connection types
+#define CONN_DENSE		0
+#define CONN_LINEAR		1
+#define CONN_TRANSFORM	2

@@ -2,21 +2,16 @@
 
 sCore::sCore(int type_, int inputCnt_, int outputCnt_, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Core.err"))) : dbg_;
-	type=type_; inputCnt=inputCnt_; outputCnt=outputCnt_;
 
 }
-sCore::sCore(tParmsSource* parms, char* parmKey, int Id_, tEngineLayout* engineLayout, tDebugger* dbg_) {
+sCore::sCore(tParmsSource* parms, tCoreLayout* layout_, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(new tFileInfo("Core.err"))) : dbg_; //-- TO DO: How to handle specific <Debugger>/</Debugger> info??
+	layout=layout_;
 
-	
-	safeCallEB(parms->setKey(parmKey));
-	Id=Id_;
-	type=engineLayout->coreType[Id];
-	inputCnt=engineLayout->coreInputCnt[Id];
-	outputCnt=engineLayout->coreOutputCnt[Id];
-
-	switch (type) {
+	int kaz;
+	switch (layout->type) {
 	case CORE_NN:
+		kaz=0;
 		break;
 	case CORE_GA:
 		break;
@@ -25,8 +20,9 @@ sCore::sCore(tParmsSource* parms, char* parmKey, int Id_, tEngineLayout* engineL
 	case CORE_SOM:
 		break;
 	default:
-		throwE("Invalid Core Type: %d", 1, type);
+		throwE("Invalid Core Type: %d", 1, layout->type);
 		break;
 	}
 }
+sCore::sCore() {}
 sCore::~sCore() {}

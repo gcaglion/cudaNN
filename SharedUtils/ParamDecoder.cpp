@@ -10,7 +10,6 @@
 #include "../Logger/Logger_enums.h"
 #include "../MyEngines/Engine_enums.h"
 #include "../MyEngines/Core_enums.h"
-#include "../MyEngines/Connector_enums.h"
 
 #define optionLookup(option, e) { \
 	if (strcmp(parmVal[foundParmId][e], #option)==0) { \

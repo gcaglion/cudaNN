@@ -23,12 +23,13 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 		//-- 0. temporary coresCnt
 		safeCallEE(parms->get(&coresCnt_, "CoresCount"));
 
-		//-- 1. create layout object
+		//-- 1. create Engine layout object
 		safeCallEE(layout=new tEngineLayout(coresCnt_));
 		//-- 1.1. set layout, and outputCnt for each Core
 		for(c=0; c<layout->coresCnt; c++) {
 			sprintf_s(coreKey, XML_MAX_PARAM_NAME_LEN, "Core%d", c);
 			safeCallEB(parms->setKey(coreKey));
+			sprintf_s(layout->coreDesc[c], XML_MAX_PARAM_NAME_LEN, coreKey);
 			safeCallEE(parms->get(&layout->coreType[c], "Type"));
 			safeCallEE(parms->get(layout->coreParentDesc[c], "Parents"));
 			safeCallEE(parms->get(&layout->coreParentConnType[c], "ParentsConnType", &layout->coreParentsCnt[c]));
@@ -55,12 +56,14 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 			layout->layersCnt++;
 		}
 
-		//-- 2. create Cores
+		//-- 2. create CoreLayouts and Cores
 		core=(tCore**)malloc(layout->coresCnt*sizeof(tCore*));
+		coreLayout=(tCoreLayout**)malloc(layout->coresCnt*sizeof(tCoreLayout*));
 		for (c=0; c<layout->coresCnt; c++) {
 			safeCallEB(parms->restoreKey());
 			sprintf_s(coreKey, XML_MAX_PARAM_NAME_LEN, "Core%d", c);
-			safeCallEE(core[c]=new tCore(parms, coreKey, c, layout, dbg));
+			coreLayout[c]=new tCoreLayout(layout, c);
+			//core[c]=new tCore(parms, coreLayout[c]);
 		}
 
 		//-- 

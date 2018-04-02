@@ -20,8 +20,8 @@ typedef struct sNN :public sCore {
 	int tid;
 
 	//-- topology
-	//int InputCount;
-	//int OutputCount;
+	//int layout->inputCnt;
+	//int layout->outputCnt;
 	//--
 	int featuresCnt;
 	int sampleLen;
@@ -81,6 +81,7 @@ typedef struct sNN :public sCore {
 	DWORD WUstart, WUtimeTot=0, WUcnt=0; float WUtimeAvg;
 	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
+	EXPORT sNN(tParmsSource* parms, char* parmKey, tEngineLayout* engineLayout, tDebugger* dbg_=nullptr);
 	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms_, tDebugger* dbg_=nullptr);
 	EXPORT ~sNN();
 
