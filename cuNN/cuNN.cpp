@@ -1,5 +1,8 @@
 #include "cuNN.h"
 
+sNN::sNN(tParmsSource* parms, char* parmKey, tEngineLayout* engineLayout, tDebugger* dbg_) {
+
+}
 sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms_, tDebugger* dbg_) {
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
