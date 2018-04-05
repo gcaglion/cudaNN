@@ -63,7 +63,7 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 			safeCallEB(parms->restoreKey());
 			sprintf_s(coreKey, XML_MAX_PARAM_NAME_LEN, "Core%d", c);
 			coreLayout[c]=new tCoreLayout(layout, c);
-			//core[c]=new tCore(parms, coreLayout[c]);
+			safeCallEE(addCore(parms, c, coreLayout[c]->type));
 		}
 
 		//-- 
@@ -87,3 +87,30 @@ sEngine::~sEngine(){
 	delete dbg;
 }
 
+void sEngine::train(tDataSet* trainDS) {
+	//-- train one layer at a time. TODO: Threads!
+	for (int l=0; l<layout->layersCnt; l++) {
+		for (int c=0; c<layout->coresCnt; c++) {
+			if (coreLayout[c]->layer==l) {
+				printf("training core %d in layer %d ...\n", c, l);
+			}
+		}
+	}
+}
+
+void sEngine::addCore(tParmsSource* parms, int coreId, int coreType) {
+	switch (coreType) {
+	case CORE_NN:
+		core[coreId]=new sNN(parms, layout->coreDesc[coreId]);
+		break;
+	case CORE_GA:
+		break;
+	case CORE_SVM:
+		break;
+	case CORE_SOM:
+		break;
+	default:
+		throwE("Invalid Core Type: %d", 1, coreType);
+		break;
+	}
+}

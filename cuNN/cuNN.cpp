@@ -1,7 +1,7 @@
 #include "cuNN.h"
 
-sNN::sNN(tParmsSource* parms, char* parmKey, tEngineLayout* engineLayout, tDebugger* dbg_) {
-
+sNN::sNN(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
+	printf("sNN constructor called with parmKey=%s\n", parmKey);
 }
 sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms_, tDebugger* dbg_) {
 	pid=GetCurrentProcessId();

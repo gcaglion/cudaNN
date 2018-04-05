@@ -209,8 +209,9 @@ typedef struct s_Algebra {
 	numtype* ss;	// shared scalar
 
 	//-- class constructor/destructor
-	EXPORT s_Algebra(tDebugger* dbg_=nullptr);
+	EXPORT s_Algebra(tDebugger* dbg_);
 	EXPORT ~s_Algebra();
+	EXPORT s_Algebra(){}
 
 	//-- class methods
 	EXPORT void MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);

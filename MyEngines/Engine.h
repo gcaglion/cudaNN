@@ -8,6 +8,8 @@
 #include "Core.h"
 #include "../SharedUtils/ParamMgr.h"
 
+#include "../cuNN/cuNN.h"
+
 typedef struct sEngine {
 
 	tDebugger* dbg;
@@ -23,5 +25,8 @@ typedef struct sEngine {
 	EXPORT sEngine(int type_, tDataShape* shape_, tDebugger* dbg_=nullptr);
 	EXPORT sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_=nullptr);
 	EXPORT ~sEngine();
+
+	EXPORT void train(tDataSet* trainDS);
+	EXPORT void addCore(tParmsSource* parms, int coreId, int coreType);
 
 } tEngine;

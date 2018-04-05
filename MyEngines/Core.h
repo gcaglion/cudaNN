@@ -4,6 +4,7 @@
 #include "../SharedUtils/ParamMgr.h"
 #include "Core_enums.h"
 #include "Layout.h"
+#include "../TimeSerie/DataSet.h"
 
 typedef struct sCore {
 

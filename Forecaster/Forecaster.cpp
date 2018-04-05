@@ -12,10 +12,10 @@ sForecaster::sForecaster(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	//-- define forecaster Engine, pass Data shape info
 	safeCallEE(engine=new tEngine(parms, ".Forecaster.Engine", data->shape));
 
-
 	//-- define forecaster Persistor
 	safeCallEE(persistor=new tLogger(parms, ".Forecaster.Persistor", dbg));
 
+	//-- train each 
 }
 sForecaster::~sForecaster() {
 	delete dbg;
