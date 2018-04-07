@@ -1,6 +1,5 @@
 #include "Debugger.h"
 
-
 void sDebugger::sDebugger_common(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
 	try {
@@ -20,7 +19,7 @@ sDebugger::sDebugger(int level_, int dest_, char* outFileName_) {
 	sDebugger_common(level_, dest_, outFileName_, DEBUG_DEFAULT_PATH, false, true, false);
 }
 sDebugger::~sDebugger() {
-	cleanup(outFile);
+	delete outFile;
 }
 
 //-- timing methods

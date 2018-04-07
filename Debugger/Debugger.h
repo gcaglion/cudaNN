@@ -1,6 +1,7 @@
 #pragma once
 
-#include "..\CommonEnv.h"
+#include "../CommonEnv10.h"
+
 #include <stdio.h>
 #include <time.h>
 #include "../Utils/Utils.h"
@@ -11,7 +12,7 @@
 
 typedef struct sDebugger
 #ifdef __cplusplus
-	: sBaseObj
+	: sBaseObj10
 #endif
 {
 	int level;	// DBG_LEVEL_ERR ||DBG_LEVEL_STD || DBG_LEVEL_DET

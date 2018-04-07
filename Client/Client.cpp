@@ -1,5 +1,4 @@
 #include "../CommonEnv.h"
-#include "../Debugger/Debugger.h"
 #include "../Forecaster/Forecaster.h"
 
 void Cleanup(int objCnt, ...) {
@@ -54,7 +53,7 @@ int main(int argc, char* argv[]) {
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		safeCallEE(XMLparms=new tParmsSource("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
+		safeCallEE(XMLparms=new tParmsSource("C:\\Users\\gcaglfion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
 
 		safeCallEE(XMLparms->parse());
 
@@ -63,7 +62,7 @@ int main(int argc, char* argv[]) {
 }
 	catch (std::exception e) {
 		dbg->write(DBG_LEVEL_ERR, "\nClient failed with exception: %s\n", 1, e.what());
-		Cleanup(3, forecaster, XMLparms, dbg);
+		Cleanup( 3, forecaster, XMLparms, dbg);
 		return -1;
 	}
 

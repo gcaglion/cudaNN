@@ -1,7 +1,6 @@
 // Database Connection - generic (can be used for both data retrieval and logging)
 #pragma once
 #include "../CommonEnv.h"
-#include "../Debugger/Debugger.h"
 #include "DBConnection_enums.h"
 #ifdef __cplusplus
 #include "../ParamMgr/ParamMgr.h"

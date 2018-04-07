@@ -28,9 +28,9 @@ sLogger::sLogger(tFileData* logFile, tDebugger* dbg_) {
 	file=logFile;
 }
 sLogger::~sLogger() {
-	cleanup(file);
-	cleanup(db);
-	cleanup(dbg);
+	delete file;
+	delete db;
+	delete dbg;
 }
 void sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV) {
 	if (saveMSE) {

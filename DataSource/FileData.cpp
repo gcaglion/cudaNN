@@ -18,5 +18,5 @@ sFileData::sFileData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	parms->get(&fieldSep, "FieldSep");
 }
 sFileData::~sFileData() {
-	cleanup(srcFile);
+	delete srcFile;
 }

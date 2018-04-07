@@ -19,8 +19,6 @@
 
 typedef struct sTimeSerie : public sBaseObj {
 
-	tDebugger* dbg=nullptr;
-
 	//-- data source
 	int sourceType;
 	tFXData* fxData=nullptr;

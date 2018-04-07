@@ -14,5 +14,5 @@ sDataSource::sDataSource(tParmsSource* parms, tDebugger* dbg_) {
 
 }
 sDataSource::~sDataSource() {
-	cleanup(dbg);
+	delete dbg;
 }

@@ -2,7 +2,6 @@
 #include "../CommonEnv.h"
 #include "../TimeSerie/TimeSerie.h"
 #include "../TimeSerie/DataSet.h"
-#include "../Debugger/Debugger.h"
 #include "../ParamMgr/ParamMgr.h"
 
 //-- Actions on data
@@ -11,8 +10,6 @@
 #define VALID 2
 
 typedef struct sDataShape : public sBaseObj {
-
-	tDebugger* dbg=nullptr;
 
 	int sampleLen;
 	int predictionLen;
@@ -25,7 +22,6 @@ typedef struct sDataShape : public sBaseObj {
 } tDataShape;
 
 typedef struct sData : public sBaseObj {
-	tDebugger* dbg=nullptr;
 
 	//-- shape
 	tDataShape* shape=nullptr;

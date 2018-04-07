@@ -30,5 +30,5 @@ sFXData::sFXData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	safeCallEE(db=new tDBConnection(parms, "DBConnection"));
 }
 sFXData::~sFXData(){
-	cleanup(db);
+	delete db;
 }

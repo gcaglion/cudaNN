@@ -15,7 +15,7 @@ sDataShape::sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 
 }
 sDataShape::~sDataShape() {
-	cleanup(dbg);
+	delete dbg;
 }
 
 sData::sData(tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, tDebugger* dbg_) {
@@ -44,9 +44,9 @@ sData::sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 sData::~sData() {
 	for (int a=0; a<3; a++) {
 		if (ActionDo[a]) {
-			cleanup(ds[a]);
+			delete ds[a];
 		}
 	}
-	cleanup(shape);
-	cleanup(dbg);
+	delete shape;
+	delete dbg;
 }

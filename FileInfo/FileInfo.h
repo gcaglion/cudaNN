@@ -1,13 +1,16 @@
 #pragma once
-#include "../CommonEnv.h"
+
+#include "../CommonEnv10.h"
+
 #include <stdio.h>
 #include <time.h>
 #include "../Utils/Utils.h"
 #include "FileInfo_enums.h"
 
+
 typedef struct sFileInfo
 #ifdef __cplusplus
-	: sBaseObj 
+	: sBaseObj10 
 #endif
 {
 	char Path[MAX_PATH];

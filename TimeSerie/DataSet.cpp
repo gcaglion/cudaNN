@@ -84,8 +84,8 @@ sDataSet::~sDataSet() {
 	free(target0);
 	free(prediction0);
 
-	cleanup(sourceTS);
-	cleanup(dbg);
+	delete sourceTS;
+	delete dbg;
 }
 //-- sDataSet, other methods
 void sDataSet::dump(char* filename) {

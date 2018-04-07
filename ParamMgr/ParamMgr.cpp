@@ -27,7 +27,7 @@ sParmsSource::~sParmsSource() {
 	}
 	free(parmVal);
 
-	cleanup(dbg);
+	delete dbg;
 }
 void sParmsSource::newDebugger(tDebugger* dbg_) {
 	int dbg_level, dbg_dest; 

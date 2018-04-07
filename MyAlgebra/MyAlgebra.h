@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../Debugger/Debugger.h"
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
@@ -201,8 +200,6 @@ EXPORT bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr,
 
 typedef struct s_Algebra : public sBaseObj {
 	
-	tDebugger* dbg=nullptr;
-
 	void* cublasH;
 	void* cuRandH;
 	void* cuStream[MAX_STREAMS];

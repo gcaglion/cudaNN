@@ -19,5 +19,5 @@ sCore::sCore() {
 	layout= new tCoreLayout();
 }
 sCore::~sCore(){
-	cleanup(layout);
+	delete layout;
 }

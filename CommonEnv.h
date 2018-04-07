@@ -1,30 +1,14 @@
 #pragma once
 
-#include <Windows.h>
+#include "CommonEnv00.h"
+#include "Debugger/Debugger.h"
+
 #ifdef __cplusplus
 #include <stdexcept>
 
 class sBaseObj {
 public:
-	virtual ~sBaseObj(){
-		//printf("sBaseObj() destructor called.\n"); 
-	}
+	tDebugger* dbg=nullptr;
+	virtual ~sBaseObj() {}
 };
-
 #endif
-
-
-typedef float numtype;
-#define DATE_FORMAT "YYYYMMDDHHMI"
-#define DATE_FORMAT_LEN 12
-
-#define DEBUG_DEFAULT_PATH "C:/temp/logs"
-
-#ifndef EXPORT
-#define EXPORT __declspec(dllexport)
-#endif
-
-#define USE_ORCL
-//#define USE_GPU
-
-#define cleanup(obj) if(obj!=nullptr) delete obj

@@ -1,13 +1,10 @@
 #pragma once
 #include "../CommonEnv.h"
 #include "DataSource_enums.h"
-#include "../Debugger/Debugger.h"
 #include "../ParamMgr/ParamMgr.h"
 
 typedef struct sDataSource : public sBaseObj {
 	
-	tDebugger* dbg=nullptr;
-
 	int type;
 
 	int featuresCnt;

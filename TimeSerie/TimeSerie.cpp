@@ -104,9 +104,9 @@ sTimeSerie::~sTimeSerie() {
 	free(dtime); free(bdtime);
 	free(tsf);
 
-	cleanup(fxData);
-	cleanup(fileData);
-	cleanup(dbg);
+	delete fxData;
+	delete fileData;
+	delete dbg;
 }
 
 //-- sTimeSerie, other methods

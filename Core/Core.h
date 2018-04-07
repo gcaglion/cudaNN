@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
+#include "Core_enums.h"
 
 #define CORE_MAX_DESC_LEN	128
 #define CORE_MAX_PARENTS	32

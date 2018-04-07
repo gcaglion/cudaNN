@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../Debugger/Debugger.h"
 #include "../DBConnection/DBConnection.h"
 #include "../DataSource/FileData.h"
 #include "../ParamMgr/ParamMgr.h"
@@ -16,7 +15,6 @@
 
 typedef struct sLogger : public sBaseObj {
 	int dest;
-	tDebugger* dbg=nullptr;
 	tDBConnection* db=nullptr;
 	tFileData* file=nullptr;
 	bool saveNothing;

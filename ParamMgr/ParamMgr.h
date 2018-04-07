@@ -1,13 +1,11 @@
 #pragma once
 #include "../CommonEnv.h"
-#include "../FileInfo/FileInfo.h"
-#include "../Debugger/Debugger.h"
 #include "../Utils/Utils.h"
+#include "../FileInfo/FileInfo.h"
 #include "ParamMgr_limits.h"
 
-typedef struct sParmsSource : public sBaseObj {
 
-	tDebugger* dbg=nullptr;
+typedef struct sParmsSource : public sBaseObj {
 
 	tFileInfo* parmsFile=nullptr;
 	int CLoverridesCnt;

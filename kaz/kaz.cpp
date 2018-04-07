@@ -30,12 +30,12 @@ int main() {
 	}
 	catch (std::exception e) {
 		printf("\nClient failed with exception: %s\n", e.what());
-		Cleanup(5, f0, f1, f2, f3, f4);
+		Cleanup( 5, f0, f1, f2, f3, f4);
 		system("pause");
 		return -1;
 	}
 
-	Cleanup(5, f0, f1, f2, f3, f4);
+	Cleanup( 5, f0, f1, f2, f3, f4);
 	system("pause");
 	return 0;
 }

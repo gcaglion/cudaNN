@@ -1,7 +1,6 @@
 #pragma once
 
 #include "..\CommonEnv.h"
-#include "../Debugger/Debugger.h"
 #include "../ParamMgr/ParamMgr.h"
 #include "../MyAlgebra/MyAlgebra.h"
 #include "../TimeSerie/DataSet.h"
@@ -10,8 +9,6 @@
 #include "NN_enums.h"
 
 typedef struct sNN :public sCore, public sBaseObj {
-
-	tDebugger* dbg=nullptr;
 
 	//-- MyAlgebra common structures
 	Algebra* Alg=nullptr;

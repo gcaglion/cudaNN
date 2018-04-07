@@ -2,11 +2,9 @@
 
 #include "../CommonEnv.h"
 #include "../ParamMgr/ParamMgr.h"
-#include "../Debugger/Debugger.h"
 #include "TimeSerie.h"
 
 typedef struct sDataSet : public sBaseObj {
-	tDebugger* dbg;
 
 	tTimeSerie* sourceTS=nullptr;
 

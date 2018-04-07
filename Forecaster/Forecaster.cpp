@@ -18,8 +18,8 @@ sForecaster::sForecaster(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	//-- train each 
 }
 sForecaster::~sForecaster() {
-	cleanup(persistor);
-	cleanup(engine);
-	cleanup(data);
-	cleanup(dbg);
+	delete persistor;
+	delete engine;
+	delete data;
+	delete dbg;
 }

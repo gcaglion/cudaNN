@@ -405,7 +405,7 @@ s_Algebra::~s_Algebra() {
 	myFree(ss);
 	//.....
 	// destroy cublasH, cuRandH, streams, curanddestroygenerator...
-	cleanup(dbg);
+	delete dbg;
 }
 //-- class methods
 bool getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
