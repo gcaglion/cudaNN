@@ -9,11 +9,18 @@
 
 #define DEBUG_DEFAULT_NAME "defaultDebug.log"
 
-typedef struct sDebugger {
-
+typedef struct sDebugger
+#ifdef __cplusplus
+	: sBaseObj
+#endif
+{
 	int level;	// DBG_LEVEL_ERR ||DBG_LEVEL_STD || DBG_LEVEL_DET
 	int dest;	// DBG_DEST_SCREEN || DBG_DEST_FILE || DBG_DEST_BOTH
-	tFileInfo* outFile;
+	tFileInfo* outFile
+#ifdef __cplusplus
+		=nullptr
+#endif
+		;
 	bool PauseOnError;
 	char errmsg[1024];
 
@@ -27,11 +34,10 @@ typedef struct sDebugger {
 	DWORD elapsedTime;
 
 #ifdef __cplusplus
-	//-- constructor (fully defaulted)
-	//EXPORT sDebugger(int level_=DBG_LEVEL_DEFAULT, int dest_=DBG_DEST_DEFAULT, tFileInfo* outFile_=nullptr, bool timing_=false, bool PauseOnError_=true, bool ThreadSafeLogging_=false);
 	EXPORT void sDebugger_common(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_);
-	EXPORT sDebugger(int level_=DBG_LEVEL_DEFAULT, int dest_=DBG_DEST_DEFAULT, char* outFileName_=nullptr, char* outFilePath_=nullptr, bool timing_=false, bool PauseOnError_=true, bool ThreadSafeLogging_=false);
-	EXPORT sDebugger(char* outFileName);
+	EXPORT sDebugger(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_=false, bool PauseOnError_=true, bool ThreadSafeLogging_=false);
+	EXPORT sDebugger(char* outFileName_);
+	EXPORT sDebugger(int level_, int dest_, char* outFileName);
 	EXPORT ~sDebugger();
 
 	EXPORT void write(int LogType, const char* msg, int argcount, ...);
@@ -39,8 +45,6 @@ typedef struct sDebugger {
 
 	EXPORT void setStartTime();
 	EXPORT void setElapsedTime();
-
-	void setOutFile(char* outFileName_, char* outFilePath_);
 
 private:
 	template <typename T> void argOut(int msgType, char* submsg, T arg);
@@ -76,10 +80,10 @@ catch (std::exception e) { \
 
 //-- class calling class
 #define safeCallEE(block) { \
-	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
+	dbg->write(DBG_LEVEL_STD, "dbg %p calling %s ... ", 2, dbg, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
 	try {block;} catch (std::exception e) { \
-		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); \
+		dbg->write(DBG_LEVEL_STD, "dbg %p FAILURE!\n", 1, dbg); \
 		throw(e); \
 	} \
 	dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \

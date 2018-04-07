@@ -10,9 +10,9 @@
 #define TEST  1
 #define VALID 2
 
-typedef struct sDataShape {
+typedef struct sDataShape : public sBaseObj {
 
-	tDebugger* dbg;
+	tDebugger* dbg=nullptr;
 
 	int sampleLen;
 	int predictionLen;
@@ -20,14 +20,15 @@ typedef struct sDataShape {
 
 	EXPORT sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT sDataShape(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_=nullptr);
+	EXPORT ~sDataShape();
 
 } tDataShape;
 
-typedef struct sData {
-	tDebugger* dbg;
+typedef struct sData : public sBaseObj {
+	tDebugger* dbg=nullptr;
 
 	//-- shape
-	tDataShape* shape;
+	tDataShape* shape=nullptr;
 
 	//-- actions
 	bool ActionDo[3];

@@ -53,7 +53,7 @@ sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	parms->get(&selectedFeature, "SelectedFeatures", &selectedFeaturesCnt);
 
 	//-- 1. TimeSerie parameters
-	safeCallEE(sourceTS=new tTimeSerie(parms, "TimeSerie", dbg));
+	safeCallEE(sourceTS=new tTimeSerie(parms, "TimeSerie"));
 
 	//-- 2. DataSource-specific parameters (so far, only BWFeature)
 	switch (sourceTS->sourceType) {
@@ -84,7 +84,8 @@ sDataSet::~sDataSet() {
 	free(target0);
 	free(prediction0);
 
-	delete dbg;
+	cleanup(sourceTS);
+	cleanup(dbg);
 }
 //-- sDataSet, other methods
 void sDataSet::dump(char* filename) {

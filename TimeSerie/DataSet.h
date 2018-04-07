@@ -5,10 +5,10 @@
 #include "../Debugger/Debugger.h"
 #include "TimeSerie.h"
 
-typedef struct sDataSet {
+typedef struct sDataSet : public sBaseObj {
 	tDebugger* dbg;
 
-	tTimeSerie* sourceTS;
+	tTimeSerie* sourceTS=nullptr;
 
 	int sampleLen;
 	int targetLen;

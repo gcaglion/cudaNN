@@ -7,7 +7,7 @@
 
 #define coreCalled
 
-typedef struct sCoreLayout {
+typedef struct sCoreLayout : sBaseObj {
 	int Id;
 	char* desc;
 	int layer;

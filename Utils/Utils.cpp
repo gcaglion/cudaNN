@@ -14,6 +14,21 @@ EXPORT char* MyGetCurrentDirectory() {
 	wcstombs_s(&convcharsn, RetBuf, Buffer, MAX_PATH-1);
 	return &RetBuf[0];
 }
+EXPORT bool getCurrentPath(char* oPath) {
+	TCHAR Buffer[MAX_PATH];
+	char  RetBuf[MAX_PATH];
+	DWORD dwRet;
+	size_t convcharsn;
+
+	dwRet = GetCurrentDirectory(MAX_PATH, Buffer);
+	if (dwRet==0) {
+		printf("GetCurrentDirectory failed (%d)\n", GetLastError());
+		return false;
+	}
+	wcstombs_s(&convcharsn, RetBuf, Buffer, MAX_PATH-1);
+	strcpy_s(oPath, MAX_PATH, RetBuf);
+	return true;
+}
 EXPORT void UpperCase(char* str) {
 	int pos=0;
 	while (str[pos]!='\0') {

@@ -17,15 +17,15 @@
 #define MAX_DATA_FEATURES 128
 #define MAX_TSF_CNT	32
 
-typedef struct sTimeSerie {
+typedef struct sTimeSerie : public sBaseObj {
 
-	tDebugger* dbg;
+	tDebugger* dbg=nullptr;
 
 	//-- data source
 	int sourceType;
-	tFXData* fxData;
-	tFileData* fileData;
-//	tMT4Data* mt4Data;
+	tFXData* fxData=nullptr;
+	tFileData* fileData=nullptr;
+	//tMT4Data* mt4Data=nullptr;
 
 	char date0[DATE_FORMAT_LEN];
 	int steps;
@@ -58,8 +58,7 @@ typedef struct sTimeSerie {
 //	EXPORT sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_=nullptr);
 	EXPORT sTimeSerie(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT ~sTimeSerie();
-	EXPORT sTimeSerie() {}
-
+	
 	EXPORT void load(tFXData* tsFXData, char* pDate0);
 	EXPORT void load(tFileData* tsFileData, char* pDate0);
 //	EXPORT void load(tMT4Data* tsMT4Data, char* pDate0);

@@ -2,6 +2,18 @@
 #include "../Debugger/Debugger.h"
 #include "../Forecaster/Forecaster.h"
 
+void Cleanup(int objCnt, ...) {
+	va_list args;
+	sBaseObj* obj;
+
+	va_start(args, objCnt);
+	for (int o=0; o<objCnt; o++) {
+		obj=va_arg(args, sBaseObj*);
+		delete (obj);
+	}
+	va_end(args);
+}
+
 void kaz() {
 #define shortLen 12
 #define longLen 20
@@ -35,22 +47,27 @@ int main(int argc, char* argv[]) {
 	//-- set main debugger properties
 	dbg->timing=false;
 
+	tParmsSource* XMLparms=nullptr;
+	tForecaster* forecaster=nullptr;
+	
 	//-- everything else must be enclosed in try/catch block
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		tParmsSource* XMLparms; safeCallEE(XMLparms=new tParmsSource("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
+		safeCallEE(XMLparms=new tParmsSource("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
 
-		XMLparms->parse();
+		safeCallEE(XMLparms->parse());
 
 		//-- create Data Forecaster from parms
-		tForecaster* forecaster; safeCallEE(forecaster=new tForecaster(XMLparms, "Forecaster", dbg));
+		safeCallEE(forecaster=new tForecaster(XMLparms, "Forecaster"));
 }
 	catch (std::exception e) {
 		dbg->write(DBG_LEVEL_ERR, "\nClient failed with exception: %s\n", 1, e.what());
+		Cleanup(3, forecaster, XMLparms, dbg);
 		return -1;
 	}
 
+	Cleanup(3, forecaster, XMLparms, dbg);
 	system("pause");
 	return 0;
 

@@ -4,9 +4,9 @@
 #include "../Debugger/Debugger.h"
 #include "../ParamMgr/ParamMgr.h"
 
-typedef struct sDataSource {
+typedef struct sDataSource : public sBaseObj {
 	
-	tDebugger* dbg;
+	tDebugger* dbg=nullptr;
 
 	int type;
 
@@ -19,6 +19,7 @@ typedef struct sDataSource {
 	sDataSource(int type_, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, tDebugger* dbg_=nullptr);
 	sDataSource(tParmsSource* parms, tDebugger* dbg_=nullptr);
 	sDataSource();
+	~sDataSource();
 #endif
 
 } tDataSource;

@@ -13,3 +13,6 @@ sDataSource::sDataSource(tParmsSource* parms, tDebugger* dbg_) {
 	parms->get(&type, "DataSourceType");
 
 }
+sDataSource::~sDataSource() {
+	cleanup(dbg);
+}

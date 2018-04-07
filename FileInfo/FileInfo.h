@@ -1,22 +1,28 @@
 #pragma once
 #include "../CommonEnv.h"
 #include <stdio.h>
+#include <time.h>
+#include "../Utils/Utils.h"
 #include "FileInfo_enums.h"
 
-typedef struct sFileInfo {
+typedef struct sFileInfo
+#ifdef __cplusplus
+	: sBaseObj 
+#endif
+{
 	char Path[MAX_PATH];
 	char Name[MAX_PATH];
 	char FullName[MAX_PATH];
 	FILE* handle;
 	fpos_t pos;
 
-	char creationTime[13];
 	int mode;
 	char modeS[2];
 	char modeDesc[30];
 
 #ifdef __cplusplus
-	EXPORT sFileInfo(char* Name_, char* Path_=DEBUG_DEFAULT_PATH, int mode_=FILE_MODE_WRITE);
+	EXPORT void sFileInfo_common();
+	EXPORT sFileInfo(char* Name_, char* Path_, int mode_);
 	EXPORT sFileInfo(char* FullName_, int mode_);
 	EXPORT ~sFileInfo();
 	EXPORT void savePos();
@@ -24,7 +30,7 @@ typedef struct sFileInfo {
 
 private:
 	char errmsg[1024]; 
-	void setModeS(int mode_);
+	void setModeS();
 #endif
 
 } tFileInfo;

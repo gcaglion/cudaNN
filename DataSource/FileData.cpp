@@ -17,4 +17,6 @@ sFileData::sFileData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	safeCallEE(srcFile=new tFileInfo(ffname, FILE_MODE_READ));
 	parms->get(&fieldSep, "FieldSep");
 }
-
+sFileData::~sFileData() {
+	cleanup(srcFile);
+}

@@ -21,5 +21,7 @@ sDBConnection::sDBConnection(tParmsSource* parms, char* parmKey, tDebugger* dbg_
 	DBCtx=NULL;
 }
 sDBConnection::sDBConnection() {}
-sDBConnection::~sDBConnection() { delete dbg; }
+sDBConnection::~sDBConnection() {
+	cleanup(dbg);
+}
 

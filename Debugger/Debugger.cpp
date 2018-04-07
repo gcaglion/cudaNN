@@ -1,24 +1,14 @@
 #include "Debugger.h"
 
 
-void sDebugger::setOutFile(char* outFileName_, char* outFilePath_) {
-	//-- outFile is created and opened by constructor (if not passed).
-	char outFilePath[MAX_PATH];
-	char outFileName[MAX_PATH];
-	strcpy_s(outFilePath, MAX_PATH, (outFilePath_==nullptr) ? DEBUG_DEFAULT_PATH : outFilePath_);
-	strcpy_s(outFileName, MAX_PATH, (outFileName_==nullptr) ? DEBUG_DEFAULT_NAME : outFileName_);
-
-	try {
-		outFile=new tFileInfo(outFileName, outFilePath);
-	}
-	catch (std::exception e) {
-		sprintf_s(errmsg, sizeof(errmsg), "%s() error creating default debug file\nFrom: %s", __func__, e.what()); throw std::runtime_error(errmsg);
-	}
-}
-
 void sDebugger::sDebugger_common(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	level=level_; dest=dest_; timing=timing_; PauseOnError=PauseOnError_; ThreadSafeLogging=ThreadSafeLogging_;
-	setOutFile(outFileName_, outFilePath_);
+	try {
+		outFile=new tFileInfo(outFileName_, outFilePath_, FILE_MODE_WRITE);
+	}
+	catch (std::exception e) {
+		sprintf_s(errmsg, "Could not create Debugger outfile (%s/%s)", outFilePath_, outFileName_); throw std::runtime_error(errmsg);
+	}
 }
 sDebugger::sDebugger(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	sDebugger_common(level_, dest_, outFileName_, outFilePath_, timing_, PauseOnError_, ThreadSafeLogging_);
@@ -26,9 +16,13 @@ sDebugger::sDebugger(int level_, int dest_, char* outFileName_, char* outFilePat
 sDebugger::sDebugger(char* outFileName_) {
 	sDebugger_common(DBG_LEVEL_DEFAULT, DBG_DEST_DEFAULT, outFileName_, DEBUG_DEFAULT_PATH, false, true, false);
 }
-sDebugger::~sDebugger() {
-	delete outFile;
+sDebugger::sDebugger(int level_, int dest_, char* outFileName_) {
+	sDebugger_common(level_, dest_, outFileName_, DEBUG_DEFAULT_PATH, false, true, false);
 }
+sDebugger::~sDebugger() {
+	cleanup(outFile);
+}
+
 //-- timing methods
 void sDebugger::setStartTime() { startTime=timeGetTime(); }
 void sDebugger::setElapsedTime() { elapsedTime=(DWORD)(timeGetTime()-startTime); }

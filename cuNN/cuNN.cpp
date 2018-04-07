@@ -61,8 +61,8 @@ sNN::~sNN() {
 	//	free(levelFirstWeight);
 	//	free(ActivationFunction);
 
-	delete Alg;
-	delete dbg;
+	cleanup(Alg);
+	cleanup(dbg);
 }
 
 void sNN::setLayout(int batchSamplesCnt_) {

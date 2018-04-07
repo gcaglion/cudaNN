@@ -8,7 +8,7 @@
 
 #define MAX_ENGINE_CORES	32
 
-typedef struct sEngine {
+typedef struct sEngine : public sBaseObj {
 
 	int coresCnt;
 

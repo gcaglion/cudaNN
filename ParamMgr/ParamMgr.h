@@ -5,11 +5,11 @@
 #include "../Utils/Utils.h"
 #include "ParamMgr_limits.h"
 
-typedef struct sParmsSource {
+typedef struct sParmsSource : public sBaseObj {
 
-	tDebugger* dbg;
+	tDebugger* dbg=nullptr;
 
-	tFileInfo* parmsFile;
+	tFileInfo* parmsFile=nullptr;
 	int CLoverridesCnt;
 	char** CLoverride;
 

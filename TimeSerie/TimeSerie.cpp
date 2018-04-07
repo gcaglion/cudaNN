@@ -102,8 +102,11 @@ sTimeSerie::~sTimeSerie() {
 	free(d_tr);
 	for (int i=0; i<len; i++) free(dtime[i]);
 	free(dtime); free(bdtime);
-	delete dbg;
 	free(tsf);
+
+	cleanup(fxData);
+	cleanup(fileData);
+	cleanup(dbg);
 }
 
 //-- sTimeSerie, other methods

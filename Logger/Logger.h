@@ -14,11 +14,11 @@
 #include "../MyCU/MyCU.h"
 #endif
 
-typedef struct sLogger {
+typedef struct sLogger : public sBaseObj {
 	int dest;
-	tDebugger* dbg;
-	tDBConnection* db;
-	tFileData* file;
+	tDebugger* dbg=nullptr;
+	tDBConnection* db=nullptr;
+	tFileData* file=nullptr;
 	bool saveNothing;
 	bool saveClient;
 	bool saveMSE;
@@ -29,10 +29,7 @@ typedef struct sLogger {
 	EXPORT sLogger(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT sLogger(tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, tDebugger* dbg_=nullptr);
 	EXPORT sLogger(tFileData* logFile, tDebugger* dbg_=nullptr);
-	EXPORT ~sLogger() {
-		delete db;
-		delete dbg;
-	}
+	EXPORT ~sLogger();
 
 	EXPORT void SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV);
 	EXPORT void SaveRun(int pid, int tid, int setid, int npid, int ntid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);

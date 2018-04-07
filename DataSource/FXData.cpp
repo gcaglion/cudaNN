@@ -29,4 +29,6 @@ sFXData::sFXData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	parms->get(&IsFilled, "IsFilled");
 	safeCallEE(db=new tDBConnection(parms, "DBConnection"));
 }
-
+sFXData::~sFXData(){
+	cleanup(db);
+}

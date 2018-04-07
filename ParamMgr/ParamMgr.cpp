@@ -3,6 +3,7 @@
 sParmsSource::sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger("ParamMgr.log")) : dbg_;
 	CLoverridesCnt=CLoverridesCnt_; CLoverride=CLoverride_;
+
 	safeCallEE(parmsFile=new tFileInfo(pFileFullName, FILE_MODE_READ));
 
 	parmsCnt=0;
@@ -25,6 +26,8 @@ sParmsSource::~sParmsSource() {
 		free(parmVal[p]);
 	}
 	free(parmVal);
+
+	cleanup(dbg);
 }
 void sParmsSource::newDebugger(tDebugger* dbg_) {
 	int dbg_level, dbg_dest; 

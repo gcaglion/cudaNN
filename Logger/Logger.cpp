@@ -27,7 +27,11 @@ sLogger::sLogger(tFileData* logFile, tDebugger* dbg_) {
 	dest=FILE_DEST;
 	file=logFile;
 }
-
+sLogger::~sLogger() {
+	cleanup(file);
+	cleanup(db);
+	cleanup(dbg);
+}
 void sLogger::SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV) {
 	if (saveMSE) {
 		if (dest==ORCL_DEST) {

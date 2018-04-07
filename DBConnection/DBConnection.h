@@ -12,12 +12,20 @@
 #define DBPASSWORD_MAXLEN 30
 #define DBCONNSTRING_MAXLEN 30
 
-typedef struct sDBConnection{
+typedef struct sDBConnection
+#ifdef __cplusplus
+	: public sBaseObj
+#endif
+{
 	char DBUser[DBUSER_MAXLEN];
 	char DBPassword[DBPASSWORD_MAXLEN];
 	char DBConnString[DBCONNSTRING_MAXLEN];
 	void* DBCtx;
-	tDebugger* dbg;
+	tDebugger* dbg
+#ifdef __cplusplus
+		=nullptr
+#endif
+		;
 #ifdef __cplusplus
 	EXPORT sDBConnection(char* username, char* password, char* connstring, tDebugger* dbg_=nullptr);
 	EXPORT sDBConnection(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);

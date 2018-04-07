@@ -14,6 +14,9 @@ sDataShape::sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	safeCallEE(parms->get(&featuresCnt, "FeaturesCount"));
 
 }
+sDataShape::~sDataShape() {
+	cleanup(dbg);
+}
 
 sData::sData(tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger("Data.err")) : dbg_;
@@ -41,9 +44,9 @@ sData::sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 sData::~sData() {
 	for (int a=0; a<3; a++) {
 		if (ActionDo[a]) {
-			delete ds[a];
+			cleanup(ds[a]);
 		}
 	}
-
-	delete dbg;
+	cleanup(shape);
+	cleanup(dbg);
 }

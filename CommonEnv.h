@@ -1,7 +1,16 @@
 #pragma once
+
 #include <Windows.h>
 #ifdef __cplusplus
 #include <stdexcept>
+
+class sBaseObj {
+public:
+	virtual ~sBaseObj(){
+		//printf("sBaseObj() destructor called.\n"); 
+	}
+};
+
 #endif
 
 
@@ -18,3 +27,4 @@ typedef float numtype;
 #define USE_ORCL
 //#define USE_GPU
 
+#define cleanup(obj) if(obj!=nullptr) delete obj

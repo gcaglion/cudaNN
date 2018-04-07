@@ -31,7 +31,7 @@ template <typename T> EXPORT void swap(T* v1, T* v2) {
 #define FAIL_MALLOC_u "Targets memory allocation failed. \n"
 #define FAIL_MALLOC_SCALAR "Scalars memory allocation failed. \n"
 
-typedef struct s_matrix {
+typedef struct s_matrix : public sBaseObj {
 	int my;
 	int mx;
 	numtype* m;
@@ -199,9 +199,9 @@ EXPORT bool Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtyp
 EXPORT bool MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu);
 EXPORT bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T);
 
-typedef struct s_Algebra {
+typedef struct s_Algebra : public sBaseObj {
 	
-	tDebugger* dbg;
+	tDebugger* dbg=nullptr;
 
 	void* cublasH;
 	void* cuRandH;
@@ -211,7 +211,7 @@ typedef struct s_Algebra {
 	//-- class constructor/destructor
 	EXPORT s_Algebra(tDebugger* dbg_);
 	EXPORT ~s_Algebra();
-	EXPORT s_Algebra(){}
+	EXPORT s_Algebra();
 
 	//-- class methods
 	EXPORT void MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);

@@ -7,13 +7,13 @@
 #include "../Logger/Logger.h"
 #include "../Engine/Engine.h"
 
-typedef struct sForecaster {
+typedef struct sForecaster : public sBaseObj {
 	
-	tDebugger* dbg;
+	tDebugger* dbg=nullptr;
 
-	tData* data;
-	tEngine* engine;
-	tLogger* persistor;
+	tData* data=nullptr;
+	tEngine* engine=nullptr;
+	tLogger* persistor=nullptr;
 
 	EXPORT sForecaster(tDebugger* dbg_=nullptr);
 	EXPORT sForecaster(tParmsSource* parms, char* parmKey="Forecaster", tDebugger* dbg_=nullptr);

@@ -9,12 +9,12 @@
 #include "NN_parms.h"
 #include "NN_enums.h"
 
-typedef struct sNN :public sCore {
+typedef struct sNN :public sCore, public sBaseObj {
 
-	tDebugger* dbg;
+	tDebugger* dbg=nullptr;
 
 	//-- MyAlgebra common structures
-	Algebra* Alg;
+	Algebra* Alg=nullptr;
 
 	//-- every instantiation has 1 process id and 1 thread id (TO BE CONFIRMED)
 	int pid;
