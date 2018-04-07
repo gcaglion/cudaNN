@@ -10,7 +10,7 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms
 	parms->MaxEpochs=0;	//-- we need this so destructor does not fail when NN object is used to run-only
 
 	//-- set debug parameters
-	dbg=(dbg_==nullptr)?(new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("NN.err"))):dbg_;
+	dbg=(dbg_==nullptr)?(new tDebugger("NN.err")):dbg_;
 	
 	//-- set input and output basic dimensions (batchsize not considered yet)
 	sampleLen=sampleLen_;

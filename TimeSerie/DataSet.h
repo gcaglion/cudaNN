@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../SharedUtils/ParamMgr.h"
-#include "../SharedUtils/Debugger.h"
+#include "../ParamMgr/ParamMgr.h"
+#include "../Debugger/Debugger.h"
 #include "TimeSerie.h"
 
 typedef struct sDataSet {

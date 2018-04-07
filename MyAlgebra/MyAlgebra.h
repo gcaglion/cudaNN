@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../SharedUtils/Debugger.h"
+#include "../Debugger/Debugger.h"
 #include <stdio.h>
 #include <time.h>
 #include <math.h>

@@ -1,10 +1,11 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../SharedUtils/Debugger.h"
-#include "Data.h"
-#include "../MyEngines/Engine.h"
+#include "../Data/Data.h"
+#include "../Debugger/Debugger.h"
+#include "../ParamMgr/ParamMgr.h"
 #include "../Logger/Logger.h"
+#include "../Engine/Engine.h"
 
 typedef struct sForecaster {
 	

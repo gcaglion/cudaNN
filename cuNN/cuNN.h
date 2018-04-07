@@ -1,10 +1,11 @@
 #pragma once
 
 #include "..\CommonEnv.h"
+#include "../Debugger/Debugger.h"
+#include "../ParamMgr/ParamMgr.h"
 #include "../MyAlgebra/MyAlgebra.h"
-#include "../TimeSerie/TimeSerie.h"
 #include "../TimeSerie/DataSet.h"
-#include "../MyEngines/Core.h"
+#include "../Core/Core.h"
 #include "NN_parms.h"
 #include "NN_enums.h"
 

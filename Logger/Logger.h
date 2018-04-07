@@ -1,9 +1,10 @@
 #pragma once
 
 #include "../CommonEnv.h"
-#include "../SharedUtils/Debugger.h"
-#include "../SharedUtils/DBConnection.h"
-#include "../SharedUtils/FileData.h"
+#include "../Debugger/Debugger.h"
+#include "../DBConnection/DBConnection.h"
+#include "../DataSource/FileData.h"
+#include "../ParamMgr/ParamMgr.h"
 #include "Logger_enums.h"
 
 #ifdef USE_ORCL

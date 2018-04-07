@@ -2,9 +2,9 @@
 
 #include "../CommonEnv.h"
 #include "TimeSerie_enums.h"
-#include "../SharedUtils/FXData.h"
-#include "../SharedUtils/FileData.h"
-#include "../SharedUtils/MT4Data.h"
+#include "../DataSource/FXData.h"
+#include "../DataSource/FileData.h"
+//#include "../DataSource/MT4Data.h"
 
 #ifdef USE_ORCL
 #include "../OraUtils/OraUtils.h"
@@ -25,7 +25,7 @@ typedef struct sTimeSerie {
 	int sourceType;
 	tFXData* fxData;
 	tFileData* fileData;
-	tMT4Data* mt4Data;
+//	tMT4Data* mt4Data;
 
 	char date0[DATE_FORMAT_LEN];
 	int steps;
@@ -55,14 +55,14 @@ typedef struct sTimeSerie {
 	EXPORT sTimeSerie(int steps_, int featuresCnt_, tDebugger* dbg_=nullptr);
 	EXPORT sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_=nullptr);
 	EXPORT sTimeSerie(tFileData* dataSource_, int featuresCnt_, int steps_, char* date0_, int dt_, tDebugger* dbg_=nullptr);
-	EXPORT sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_=nullptr);
+//	EXPORT sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_=nullptr);
 	EXPORT sTimeSerie(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
 	EXPORT ~sTimeSerie();
 	EXPORT sTimeSerie() {}
 
 	EXPORT void load(tFXData* tsFXData, char* pDate0);
 	EXPORT void load(tFileData* tsFileData, char* pDate0);
-	EXPORT void load(tMT4Data* tsMT4Data, char* pDate0);
+//	EXPORT void load(tMT4Data* tsMT4Data, char* pDate0);
 
 	EXPORT void transform(int dt_);
 	EXPORT void scale(numtype scaleMin_, numtype scaleMax_);

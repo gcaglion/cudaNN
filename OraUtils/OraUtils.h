@@ -11,8 +11,8 @@ typedef int bool;
 #endif
 
 #include "../CommonEnv.h"
-#include "../SharedUtils/DBConnection.h"
-#include "../SharedUtils/Debugger.h"
+#include "../DBConnection/DBConnection.h"
+#include "../Debugger/Debugger.h"
 #include <math.h>
 
 

@@ -2,7 +2,7 @@
 
 //-- sDataSet, constructors  /destructor
 sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* BWFeature_, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSet.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger("DataSet.err")) : dbg_;
 	//--
 	selectedFeaturesCnt=selectedFeaturesCnt_;
 	for (int f=0; f<selectedFeaturesCnt; f++) selectedFeature[f]=selectedFeature_[f];
@@ -42,7 +42,7 @@ sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int sel
 	}
 }
 sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("DataSets.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger("DataSets.err")) : dbg_;
 	selectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
 	BWFeature=(int*)malloc(2*sizeof(int));
 
@@ -63,10 +63,10 @@ sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	case FXDB_SOURCE:
 		BWFeature[0]=FXHIGH; BWFeature[1]=FXLOW;
 		break;
-	case MT4_SOURCE:
+/*	case MT4_SOURCE:
 		//-- ...... ?? boh ??? ...
 		break;
-	default:
+*/	default:
 		break;
 	}
 

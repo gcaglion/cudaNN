@@ -1,7 +1,7 @@
 #include "Logger.h"
 
 sLogger::sLogger(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger("sLogger.err")) : dbg_;
 	safeCallEB(parms->setKey(parmKey));
 	parms->get(&saveNothing, "saveNothing");
 	parms->get(&saveClient, "saveClient");
@@ -17,13 +17,13 @@ sLogger::sLogger(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	}
 }
 sLogger::sLogger(tDBConnection* logDB, bool saveNothing_, bool saveClient_, bool saveMSE_, bool saveRun_, bool saveInternals_, bool saveImage_, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger("sLogger.err")) : dbg_;
 	dest=ORCL_DEST;
 	db=logDB;
 	saveNothing=saveNothing_; saveClient=saveClient_; saveMSE=saveMSE_; saveRun=saveRun_; saveInternals=saveInternals_; saveImage=saveImage_;
 }
 sLogger::sLogger(tFileData* logFile, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger(DBG_LEVEL_ERR, DBG_DEST_FILE, new tFileInfo("sLogger.err"))) : dbg_;
+	dbg=(dbg_==nullptr) ? (new tDebugger("sLogger.err")) : dbg_;
 	dest=FILE_DEST;
 	file=logFile;
 }
