@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 	try {
 
 		//-- create client parms, include command-line parms, and read parameters file
-		safeCallEE(XMLparms=new tParmsSource("C:\\Users\\gcaglfion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
+		safeCallEE(XMLparms=new tParmsSource("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
 
 		safeCallEE(XMLparms->parse());
 

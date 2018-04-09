@@ -1,55 +1,35 @@
 #include "Engine.h"
 
 //-- Engine stuff
-sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_) {
+void sEngine::sEngine_common(tParmsSource* parms, tDataShape* shape_, tDebugger* dbg_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger("Engine.err")) : dbg_;	//... handle specific debugger in xml ...
+	layerCoresCnt=(int*)malloc(MAX_ENGINE_LAYERS*sizeof(int)); for (int l=0; l<MAX_ENGINE_LAYERS; l++) layerCoresCnt[l]=0;
+	shape=shape_;
+}
+sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_) {
+	int c;
 
-	core=(tCore**)malloc(MAX_ENGINE_CORES*sizeof(tCore*));
-
-	safeCallEB(parms->setKey("Custom"));
-	safeCallEB(parms->backupKey());
-
-	//-- 0. temporary coresCnt
-	safeCallEE(parms->get(&coresCnt, "CoresCount"));
-
-	//-- 1.1. set layout, and outputCnt for each Core
-	char coreKey[XML_MAX_PARAM_NAME_LEN];
-	for (int c=0; c<coresCnt; c++) {
-		sprintf_s(coreKey, XML_MAX_PARAM_NAME_LEN, "Core%d", c);
-		safeCallEB(parms->setKey(coreKey));
-		sprintf_s(coreDesc[c], XML_MAX_PARAM_NAME_LEN, coreKey);
-		safeCallEE(parms->get(&coreType[c], "Type"));
-		safeCallEE(parms->get(coreParentDesc[c], "Parents"));
-		safeCallEE(parms->get(&coreParentConnType[c], "ParentsConnType", &coreParentsCnt[c]));
-		//-- outputCnt is assumed to be the same across all Cores, and dependent on DataShape
-		coreOutputCnt[c]=shape->predictionLen*shape->featuresCnt;
-
-		safeCallEB(parms->restoreKey());
-	}
-	//-- 1.2. determine Layer for each Core, and cores count for each layer
-	for (c=0; c<coresCnt; c++) {
-		coreLayer[c]=getCoreLayer(c);
-		layerCoresCnt[coreLayer[c]]++;
-	}
-	//-- 1.3. determine layersCnt, and InputCnt for each Core
-	for (int l=0; l<MAX_ENGINE_LAYERS; l++) {
-		for (c=0; c<layerCoresCnt[l]; c++) {
-			if (l==0) {
-				coreInputCnt[c]=shape->sampleLen*shape->featuresCnt;
-			} else {
-				coreInputCnt[c]=layerCoresCnt[l-1]*coreOutputCnt[c];
-			}
-		}
-		if (c==0) break;
-		layersCnt++;
-	}
-//----------------------------------------------
+	sEngine_common(parms, shape_, dbg_);
 
 	safeCallEB(parms->setKey(parmKey));
+	safeCallEB(parms->backupKey());
+
 	parms->get(&type, "Type");
 
 	switch (type) {
 	case ENGINE_CUSTOM:
+		safeCallEB(parms->setKey("Custom"));
+		//-- 0. coresCnt
+		safeCallEE(parms->get(&coresCnt, "CoresCount"));
+		//-- 1. malloc one core and one coreLayout for each core
+		core=(tCore**)malloc(coresCnt*sizeof(tCore*));
+		coreLayout=(tCoreLayout**)malloc(coresCnt*sizeof(tCoreLayout*));
+		//-- 2. create layout, set base coreLayout properties for each Core (type, desc, connType, outputCnt)
+		for (c=0; c<coresCnt; c++) {
+			safeCallEB(parms->backupKey());
+			coreLayout[c]=new tCoreLayout(parms, c, shape->predictionLen*shape->featuresCnt);
+			safeCallEB(parms->restoreKey());
+		}
 		break;
 	case ENGINE_WNN:
 		safeCallEB(parms->setKey("WNN"));
@@ -64,11 +44,32 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 		break;
 	}
 
+	//-- 3. once all coreLayouts are created (and all  parents are set), we can determine Layer for each Core, and cores count for each layer
+	for (c=0; c<coresCnt; c++) {
+		coreLayout[c]->layer=getCoreLayer(c);
+		layerCoresCnt[coreLayout[c]->layer]++;
+	}
+	//-- 4. determine layersCnt, and InputCnt for each Core
+	for (int l=0; l<MAX_ENGINE_LAYERS; l++) {
+		for (c=0; c<layerCoresCnt[l]; c++) {
+			if (l==0) {
+				coreLayout[c]->inputCnt=shape->sampleLen*shape->featuresCnt;
+			} else {
+				coreLayout[c]->inputCnt=layerCoresCnt[l-1]*coreLayout[c]->outputCnt;
+			}
+		}
+		if (c==0) break;
+		layersCnt++;
+	}
+
 }
 sEngine::~sEngine() {
 	for (int i=0; i<coresCnt; i++) delete core[i];
 	delete core;
+	free(layerCoresCnt);
+	delete dbg;
 }
+
 
 void sEngine::addCore(tCoreLayout* coreLayout_) {
 	switch (coreLayout_->type) {
@@ -86,9 +87,22 @@ void sEngine::addCore(tCoreLayout* coreLayout_) {
 	coresCnt++;
 }
 
+int sEngine::getCoreLayer(int c){
+
+	int l=0;
+	int maxParentLayer=-1;
+	for (int p=0; p<coreLayout[c]->parentsCnt; p++) {
+		if (coreLayout[p]->layer>maxParentLayer) {
+			l++;
+			maxParentLayer=coreLayout[p]->layer;
+			maxParentLayer=getCoreLayer(coreLayout[p]->Id);
+		}
+	}
+	return l;
+}
 
 //-- Engine Layout stuff
-sEngineLayout::sEngineLayout(int coresCnt_) {
+/*sEngineLayout::sEngineLayout(int coresCnt_) {
 	coresCnt=coresCnt_;
 	layerCoresCnt=(int*)malloc(MAX_ENGINE_LAYERS*sizeof(int)); for (int l=0; l<MAX_ENGINE_LAYERS; l++) layerCoresCnt[l]=0;
 
@@ -128,15 +142,4 @@ sEngineLayout::~sEngineLayout() {
 	free(coreOutputCnt);
 	free(layerCoresCnt);
 }
-int sEngineLayout::getCoreLayer(int c) {
-	int ret=0;
-	if (coreParentsCnt[c]==0) {
-		ret=0;
-	} else {
-		for (int p=0; p<coreParentsCnt[c]; p++) {
-			ret++;
-			//coreParent[p]
-		}
-	}
-	return ret;
-}
+*/

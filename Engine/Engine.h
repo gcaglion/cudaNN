@@ -1,5 +1,6 @@
 #pragma once
 #include "../CommonEnv.h"
+#include "../Debugger/Debugger.h"
 #include "../ParamMgr/ParamMgr.h"
 #include "../Data/Data.h"
 #include "../Core/Core.h"
@@ -7,11 +8,11 @@
 
 #include "../cuNN/cuNN.h"
 
+#define MAX_ENGINE_LAYERS	8
 #define MAX_ENGINE_CORES	32
 
+/*
 typedef struct sEngineLayout {
-	int layersCnt=0;
-	int* layerCoresCnt;
 	int coresCnt;
 
 	int* coreLayer;
@@ -27,20 +28,25 @@ typedef struct sEngineLayout {
 	EXPORT sEngineLayout(int coresCnt_);
 	EXPORT ~sEngineLayout();
 
-	EXPORT int getCoreLayer(int c);
-
 } tEngineLayout;
-
+*/
 typedef struct sEngine : public sBaseObj {
 
 	int type;
 	int coresCnt;
+	int layersCnt=0;
+	int* layerCoresCnt;
 
+	tDataShape* shape;
+
+	tCoreLayout** coreLayout;
 	tCore** core;
 
+	EXPORT void sEngine::sEngine_common(tParmsSource* parms, tDataShape* shape_, tDebugger* dbg_);
 	EXPORT sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_=nullptr);
 	EXPORT ~sEngine();
 
+	EXPORT int getCoreLayer(int c);
 	EXPORT void train(tDataSet* trainDS);
 	EXPORT void addCore(tCoreLayout* coreLayout_);
 
