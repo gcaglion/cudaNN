@@ -13,7 +13,7 @@
 typedef struct sCoreLayout : sBaseObj {
 	int Id;
 	char* desc;
-	int layer=0;
+	int layer=-1;
 	int type;
 	int parentsCnt;
 	int* parentId;

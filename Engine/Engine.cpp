@@ -46,7 +46,7 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 
 	//-- 3. once all coreLayouts are created (and all  parents are set), we can determine Layer for each Core, and cores count for each layer
 	for (c=0; c<coresCnt; c++) {
-		coreLayout[c]->layer=getCoreLayer(c);
+		setCoreLayer(coreLayout[c]);
 		layerCoresCnt[coreLayout[c]->layer]++;
 	}
 	//-- 4. determine layersCnt, and InputCnt for each Core
@@ -62,6 +62,7 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 		layersCnt++;
 	}
 
+	//--
 }
 sEngine::~sEngine() {
 	for (int i=0; i<coresCnt; i++) delete core[i];
@@ -87,18 +88,18 @@ void sEngine::addCore(tCoreLayout* coreLayout_) {
 	coresCnt++;
 }
 
-int sEngine::getCoreLayer(int c){
-
-	int l=0;
+void sEngine::setCoreLayer(tCoreLayout* c){
+	int ret=0;
 	int maxParentLayer=-1;
-	for (int p=0; p<coreLayout[c]->parentsCnt; p++) {
-		if (coreLayout[p]->layer>maxParentLayer) {
-			l++;
-			maxParentLayer=coreLayout[p]->layer;
-			maxParentLayer=getCoreLayer(coreLayout[p]->Id);
+	for (int p=0; p<c->parentsCnt; p++) {
+		tCoreLayout* parent=coreLayout[c->parentId[p]];
+		setCoreLayer(parent);
+		if (parent->layer>maxParentLayer) {
+			maxParentLayer=parent->layer;
 		}
+		ret=maxParentLayer+1;
 	}
-	return l;
+	c->layer=ret;
 }
 
 //-- Engine Layout stuff

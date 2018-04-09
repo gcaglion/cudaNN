@@ -46,8 +46,10 @@ typedef struct sEngine : public sBaseObj {
 	EXPORT sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_=nullptr);
 	EXPORT ~sEngine();
 
-	EXPORT int getCoreLayer(int c);
+	EXPORT void setCoreLayer(tCoreLayout* c);
 	EXPORT void train(tDataSet* trainDS);
 	EXPORT void addCore(tCoreLayout* coreLayout_);
+
+	int getMaxLayer(int coreIdCnt, int* coreIdList_);
 
 } tEngine;
