@@ -4,6 +4,7 @@
 #include "Core_enums.h"
 #include "../Utils/Utils.h"
 #include "../ParamMgr/ParamMgr.h"
+#include "../Data/Data.h"
 
 #define CORE_MAX_DESC_LEN	128
 #define CORE_MAX_PARENTS	32
@@ -20,11 +21,10 @@ typedef struct sCoreLayout : sBaseObj {
 	char** parentDesc;
 	int* parentConnType;
 
-	int inputCnt;
-	int outputCnt;
+	tDataShape* shape;
 
 	void sCoreLayout_common(tDebugger* dbg_, int Id_);
-	EXPORT sCoreLayout(tParmsSource* parms, int Id_, int outputCnt_, tDebugger* dbg_=nullptr);
+	EXPORT sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebugger* dbg_=nullptr);
 	EXPORT ~sCoreLayout();
 	EXPORT void setLayer();
 

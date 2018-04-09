@@ -27,7 +27,7 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 		//-- 2. create layout, set base coreLayout properties for each Core (type, desc, connType, outputCnt)
 		for (c=0; c<coresCnt; c++) {
 			safeCallEB(parms->backupKey());
-			coreLayout[c]=new tCoreLayout(parms, c, shape->predictionLen*shape->featuresCnt);
+			coreLayout[c]=new tCoreLayout(parms, c, shape);
 			safeCallEB(parms->restoreKey());
 		}
 		break;
@@ -53,16 +53,20 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 	for (int l=0; l<MAX_ENGINE_LAYERS; l++) {
 		for (c=0; c<layerCoresCnt[l]; c++) {
 			if (l==0) {
-				coreLayout[c]->inputCnt=shape->sampleLen*shape->featuresCnt;
+				//-- do nothing. keep core shape same as engine shape
 			} else {
-				coreLayout[c]->inputCnt=layerCoresCnt[l-1]*coreLayout[c]->outputCnt;
+				//-- change sampleLen
+				coreLayout[c]->shape->sampleLen=layerCoresCnt[l-1]*coreLayout[c]->shape->predictionLen;
 			}
 		}
 		if (c==0) break;
 		layersCnt++;
 	}
 
-	//--
+	//-- 5. add each core
+	for (c=0; c<coresCnt; c++) {
+		safeCallEE(addCore(parms, c));
+	}
 }
 sEngine::~sEngine() {
 	for (int i=0; i<coresCnt; i++) delete core[i];
@@ -72,17 +76,17 @@ sEngine::~sEngine() {
 }
 
 
-void sEngine::addCore(tCoreLayout* coreLayout_) {
-	switch (coreLayout_->type) {
+void sEngine::addCore(tParmsSource* parms, int coreId) {
+	switch (coreLayout[coreId]->type) {
 	case CORE_NN:
-		core[coresCnt]=new tNN(200,50,4,nullptr);
+		core[coresCnt]=new tNN(parms, coreLayout[coreId]);
 		coresCnt++;
 		break;
 	case CORE_GA: break;
 	case CORE_SVM: break;
 	case CORE_SOM: break;
 	default:
-		throwE("coreId %d : invalid coreType: %d", 2, coreLayout_->Id, coreLayout_->type);
+		throwE("coreId %d : invalid coreType: %d", 2, coreLayout[coreId]->Id, coreLayout[coreId]->type);
 		break;
 	}
 	coresCnt++;

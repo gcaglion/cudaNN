@@ -1,24 +1,18 @@
 #include "cuNN.h"
 
-sNN::sNN(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
-	printf("sNN constructor called with parmKey=%s\n", parmKey);
-}
-sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms_, tDebugger* dbg_) {
+void sNN::sNN_common(tDataShape* baseShape, tDebugger* dbg_) {
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
 
 	parms->MaxEpochs=0;	//-- we need this so destructor does not fail when NN object is used to run-only
 
-	//-- set debug parameters
-	dbg=(dbg_==nullptr)?(new tDebugger("NN.err")):dbg_;
-	
+						//-- set debug parameters
+	dbg=(dbg_==nullptr) ? (new tDebugger("NN.err")) : dbg_;
+
 	//-- set input and output basic dimensions (batchsize not considered yet)
-	sampleLen=sampleLen_;
-	predictionLen=predictionLen_;
-	featuresCnt=featuresCnt_;
-	
-	//-- set NN parms
-	parms=NNparms_;
+	sampleLen=baseShape->sampleLen;
+	predictionLen=baseShape->predictionLen;
+	featuresCnt=baseShape->featuresCnt;
 
 	//-- bias still not working(!) Better abort until it does
 	if (parms->useBias) throwE("Bias still not working properly. NN creation aborted.", 0);
@@ -43,6 +37,27 @@ sNN::sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms
 	//-- 4. we need to malloc these here (issue when running with no training...)
 	mseT=(numtype*)malloc(1*sizeof(numtype));
 	mseV=(numtype*)malloc(1*sizeof(numtype));
+
+}
+
+sNN::sNN(tParmsSource* parms, tCoreLayout* coreLayout, tDebugger* dbg_) {
+	
+	//-- 0. read NN Parms (Topology + Training)
+
+	//parms=new tNNparms(...)...
+	
+	//-- 1. common constructor
+	sNN_common(coreLayout->shape, dbg_);
+
+}
+sNN::sNN(tDataShape* baseShape, tNNparms* NNparms_, tDebugger* dbg_) {
+	
+	//-- set NN parms
+	parms=NNparms_;
+
+	//-- call common constructor
+	sNN_common(baseShape, dbg_);
+
 
 
 }
@@ -79,13 +94,13 @@ void sNN::setLayout(int batchSamplesCnt_) {
 
 	//-- 0.2. Input-layout->outputCnt moved here, so can be reset when called by run()
 	parms->batchSamplesCnt=batchSamplesCnt_;
-	layout->inputCnt=sampleLen*featuresCnt*parms->batchSamplesCnt;
-	layout->outputCnt=predictionLen*featuresCnt*parms->batchSamplesCnt;
+	layout->shape->inputCnt=sampleLen*featuresCnt*parms->batchSamplesCnt;
+	layout->shape->outputCnt=predictionLen*featuresCnt*parms->batchSamplesCnt;
 
 
 	//-- 0.3. set nodesCnt (single sample)
-	nodesCnt[0] = layout->inputCnt;
-	nodesCnt[outputLevel] = layout->outputCnt;
+	nodesCnt[0] = layout->shape->inputCnt;
+	nodesCnt[outputLevel] = layout->shape->outputCnt;
 	for (nl = 0; nl<(levelsCnt-2); nl++) nodesCnt[nl+1] = (int)floor(nodesCnt[nl]*parms->levelRatio[nl]);
 
 	//-- add context neurons
@@ -328,9 +343,9 @@ void sNN::ForwardPass(tDataSet* ds, int batchId, bool haveTargets) {
 
 	//-- 1. load samples (and targets, if passed) from single batch in dataset onto input layer
 	LDstart=timeGetTime(); LDcnt++;
-	safeCallEE(Alg->h2d(&F[(parms->useBias)?1:0], &ds->sampleBFS[batchId*layout->inputCnt], layout->inputCnt*sizeof(numtype), true));
+	safeCallEE(Alg->h2d(&F[(parms->useBias)?1:0], &ds->sampleBFS[batchId*layout->shape->inputCnt], layout->shape->inputCnt*sizeof(numtype), true));
 	if (haveTargets) {
-		safeCallEE(Alg->h2d(&u[0], &ds->targetBFS[batchId*layout->outputCnt], layout->outputCnt*sizeof(numtype), true));
+		safeCallEE(Alg->h2d(&u[0], &ds->targetBFS[batchId*layout->shape->outputCnt], layout->shape->outputCnt*sizeof(numtype), true));
 	}
 	LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
@@ -481,14 +496,14 @@ void sNN::run(tDataSet* runSet) {
 	for (int b=0; b<batchCnt; b++) {
 
 		//-- 1.1.1.  load samples/targets onto GPU
-		safeCallEE(Alg->h2d(&F[(parms->useBias) ? 1 : 0], &runSet->sampleBFS[b*layout->inputCnt], layout->inputCnt*sizeof(numtype), true));
-		safeCallEE(Alg->h2d(&u[0], &runSet->targetBFS[b*layout->outputCnt], layout->outputCnt*sizeof(numtype), true));
+		safeCallEE(Alg->h2d(&F[(parms->useBias) ? 1 : 0], &runSet->sampleBFS[b*layout->shape->inputCnt], layout->shape->inputCnt*sizeof(numtype), true));
+		safeCallEE(Alg->h2d(&u[0], &runSet->targetBFS[b*layout->shape->outputCnt], layout->shape->outputCnt*sizeof(numtype), true));
 
 		//-- 1.1.2. Feed Forward
 		safeCallEE(FF());
 
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
-		safeCallEE(Alg->d2h(&runSet->predictionBFS[b*layout->outputCnt], &F[levelFirstNode[outputLevel]], layout->outputCnt*sizeof(numtype)));
+		safeCallEE(Alg->d2h(&runSet->predictionBFS[b*layout->shape->outputCnt], &F[levelFirstNode[outputLevel]], layout->shape->outputCnt*sizeof(numtype)));
 
 		safeCallEE(calcErr());
 	}

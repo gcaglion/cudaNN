@@ -48,7 +48,7 @@ typedef struct sEngine : public sBaseObj {
 
 	EXPORT void setCoreLayer(tCoreLayout* c);
 	EXPORT void train(tDataSet* trainDS);
-	EXPORT void addCore(tCoreLayout* coreLayout_);
+	EXPORT void addCore(tParmsSource* parms, int coreId);
 
 	int getMaxLayer(int coreIdCnt, int* coreIdList_);
 

@@ -79,8 +79,10 @@ typedef struct sNN :public sCore, public sBaseObj {
 	DWORD WUstart, WUtimeTot=0, WUcnt=0; float WUtimeAvg;
 	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
-	EXPORT sNN(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
-	EXPORT sNN(int sampleLen_, int predictionLen_, int featuresCnt_, tNNparms* NNparms_, tDebugger* dbg_=nullptr);
+	void sNN_common(tDataShape* baseShape, tDebugger* dbg_);
+
+	EXPORT sNN(tParmsSource* parms, tCoreLayout* coreLayout, tDebugger* dbg_=nullptr);
+	EXPORT sNN(tDataShape* baseShape, tNNparms* NNparms_, tDebugger* dbg_=nullptr);
 	EXPORT ~sNN();
 
 	void setLayout(int batchSamplesCnt_);

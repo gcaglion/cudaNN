@@ -10,9 +10,9 @@ void sCoreLayout::sCoreLayout_common(tDebugger* dbg_, int Id_) {
 	dbg=(dbg_==nullptr) ? (new tDebugger(fname)) : dbg_;	//... handle specific debugger in xml ...
 }
 
-sCoreLayout::sCoreLayout(tParmsSource* parms, int Id_, int outputCnt_, tDebugger* dbg_) {
+sCoreLayout::sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebugger* dbg_) {
 	sCoreLayout_common(dbg_, Id_);
-	Id=Id_; outputCnt=outputCnt_;
+	Id=Id_; shape=shape_;
 	sprintf_s(desc, CORE_MAX_DESC_LEN, "Core%d", Id);
 	safeCallEB(parms->setKey(desc));
 
@@ -31,6 +31,7 @@ sCoreLayout::~sCoreLayout() {
 	free(parentConnType);
 	for (int p=0; p<CORE_MAX_PARENTS; p++) free(parentDesc[p]);
 	free(parentDesc);
+	delete shape;
 }
 void sCoreLayout::setLayer() {
 	
