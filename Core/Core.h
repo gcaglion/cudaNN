@@ -26,12 +26,12 @@ typedef struct sCoreLayout : sBaseObj {
 	void sCoreLayout_common(tDebugger* dbg_, int Id_);
 	EXPORT sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebugger* dbg_=nullptr);
 	EXPORT ~sCoreLayout();
-	EXPORT void setLayer();
 
 } tCoreLayout;
 
 typedef struct sCore {
 
+	int kaz;
 	tCoreLayout* layout;
 
 	EXPORT sCore();

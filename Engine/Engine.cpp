@@ -71,8 +71,12 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 	}
 }
 sEngine::~sEngine() {
-	for (int i=0; i<coresCnt; i++) delete core[i];
-	delete core;
+	for (int i=0; i<coresCnt; i++) {
+		delete coreLayout[i];
+//		delete core[i];
+	}
+	free(core);
+	free(coreLayout);
 	free(layerCoresCnt);
 	delete dbg;
 }
@@ -84,11 +88,20 @@ void sEngine::addCore(tParmsSource* parms, int coreId) {
 
 	switch (coreLayout[coreId]->type) {
 	case CORE_NN:
-		safeCallEE(core[coresCnt]=new tNN(parms, coreLayout[coreId]));
+		safeCallEE(core[coreId]=new tNN(parms, coreLayout[coreId]));
 		break;
-	case CORE_GA: break;
-	case CORE_SVM: break;
-	case CORE_SOM: break;
+	case CORE_GA:
+		//safeCallEE(core[coreId]=new tGA(parms, coreLayout[coreId]));
+		safeCallEE(core[coreId]=new tCore(parms, coreLayout[coreId]));
+		break;
+	case CORE_SVM: 
+		//safeCallEE(core[coreId]=new tSVM(parms, coreLayout[coreId]));
+		safeCallEE(core[coreId]=new tCore(parms, coreLayout[coreId]));
+		break;
+	case CORE_SOM: 
+		//safeCallEE(core[coreId]=new tSOM(parms, coreLayout[coreId]));
+		safeCallEE(core[coreId]=new tCore(parms, coreLayout[coreId]));
+		break;
 	default:
 		throwE("coreId %d : invalid coreType: %d", 2, coreLayout[coreId]->Id, coreLayout[coreId]->type);
 		break;
@@ -108,46 +121,3 @@ void sEngine::setCoreLayer(tCoreLayout* c){
 	}
 	c->layer=ret;
 }
-
-//-- Engine Layout stuff
-/*sEngineLayout::sEngineLayout(int coresCnt_) {
-	coresCnt=coresCnt_;
-	layerCoresCnt=(int*)malloc(MAX_ENGINE_LAYERS*sizeof(int)); for (int l=0; l<MAX_ENGINE_LAYERS; l++) layerCoresCnt[l]=0;
-
-	coreLayer=(int*)malloc(coresCnt*sizeof(int));
-	coreType=(int*)malloc(coresCnt*sizeof(int));
-	coreDesc=(char**)malloc(coresCnt*sizeof(char*));
-	coreParentsCnt=(int*)malloc(coresCnt*sizeof(int));
-	coreParent=(int**)malloc(coresCnt*sizeof(int*));
-	coreParentConnType=(int**)malloc(coresCnt*sizeof(int*));
-	coreParentDesc=(char***)malloc(coresCnt*sizeof(char**));
-	coreInputCnt=(int*)malloc(coresCnt*sizeof(int));
-	coreOutputCnt=(int*)malloc(coresCnt*sizeof(int));
-	for (int c=0; c<coresCnt; c++) {
-		coreDesc[c]=(char*)malloc(XML_MAX_PARAM_VAL_LEN);
-		coreParent[c]=(int*)malloc(coresCnt*sizeof(int));
-		coreParentConnType[c]=(int*)malloc(coresCnt*sizeof(int));
-		coreParentDesc[c]=(char**)malloc(coresCnt*sizeof(char*));
-		for (int cc=0; cc<coresCnt; cc++) coreParentDesc[c][cc]=(char*)malloc(XML_MAX_PARAM_VAL_LEN);
-	}
-}
-sEngineLayout::~sEngineLayout() {
-	for (int c=0; c<coresCnt; c++) {
-		free(coreDesc[c]);
-		free(coreParent[c]);
-		free(coreParentConnType[c]);
-		for (int cc=0; cc<coresCnt; cc++) free(coreParentDesc[c][cc]);
-		free(coreParentDesc[c]);
-	}
-	free(coreLayer);
-	free(coreType);
-	free(coreDesc);
-	free(coreParent);
-	free(coreParentsCnt);
-	free(coreParentConnType);
-	free(coreParentDesc);
-	free(coreInputCnt);
-	free(coreOutputCnt);
-	free(layerCoresCnt);
-}
-*/

@@ -31,14 +31,10 @@ sCoreLayout::~sCoreLayout() {
 	free(parentConnType);
 	for (int p=0; p<CORE_MAX_PARENTS; p++) free(parentDesc[p]);
 	free(parentDesc);
-	delete shape;
-}
-void sCoreLayout::setLayer() {
-	
 }
 
 sCore::sCore() {}
 sCore::sCore(tParmsSource* parms, tCoreLayout* layout_) {
 	layout=layout_;
 }
-sCore::~sCore(){}
+sCore::~sCore() {}
