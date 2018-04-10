@@ -131,17 +131,17 @@ void sParmsSource::getx(numtype* oVar){
 void sParmsSource::getx(int** oVar){
 	for (int e=0; e<parmValsCnt[foundParmId]; e++) {
 		if (isnumber(parmVal[foundParmId][e])) {
-			(*oVar[e])=atoi(parmVal[foundParmId][e]);
+			(*oVar)[e]=atoi(parmVal[foundParmId][e]);
 		} else {
-			//safeCallEB(decode(e, &oVar[0][e]));
-			decode(e, &oVar[0][e]);
+			safeCallEB(decode(e, &oVar[0][e]));
+			//decode(e, &oVar[0][e]);
 		}
 	}
 }
 void sParmsSource::getx(bool** oVar) {
 	for (int e=0; e<parmValsCnt[foundParmId]; e++) {
 		UpperCase(parmVal[foundParmId][e]);
-		(*oVar[e])=(strcmp(parmVal[foundParmId][e], "TRUE")==0);
+		(*oVar)[e]=(strcmp(parmVal[foundParmId][e], "TRUE")==0);
 	}
 }
 void sParmsSource::getx(char** oVar){
@@ -155,7 +155,7 @@ void sParmsSource::getx(char** oVar){
 }
 void sParmsSource::getx(numtype** oVar){
 	for(int e=0; e<parmValsCnt[foundParmId]; e++){
-		(*oVar[e])=(numtype)atof(parmVal[foundParmId][e]);
+		(*oVar)[e]=(numtype)atof(parmVal[foundParmId][e]);
 	}
 }
 

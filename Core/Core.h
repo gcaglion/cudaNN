@@ -35,6 +35,7 @@ typedef struct sCore {
 	tCoreLayout* layout;
 
 	EXPORT sCore();
+	EXPORT sCore(tParmsSource* parms, tCoreLayout* layout_);
 	EXPORT ~sCore();
 
 

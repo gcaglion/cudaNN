@@ -65,7 +65,9 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 
 	//-- 5. add each core
 	for (c=0; c<coresCnt; c++) {
+		safeCallEE(parms->backupKey());
 		safeCallEE(addCore(parms, c));
+		safeCallEE(parms->restoreKey());
 	}
 }
 sEngine::~sEngine() {
@@ -77,10 +79,12 @@ sEngine::~sEngine() {
 
 
 void sEngine::addCore(tParmsSource* parms, int coreId) {
+
+	safeCallEE(parms->setKey(coreLayout[coreId]->desc));
+
 	switch (coreLayout[coreId]->type) {
 	case CORE_NN:
-		core[coresCnt]=new tNN(parms, coreLayout[coreId]);
-		coresCnt++;
+		safeCallEE(core[coresCnt]=new tNN(parms, coreLayout[coreId]));
 		break;
 	case CORE_GA: break;
 	case CORE_SVM: break;
@@ -89,7 +93,6 @@ void sEngine::addCore(tParmsSource* parms, int coreId) {
 		throwE("coreId %d : invalid coreType: %d", 2, coreLayout[coreId]->Id, coreLayout[coreId]->type);
 		break;
 	}
-	coresCnt++;
 }
 
 void sEngine::setCoreLayer(tCoreLayout* c){

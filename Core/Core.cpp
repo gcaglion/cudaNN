@@ -37,9 +37,8 @@ void sCoreLayout::setLayer() {
 	
 }
 
-sCore::sCore() {
-	//layout= new tCoreLayout();
+sCore::sCore() {}
+sCore::sCore(tParmsSource* parms, tCoreLayout* layout_) {
+	layout=layout_;
 }
-sCore::~sCore(){
-	delete layout;
-}
+sCore::~sCore(){}

@@ -17,33 +17,35 @@ typedef struct sNN :public sCore, public sBaseObj {
 	int pid;
 	int tid;
 
-	//-- topology
-	//int layout->inputCnt;
-	//int layout->outputCnt;
-	//--
-	int featuresCnt;
-	int sampleLen;
-	int predictionLen;
-	//--
-	int batchCnt;
+	//-- NNParms
+	tNNparms* parms;
 
-	int outputLevel;
+	//-- inner layout
+	int sampleLen;
+	int predictionLen; 
+	int featuresCnt;
+	int batchCnt;
+	//--
 	int* nodesCnt;
+	int nodesCntTotal;
+	int outputLevel;
 	int* levelFirstNode;
 	int* ctxStart;
-	int ActualEpochs;
-
-	int nodesCntTotal;
 	int* weightsCnt;
 	int weightsCntTotal;
 	int* levelFirstWeight;
 
+	//-- training stuff
+	int ActualEpochs;
+	//-- error measuring
+	numtype* tse;	// total squared error.	Scalar. On GPU (if used)
+	numtype* se;	// squared sum error.	Scalar. On GPU (if used)
+	numtype* mseT;	// Training mean squared error, array indexed by epoch, always on host
+	numtype* mseV;	// Validation mean squared error, array indexed by epoch, always on host
+
 	//-- set at each level according to ActivationFunction
 	float* scaleMin;	
 	float* scaleMax;
-
-	//-- NNParms
-	tNNparms* parms;
 
 	numtype* a;
 	numtype* F;
@@ -56,13 +58,6 @@ typedef struct sNN :public sCore, public sBaseObj {
 	numtype* e;
 	numtype* u;
 
-	//-- error measuring
-	numtype* tse;	// total squared error.	Scalar. On GPU (if used)
-	numtype* se;	// squared sum error.	Scalar. On GPU (if used)
-	//--
-	numtype* mseT;	// Training mean squared error, array indexed by epoch, always on host
-	numtype* mseV;	// Validation mean squared error, array indexed by epoch, always on host
-	//--
 
 	//-- performance counters
 	DWORD LDstart, LDtimeTot=0, LDcnt=0; float LDtimeAvg;
@@ -80,14 +75,17 @@ typedef struct sNN :public sCore, public sBaseObj {
 	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
 	void sNN_common(tDataShape* baseShape, tDebugger* dbg_);
-
-	EXPORT sNN(tParmsSource* parms, tCoreLayout* coreLayout, tDebugger* dbg_=nullptr);
+	EXPORT sNN(tParmsSource* XMLparms, tCoreLayout* coreLayout, tDebugger* dbg_=nullptr);
 	EXPORT sNN(tDataShape* baseShape, tNNparms* NNparms_, tDebugger* dbg_=nullptr);
 	EXPORT ~sNN();
 
-	void setLayout(int batchSamplesCnt_);
-
 	EXPORT void setActivationFunction(int* func_);
+	EXPORT void train(tDataSet* trainSet);
+	EXPORT void run(tDataSet* runSet);
+
+
+private:
+	void setLayout(int batchSamplesCnt_);
 	void FF();
 	void Activate(int level);
 	void calcErr();
@@ -96,11 +94,6 @@ typedef struct sNN :public sCore, public sBaseObj {
 	void BP_std();
 	void WU_std();
 	void BackwardPass(tDataSet* ds, int batchId, bool updateWeights);
-
-	EXPORT void train(tDataSet* trainSet);
-	EXPORT void run(tDataSet* runSet);
-
-private:
 	//-- malloc + init
 	void mallocNeurons();
 	void initNeurons();

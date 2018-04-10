@@ -6,9 +6,6 @@ void sNN::sNN_common(tDataShape* baseShape, tDebugger* dbg_) {
 
 	parms->MaxEpochs=0;	//-- we need this so destructor does not fail when NN object is used to run-only
 
-						//-- set debug parameters
-	dbg=(dbg_==nullptr) ? (new tDebugger("NN.err")) : dbg_;
-
 	//-- set input and output basic dimensions (batchsize not considered yet)
 	sampleLen=baseShape->sampleLen;
 	predictionLen=baseShape->predictionLen;
@@ -40,12 +37,43 @@ void sNN::sNN_common(tDataShape* baseShape, tDebugger* dbg_) {
 
 }
 
-sNN::sNN(tParmsSource* parms, tCoreLayout* coreLayout, tDebugger* dbg_) {
+sNN::sNN(tParmsSource* XMLparms, tCoreLayout* coreLayout, tDebugger* dbg_) : sCore(XMLparms, coreLayout) {
 	
-	//-- 0. read NN Parms (Topology + Training)
+	//-- set debug parameters
+	dbg=(dbg_==nullptr) ? (new tDebugger("NN.err")) : dbg_;
 
-	//parms=new tNNparms(...)...
+	//-- 0. read NN Parms (Topology + Training)
+	parms=new tNNparms();
+	safeCallEE(XMLparms->setKey("Topology"));
+	safeCallEE(XMLparms->get(&parms->levelRatio, "LevelRatio", &parms->levelsCnt)); parms->levelsCnt+=2;
+	safeCallEE(XMLparms->get(&parms->ActivationFunction, "LevelActivation", new int));
+	safeCallEE(XMLparms->get(&parms->useContext, "UseContext"));
+	safeCallEE(XMLparms->get(&parms->useBias, "UseBias"));
 	
+	safeCallEE(XMLparms->setKey("..Training"));
+	safeCallEE(XMLparms->get(&parms->MaxEpochs, "MaxEpochs"));
+	safeCallEE(XMLparms->get(&parms->TargetMSE, "TargetMSE"));
+	safeCallEE(XMLparms->get(&parms->NetSaveFreq, "NetSaveFrequency"));
+	safeCallEE(XMLparms->get(&parms->StopOnDivergence, "StopOnDivergence"));
+	safeCallEE(XMLparms->get(&parms->BP_Algo, "BP_Algo"));
+
+	switch (parms->BP_Algo) {
+		//--... TO DO ...
+	case BP_STD:
+		safeCallEE(XMLparms->get(&parms->LearningRate, "BP_Std.LearningRate"));
+		safeCallEE(XMLparms->get(&parms->LearningMomentum, "BP_Std.LearningMomentum"));
+		break;
+	case BP_QUICKPROP:
+		break;
+	case BP_RPROP: break;
+	case BP_QING:
+		break;
+	case BP_SCGD: break;
+	case BP_LM: break;
+	default:
+		throwE("invalid BP_Algo: %d", 1, parms->BP_Algo);
+	}
+
 	//-- 1. common constructor
 	sNN_common(coreLayout->shape, dbg_);
 
@@ -54,6 +82,9 @@ sNN::sNN(tDataShape* baseShape, tNNparms* NNparms_, tDebugger* dbg_) {
 	
 	//-- set NN parms
 	parms=NNparms_;
+
+	//-- set debug parameters
+	dbg=(dbg_==nullptr) ? (new tDebugger("NN.err")) : dbg_;
 
 	//-- call common constructor
 	sNN_common(baseShape, dbg_);
