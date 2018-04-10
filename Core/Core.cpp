@@ -7,7 +7,6 @@ void sCoreLayout::sCoreLayout_common(tDebugger* dbg_, int Id_) {
 	parentConnType=(int*)malloc(CORE_MAX_PARENTS*sizeof(int));
 
 	char fname[MAX_PATH]; sprintf_s(fname, MAX_PATH, "Core%d.err", Id_);
-	dbg=(dbg_==nullptr) ? (new tDebugger(fname)) : dbg_;	//... handle specific debugger in xml ...
 }
 
 sCoreLayout::sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebugger* dbg_) {

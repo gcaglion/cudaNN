@@ -2,11 +2,9 @@
 
 
 sDataShape::sDataShape(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("DataShape.err")) : dbg_;
 	sampleLen=sampleLen_; predictionLen=predictionLen_; featuresCnt=featuresCnt_;
 }
 sDataShape::sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("DataShape.err")) : dbg_;
 
 	safeCallEB(parms->setKey(parmKey));
 	safeCallEE(parms->get(&sampleLen, "SampleLen"));
@@ -15,17 +13,14 @@ sDataShape::sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 
 }
 sDataShape::~sDataShape() {
-	delete dbg;
 }
 
 sData::sData(tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("Data.err")) : dbg_;
 	shape=shape_; 
 	ActionDo[TRAIN]=doTrain_; ActionDo[TEST]=doTest_; ActionDo[VALID]=doValidation_;
 
 }
 sData::sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("Data.err")) : dbg_;
 
 	//-- Shape
 	safeCallEB(parms->setKey(parmKey));
@@ -48,5 +43,4 @@ sData::~sData() {
 		}
 	}
 	delete shape;
-	delete dbg;
 }

@@ -20,11 +20,7 @@ typedef struct sDBConnection
 	char DBPassword[DBPASSWORD_MAXLEN];
 	char DBConnString[DBCONNSTRING_MAXLEN];
 	void* DBCtx;
-	tDebugger* dbg
-#ifdef __cplusplus
-		=nullptr
-#endif
-		;
+
 #ifdef __cplusplus
 	EXPORT sDBConnection(char* username, char* password, char* connstring, tDebugger* dbg_=nullptr);
 	EXPORT sDBConnection(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);

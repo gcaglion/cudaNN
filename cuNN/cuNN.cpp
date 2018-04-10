@@ -39,9 +39,6 @@ void sNN::sNN_common(tDataShape* baseShape, tDebugger* dbg_) {
 
 sNN::sNN(tParmsSource* XMLparms, tCoreLayout* coreLayout, tDebugger* dbg_) : sCore(XMLparms, coreLayout) {
 	
-	//-- set debug parameters
-	dbg=(dbg_==nullptr) ? (new tDebugger("NN.err")) : dbg_;
-
 	//-- 0. read NN Parms (Topology + Training)
 	parms=new tNNparms();
 	safeCallEE(XMLparms->setKey("Topology"));
@@ -83,9 +80,6 @@ sNN::sNN(tDataShape* baseShape, tNNparms* NNparms_, tDebugger* dbg_) {
 	//-- set NN parms
 	parms=NNparms_;
 
-	//-- set debug parameters
-	dbg=(dbg_==nullptr) ? (new tDebugger("NN.err")) : dbg_;
-
 	//-- call common constructor
 	sNN_common(baseShape, dbg_);
 
@@ -108,7 +102,6 @@ sNN::~sNN() {
 	//	free(ActivationFunction);
 
 	delete Alg;
-	delete dbg;
 }
 
 void sNN::setLayout(int batchSamplesCnt_) {

@@ -2,7 +2,6 @@
 
 //-- Engine stuff
 void sEngine::sEngine_common(tParmsSource* parms, tDataShape* shape_, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("Engine.err")) : dbg_;	//... handle specific debugger in xml ...
 	layerCoresCnt=(int*)malloc(MAX_ENGINE_LAYERS*sizeof(int)); for (int l=0; l<MAX_ENGINE_LAYERS; l++) layerCoresCnt[l]=0;
 	shape=shape_;
 }
@@ -78,7 +77,6 @@ sEngine::~sEngine() {
 	free(core);
 	free(coreLayout);
 	free(layerCoresCnt);
-	delete dbg;
 }
 
 

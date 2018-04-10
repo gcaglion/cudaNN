@@ -11,7 +11,6 @@ sFileData::sFileData(tFileInfo* srcFile_, int fieldSep_, bool calcBW_, int BWfea
 	featuresCnt=-99;
 }
 sFileData::sFileData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("FileData.err")) : dbg_;
 	safeCallEB(parms->setKey(parmKey));
 	char ffname[MAX_PATH];
 	safeCallEE(srcFile=new tFileInfo(ffname, FILE_MODE_READ));

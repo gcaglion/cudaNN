@@ -2,8 +2,7 @@
 
 //-- sDataSet, constructors  /destructor
 sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* BWFeature_, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("DataSet.err")) : dbg_;
-	//--
+
 	selectedFeaturesCnt=selectedFeaturesCnt_;
 	for (int f=0; f<selectedFeaturesCnt; f++) selectedFeature[f]=selectedFeature_[f];
 	BWFeature=(int*)malloc(2*sizeof(int));
@@ -42,7 +41,7 @@ sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int sel
 	}
 }
 sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("DataSets.err")) : dbg_;
+
 	selectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
 	BWFeature=(int*)malloc(2*sizeof(int));
 
@@ -85,7 +84,6 @@ sDataSet::~sDataSet() {
 	free(prediction0);
 
 	delete sourceTS;
-	delete dbg;
 }
 //-- sDataSet, other methods
 void sDataSet::dump(char* filename) {

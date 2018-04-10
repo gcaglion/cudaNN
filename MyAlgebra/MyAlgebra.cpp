@@ -384,7 +384,6 @@ bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtyp
 s_Algebra::s_Algebra() {}
 
 s_Algebra::s_Algebra(tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("MyAlgebra.err")) : dbg_;
 
 	//-- init CUDA/BLAS
 	cublasH=new void*;
@@ -405,7 +404,6 @@ s_Algebra::~s_Algebra() {
 	myFree(ss);
 	//.....
 	// destroy cublasH, cuRandH, streams, curanddestroygenerator...
-	delete dbg;
 }
 //-- class methods
 bool getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {

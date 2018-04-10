@@ -2,7 +2,6 @@
 
 //=== sFXData
 void sFXData::sFXData_common(tDebugger* dbg_){	//--parent DataSource properties
-	dbg=(dbg_==nullptr) ? (new tDebugger("FXData.err")) : dbg_;
 	Symbol[FX_SYMBOL_MAXLEN-1]='\0';
 	TimeFrame[FX_TIMEFRAME_MAXLEN-1]='\0';
 

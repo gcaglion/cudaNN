@@ -3,7 +3,7 @@
 
 //-- sTimeSerie, constructors / destructor
 void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, int tsfCnt_, int* tsf_, tDebugger* dbg_) {
-	dbg=(dbg_==nullptr) ? (new tDebugger("TimeSeries.err")) : dbg_;
+
 	steps=steps_;
 	featuresCnt=featuresCnt_;
 	len=steps*featuresCnt;
@@ -43,7 +43,7 @@ sTimeSerie::sTimeSerie(tFileData* dataSource_, int steps_, int featuresCnt_, cha
 //-------------------------------------------------------------------------------------------------------------------------------------
 */
 sTimeSerie::sTimeSerie(tParmsSource* parms, char* parmKey, tDebugger* dbg_){
-	dbg=(dbg_==nullptr) ? (new tDebugger("TimeSeries.err")) : dbg_;
+
 	tsf=(int*)malloc(MAX_TSF_CNT*sizeof(int));
 	date0[DATE_FORMAT_LEN]='\0';
 
@@ -106,7 +106,6 @@ sTimeSerie::~sTimeSerie() {
 
 	delete fxData;
 	delete fileData;
-	delete dbg;
 }
 
 //-- sTimeSerie, other methods
