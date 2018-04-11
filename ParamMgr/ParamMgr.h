@@ -38,7 +38,7 @@ typedef struct sParmsSource : public sBaseObj {
 
 	EXPORT bool parse();
 	//--
-	EXPORT bool decode(int elementId, int* oVal);
+	EXPORT void decode(int elementId, int* oVal);
 
 	//-- we need this in .cpp because it uses UpperCase() from Utils lib, which is not linked by all modules calling ParamMgr...
 	EXPORT void buildSoughtParmFull(const char* soughtParmDesc);
@@ -58,7 +58,6 @@ typedef struct sParmsSource : public sBaseObj {
 		getx(oVar);
 
 	}
-
 
 	//-- type-specific: int(with or without enums), numtype, char*
 	EXPORT void getx(int* oVar);

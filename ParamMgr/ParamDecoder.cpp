@@ -13,12 +13,16 @@
 #include "../cuNN/NN_enums.h"
 
 #define optionLookup(option, e) { \
-	if (strcmp(parmVal[foundParmId][e], #option)==0) { \
+	strcpy_s(optionS,XML_MAX_PARAM_VAL_LEN, #option); \
+	if (strcmp(parmVal[foundParmId][e], optionS)==0) { \
 		(*oVal)=option; \
-		return true; \
+		return; \
 	} \
 }
-bool sParmsSource::decode(int elementId, int* oVal) { 
+void sParmsSource::decode(int elementId, int* oVal) { 
+	char optionS[XML_MAX_PARAM_VAL_LEN];
+	bool success=false;
+
 	//-- DataSource_enums
 	optionLookup(FXDB_SOURCE, elementId);
 	optionLookup(FILE_SOURCE, elementId);
@@ -87,5 +91,6 @@ bool sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(BP_SCGD, elementId);
 	optionLookup(BP_LM, elementId);
 
-	return false;
+	if(!success) throwE("could not decode value %s for parameter %s", 2, parmVal[foundParmId][elementId], soughtParmFull);
+
 }

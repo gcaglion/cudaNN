@@ -13,7 +13,7 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 	safeCallEB(parms->setKey(parmKey));
 	safeCallEB(parms->backupKey());
 
-	parms->get(&type, "Type");
+	safeCallEE(parms->get(&type, "Type"));
 
 	switch (type) {
 	case ENGINE_CUSTOM:
@@ -26,7 +26,7 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 		//-- 2. create layout, set base coreLayout properties for each Core (type, desc, connType, outputCnt)
 		for (c=0; c<coresCnt; c++) {
 			safeCallEB(parms->backupKey());
-			coreLayout[c]=new tCoreLayout(parms, c, shape);
+			safeCallEE(coreLayout[c]=new tCoreLayout(parms, c, shape));
 			safeCallEB(parms->restoreKey());
 		}
 		break;

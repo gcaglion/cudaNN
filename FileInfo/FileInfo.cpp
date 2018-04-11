@@ -32,6 +32,7 @@ sFileInfo::sFileInfo(char* FullName_, int mode_) {
 	sFileInfo_common();
 }
 sFileInfo::~sFileInfo() {
+	fflush(handle);
 	fseek(handle, 0, SEEK_END); // seek to end of file
 	size_t fsize = ftell(handle); // get current file pointer
 

@@ -131,8 +131,7 @@ void sParmsSource::getx(int** oVar){
 		if (isnumber(parmVal[foundParmId][e])) {
 			(*oVar)[e]=atoi(parmVal[foundParmId][e]);
 		} else {
-			safeCallEB(decode(e, &oVar[0][e]));
-			//decode(e, &oVar[0][e]);
+			decode(e, &oVar[0][e]);
 		}
 	}
 }

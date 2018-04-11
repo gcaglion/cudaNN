@@ -84,7 +84,7 @@ catch (std::exception e) { \
 	dbg->write(DBG_LEVEL_STD, "dbg %p calling %s ... ", 2, dbg, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
 	try {block;} catch (std::exception e) { \
-		dbg->write(DBG_LEVEL_STD, "dbg %p FAILURE!\n", 1, dbg); \
+		dbg->write(DBG_LEVEL_ERR, "dbg %p FAILURE: %s\n", 2, dbg, e.what()); \
 		throw(e); \
 	} \
 	dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
@@ -96,8 +96,7 @@ catch (std::exception e) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
 	if(!(block)){ \
-		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); \
-		throw std::exception("Call to bool function failed"); \
+		throwE("DioPorco!", 0); \
 	} else {\
 		dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
 	}\
@@ -109,7 +108,7 @@ catch (std::exception e) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
 	try {block;} catch (std::exception e) { \
-		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); \
+		dbg->write(DBG_LEVEL_ERR, "dbg %p FAILURE: %s\n", 2, dbg, e.what()); \
 		return false; \
 	} \
 	dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
@@ -121,7 +120,7 @@ catch (std::exception e) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s\n", 1, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
 	if(!(block)) {\
-		dbg->write(DBG_LEVEL_STD, "FAILURE!\n", 0); \
+		dbg->write(DBG_LEVEL_ERR, "FAILURE!\n", 0); \
 		return false; \
 	} else { \
 		dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
@@ -133,7 +132,7 @@ catch (std::exception e) { \
 //-- throw exception from class method
 #define throwE(mask, argcnt, ...) { \
 	dbg->compose((#mask), argcnt, __VA_ARGS__ ); \
-	dbg->write(DBG_LEVEL_ERR, "%s() failed with message: %s \n", 2, __func__, dbg->errmsg); \
+	dbg->write(DBG_LEVEL_ERR, "dbg %p %s() failed with message: %s \n", 3, dbg, __func__, dbg->errmsg); \
 	throw std::exception(dbg->errmsg); \
 }
 //-- return error from boolean function
