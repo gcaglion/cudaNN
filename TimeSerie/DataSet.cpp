@@ -1,7 +1,7 @@
 #include "DataSet.h"
 
 //-- sDataSet, constructors  /destructor
-sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* BWFeature_, tDebugger* dbg_) {
+sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* BWFeature_, tDebugger* dbg_) : sBaseObj("DataSet", dbg_) {
 
 	selectedFeaturesCnt=selectedFeaturesCnt_;
 	for (int f=0; f<selectedFeaturesCnt; f++) selectedFeature[f]=selectedFeature_[f];
@@ -40,7 +40,7 @@ sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int sel
 		BFS2SFB(b, targetLen, targetBFS, targetSFB);
 	}
 }
-sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
+sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("DataSet", dbg_) {
 
 	selectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
 	BWFeature=(int*)malloc(2*sizeof(int));

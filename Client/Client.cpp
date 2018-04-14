@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
 
 	tParmsSource* XMLparms=nullptr;
 	tForecaster* forecaster=nullptr;
+	tData* data0=nullptr;
 	
 	//-- everything else must be enclosed in try/catch block
 	try {
@@ -57,16 +58,27 @@ int main(int argc, char* argv[]) {
 
 		safeCallEE(XMLparms->parse());
 
+		safeCallEE(data0=new tData(XMLparms, ".Forecaster.Data"));
+
 		//-- create Data Forecaster from parms
-		safeCallEE(forecaster=new tForecaster(XMLparms, "Forecaster"));
+		//safeCallEE(forecaster=new tForecaster(XMLparms, "Forecaster"));
 }
 	catch (std::exception e) {
 		dbg->write(DBG_LEVEL_ERR, "\nClient failed with exception: %s\n", 1, e.what());
-		Cleanup( 3, forecaster, XMLparms, dbg);
+		//Cleanup( 3, forecaster, XMLparms, dbg);
+		delete data0;
+		delete forecaster;
+		delete XMLparms;
+		delete dbg;
+		system("pause");
 		return -1;
 	}
 
-	Cleanup(3, forecaster, XMLparms, dbg);
+	//Cleanup(3, forecaster, XMLparms, dbg);
+	delete data0;
+	delete forecaster;
+	delete XMLparms;
+	delete dbg;
 	system("pause");
 	return 0;
 

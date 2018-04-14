@@ -1,10 +1,10 @@
 #include "Data.h"
 
 
-sDataShape::sDataShape(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_) {
+sDataShape::sDataShape(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_) : sBaseObj("DataShape", dbg_) {
 	sampleLen=sampleLen_; predictionLen=predictionLen_; featuresCnt=featuresCnt_;
 }
-sDataShape::sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
+sDataShape::sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("DataShape", dbg_) {
 
 	safeCallEB(parms->setKey(parmKey));
 	safeCallEE(parms->get(&sampleLen, "SampleLen"));
@@ -15,16 +15,16 @@ sDataShape::sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 sDataShape::~sDataShape() {
 }
 
-sData::sData(tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, tDebugger* dbg_) {
+sData::sData(tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, tDebugger* dbg_) : sBaseObj("Data", dbg_) {
 	shape=shape_; 
 	ActionDo[TRAIN]=doTrain_; ActionDo[TEST]=doTest_; ActionDo[VALID]=doValidation_;
 
 }
-sData::sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
+sData::sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("Data", dbg_) {
 
 	//-- Shape
 	safeCallEB(parms->setKey(parmKey));
-	safeCallEE(shape=new tDataShape(parms, "Shape"));
+	safeCallEE(shape=new tDataShape(parms, "Sphape"));
 
 	//-- Actions, TimeSeries and DataSets
 	for(int a=0; a<3; a++) {

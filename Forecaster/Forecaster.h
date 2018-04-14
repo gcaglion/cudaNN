@@ -12,7 +12,6 @@ typedef struct sForecaster : public sBaseObj {
 	tEngine* engine=nullptr;
 	tLogger* persistor=nullptr;
 
-	EXPORT sForecaster(tDebugger* dbg_=nullptr);
 	EXPORT sForecaster(tParmsSource* parms, char* parmKey="Forecaster", tDebugger* dbg_=nullptr);
 	EXPORT ~sForecaster();
 

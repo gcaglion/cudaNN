@@ -1,9 +1,19 @@
 #include "ParamMgr.h"
 
-sParmsSource::sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], tDebugger* dbg_) {
+sParmsSource::sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], tDebugger* dbg_) : sBaseObj("ParmsSource", dbg_) {
 
 	CLoverridesCnt=CLoverridesCnt_; CLoverride=CLoverride_;
-
+/*
+	try {
+		parmsFile=new tFileInfo(pFileFullName, FILE_MODE_READ);
+	}
+	catch (std::exception e) {
+		dbg->write(DBG_LEVEL_ERR, "%s() failed. pFileFullName=%s \n lower-level message: %s\n ", 3, __func__, pFileFullName, e.what());
+		throw(e);
+	}
+	dbg->write(DBG_LEVEL_STD, "%s() successfully opened %s \n", 2, __func__, pFileFullName);
+	return;
+*/
 	safeCallEE(parmsFile=new tFileInfo(pFileFullName, FILE_MODE_READ));
 
 	parmsCnt=0;
@@ -92,8 +102,10 @@ bool sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 
 	UpperCase(currentKey);
 
-	bool found=findKey(currentKey);
-	return(found || ignoreError);
+	bool success=(findKey(currentKey) || ignoreError);
+	if (!success) throwB("KeyDesc_=%s", 1, KeyDesc_);
+
+	return true;
 }
 bool sParmsSource::findKey(char* KeyFullDesc){
 	char keyDescFromParmDesc[XML_MAX_PATH_LEN];
@@ -131,7 +143,7 @@ void sParmsSource::getx(int** oVar){
 		if (isnumber(parmVal[foundParmId][e])) {
 			(*oVar)[e]=atoi(parmVal[foundParmId][e]);
 		} else {
-			decode(e, &oVar[0][e]);
+			safeCallEE(decode(e, &oVar[0][e]));
 		}
 	}
 }

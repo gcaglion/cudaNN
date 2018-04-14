@@ -21,7 +21,7 @@ void sNN::sNN_common(tDataShape* baseShape, tDebugger* dbg_) {
 	safeCallEE(createWeights());
 
 	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
-	safeCallEE(Alg=new Algebra());
+	safeCallEE(Alg=new Algebra(dbg));
 
 	//-- x. set scaleMin / scaleMax
 	scaleMin=(numtype*)malloc(parms->levelsCnt*sizeof(int));
@@ -37,7 +37,7 @@ void sNN::sNN_common(tDataShape* baseShape, tDebugger* dbg_) {
 
 }
 
-sNN::sNN(tParmsSource* XMLparms, tCoreLayout* coreLayout, tDebugger* dbg_) : sCore(XMLparms, coreLayout) {
+sNN::sNN(tParmsSource* XMLparms, tCoreLayout* coreLayout, tDebugger* dbg_) : sBaseObj("NN", dbg_), sCore(XMLparms, coreLayout) {
 	
 	//-- 0. read NN Parms (Topology + Training)
 	parms=new tNNparms();
@@ -75,7 +75,7 @@ sNN::sNN(tParmsSource* XMLparms, tCoreLayout* coreLayout, tDebugger* dbg_) : sCo
 	sNN_common(coreLayout->shape, dbg_);
 
 }
-sNN::sNN(tDataShape* baseShape, tNNparms* NNparms_, tDebugger* dbg_) {
+sNN::sNN(tDataShape* baseShape, tNNparms* NNparms_, tDebugger* dbg_) : sBaseObj("NN", dbg_) {
 	
 	//-- set NN parms
 	parms=NNparms_;

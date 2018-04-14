@@ -22,9 +22,13 @@ typedef struct sDebugger
 #ifdef __cplusplus
 		=nullptr
 #endif
-		;
+	;
+	char errmsg[1024]
+#ifdef __cplusplus
+		=""
+#endif
+	;
 	bool PauseOnError;
-	char errmsg[1024];
 
 	//-- concurrency stuff
 	bool ThreadSafeLogging;
@@ -37,7 +41,7 @@ typedef struct sDebugger
 
 #ifdef __cplusplus
 	EXPORT void sDebugger_common(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_);
-	EXPORT sDebugger(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_=false, bool PauseOnError_=true, bool ThreadSafeLogging_=false);
+	EXPORT sDebugger(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_=false, bool PauseOnError_=false, bool ThreadSafeLogging_=false);
 	EXPORT sDebugger(char* outFileName_);
 	EXPORT sDebugger(int level_, int dest_, char* outFileName);
 	EXPORT ~sDebugger();
@@ -105,7 +109,7 @@ catch (std::exception e) { \
 	dbg->write(DBG_LEVEL_STD, "\n", 0); \
 }
 //-- boolean calling class
-#define safeCallBE(block) { \
+/*#define safeCallBE(block) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
 	try {block;} catch (std::exception e) { \
@@ -116,7 +120,9 @@ catch (std::exception e) { \
 	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
 	dbg->write(DBG_LEVEL_STD, "\n", 0); \
 }
+*/
 //-- boolean calling boolean
+/*
 #define safeCallBB(block) { \
 	dbg->write(DBG_LEVEL_STD, "calling %s\n", 1, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
@@ -129,7 +135,7 @@ catch (std::exception e) { \
 	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
 	dbg->write(DBG_LEVEL_STD, "\n", 0); \
 }
-
+*/
 //-- throw exception from class method
 #define throwE(mask, argcnt, ...) { \
 	dbg->compose((#mask), argcnt, __VA_ARGS__ ); \

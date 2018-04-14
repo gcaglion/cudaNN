@@ -35,7 +35,7 @@ typedef struct s_matrix : public sBaseObj {
 	int mx;
 	numtype* m;
 
-	s_matrix(int my_, int mx_, bool init_=false, numtype val0=0, numtype inc=0 ) {
+	s_matrix(int my_, int mx_, bool init_=false, numtype val0=0, numtype inc=0 ) : sBaseObj("Matrix", nullptr) {
 		my=my_; mx=mx_;
 		m=(numtype*)malloc(my*mx*sizeof(numtype));
 		if(init_) { for (int i=0; i<(my*mx); i++) m[i]=val0+i*inc; }

@@ -11,7 +11,7 @@ typedef struct sParmsSource : public sBaseObj {
 	int CLoverridesCnt;
 	char** CLoverride;
 
-	int parmsCnt;
+	int parmsCnt=0;
 	int foundParmId;
 
 	EXPORT sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], tDebugger* dbg_=nullptr);

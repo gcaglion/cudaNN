@@ -1,8 +1,6 @@
 #include "Forecaster.h"
 
-sForecaster::sForecaster(tDebugger* dbg_) {
-}
-sForecaster::sForecaster(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
+sForecaster::sForecaster(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("Forecaster", dbg_) {
 
 	//-- define forecaster Data
 	safeCallEE(data=new tData(parms, ".Forecaster.Data"))

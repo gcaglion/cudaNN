@@ -15,7 +15,7 @@ typedef struct sDataSource : public sBaseObj {
 #ifdef __cplusplus
 	sDataSource(int type_, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, tDebugger* dbg_=nullptr);
 	sDataSource(tParmsSource* parms, tDebugger* dbg_=nullptr);
-	sDataSource();
+	sDataSource(tDebugger* dbg_=nullptr);
 	~sDataSource();
 #endif
 

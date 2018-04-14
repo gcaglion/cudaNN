@@ -9,7 +9,7 @@ void sCoreLayout::sCoreLayout_common(tDebugger* dbg_, int Id_) {
 	char fname[MAX_PATH]; sprintf_s(fname, MAX_PATH, "Core%d.err", Id_);
 }
 
-sCoreLayout::sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebugger* dbg_) {
+sCoreLayout::sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebugger* dbg_) : sBaseObj("CoreLayout", dbg_) {
 	sCoreLayout_common(dbg_, Id_);
 	Id=Id_; shape=shape_;
 	sprintf_s(desc, CORE_MAX_DESC_LEN, "Core%d", Id);

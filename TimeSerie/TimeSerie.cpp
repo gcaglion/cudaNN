@@ -24,10 +24,10 @@ void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, int tsfCnt_, int
 }
 
 //-------- To fix --------------
-sTimeSerie::sTimeSerie(int steps_, int featuresCnt_, tDebugger* dbg_) {
+sTimeSerie::sTimeSerie(int steps_, int featuresCnt_, tDebugger* dbg_) : sBaseObj("TimeSerie", dbg_) {
 	sTimeSeriecommon(steps_, featuresCnt_, 0, nullptr, dbg_);
 }
-sTimeSerie::sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_){
+sTimeSerie::sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_) : sBaseObj("TimeSerie", dbg_) {
 	//-- 1. create
 	sTimeSeriecommon(steps_, FXDATA_FEATURESCNT, 0, nullptr, dbg_);	// no safeCall() because we don't set dbg, here
 	//-- 2. load data
@@ -35,14 +35,14 @@ sTimeSerie::sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, 
 	//-- 3. transform
 	safeCallEE(transform(dt_));
 }
-sTimeSerie::sTimeSerie(tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, tDebugger* dbg_){
+sTimeSerie::sTimeSerie(tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, tDebugger* dbg_) : sBaseObj("TimeSerie", dbg_) {
 	featuresCnt=featuresCnt_;
 }
 /*sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_){
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 */
-sTimeSerie::sTimeSerie(tParmsSource* parms, char* parmKey, tDebugger* dbg_){
+sTimeSerie::sTimeSerie(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("TimeSerie", dbg_) {
 
 	tsf=(int*)malloc(MAX_TSF_CNT*sizeof(int));
 	date0[DATE_FORMAT_LEN]='\0';

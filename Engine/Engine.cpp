@@ -5,7 +5,7 @@ void sEngine::sEngine_common(tParmsSource* parms, tDataShape* shape_, tDebugger*
 	layerCoresCnt=(int*)malloc(MAX_ENGINE_LAYERS*sizeof(int)); for (int l=0; l<MAX_ENGINE_LAYERS; l++) layerCoresCnt[l]=0;
 	shape=shape_;
 }
-sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_) {
+sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_) : sBaseObj("Engine", dbg_) {
 	int c;
 
 	sEngine_common(parms, shape_, dbg_);

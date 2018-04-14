@@ -16,7 +16,7 @@ sDebugger::sDebugger(char* outFileName_) {
 	sDebugger_common(DBG_LEVEL_DEFAULT, DBG_DEST_DEFAULT, outFileName_, DBG_DEFAULT_PATH, false, true, false);
 }
 sDebugger::sDebugger(int level_, int dest_, char* outFileName_) {
-	sDebugger_common(level_, dest_, outFileName_, DBG_DEFAULT_PATH, false, true, false);
+	sDebugger_common(level_, dest_, outFileName_, DBG_DEFAULT_PATH, false, false, false);
 }
 sDebugger::~sDebugger() {
 	delete outFile;
@@ -101,7 +101,7 @@ void sDebugger::compose(char* msg_, int argcount, ...) {
 
 	va_start(arguments, argcount);
 	removeQuotes(msg_, msg);
-	errmsg[0]='\0';
+	//errmsg[0]='\0';
 	do {
 		if (msg[im]==37) {                // "%"
 			memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';

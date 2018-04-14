@@ -8,15 +8,22 @@
 
 class sBaseObj {
 public:
+	char objName[MAX_PATH];
 	tDebugger* dbg;
 
-	sBaseObj() {
-		char fname[MAX_PATH];
-		sprintf_s(fname, MAX_PATH, "Obj_%p.log", this);
-		dbg=new tDebugger(DBG_LEVEL_DEFAULT, DBG_DEST_DEFAULT, fname);
+	sBaseObj(char* className, tDebugger* dbg_) {
+		if (dbg_==nullptr) {
+			sprintf_s(objName, MAX_PATH, "%s_%p.log", className, this);
+			dbg=new tDebugger(DBG_LEVEL_DEFAULT, DBG_DEST_DEFAULT, objName);
+		} else {
+			dbg=dbg_;
+		}
 	}
-	virtual ~sBaseObj() {
+
+	~sBaseObj() {
 		delete dbg;
 	}
+
+
 };
 #endif
