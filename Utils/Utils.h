@@ -5,6 +5,7 @@
 EXPORT char* MyGetCurrentDirectory();
 EXPORT bool getCurrentPath(char* oPath);
 EXPORT int cslToArray(const char* csl, char Separator, char** StrList);
+EXPORT void splitFullFileName(char* iFullName, char* oPath, char* oName);
 EXPORT char* substr(char* str, int start, int len);
 EXPORT char* right(char* str, int len);
 EXPORT char* left(char* str, int len);

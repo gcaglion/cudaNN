@@ -17,5 +17,3 @@ typedef float numtype;
 
 #define USE_ORCL
 //#define USE_GPU
-
-//#define delete obj) if(obj!=nullptr) delete obj

@@ -63,6 +63,19 @@ EXPORT int cslToArray(const char* csl, char Separator, char** StrList) {
 
 	return (ListLen+1);
 }
+EXPORT void splitFullFileName(char* iFullName, char* oPath, char* oName) {
+	int i;
+	int ls=instr('\\', FullName_, true);
+	if (ls<0) ls=instr('/', FullName_, true);
+
+	Path[0]='\0';
+	for (i=0; i<ls; i++) Path[i]=FullName_[i];
+	Path[i]='\0';
+
+	Name[0]='\0';
+	for (i=0; i<(strlen(FullName_)-ls); i++) Name[i]=FullName_[ls+i+1];
+	Name[i]='\0';
+}
 EXPORT char* substr(char* str, int start, int len) {
 	char ret[1000];
 	memcpy(ret, &str[start], len);

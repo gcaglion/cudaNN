@@ -16,18 +16,7 @@ sFileInfo::sFileInfo(char* Name_, char* Path_, int mode_) {
 	sFileInfo_common();
 }
 sFileInfo::sFileInfo(char* FullName_, int mode_) {
-	int i;
-	int ls=instr('\\', FullName_, true);
-	if(ls<0) ls=instr('/', FullName_, true);
-
-	Path[0]='\0';
-	for (i=0; i<ls; i++) Path[i]=FullName_[i];
-	Path[i]='\0';
-
-	Name[0]='\0';
-	for (i=0; i<(strlen(FullName_)-ls); i++) Name[i]=FullName_[ls+i+1];
-	Name[i]='\0';
-
+	splitFullFileName(FullName_, Path, Name);
 	mode=mode_;
 	sFileInfo_common();
 }
