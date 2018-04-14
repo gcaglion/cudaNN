@@ -15,8 +15,6 @@ typedef float numtype;
 #define DATE_FORMAT "YYYYMMDDHHMI"
 #define DATE_FORMAT_LEN 12
 
-#define DEBUG_DEFAULT_PATH "C:/temp/logs"
-
 #define USE_ORCL
 //#define USE_GPU
 

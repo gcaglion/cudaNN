@@ -129,7 +129,7 @@ void sTimeSerie::load(tFileData* tsFileData, char* pDate0) {
 }*/
 void sTimeSerie::dump(char* dumpFileName) {
 	int s, f;
-	tDebugger* dumpDbg=new tDebugger(DBG_LEVEL_DET, DBG_DEST_FILE, dumpFileName, DEBUG_DEFAULT_PATH);
+	tDebugger* dumpDbg=new tDebugger(DBG_LEVEL_DET, DBG_DEST_FILE, dumpFileName, DBG_DEFAULT_PATH);
 	dumpDbg->write(DBG_LEVEL_DET, "i, datetime", 0);
 	for (f=0; f<featuresCnt; f++) dumpDbg->write(DBG_LEVEL_DET, ",F%d_orig,F%d_tr,F%d_trs", 3, f, f, f);
 	dumpDbg->write(DBG_LEVEL_DET, "\n%d,%s", 2, -1, bdtime);

@@ -8,7 +8,8 @@
 #include "../FileInfo/FileInfo.h"
 #include "Debugger_enums.h"
 
-#define DEBUG_DEFAULT_NAME "defaultDebug.log"
+#define DBG_DEFAULT_PATH "C:/temp/logs"
+#define DBG_DEFAULT_NAME "defaultDebug.log"
 
 typedef struct sDebugger
 #ifdef __cplusplus

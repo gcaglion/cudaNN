@@ -13,10 +13,10 @@ sDebugger::sDebugger(int level_, int dest_, char* outFileName_, char* outFilePat
 	sDebugger_common(level_, dest_, outFileName_, outFilePath_, timing_, PauseOnError_, ThreadSafeLogging_);
 }
 sDebugger::sDebugger(char* outFileName_) {
-	sDebugger_common(DBG_LEVEL_DEFAULT, DBG_DEST_DEFAULT, outFileName_, DEBUG_DEFAULT_PATH, false, true, false);
+	sDebugger_common(DBG_LEVEL_DEFAULT, DBG_DEST_DEFAULT, outFileName_, DBG_DEFAULT_PATH, false, true, false);
 }
 sDebugger::sDebugger(int level_, int dest_, char* outFileName_) {
-	sDebugger_common(level_, dest_, outFileName_, DEBUG_DEFAULT_PATH, false, true, false);
+	sDebugger_common(level_, dest_, outFileName_, DBG_DEFAULT_PATH, false, true, false);
 }
 sDebugger::~sDebugger() {
 	delete outFile;
