@@ -1,7 +1,11 @@
 #include "../CommonEnv.h"
 #include "../Forecaster/Forecaster.h"
 
-void Cleanup(int objCnt, ...) {
+#define SUCCESS 0
+#define FAILURE -1
+#define Bye(retcode) { system("pause"); return retcode; }
+
+void objCleanup(int objCnt, ...) {
 	va_list args;
 	sBaseObj* obj;
 
@@ -13,73 +17,42 @@ void Cleanup(int objCnt, ...) {
 	va_end(args);
 }
 
-void kaz() {
-#define shortLen 12
-#define longLen 20
-	char shorts[shortLen+1];
-	char longs[longLen+1];
-
-	shorts[shortLen]='\0';
-	longs[longLen]='\0';
-	//memcpy_s(shorts, shortLen, "012345678901", shortLen);
-	strcpy_s(shorts, longLen, "012345678901");
-	strcpy_s(longs, longLen, "01234567890123456789");
-
-	//-- 1. long into short
-	strcpy_s(shorts, shortLen, longs);
-	strcpy_s(shorts, longLen, longs);
-	//-- 2. short into long
-	strcpy_s(longs, longLen, shorts);
-	strcpy_s(longs, shortLen, shorts);
+void cleanup() {
+	printf("\nClient->cleanup() called.\n");
 }
 int main(int argc, char* argv[]) {
 
-	//kaz();
-	//system("pause");
-	//return -1;
-
-	//-- start client timer
-	DWORD mainStart=timeGetTime();
-
-	//-- main debugger declaration & creation
+	//-- 1. main debugger declaration & creation. Also declares and starts timer (mainStart)
 	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH);
-	//-- set main debugger properties
-	dbg->timing=false;
 
+	//-- 2. objects used throughout the client
 	tParmsSource* XMLparms=nullptr;
 	tForecaster* forecaster=nullptr;
 	tData* data0=nullptr;
-	
-	//-- everything else must be enclosed in try/catch block
+	tEngine* engine0=nullptr;
+
+	//==================  main stuff ========================================================================================================
 	try {
-
 		//-- create client parms, include command-line parms, and read parameters file
-		safeCallEE(XMLparms=new tParmsSource("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
-
-		safeCallEE(XMLparms->parse());
-
-		safeCallEE(data0=new tData(XMLparms, ".Forecaster.Data"));
+		safeCall(XMLparms=new tParmsSource("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
+		safeCall(XMLparms->parse());
 
 		//-- create Data Forecaster from parms
-		//safeCallEE(forecaster=new tForecaster(XMLparms, "Forecaster"));
-}
-	catch (std::exception e) {
-		dbg->write(DBG_LEVEL_ERR, "\nClient failed with exception: %s\n", 1, e.what());
-		//Cleanup( 3, forecaster, XMLparms, dbg);
-		delete data0;
-		delete forecaster;
-		delete XMLparms;
-		delete dbg;
-		system("pause");
-		return -1;
+		//safeCall(forecaster=new tForecaster(XMLparms, "Forecaster"));
+
+		safeCall(data0=new tData(XMLparms, ".Forecaster.Data"));
+		safeCall(engine0=new tEngine(XMLparms, ".Forecaster.Engine", data0->shape));
+		delete engine0;
+
 	}
+	catch (char* e) {
+		objCleanup(4, XMLparms, forecaster, data0, engine0);
+		dbg->write(DBG_LEVEL_ERR, "main() failed. Exception=%s\n", 1, e);
+		Bye(FAILURE);
+	}
+	//==========================================================================================================================
 
-	//Cleanup(3, forecaster, XMLparms, dbg);
-	delete data0;
-	delete forecaster;
-	delete XMLparms;
-	delete dbg;
-	system("pause");
-	return 0;
 
+	objCleanup(4, XMLparms, forecaster, data0, engine0);
+	Bye(SUCCESS);
 }

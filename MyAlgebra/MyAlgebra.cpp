@@ -389,14 +389,14 @@ s_Algebra::s_Algebra(tDebugger* dbg_) : sBaseObj("Algebra", dbg_) {
 	for (int i=0; i<MAX_STREAMS; i++) cuStream[i]=new void*;
 
 #ifdef USE_GPU
-	safeCallEB(initCUDA());
-	safeCallEB(initCUDA());
-	safeCallEB(initCUBLAS(cublasH));
-	safeCallEB(initCURand(cuRandH));
-	safeCallEB(initCUstreams(cuStream));
+	safeCall(initCUDA());
+	safeCall(initCUDA());
+	safeCall(initCUBLAS(cublasH));
+	safeCall(initCURand(cuRandH));
+	safeCall(initCUstreams(cuStream));
 #endif
 	//-- init shared scalar
-	safeCallEB(myMalloc(&ss, 1));
+	safeCall(myMalloc(&ss, 1));
 }
 s_Algebra::~s_Algebra() {
 	myFree(ss);
@@ -411,36 +411,36 @@ bool getMcol_cpu(int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 void s_Algebra::getMcol(int Ay, int Ax, numtype* A, int col, numtype* oCol, bool forceCPU) {
 #ifdef USE_GPU
 	if (forceCPU) {
-		safeCallEB(getMcol_cpu(Ay, Ax, A, col, oCol));
+		safeCall(getMcol_cpu(Ay, Ax, A, col, oCol));
 	} else {
-		safeCallEB(getMcol_cu(cublasH, Ay, Ax, A, col, oCol));
+		safeCall(getMcol_cu(cublasH, Ay, Ax, A, col, oCol));
 	}
 #else
-	safeCallEB(getMcol_cpu(Ay, Ax, A, col, oCol));
+	safeCall(getMcol_cpu(Ay, Ax, A, col, oCol));
 #endif
 }
 void s_Algebra::MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU) {
 #ifdef USE_GPU
 	if(forceCPU) {
-		safeCallEB(MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
+		safeCall(MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
 	} else {
-		safeCallEB(MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
+		safeCall(MbyM_cu(cublasH, Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
 	}
 #else
-	safeCallEB(MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
+	safeCall(MbyM_std(Ay, Ax, Ascale, Atr, A, By, Bx, Bscale, Btr, B, C));
 #endif
 }
 void s_Algebra::h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams) {
 #ifdef USE_GPU
-	safeCallEB(h2d_cu(destAddr, srcAddr, size, ((useStreams)?cuStream:nullptr)) );
+	safeCall(h2d_cu(destAddr, srcAddr, size, ((useStreams)?cuStream:nullptr)) );
 #else
-	safeCallEB(memcpy_s(destAddr, size, srcAddr, size)==0);
+	safeCall(memcpy_s(destAddr, size, srcAddr, size)==0);
 #endif
 }
 void s_Algebra::d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams) {
 #ifdef USE_GPU
-	safeCallEB(d2h_cu(destAddr, srcAddr, size, ((useStreams)?cuStream:nullptr)) );
+	safeCall(d2h_cu(destAddr, srcAddr, size, ((useStreams)?cuStream:nullptr)) );
 #else
-	safeCallEB(memcpy_s(destAddr, size, srcAddr, size)==0);
+	safeCall(memcpy_s(destAddr, size, srcAddr, size)==0);
 #endif
 }

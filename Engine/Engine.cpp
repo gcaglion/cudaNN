@@ -10,36 +10,51 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 
 	sEngine_common(parms, shape_, dbg_);
 
-	safeCallEB(parms->setKey(parmKey));
-	safeCallEB(parms->backupKey());
+	safeCall(parms->setKey(parmKey));
+	safeCall(parms->backupKey());
 
-	safeCallEE(parms->get(&type, "Type"));
+	safeCall(parms->get(&type, "Type"));
 
 	switch (type) {
 	case ENGINE_CUSTOM:
-		safeCallEB(parms->setKey("Custom"));
+		safeCall(parms->setKey("Custom"));
 		//-- 0. coresCnt
-		safeCallEE(parms->get(&coresCnt, "CoresCount"));
+		safeCall(parms->get(&coresCnt, "CoresCount"));
 		//-- 1. malloc one core and one coreLayout for each core
 		core=(tCore**)malloc(coresCnt*sizeof(tCore*));
 		coreLayout=(tCoreLayout**)malloc(coresCnt*sizeof(tCoreLayout*));
 		//-- 2. create layout, set base coreLayout properties for each Core (type, desc, connType, outputCnt)
 		for (c=0; c<coresCnt; c++) {
-			safeCallEB(parms->backupKey());
-			safeCallEE(coreLayout[c]=new tCoreLayout(parms, c, shape));
-			safeCallEB(parms->restoreKey());
+
+			//--
+			dbg->write(DBG_LEVEL_STD, "%s -> %s() calling %s ... ", 3, dbg->parentObjName, __func__, "coreLayout[c]=new tCoreLayout(parms, c, shape)");
+				if (dbg->timing) dbg->setStartTime();
+					try { coreLayout[c]=new tCoreLayout(parms, c, shape); }
+			catch (char* exc) {
+				printf("\ndbg->parentObjName=%s\n", dbg->parentObjName);
+				printf("exc=%s\n", exc);
+				sprintf_s(dbg->errmsg, DBG_ERRMSG_SIZE, "%s -> %s() FAILURE: %s\n", dbg->parentObjName, __func__, exc);
+				throw(dbg->errmsg);
+			}
+			dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0);
+			if (dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); }
+			dbg->write(DBG_LEVEL_STD, "\n", 0);
+			//--
+
+			//safeCall(coreLayout[c]=new tCoreLayout(parms, c, shape));
+			safeCall(parms->restoreKey());
 		}
 		break;
 	case ENGINE_WNN:
-		safeCallEB(parms->setKey("WNN"));
+		safeCall(parms->setKey("WNN"));
 		//... get() ...
 		break;
 	case ENGINE_XIE:
-		safeCallEB(parms->setKey("XIE"));
+		safeCall(parms->setKey("XIE"));
 		//... get() ...
 		break;
 	default:
-		throwE("Invalid Engine Type: %d", 1, type);
+		safeThrow("Invalid Engine Type: %d", 1, type);
 		break;
 	}
 
@@ -64,15 +79,15 @@ sEngine::sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugg
 
 	//-- 5. add each core
 	for (c=0; c<coresCnt; c++) {
-		safeCallEE(parms->backupKey());
-		safeCallEE(addCore(parms, c));
-		safeCallEE(parms->restoreKey());
+		safeCall(parms->backupKey());
+		safeCall(addCore(parms, c));
+		safeCall(parms->restoreKey());
 	}
 }
-sEngine::~sEngine() {
+
+void sEngine::cleanup() {
 	for (int i=0; i<coresCnt; i++) {
 		delete coreLayout[i];
-//		delete core[i];
 	}
 	free(core);
 	free(coreLayout);
@@ -82,30 +97,29 @@ sEngine::~sEngine() {
 
 void sEngine::addCore(tParmsSource* parms, int coreId) {
 
-	safeCallEE(parms->setKey(coreLayout[coreId]->desc));
+	safeCall(parms->setKey(coreLayout[coreId]->desc));
 
 	switch (coreLayout[coreId]->type) {
 	case CORE_NN:
-		safeCallEE(core[coreId]=new tNN(parms, coreLayout[coreId]));
+		safeCall(core[coreId]=new tNN(parms, coreLayout[coreId]));
 		break;
 	case CORE_GA:
-		//safeCallEE(core[coreId]=new tGA(parms, coreLayout[coreId]));
-		safeCallEE(core[coreId]=new tCore(parms, coreLayout[coreId]));
+		//safeCall(core[coreId]=new tGA(parms, coreLayout[coreId]));
+		safeCall(core[coreId]=new tCore(parms, coreLayout[coreId]));
 		break;
 	case CORE_SVM: 
-		//safeCallEE(core[coreId]=new tSVM(parms, coreLayout[coreId]));
-		safeCallEE(core[coreId]=new tCore(parms, coreLayout[coreId]));
+		//safeCall(core[coreId]=new tSVM(parms, coreLayout[coreId]));
+		safeCall(core[coreId]=new tCore(parms, coreLayout[coreId]));
 		break;
 	case CORE_SOM: 
-		//safeCallEE(core[coreId]=new tSOM(parms, coreLayout[coreId]));
-		safeCallEE(core[coreId]=new tCore(parms, coreLayout[coreId]));
+		//safeCall(core[coreId]=new tSOM(parms, coreLayout[coreId]));
+		safeCall(core[coreId]=new tCore(parms, coreLayout[coreId]));
 		break;
 	default:
-		throwE("coreId %d : invalid coreType: %d", 2, coreLayout[coreId]->Id, coreLayout[coreId]->type);
+		safeThrow("coreId %d : invalid coreType: %d", 2, coreLayout[coreId]->Id, coreLayout[coreId]->type);
 		break;
 	}
 }
-
 void sEngine::setCoreLayer(tCoreLayout* c){
 	int ret=0;
 	int maxParentLayer=-1;

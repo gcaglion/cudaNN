@@ -22,11 +22,11 @@ sFXData::sFXData(tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, t
 sFXData::sFXData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) {
 	sFXData_common(dbg_);
 	//--
-	safeCallEB(parms->setKey(parmKey));
+	safeCall(parms->setKey(parmKey));
 	parms->get(Symbol, "Symbol");
 	parms->get(TimeFrame, "TimeFrame");
 	parms->get(&IsFilled, "IsFilled");
-	safeCallEE(db=new tDBConnection(parms, "DBConnection"));
+	safeCall(db=new tDBConnection(parms, "DBConnection"));
 }
 sFXData::~sFXData(){
 	delete db;

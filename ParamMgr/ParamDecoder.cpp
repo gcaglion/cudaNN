@@ -91,6 +91,6 @@ void sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(BP_SCGD, elementId);
 	optionLookup(BP_LM, elementId);
 
-	if(!success) throwE("could not decode value %s for parameter %s", 2, parmVal[foundParmId][elementId], soughtParmFull);
+	if(!success) safeThrow("could not decode value %s for parameter %s", 2, parmVal[foundParmId][elementId], soughtParmFull);
 
 }

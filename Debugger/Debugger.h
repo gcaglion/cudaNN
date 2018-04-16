@@ -8,14 +8,23 @@
 #include "../FileInfo/FileInfo.h"
 #include "Debugger_enums.h"
 
+//-- defaults
 #define DBG_DEFAULT_PATH "C:/temp/logs"
-#define DBG_DEFAULT_NAME "defaultDebug.log"
+#define DBG_DEFAULT_NAME "Debugger"
+#define DBG_DEFAULT_LEVEL DBG_LEVEL_ERR
+#define DBG_DEFAULT_DEST DBG_DEST_BOTH
+#define DBG_ERRMSG_SIZE 32768
 
 typedef struct sDebugger
 #ifdef __cplusplus
 	: sBaseObj10
 #endif
 {
+	char parentObjName[MAX_PATH]
+#ifdef __cplusplus
+	=""
+#endif
+	;
 	int level;	// DBG_LEVEL_ERR ||DBG_LEVEL_STD || DBG_LEVEL_DET
 	int dest;	// DBG_DEST_SCREEN || DBG_DEST_FILE || DBG_DEST_BOTH
 	tFileInfo* outFile
@@ -23,7 +32,7 @@ typedef struct sDebugger
 		=nullptr
 #endif
 	;
-	char errmsg[1024]
+	char errmsg[DBG_ERRMSG_SIZE]
 #ifdef __cplusplus
 		=""
 #endif
@@ -43,7 +52,7 @@ typedef struct sDebugger
 	EXPORT void sDebugger_common(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_);
 	EXPORT sDebugger(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_=false, bool PauseOnError_=false, bool ThreadSafeLogging_=false);
 	EXPORT sDebugger(char* outFileName_);
-	EXPORT sDebugger(int level_, int dest_, char* outFileName);
+	EXPORT sDebugger(int level_, int dest_, char* objName_);
 	EXPORT ~sDebugger();
 
 	EXPORT void write(int LogType, const char* msg, int argcount, ...);
@@ -67,41 +76,56 @@ private:
 //--							- C (Class,   throwing exception)
 //-- therefore, we need:
 //--	safeCallBB()
-//--	safeCallEE()
+//--	safeCall()
 //--	safeCallBE()
-//--	safeCallEB()
+//--	safeCall()
 
 //-- main debugger declaration & creation
 #define createMainDebugger(level, dest) \
 sDebugger* dbg=nullptr; \
+DWORD mainStart=timeGetTime(); \
 try { \
-	dbg=new tDebugger(level, dest, "mainDebugger.log"); \
+	dbg=new tDebugger(level, dest, "mainDebugger"); \
 } \
-catch (std::exception e) { \
+catch (char* e) { \
 	if (dbg==nullptr) { \
-		fprintf(stderr, "\n CRITICAL ERROR: could not create main client debugger!\n"); \
+		fprintf(stderr, "\n CRITICAL ERROR: could not create main client debugger! Exception: %s\n", e); \
 		system("pause"); return -1; \
 	} \
 }
 
 //-- class calling class
-#define safeCallEE(block) { \
-	dbg->write(DBG_LEVEL_STD, "dbg %p calling %s ... ", 2, dbg, (#block)); \
+/*#define safeCallEE(block) { \
+	dbg->write(DBG_LEVEL_STD, "%s -> %s() calling %s ... ", 3, dbg->parentObjName, __func__, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
-	try {block;} catch (std::exception e) { \
-		dbg->write(DBG_LEVEL_ERR, "dbg %p FAILURE: %s\n", 2, dbg, e.what()); \
+	try {block;} catch (char* e) { \
+		dbg->write(DBG_LEVEL_ERR, "%s -> %s() FAILURE: %s\n", 3, dbg->parentObjName, __func__, e); \
 		throw(e); \
 	} \
 	dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
 	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
 	dbg->write(DBG_LEVEL_STD, "\n", 0); \
+}*/
+#define safeCallEE(block) { \
+	dbg->write(DBG_LEVEL_STD, "%s -> %s() calling %s ... ", 3, dbg->parentObjName, __func__, (#block)); \
+	if(dbg->timing) dbg->setStartTime(); \
+	try {block;} catch (char* exc) { \
+		printf("exc=%s\n", exc); \
+		sprintf_s(dbg->errmsg, DBG_ERRMSG_SIZE, "%s -> %s() FAILURE: %s\n",dbg->parentObjName, __func__, exc); \
+		throw(dbg->errmsg); \
+	} \
+	dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
+	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
+	dbg->write(DBG_LEVEL_STD, "\n", 0); \
 }
+
 //-- class calling boolean
 #define safeCallEB(block) { \
-	dbg->write(DBG_LEVEL_STD, "calling %s ... ", 1, (#block)); \
+	dbg->write(DBG_LEVEL_STD, "%s -> %s() calling %s ... ", 3, dbg->parentObjName, __func__, (#block)); \
 	if(dbg->timing) dbg->setStartTime(); \
 	if(!(block)){ \
-		throwE("DioPorco!", 0); \
+		sprintf_s(dbg->errmsg, DBG_ERRMSG_SIZE-1, "%s -> %s() FAILURE!\n",dbg->parentObjName, __func__); \
+		throw(dbg->errmsg); \
 	} else {\
 		dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
 	}\
@@ -139,16 +163,41 @@ catch (std::exception e) { \
 //-- throw exception from class method
 #define throwE(mask, argcnt, ...) { \
 	dbg->compose((#mask), argcnt, __VA_ARGS__ ); \
-	dbg->write(DBG_LEVEL_ERR, "dbg %p %s() failed with message: %s \n", 3, dbg, __func__, dbg->errmsg); \
-	throw std::exception(dbg->errmsg); \
+	dbg->write(DBG_LEVEL_ERR, "%s -> %s() failed with message: %s \n", 3, dbg->parentObjName, __func__, dbg->errmsg); \
+	throw dbg->errmsg; \
 }
 //-- return error from boolean function
 #define throwB(mask, argcnt, ...) { \
 	dbg->compose((#mask), argcnt, __VA_ARGS__ ); \
-	dbg->write(DBG_LEVEL_ERR, "%s() failed with message: %s \n", 2, __func__, dbg->errmsg); \
+	dbg->write(DBG_LEVEL_ERR, "%s -> %s() failed with message: %s \n", 3, dbg->parentObjName, __func__, dbg->errmsg); \
 	return false; \
 }
 
 
-//-- case 3a: throw exception from Debugger constructor
-//-- case 3b: caller of Debugger constructor
+
+//==========================
+// on failure, functions can either throw an exception, OR return false. Never both
+// 
+
+#define safeThrow(mask, argcnt, ...) { \
+	dbg->compose((#mask), argcnt, __VA_ARGS__ ); \
+	printf("dbg->parentObjName=%s\n", dbg->parentObjName); \
+	printf("dbg->errmsg=%s\n", dbg->errmsg); \
+	dbg->compose("safeThrow(): %s -> %s() failed with message: %s \n", 3, dbg->parentObjName, __func__, dbg->errmsg); \
+	throw dbg->errmsg; \
+}
+
+#define safeCall(block) { \
+	dbg->write(DBG_LEVEL_STD, "%s -> %s() calling %s ... ", 3, dbg->parentObjName, __func__, (#block)); \
+	if(dbg->timing) dbg->setStartTime(); \
+	try {block;} catch (char* exc) { \
+		sprintf_s(dbg->errmsg, DBG_ERRMSG_SIZE, "%s -> %s() FAILURE: %s\n",dbg->parentObjName, __func__, exc); \
+		printf("DioPorco! dbg->errmsg=%s\n", dbg->errmsg); \
+		throw(dbg->errmsg); \
+	} \
+	dbg->write(DBG_LEVEL_STD, "SUCCESS.", 0); \
+	if(dbg->timing) { dbg->setElapsedTime(); dbg->write(DBG_LEVEL_STD, " Elapsed time: %.4f s.", 1, (dbg->elapsedTime/(float)1000)); } \
+	dbg->write(DBG_LEVEL_STD, "\n", 0); \
+}
+
+//==========================

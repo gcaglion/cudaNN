@@ -11,10 +11,10 @@ sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int sel
 	sampleLen=sampleLen_;
 	targetLen=targetLen_;
 	samplesCnt=sourceTS->steps-sampleLen-targetLen;// +1;
-	if (samplesCnt<1) throwE("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
+	if (samplesCnt<1) safeThrow("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;
-	if ((batchCnt*batchSamplesCnt)!=samplesCnt) throwE("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
+	if ((batchCnt*batchSamplesCnt)!=samplesCnt) safeThrow("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
 
 	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
 	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
@@ -45,14 +45,14 @@ sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseO
 	selectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
 	BWFeature=(int*)malloc(2*sizeof(int));
 
-	safeCallEB(parms->setKey(parmKey));
+	safeCall(parms->setKey(parmKey));
 
 	//-- 0. common parameters
 	parms->get(&batchSamplesCnt, "BatchSamplesCount");
 	parms->get(&selectedFeature, "SelectedFeatures", &selectedFeaturesCnt);
 
 	//-- 1. TimeSerie parameters
-	safeCallEE(sourceTS=new tTimeSerie(parms, "TimeSerie"));
+	safeCall(sourceTS=new tTimeSerie(parms, "TimeSerie"));
 
 	//-- 2. DataSource-specific parameters (so far, only BWFeature)
 	switch (sourceTS->sourceType) {

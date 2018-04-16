@@ -13,11 +13,19 @@ sCoreLayout::sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebu
 	sCoreLayout_common(dbg_, Id_);
 	Id=Id_; shape=shape_;
 	sprintf_s(desc, CORE_MAX_DESC_LEN, "Core%d", Id);
-	safeCallEB(parms->setKey(desc));
 
-	safeCallEE(parms->get(&type, "Type"));
-	safeCallEE(parms->get(parentDesc, "Parents"));
-	safeCallEE(parms->get(&parentConnType, "ParentsConnType", &parentsCnt));
+	//safeCall(parms->setKey(desc));
+	try {
+		parms->setKey(desc);
+	}
+	catch (char* exc) {
+		sprintf_s(dbg->errmsg, DBG_ERRMSG_SIZE, "%s -> %s() FAILURE: %s\n", dbg->parentObjName, __func__, exc);
+		throw dbg->errmsg;
+	}
+
+	safeCall(parms->get(&type, "Type"));
+	safeCall(parms->get(parentDesc, "Parents"));
+	safeCall(parms->get(&parentConnType, "ParentsConnType", &parentsCnt));
 	//-- extract parentId from each parentDesc
 	for(int p=0; p<parentsCnt; p++){
 		parentId[p]=atoi(right(parentDesc[p], (int)strlen(parentDesc[p])-4));
@@ -25,6 +33,9 @@ sCoreLayout::sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebu
 
 }
 sCoreLayout::~sCoreLayout() {
+	cleanup();
+}
+void sCoreLayout::cleanup() {
 	free(desc);
 	free(parentId);
 	free(parentConnType);
@@ -36,4 +47,3 @@ sCore::sCore() {}
 sCore::sCore(tParmsSource* parms, tCoreLayout* layout_) {
 	layout=layout_;
 }
-sCore::~sCore() {}

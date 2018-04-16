@@ -25,7 +25,9 @@ typedef struct sCoreLayout : sBaseObj {
 
 	void sCoreLayout_common(tDebugger* dbg_, int Id_);
 	EXPORT sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebugger* dbg_=nullptr);
+
 	EXPORT ~sCoreLayout();
+	EXPORT void cleanup();
 
 } tCoreLayout;
 
@@ -36,8 +38,5 @@ typedef struct sCore {
 
 	EXPORT sCore();
 	EXPORT sCore(tParmsSource* parms, tCoreLayout* layout_);
-	EXPORT ~sCore();
-
-
 
 } tCore;

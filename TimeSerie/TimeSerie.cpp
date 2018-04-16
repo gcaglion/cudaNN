@@ -31,9 +31,9 @@ sTimeSerie::sTimeSerie(tFXData* dataSource_, int steps_, char* date0_, int dt_, 
 	//-- 1. create
 	sTimeSeriecommon(steps_, FXDATA_FEATURESCNT, 0, nullptr, dbg_);	// no safeCall() because we don't set dbg, here
 	//-- 2. load data
-	safeCallEE(load(dataSource_, date0_));
+	safeCall(load(dataSource_, date0_));
 	//-- 3. transform
-	safeCallEE(transform(dt_));
+	safeCall(transform(dt_));
 }
 sTimeSerie::sTimeSerie(tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, tDebugger* dbg_) : sBaseObj("TimeSerie", dbg_) {
 	featuresCnt=featuresCnt_;
@@ -47,35 +47,35 @@ sTimeSerie::sTimeSerie(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sB
 	tsf=(int*)malloc(MAX_TSF_CNT*sizeof(int));
 	date0[DATE_FORMAT_LEN]='\0';
 
-	safeCallEB(parms->setKey(parmKey));
+	safeCall(parms->setKey(parmKey));
 
 	//-- 0. common parameters
-	safeCallEE(parms->get(date0, "Date0"));
-	safeCallEE(parms->get(&steps, "HistoryLen"));
-	safeCallEE(parms->get(&dt, "DataTransformation"));
-	safeCallEE(parms->get(&BWcalc, "BWCalc"));
-	safeCallEE(parms->get(&tsf, "StatisticalFeatures", &tsfCnt));
+	safeCall(parms->get(date0, "Date0"));
+	safeCall(parms->get(&steps, "HistoryLen"));
+	safeCall(parms->get(&dt, "DataTransformation"));
+	safeCall(parms->get(&BWcalc, "BWCalc"));
+	safeCall(parms->get(&tsf, "StatisticalFeatures", &tsfCnt));
 
 	//-- 1. Find DataSource.Type
-	safeCallEB(parms->setKey("DataSource"));
-	safeCallEE(parms->get(&sourceType, "Type"));
+	safeCall(parms->setKey("DataSource"));
+	safeCall(parms->get(&sourceType, "Type"));
 
 	//-- 2. create DataSource according to Type
 	switch (sourceType) {
 	case FXDB_SOURCE:
-		safeCallEE(fxData=new tFXData(parms, "FXData"));
+		safeCall(fxData=new tFXData(parms, "FXData"));
 		featuresCnt=FXDATA_FEATURESCNT;
 		break;
 	case FILE_SOURCE:
-		safeCallEE(fileData=new tFileData(parms, "FileData"));
+		safeCall(fileData=new tFileData(parms, "FileData"));
 		featuresCnt=fileData->featuresCnt;
 		break;
 /*	case MT4_SOURCE:
-		safeCallEE(mt4Data=new tMT4Data(parms));
+		safeCall(mt4Data=new tMT4Data(parms));
 		featuresCnt=mt4Data->featuresCnt;
 		break;
 */	default:
-		throwE("invalid DataSource Type: %d", 1, sourceType);
+		safeThrow("invalid DataSource Type: %d", 1, sourceType);
 	}
 
 	//-- 3. common stuff (mallocs, ...)
@@ -119,13 +119,13 @@ bool sTimeSerie::LoadOHLCVdata(char* date0) {
 void sTimeSerie::load(tFXData* tsFXData_, char* pDate0) {
 	fxData=tsFXData_;
 	sourceType=FXDB_SOURCE;
-	if (!LoadOHLCVdata(pDate0)) throwE("pDate0=%s", 1, pDate0);
+	if (!LoadOHLCVdata(pDate0)) safeThrow("pDate0=%s", 1, pDate0);
 }
 void sTimeSerie::load(tFileData* tsFileData, char* pDate0) {
-	throwE("", 0);
+	safeThrow("", 0);
 }
 /*void sTimeSerie::load(tMT4Data* tsMT4Data, char* pDate0) {
-	throwE("", 0);
+	safeThrow("", 0);
 }*/
 void sTimeSerie::dump(char* dumpFileName) {
 	int s, f;
@@ -214,7 +214,7 @@ void sTimeSerie::scale(numtype scaleMin_, numtype scaleMax_) {
 
 	scaleMin=scaleMin_; scaleMax=scaleMax_;
 
-	if (!hasTR) throwE("-- must transform before scaling! ---", 0);
+	if (!hasTR) safeThrow("-- must transform before scaling! ---", 0);
 
 	for (int f=0; f<featuresCnt; f++) {
 		scaleM[f] = (scaleMax-scaleMin)/(dmax[f]-dmin[f]);

@@ -4,7 +4,6 @@
 #include "Debugger/Debugger.h"
 
 #ifdef __cplusplus
-#include <stdexcept>
 
 class sBaseObj {
 public:
@@ -12,9 +11,9 @@ public:
 	tDebugger* dbg;
 
 	sBaseObj(char* className, tDebugger* dbg_) {
+		sprintf_s(objName, MAX_PATH, "%s_%p", className, this);
 		if (dbg_==nullptr) {
-			sprintf_s(objName, MAX_PATH, "%s_%p.log", className, this);
-			dbg=new tDebugger(DBG_LEVEL_DEFAULT, DBG_DEST_DEFAULT, objName);
+			dbg=new tDebugger(DBG_DEFAULT_LEVEL, DBG_DEFAULT_DEST, objName);
 		} else {
 			dbg=dbg_;
 		}
@@ -24,6 +23,7 @@ public:
 		delete dbg;
 	}
 
+	virtual void cleanup() {}
 
 };
 #endif

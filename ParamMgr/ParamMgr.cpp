@@ -1,5 +1,7 @@
 #include "ParamMgr.h"
 
+
+
 sParmsSource::sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], tDebugger* dbg_) : sBaseObj("ParmsSource", dbg_) {
 
 	CLoverridesCnt=CLoverridesCnt_; CLoverride=CLoverride_;
@@ -14,7 +16,7 @@ sParmsSource::sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLove
 	dbg->write(DBG_LEVEL_STD, "%s() successfully opened %s \n", 2, __func__, pFileFullName);
 	return;
 */
-	safeCallEE(parmsFile=new tFileInfo(pFileFullName, FILE_MODE_READ));
+	safeCall(parmsFile=new tFileInfo(pFileFullName, FILE_MODE_READ));
 
 	parmsCnt=0;
 	currentKey[0]='\0';
@@ -45,7 +47,7 @@ void sParmsSource::newDebugger(tDebugger* dbg_) {
 	get(&dbg_dest, "Dest");
 	get(dbg_fname, "DestFileFullName");
 
-	safeCallEE(dbg_=new tDebugger(dbg_level, dbg_dest, dbg_fname));
+	safeCall(dbg_=new tDebugger(dbg_level, dbg_dest, dbg_fname));
 
 }
 void sParmsSource::buildSoughtParmFull(const char* soughtParmDesc) {
@@ -77,7 +79,8 @@ bool stripLastStep(char* fullDesc, char* oStrippedDesc) {
 	oStrippedDesc[lastDotPos]='\0';
 	return true;
 }
-bool sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
+
+void sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 	
 	//-- KeyDesc may be passed as literal, therefore we need a buffer to copy KeyDesc_ to, so we can overwrite it
 	char KeyDesc[XML_MAX_PATH_LEN];	strcpy_s(KeyDesc, XML_MAX_PATH_LEN, KeyDesc_);
@@ -86,14 +89,16 @@ bool sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 	if (KeyDesc[0]=='.' && KeyDesc[1]!='.') {
 		currentKey[0]='\0';
 		memcpy_s(KeyDesc, XML_MAX_PATH_LEN, &KeyDesc[1], XML_MAX_PATH_LEN-1);
-		return (setKey(KeyDesc, ignoreError));
+		setKey(KeyDesc, ignoreError);
+		return;
 	}
 
 	//-- ".." before KeyDesc makes search start from one level up;
 	if (KeyDesc[0]=='.' && KeyDesc[1]=='.') {
 		stripLastStep(currentKey, currentKey);
 		memcpy_s(KeyDesc, XML_MAX_PATH_LEN, &KeyDesc[2], XML_MAX_PATH_LEN-2);
-		return (setKey(KeyDesc, ignoreError));
+		setKey(KeyDesc, ignoreError);
+		return;
 	}
 
 	//--  otherwise search starts from current pos
@@ -103,9 +108,18 @@ bool sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 	UpperCase(currentKey);
 
 	bool success=(findKey(currentKey) || ignoreError);
-	if (!success) throwB("KeyDesc_=%s", 1, KeyDesc_);
+	if (!success) {
 
-	return true;
+		//--------safeThrow replacement------------
+		dbg->compose("KeyDesc_=%s", 1, KeyDesc_);
+			printf("dbg->parentObjName=%s\n", dbg->parentObjName);
+			printf("dbg->errmsg=%s\n", dbg->errmsg);
+			dbg->compose("safeThrow(): %s -> %s() failed with message: %sn", 3, dbg->parentObjName, __func__, dbg->errmsg);
+			printf("dbg->errmsg=%s\n", dbg->errmsg);
+			throw dbg->errmsg;
+			//------------------------------------------
+		//safeThrow("KeyDesc_=%s", 1, KeyDesc_);
+	}
 }
 bool sParmsSource::findKey(char* KeyFullDesc){
 	char keyDescFromParmDesc[XML_MAX_PATH_LEN];
@@ -117,11 +131,11 @@ bool sParmsSource::findKey(char* KeyFullDesc){
 	}
 	return false;
 }
-bool sParmsSource::backupKey() {
-	return(strcpy_s(bkpKey, XML_MAX_PATH_LEN, currentKey)==0);
+void sParmsSource::backupKey() {
+	strcpy_s(bkpKey, XML_MAX_PATH_LEN, currentKey);
 }
-bool sParmsSource::restoreKey() {
-	return(strcpy_s(currentKey, XML_MAX_PATH_LEN, bkpKey)==0);
+void sParmsSource::restoreKey() {
+	strcpy_s(currentKey, XML_MAX_PATH_LEN, bkpKey);
 }
 //-- specific, single value: int(with or without enums), numtype, char*
 void sParmsSource::getx(int* oVar){
@@ -143,7 +157,7 @@ void sParmsSource::getx(int** oVar){
 		if (isnumber(parmVal[foundParmId][e])) {
 			(*oVar)[e]=atoi(parmVal[foundParmId][e]);
 		} else {
-			safeCallEE(decode(e, &oVar[0][e]));
+			safeCall(decode(e, &oVar[0][e]));
 		}
 	}
 }
@@ -215,4 +229,8 @@ bool sParmsSource::parse() {
 
 	}
 	return true;
+}
+
+void sParmsSource::cleanup() {
+	printf("\nsParamsSource->cleanup() called.\n");
 }

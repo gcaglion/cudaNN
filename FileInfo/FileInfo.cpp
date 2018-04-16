@@ -52,7 +52,8 @@ void sFileInfo::setModeS() {
 	case FILE_MODE_WRITE:
 		strcpy_s(modeS, "w");
 		strcpy_s(modeDesc, "Write"); 
-		sprintf_s(FullName, MAX_PATH-1, "%s/%lu_%s", Path, ct, Name);
+		//sprintf_s(FullName, MAX_PATH-1, "%s/%lu_%s", Path, ct, Name);
+		sprintf_s(FullName, MAX_PATH-1, "%s/%s", Path, Name);
 		break;
 	case FILE_MODE_APPEND:
 		strcpy_s(modeS, "a");

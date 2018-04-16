@@ -6,10 +6,10 @@ sDataShape::sDataShape(int sampleLen_, int predictionLen_, int featuresCnt_, tDe
 }
 sDataShape::sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("DataShape", dbg_) {
 
-	safeCallEB(parms->setKey(parmKey));
-	safeCallEE(parms->get(&sampleLen, "SampleLen"));
-	safeCallEE(parms->get(&predictionLen, "PredictionLen"));
-	safeCallEE(parms->get(&featuresCnt, "FeaturesCount"));
+	safeCall(parms->setKey(parmKey));
+	safeCall(parms->get(&sampleLen, "SampleLen"));
+	safeCall(parms->get(&predictionLen, "PredictionLen"));
+	safeCall(parms->get(&featuresCnt, "FeaturesCount"));
 
 }
 sDataShape::~sDataShape() {
@@ -23,15 +23,15 @@ sData::sData(tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_
 sData::sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("Data", dbg_) {
 
 	//-- Shape
-	safeCallEB(parms->setKey(parmKey));
-	safeCallEE(shape=new tDataShape(parms, "Sphape"));
+	safeCall(parms->setKey(parmKey));
+	safeCall(shape=new tDataShape(parms, "Shape"));
 
 	//-- Actions, TimeSeries and DataSets
 	for(int a=0; a<3; a++) {
-		safeCallEB(parms->setKey(parmKey)); safeCallEE(parms->setKey(ActionDesc[a]));
-		safeCallEE(parms->get(&ActionDo[a], "Do"));
+		safeCall(parms->setKey(parmKey)); safeCall(parms->setKey(ActionDesc[a]));
+		safeCall(parms->get(&ActionDo[a], "Do"));
 		if(ActionDo[a]) {
-			safeCallEE(ds[a]=new tDataSet(parms, "DataSet"));
+			safeCall(ds[a]=new tDataSet(parms, "DataSet"));
 		}
 	}
 

@@ -9,7 +9,3 @@
 #define DBG_DEST_SCREEN 0
 #define DBG_DEST_FILE 1
 #define DBG_DEST_BOTH 2
-
-//-- default values for the two above
-#define DBG_LEVEL_DEFAULT DBG_LEVEL_ERR
-#define DBG_DEST_DEFAULT DBG_DEST_BOTH

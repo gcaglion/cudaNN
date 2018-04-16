@@ -12,7 +12,7 @@ sDBConnection::sDBConnection(tParmsSource* parms, char* parmKey, tDebugger* dbg_
 	DBPassword[DBPASSWORD_MAXLEN]='\0';
 	DBConnString[DBCONNSTRING_MAXLEN]='\0';
 
-	safeCallEB(parms->setKey(parmKey));
+	safeCall(parms->setKey(parmKey));
 	parms->get(DBUser, "DBUser");
 	parms->get(DBPassword, "DBPassword");
 	parms->get(DBConnString, "DBConnString");

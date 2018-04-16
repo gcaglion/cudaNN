@@ -5,17 +5,21 @@ void sDebugger::sDebugger_common(int level_, int dest_, char* outFileName_, char
 	try {
 		outFile=new tFileInfo(outFileName_, outFilePath_, FILE_MODE_WRITE);
 	}
-	catch (std::exception e) {
-		sprintf_s(errmsg, "Could not create Debugger outfile (%s/%s)", outFilePath_, outFileName_); throw std::runtime_error(errmsg);
+	catch (char* e) {
+		sprintf_s(errmsg, "Could not create Debugger outfile (%s/%s). Exception: %s", outFilePath_, outFileName_, e); throw errmsg;
 	}
 }
 sDebugger::sDebugger(int level_, int dest_, char* outFileName_, char* outFilePath_, bool timing_, bool PauseOnError_, bool ThreadSafeLogging_) {
 	sDebugger_common(level_, dest_, outFileName_, outFilePath_, timing_, PauseOnError_, ThreadSafeLogging_);
 }
 sDebugger::sDebugger(char* outFileName_) {
-	sDebugger_common(DBG_LEVEL_DEFAULT, DBG_DEST_DEFAULT, outFileName_, DBG_DEFAULT_PATH, false, true, false);
+	sDebugger_common(DBG_DEFAULT_LEVEL, DBG_DEFAULT_DEST, outFileName_, DBG_DEFAULT_PATH, false, true, false);
 }
-sDebugger::sDebugger(int level_, int dest_, char* outFileName_) {
+sDebugger::sDebugger(int level_, int dest_, char* objName_) {
+	char outFileName_[MAX_PATH];
+	sprintf_s(parentObjName, MAX_PATH, objName_);
+	sprintf_s(outFileName_, MAX_PATH, parentObjName);
+	strcat_s(outFileName_, MAX_PATH, (level_==DBG_LEVEL_ERR) ? ".err" : ".log");
 	sDebugger_common(level_, dest_, outFileName_, DBG_DEFAULT_PATH, false, false, false);
 }
 sDebugger::~sDebugger() {
@@ -101,7 +105,7 @@ void sDebugger::compose(char* msg_, int argcount, ...) {
 
 	va_start(arguments, argcount);
 	removeQuotes(msg_, msg);
-	//errmsg[0]='\0';
+	errmsg[0]='\0';
 	do {
 		if (msg[im]==37) {                // "%"
 			memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
@@ -125,7 +129,8 @@ void sDebugger::compose(char* msg_, int argcount, ...) {
 	} while (im<strlen(msg));
 
 	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
-	sprintf_s(tmpmsg, submsg, arg_s); strcat_s(errmsg, tmpmsg);
+	sprintf_s(tmpmsg, submsg, arg_s); 
+	strcat_s(errmsg, tmpmsg);
 
 	va_end(arguments);
 }

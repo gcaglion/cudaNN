@@ -3,13 +3,13 @@
 sForecaster::sForecaster(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("Forecaster", dbg_) {
 
 	//-- define forecaster Data
-	safeCallEE(data=new tData(parms, ".Forecaster.Data"))
+	safeCall(data=new tData(parms, ".Forecaster.Data"))
 
 	//-- define forecaster Engine, pass Data shape info
-	safeCallEE(engine=new tEngine(parms, ".Forecaster.Engine", data->shape));
+	safeCall(engine=new tEngine(parms, ".Forecaster.Engine", data->shape));
 
 	//-- define forecaster Persistor
-	safeCallEE(persistor=new tLogger(parms, ".Forecaster.Persistor"));
+	safeCall(persistor=new tLogger(parms, ".Forecaster.Persistor"));
 
 	//-- train each 
 }

@@ -31,9 +31,9 @@ typedef struct sParmsSource : public sBaseObj {
 	char soughtParmFull[XML_MAX_PATH_LEN];
 
 	//--
-	EXPORT bool setKey(char* KeyDesc, bool ignoreError=false);
-	EXPORT bool backupKey();
-	EXPORT bool restoreKey();
+	EXPORT void setKey(char* KeyDesc, bool ignoreError=false);
+	EXPORT void backupKey();
+	EXPORT void restoreKey();
 	bool findKey(char* KeyFullDesc);
 
 	EXPORT bool parse();
@@ -50,7 +50,7 @@ typedef struct sParmsSource : public sBaseObj {
 
 		//-- lookup parm name&val
 		foundParmId=findParmId();
-		if (foundParmId<0) throwE("could not find parm %s. currentKey=%s", 1, soughtParmDesc, currentKey);
+		if (foundParmId<0) safeThrow("could not find parm %s. currentKey=%s", 1, soughtParmDesc, currentKey);
 
 		//-- set oListLen (if passed)
 		if (oListLen!=nullptr) (*oListLen)=parmValsCnt[foundParmId];
@@ -69,5 +69,7 @@ typedef struct sParmsSource : public sBaseObj {
 	EXPORT void getx(bool** oVar);
 	EXPORT void getx(char** oVar);
 	EXPORT void getx(numtype** oVar);
+
+	EXPORT void cleanup();
 
 } tParmsSource;
