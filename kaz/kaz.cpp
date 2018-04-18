@@ -3,6 +3,7 @@
 #include "../ParamMgr/ParamMgr.h"
 #include <memory>
 
+
 void Cleanup(int objCnt, ...) {
 	va_list args;
 	sBaseObj* obj;
@@ -14,8 +15,7 @@ void Cleanup(int objCnt, ...) {
 	}
 	va_end(args);
 }
-
-struct sElement {
+/*truct sElement {
 	int id;
 	int type;
 
@@ -72,8 +72,21 @@ struct sContainer {
 		free(errstack);
 	}
 };
+*/
 
 #define DBG_ERRMSG_SIZE 32768
+
+struct sLbase {
+	bool verbose=true;
+	char objName[MAX_PATH]="";
+	char errstack[DBG_ERRMSG_SIZE]="";
+	char errmsg[DBG_ERRMSG_SIZE]="";
+
+	sLbase(char* objName_) {
+		sprintf_s(objName, MAX_PATH, "%s(%p)", objName_, this);
+	}
+	//virtual void cleanup(char* msg) { printf("sLbase->cleanup() called with msg: %s.\n", msg); }
+};
 
 void compose(char* msg_, char* omsg, int argcount, ...) {
 	va_list			arguments;
@@ -117,32 +130,59 @@ void compose(char* msg_, char* omsg, int argcount, ...) {
 
 	va_end(arguments);
 }
+void removeQuotes(char* istr, char* ostr) {
+	size_t slen=strlen(istr);
+	size_t rlen=slen;
+	int ri=0;
+	for (int si=0; si<slen; si++) {
+		if (istr[si]!=34) {
+			ostr[ri]=istr[si];
+			ri++;
+		}
+	}
+	ostr[ri]='\0';
+}
 
-#define fail(failMsgMask, argcnt, ...){ \
+/*#define fail(failMsgMask, argcnt, ...){ \
 	compose((#failMsgMask), errmsg, argcnt, __VA_ARGS__ ); \
 	sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s() -> %s() failed with message: %s\n", errstack, __func__, errmsg); \
+	printf("%s->fail() macro called compose(); \n\t errmsg : %s \n\t errstack : %s\n", objName, errmsg, errstack); \
+	cleanup("FAIL MACRO"); \
 	throw std::exception(errstack); \
 }
+*/
+#define fail(failMsgMask, argcnt, ...){ \
+	compose((#failMsgMask), errmsg, argcnt, __VA_ARGS__ ); \
+	sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s", errmsg); \
+	if(verbose) printf("%s\n", errstack); \
+	cleanup("FAIL MACRO"); \
+	throw std::exception(errstack); \
+}
+
 #define cmdlow(cmd){ \
-	sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s() -> %s() success. Spawning %s...\n", errstack, __func__, #cmd); \
+	sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s \n || %s()->%s() calling %s...", errstack, objName, __func__, #cmd); \
+	if(verbose) printf("%s\n", errstack); \
 	try { \
 		cmd; \
+		sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s \n || %s()->%s() call to %s SUCCESS...", errstack, objName, __func__, #cmd); \
+		if(verbose) printf("%s\n", errstack); \
 	} \
 	catch (std::exception exc) { \
-		strcat_s(errstack, DBG_ERRMSG_SIZE, exc.what()); \
+		sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s \n || %s()->%s() call to %s FAILED...", errstack, objName, __func__, #cmd); \
+		if(verbose) printf("%s\n", errstack); \
+		cleanup("CMDLOW MACRO"); \
 		throw std::exception(errstack); \
 	} \
 }
 #define bottomsuccess() { \
-	sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s() -> %s() success. Lowest level.\n", errstack, __func__); \
+		sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s \n || %s()->%s() call (Lowest Level) SUCCESS...", errstack, objName, __func__); \
+		if(verbose) printf("%s\n", errstack); \
 }
 
-struct sL3 {
-	int id;
-	char errstack[DBG_ERRMSG_SIZE]="";
-	char errmsg[DBG_ERRMSG_SIZE]="";
+struct sL3 : sLbase {
+	int L3id;
 
-	sL3(bool L3fail) {
+	sL3(bool L3fail) :sLbase("L3parm") {
 		if (L3fail) {
 			fail("parameter value=%d", 1, 3);
 		} else {
@@ -154,29 +194,22 @@ struct sL3 {
 		printf("sL3 destructor called.\n");
 	}
 
+	void cleanup(char* msg) {
+		printf("%s->cleanup() called with msg=%s.\n", objName, msg);
+		//-- delete all objects (potentially) created by constructor before its failure
+	}
+
 };
-struct sL2 {
-	int id;
-	char errstack[DBG_ERRMSG_SIZE]="";
-	char errmsg[DBG_ERRMSG_SIZE]="";
+struct sL2 : sLbase {
+	int L2id;
 
-	sL3* l3;
+	sL3* l3=nullptr;
 
-	sL2(bool L2fail, bool L3fail) {
+	sL2(bool L2fail, bool L3fail) :sLbase("L2parm") {
 		if (L2fail) {
 			fail("parameter value=%d", 1, 2);
 		} else {
 			cmdlow(l3=new sL3(L3fail));
-			/*
-			sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s() -> %s() success. Spawning %s...\n", errstack, __func__, "l3");
-			try {
-				l3=new sL3(L3fail);
-			}
-			catch (std::exception exc) {
-				strcat_s(errstack, DBG_ERRMSG_SIZE, exc.what());
-				throw std::exception(errstack);
-			}
-			*/
 		}
 	}
 
@@ -184,36 +217,40 @@ struct sL2 {
 		printf("sL2 destructor called.\n");
 	}
 
+	void cleanup(char* msg) {
+		printf("%s->cleanup() called with msg=%s.\n", objName, msg);
+		//-- delete all objects (potentially) created by constructor before its failure
+		delete l3;
+	}
+
 };
-struct sL1 {
-	int id;
-	char errstack[DBG_ERRMSG_SIZE]="";
-	char errmsg[DBG_ERRMSG_SIZE]="";
+struct sL1 : sLbase {
+	int L1id;
 
-	sL2* l2;
+	sL2* l2good=nullptr;
+	sL2* l2bad=nullptr;
+	sL2* l2=nullptr;
 
-	sL1(bool L1fail, bool L2fail, bool L3fail) {
+	sL3* l3bad=nullptr;
+
+	sL1(bool L1fail, bool L2fail, bool L3fail) :sLbase("L1parm") {
 		if (L1fail) {
+			cmdlow(l3bad=new sL3(false));
 			fail("parameter value=%d", 1, 1);
 		} else {
-			cmdlow(successMethod());
-			cmdlow(failMethod());
+			//cmdlow(successMethod());
+			//cmdlow(l2good=new sL2(false, false));
+			//cmdlow(l2bad=new sL2(true, true));
 			cmdlow(l2=new sL2(L2fail, L3fail));
-			/*
-			sprintf_s(errstack, DBG_ERRMSG_SIZE, "%s() -> %s() success. Spawning %s...\n", errstack, __func__, "l2");
-			try {
-				l2=new sL2(L2fail, L3fail);
-			}
-			catch (std::exception exc) {
-				strcat_s(errstack, DBG_ERRMSG_SIZE, exc.what());
-				throw std::exception(errstack);
-			}
-			*/
 		}
+	}
+	sL1() :sLbase("L1parm") {
+		cmdlow(successMethod());
 	}
 
 	~sL1() {
-		printf("sL1 destructor called.\n");
+		printf("%s() destructor called.\n", objName);
+		cleanup("called by destructor.");
 	}
 
 	void failMethod() {
@@ -222,28 +259,58 @@ struct sL1 {
 	void successMethod() {
 		bottomsuccess();
 	}
+
+	void cleanup(char* msg) {
+		printf("%s->cleanup() called with msg=%s.\n", objName, msg);
+		//-- delete all objects (potentially) created by constructor before its failure
+		delete l2good;
+		delete l2bad;
+	}
+
 };
 
-struct sL0 {
-	int id;
-	char errstack[DBG_ERRMSG_SIZE]="";
-	char errmsg[DBG_ERRMSG_SIZE]="";
+struct sL0 : sLbase {
+	int L0id;
 
-	sL1* l1;
+	//-- objects created within this
+	sL3* l3good=nullptr;
+	sL1* l1good=nullptr;
+	sL1* l1bad=nullptr;
 
-	sL0(bool L0fail, bool L1fail, bool L2fail, bool L3fail) {
+	sL0(bool L0fail, bool L1fail, bool L2fail, bool L3fail) :sLbase("L0parm") {
 		if (L0fail) {
 			fail("parameter value=%d", 1, 0);
-		} else {			
-			cmdlow(l1=new sL1(L1fail, L2fail, L3fail));
+		} else {
+			cmdlow(l1good=new sL1(true, L2fail, L3fail));
 		}
+	}
+	sL0() :sLbase("L0parm") {
+		//cmdlow(l3good=new sL3(false));
+		cmdlow(l1good=new sL1(false, false, false));
+		cmdlow(l1bad=new sL1(true, false, false));
 	}
 
 	~sL0() {
 		printf("sL0 destructor called.\n");
 	}
 
+	void cleanup(char* msg) { 
+		printf("%s->cleanup() called with msg=%s.\n", objName, msg); 
+		//-- delete all objects (potentially) created by constructor before its failure
+		delete l3good;
+		delete l1good;
+		delete l1bad;
+	}
+
 };
+
+//-- this is used by main(), and deletes all objects (potentially) created by main() before its failure
+#define cleanup(msg){ \
+	printf("macro cleanup() called with msg=%s.\n", msg); \
+	delete l0; \
+	printf("aaa\n"); \
+	delete l1; \
+}
 
 int main() {
 /*
@@ -254,20 +321,31 @@ int main() {
 	printf("%s\n", errstack);
 */
 
+	char* objName="main";
 	char errstack[DBG_ERRMSG_SIZE]="";
+	bool  verbose=true;
 
 	sL0* l0=nullptr;
+	sL1* l1=nullptr;
 
 	try {
-		cmdlow(l0=new sL0(false, false, true, false));
+		//cmdlow(l0=new sL0(false, false, false, false));
+
+		cmdlow(l1=new sL1());
+		cmdlow(l0=new sL0());
 	}
 	catch (std::exception exc) {
-		printf("Full stack:\n%s\n", exc.what());
+		printf("\n\n---------------------------------------------------------------------------------\nFull stack:\n%s\n", exc.what());
 	}
 
-	delete l0;
-	
 
+	delete l1;
+	delete l0;
+	cleanup("DioPorco!");
+
+	system("pause");
+	return -1;
+/*
 	sContainer* cont=nullptr;
 	try { 
 		cont=new sContainer(); 
@@ -294,7 +372,7 @@ int main() {
 		system("pause");
 		return -1;
 	}
-
+*/
 /*	tFileInfo* f0=nullptr;
 	tFileInfo* f1=nullptr;
 	tFileInfo* f2=nullptr;
@@ -319,7 +397,7 @@ int main() {
 
 	
 	printf("Client Success!\n");
-	Cleanup(3, p0, dbg1, p1);
+	//Cleanup(3, p0, dbg1, p1);
 	system("pause");
 	return 0;
 }
