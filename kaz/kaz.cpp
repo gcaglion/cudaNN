@@ -11,13 +11,13 @@ struct sDebuger {
 	int stackLevel;
 	bool verbose;
 	tFileInfo* outfile;
+	char errmsg[DBG_ERRMSG_SIZE]="";
 
 	sDebuger(char* outfilename, bool verbose_=false) {
 		verbose=verbose_;
 		outfile=new tFileInfo(outfilename, "C:/temp", FILE_MODE_WRITE);
 	}
 	~sDebuger() {
-		//for (int t=0; t<stackLevel; t++) printf("\t");
 		printf("%s() called on %p. Deleting outFile (%s) ...\n", __func__, this, outfile->FullName);
 		delete outfile;
 	}
@@ -25,7 +25,6 @@ struct sDebuger {
 
 struct sLbase {
 	char objName[MAX_PATH]="";
-	char errmsg[DBG_ERRMSG_SIZE]="";
 	char errtmp[DBG_ERRMSG_SIZE]="";
 
 	int	 stackLevel=0;
@@ -77,6 +76,10 @@ struct sLbase {
 		delete dbg;
 	}
 
+	~sLbase() {
+		info("%s->%s() called; calling cleanup()", objName, __func__);
+		cleanup("destructor call");
+	}
 };
 
 struct sChildKaz : sLbase {
@@ -94,15 +97,12 @@ struct sChildKaz : sLbase {
 
 		info("%s->%s() successful.", objName, __func__);
 	}
-	~sChildKaz() {
-		info("%s->%s() called. ChildKazProp=%d", objName, __func__, ChildKazProp);
-	}
 
 	void childMethod(bool fail_) {
 		info("%s->%s() called. fail_=%s", objName, __func__, ((fail_)?"true":"false"));
 		if (fail_) {
 			err("%s->%s() failed, because of fail_", objName, __func__);
-			throw std::exception(errmsg);
+			throw std::exception(dbg->errmsg);
 		}
 		info("%s->%s() successful.", objName, __func__);
 	}
@@ -110,15 +110,16 @@ struct sChildKaz : sLbase {
 };
 
 struct sParentKaz : sLbase {
-	int ParentKazProp;
+	int forecasterProp;
 
 	sChildKaz* child1=nullptr;
 	sChildKaz* child2=nullptr;
 
-	sParentKaz(char* kazName_, int ParentKazProp_, bool forceFail=false, sDebuger* dbg_=nullptr) : sLbase(this, kazName_, dbg_) {
-		ParentKazProp=ParentKazProp_;
+	sParentKaz(char* kazName_, int forecasterProp_, bool forceFail=false, sDebuger* dbg_=nullptr) : sLbase(this, kazName_, dbg_) {
+		forecasterProp=forecasterProp_;
 		
 		//-- ... do specific constructor stuff ...
+
 
 		//-- Child Creation SUCCESS
 		spawn(child1, new sChildKaz("child1 Name", 1, false) );
@@ -127,23 +128,41 @@ struct sParentKaz : sLbase {
 		method(child1->childMethod(false));
 		
 		//-- Child Creation FAILURE
-		spawn(child2, new sChildKaz("child2 Name", 2, true));
+		//spawn(child2, new sChildKaz("child2 Name", 2, true));
+		try {
+				child2 = new sChildKaz("child2 Name", 2, true);
+				subObj[subObjCnt]=child2; 
+				subObjCnt++; 
+		}
+		catch (std::exception exc) {
+			//-- put all this into dbg->write()
+			sprintf_s(dbg->errmsg, DBG_ERRMSG_SIZE, "%s()->%s() failed to create %s . Exception=%s", objName, __func__, "child2", exc.what()); 
+			printf("%s\n", dbg->errmsg);
+			fprintf(dbg->outfile->handle, "%s\n", dbg->errmsg);
+			//--
+			throw std::exception(dbg->errmsg);
+		} 
+
 
 		//-- Internal failure
 		if (forceFail) {
-			sprintf_s(errmsg, DBG_ERRMSG_SIZE, "%s()->%s() failed in itself. Problem=%s", objName, __func__, "Internal cause of failure");
-			cleanup(errmsg);
+			failM("forceFail set. forecasterProp=%d", forecasterProp);
 		}
 
-		sprintf_s(errmsg, "Parent %s constructor failed", __func__);
-		throw std::exception(errmsg);
-
-
-	}
-	~sParentKaz() {
-		info("ParentKaz destructor called. ParentKazProp=%d", ParentKazProp);
 	}
 };
+
+void mainCleanup(int objCnt, ...) {
+	va_list args;
+	sLbase* obj;
+
+	va_start(args, objCnt);
+	for (int o=0; o<objCnt; o++) {
+		obj=va_arg(args, sLbase*);
+		delete (obj);
+	}
+	va_end(args);
+}
 
 int main() {
 
@@ -162,12 +181,14 @@ int main() {
 	//-- main actions
 
 	try {
-		forecaster=new sParentKaz("Forecaster", 0);
+		forecaster=new sParentKaz("Forecaster", 0, false);
 	}
 	catch (std::exception exc) {
+		mainCleanup(2, timeserie, forecaster);
 		mainFail("forecaster creation failed. Exception=%s \n", exc.what());
 	}
 
+	mainCleanup(2, timeserie, forecaster);
 	mainSuccess();
 
 }
