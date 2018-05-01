@@ -1,9 +1,9 @@
 #include "../CommonEnv00.h"
 #include "../FileInfo/FileInfo.h"
 
-#include "kazM.h"
+#include "kazM2.h"
 
-#define DBG_DEFAULT_VERBOSE false
+#define DBG_DEFAULT_VERBOSE true
 #define DBG_ERRMSG_SIZE 32768
 #define MAX_OBJ_CHILDREN 32
 
@@ -11,11 +11,13 @@ struct sDebuger {
 	int stackLevel;
 	bool verbose;
 	tFileInfo* outfile;
-	char errmsg[DBG_ERRMSG_SIZE]="";
+
+	char stackmsg[DBG_ERRMSG_SIZE]="";
+	char msg[DBG_ERRMSG_SIZE]="";
 
 	sDebuger(char* outfilename, bool verbose_=false) {
 		verbose=verbose_;
-		outfile=new tFileInfo(outfilename, "C:/temp", FILE_MODE_WRITE);
+		outfile=new tFileInfo(outfilename, "C:/temp/logs", FILE_MODE_WRITE);
 	}
 	~sDebuger() {
 		printf("%s() called on %p. Deleting outFile (%s) ...\n", __func__, this, outfile->FullName);
@@ -25,7 +27,7 @@ struct sDebuger {
 
 struct sLbase {
 	char objName[MAX_PATH]="";
-	char errtmp[DBG_ERRMSG_SIZE]="";
+	char dbgfname[MAX_PATH]="";
 
 	int	 stackLevel=0;
 	void*	parentObj;
@@ -33,18 +35,19 @@ struct sLbase {
 	void**	subObj;
 
 	sDebuger* dbg;
+	sDebuger* rootdbg;	//-- this is populated only by direct children of main()/client
 
-	void sLbase_common(void* parentObj_, char* objName_, bool verbose_, sDebuger* dbg_) {
+	void setParent(void* parentObj_) {
 		parentObj=parentObj_;
-		stackLevel=((sLbase*)parentObj)->stackLevel+1;
-		sprintf_s(objName, MAX_PATH, "%s(%p)", objName_, this);
-		subObj=(void**)malloc(MAX_OBJ_CHILDREN*sizeof(void*));
-
+		if (parentObj!=nullptr) stackLevel=((sLbase*)parentObj)->stackLevel+1;
+	}
+	void setDebugger(sDebuger* dbg_, bool verbose_){
 		//-- if we didn't pass a valid dbg_, regardless of what this new object does, it will always create its own debugger
 		if (dbg_==nullptr) {
+			sprintf_s(dbgfname, MAX_PATH, "%s.%s", objName, ((verbose_) ? "log" : "err"));
 			try {
-				dbg=new sDebuger(objName, verbose_);
-				dbg->stackLevel=stackLevel+1;
+				dbg=new sDebuger(dbgfname, verbose_);
+				dbg->stackLevel=stackLevel;
 				info("new sDebugger(%s) completed successfully. dbg->stackLevel=%d", objName, dbg->stackLevel);
 			}
 			catch (std::exception exc) {
@@ -57,28 +60,107 @@ struct sLbase {
 		}
 	}
 
-	sLbase(void* parentObj_, char* objName_, bool verbose_) {
-		sLbase_common(parentObj_, objName_, verbose_, nullptr);
+	sLbase(char* objName_, void* parent_, bool verbose_=DBG_DEFAULT_VERBOSE, sDebuger* dbg_=nullptr) {
+		subObj=(void**)malloc(MAX_OBJ_CHILDREN*sizeof(void*));
+		sprintf_s(objName, MAX_PATH, "%s(%p)", objName_, this);
+		setDebugger(dbg_, verbose_);
+		setParent(parent_);
 	}
 
-	sLbase(void* parentObj_, char* objName_, sDebuger* dbg_) {
-		sLbase_common(parentObj_, objName_, DBG_DEFAULT_VERBOSE, dbg_);
+	//-- this constructor is only called by root object in client
+	sLbase(sDebuger* rootdbg_, bool verbose_=DBG_DEFAULT_VERBOSE) {
+		subObj=(void**)malloc(MAX_OBJ_CHILDREN*sizeof(void*));
+		sprintf_s(objName, MAX_PATH, "%s(%p)", "root", this);
+		//-- rootdbg must be valid.
+		stackLevel=0;
+		rootdbg=rootdbg_;
+		setDebugger(rootdbg, verbose_);
 	}
 
-	void cleanup(char* failmsg) {
 
-		info("%s->cleanup() called; failmsg=%s", objName, failmsg);
+	void cleanup(char* reason) {
+
+		info("%s->cleanup() called; reason=%s", objName, reason);
 		for (int o=0; o<subObjCnt; o++) {
 			info("%s->cleanup() calling %s->cleanup() ...", objName, ((sLbase*)subObj[o])->objName);
 			((sLbase*)subObj[o])->cleanup("called from parent cleanup()");
 		}
 		info("%s->cleanup() calling (delete dbg) ...", objName);
-		delete dbg;
+		//-- determine parent's dbg
+		sDebuger* parentDbg=(parentObj==nullptr) ? rootdbg : ((sLbase*)parentObj)->dbg;
+		//-- unless we are root, append dbg->stackmsg to parent's before suicide
+		if (parentObj!=nullptr) {
+			sprintf_s(parentDbg->stackmsg, DBG_ERRMSG_SIZE, "%s\n\t%s", parentDbg->stackmsg, dbg->stackmsg);
+			delete dbg;
+		}
 	}
-
 	~sLbase() {
 		info("%s->%s() called; calling cleanup()", objName, __func__);
 		cleanup("destructor call");
+	}
+};
+/*
+struct sTimeSerie :sLbase {
+	int tsprop1;
+	int tsprop2;
+
+	sTimeSerie(char* objName_, int tsprop1_, int tsprop2_, sDebuger* dbg_=nullptr) :sLbase(this, objName_, dbg_) {
+		tsprop1=tsprop1_;
+		tsprop2=tsprop2_;
+
+
+
+		start("tsprop1=%d ; tsprop2=%d", tsprop1, tsprop2);
+		//-- ... do specific constructor stuff ...
+
+		//-- constructor failure
+		if (tsprop1!=1) failC("tsprop1=%d ; tsprop2=%d", tsprop1, tsprop2);
+
+		success();
+	}
+
+	void dump() {
+	}
+
+};
+
+struct sForecaster :sLbase {
+	int prop1;
+	int prop2;
+	sTimeSerie* ts1=nullptr;
+	sTimeSerie* ts2=nullptr;
+
+	sForecaster(char* objName_, int prop1_, int prop2_, sDebuger* dbg_=nullptr) :sLbase(this, objName_, dbg_) {
+		prop1=prop1_;
+		prop2=prop2_;
+
+		start("prop1=%d ; prop2=%d", prop1, prop2);
+		//-- ... do specific constructor stuff ...
+
+		//-- create child ts1 (success)
+		newC(ts1, sTimeSerie("TrainTimeSerie", 1, -1));
+
+		//-- create child ts2 (fail)
+		//newC(ts2, sTimeSerie("TestTimeSerie", 2, -2));
+		try {
+				info("Trying: %s = %s ...", "ts2", "new ts2(... blah ...)");
+				ts2 = new sTimeSerie("TestTimeSerie", 2, -2);
+				subObj[subObjCnt]=ts2;
+				subObjCnt++;
+				info("%s = %s completed successfully.", "ts2", "new ts2(... blah ...)");
+		}
+		catch (std::exception exc) {
+			err("%s()->%s() failed to create %s . Exception=%s", objName, __func__, "ts2", exc.what());
+			printf("%s \n", dbg->errmsg);
+			throw std::exception(dbg->errmsg);
+		}
+
+
+		success();
+	}
+
+	void dump() {
+
 	}
 };
 
@@ -88,27 +170,26 @@ struct sChildKaz : sLbase {
 	sChildKaz(char* kazName_, int ChildKazProp_, bool forceFail, sDebuger* dbg_=nullptr) : sLbase(this, kazName_, dbg_) {
 		ChildKazProp=ChildKazProp_;
 		
-		info("%s->%s() called. ChildKazProp=%d", objName, __func__, ChildKazProp);
+		start("ChildKazProp=%d", ChildKazProp);
 		//-- ... do specific constructor stuff ...
 
 		if (forceFail) {
-			failM("forceFail set. ChildKazProp=%d", ChildKazProp);
+			fail("forceFail set. ChildKazProp=%d", ChildKazProp);
 		}
 
-		info("%s->%s() successful.", objName, __func__);
+		success();
 	}
 
 	void childMethod(bool fail_) {
-		info("%s->%s() called. fail_=%s", objName, __func__, ((fail_)?"true":"false"));
+		start("fail_=%s", ((fail_)?"true":"false"));
 		if (fail_) {
-			err("%s->%s() failed, because of fail_", objName, __func__);
-			throw std::exception(dbg->errmsg);
+			fail("forceFail set. fail_=%d", fail_);
 		}
-		info("%s->%s() successful.", objName, __func__);
+
+		success();
 	}
 
 };
-
 struct sParentKaz : sLbase {
 	int forecasterProp;
 
@@ -118,77 +199,122 @@ struct sParentKaz : sLbase {
 	sParentKaz(char* kazName_, int forecasterProp_, bool forceFail=false, sDebuger* dbg_=nullptr) : sLbase(this, kazName_, dbg_) {
 		forecasterProp=forecasterProp_;
 		
+		start("forecasterProp=%d", forecasterProp);
 		//-- ... do specific constructor stuff ...
 
 
 		//-- Child Creation SUCCESS
-		spawn(child1, new sChildKaz("child1 Name", 1, false) );
+		newC(child1, new sChildKaz("child1 Name", 1, false) );
 
 		//-- Child Method SUCCESS
-		method(child1->childMethod(false));
+		callM(child1->childMethod(false));
 		
 		//-- Child Creation FAILURE
-		//spawn(child2, new sChildKaz("child2 Name", 2, true));
+		//newC(child2, new sChildKaz("child2 Name", 2, true));
+
 		try {
-				child2 = new sChildKaz("child2 Name", 2, true);
-				subObj[subObjCnt]=child2; 
-				subObjCnt++; 
+			child2= new sChildKaz("child2 Name", 2, true);
+				subObj[subObjCnt]=child2;
+				subObjCnt++;
 		}
 		catch (std::exception exc) {
-			//-- put all this into dbg->write()
-			sprintf_s(dbg->errmsg, DBG_ERRMSG_SIZE, "%s()->%s() failed to create %s . Exception=%s", objName, __func__, "child2", exc.what()); 
-			printf("%s\n", dbg->errmsg);
-			fprintf(dbg->outfile->handle, "%s\n", dbg->errmsg);
-			//--
+			sprintf_s(dbg->errmsg, DBG_ERRMSG_SIZE, "%s()->%s() failed to create %s . Exception=%s", objName, __func__, "Child2", exc.what()); 
 			throw std::exception(dbg->errmsg);
-		} 
+		}
+
 
 
 		//-- Internal failure
 		if (forceFail) {
-			failM("forceFail set. forecasterProp=%d", forecasterProp);
+			fail("forceFail set. forecasterProp=%d", forecasterProp);
 		}
 
 	}
 };
+*/
 
-void mainCleanup(int objCnt, ...) {
+struct sDio: sLbase {
+
+	sDio(int parm1, int parm2, bool fail_) :sLbase("DioPorco", this) {
+		start("dio parms: %d , %d", parm1, parm2);
+
+		if (fail_) failC("blah blah");
+		success();
+	}
+};
+
+struct sRoot : sLbase {
+	sDebuger* rootdbg;
+	int kaz;
+
+	sRoot(sDebuger* rootdbg_):sLbase(rootdbg_) {
+		parentObj=nullptr;
+		rootdbg=rootdbg_;
+	}
+
+	bool go() {
+
+		//======= ALL MAIN PROGRAM GOES HERE !!! =========
+
+		sDio* dio12=nullptr;
+		sDio* dio34=nullptr;
+
+		start("action start!");
+
+		newC(dio12, sDio(1, 2, false));
+		newC(dio34, sDio(3, 4, true));
+
+		cleanup("SUCCESS");
+		success();
+
+		return true;
+	}
+};
+
+void mainCleanup(sDebuger* dbg, int objCnt, ...) {
 	va_list args;
 	sLbase* obj;
 
 	va_start(args, objCnt);
 	for (int o=0; o<objCnt; o++) {
 		obj=va_arg(args, sLbase*);
+		//-- append child object's dbg->stackmsg to main()'s before exit
+		//sprintf_s(dbg->stackmsg, DBG_ERRMSG_SIZE, "%s\n\t%s", dbg->stackmsg, obj->dbg->stackmsg);
 		delete (obj);
 	}
 	va_end(args);
 }
-
 int main() {
+	char objName[MAX_PATH]="mainClient";
+	int	 stackLevel=0;
 
 	sDebuger* dbg=nullptr;
-	sParentKaz* forecaster=nullptr;
-	sChildKaz* timeserie=nullptr;
+
 
 	//-- main debugger
 	try {
-		dbg=new sDebuger("mainDebugger", true);
+		dbg=new sDebuger("mainDebugger.log", false);
 	}
 	catch (std::exception exc) {
 		mainFail("Could not create mainDebugger.\n");
 	}
 
-	//-- main actions
+	//-- root object
+	sRoot* root=new sRoot(dbg);
+	//-- main actions are moved into root->go() method, which ca
+	return(root->go());
 
+	
+
+/*
 	try {
-		forecaster=new sParentKaz("Forecaster", 0, false);
+		//forecaster=new sParentKaz("Forecaster", 0, false);
+		forecaster=new sForecaster("Forecaster", 0, false);
 	}
 	catch (std::exception exc) {
-		mainCleanup(2, timeserie, forecaster);
+		mainCleanup(1, forecaster);
 		mainFail("forecaster creation failed. Exception=%s \n", exc.what());
 	}
-
-	mainCleanup(2, timeserie, forecaster);
-	mainSuccess();
+*/
 
 }
