@@ -20,9 +20,6 @@ struct sDebugger {
 	char msg[DBG_MSG_MAXLEN]="";
 	char stackmsg[DBG_STACK_MAXLEN]="";
 
-	//-- common constructor
-
-
 	sDebugger(char* outFileName=DEFAULT_DBG_FNAME, sDebuggerParms* parms_=nullptr, char* outFilePath=DEFAULT_DBG_FPATH) {
 		if (parms_==nullptr) {
 			parms=new sDebuggerParms();

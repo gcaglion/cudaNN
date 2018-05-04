@@ -40,8 +40,12 @@
 }
 
 //-- info() , err(), fail() for sBaseObj object types
-#define info(mask, ...) { if(dbg->parms->verbose) err(mask, __VA_ARGS__); }
+#define info(mask, ...) { if(dbg->parms->verbose) err_(mask, __VA_ARGS__); }
 #define err(mask, ...) { \
+	err_(mask, __VA_ARGS__); \
+	if (dbg->parms->pauseOnError) { printf("Press any key..."); getchar(); } \
+}
+#define err_(mask, ...) { \
 	for(int t=0; t<stackLevel; t++) dbg->msg[t]='\t'; \
 	sprintf_s(&dbg->msg[stackLevel], DBG_MSG_MAXLEN, mask, __VA_ARGS__); strcat_s(dbg->msg, DBG_MSG_MAXLEN, "\n"); \
 	strcat_s(dbg->stackmsg, DBG_STACK_MAXLEN, dbg->msg); \
