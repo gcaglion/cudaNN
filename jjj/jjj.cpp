@@ -4,7 +4,6 @@ struct sDebugger {
 	bool verbose;
 	tFileInfo* outFile;
 
-	int stackLevel;
 	char msg[DBG_MSG_MAXLEN]="";
 	char stackmsg[DBG_STACK_MAXLEN]="";
 
@@ -32,17 +31,19 @@ struct sDebugger {
 struct sBaseObj {
 
 	char objName[64];
+	sBaseObj* objParent;
+	int stackLevel;
 	int childrenCnt=0;
 	sBaseObj* objecttAddr=this;
 	sBaseObj* child[BASEOBJ_MAX_CHILDREN];
 
 	sDebugger* dbg;
-	sDebugger* parentdbg;
 
-	sBaseObj(char* objName_, sDebugger* parentdbg_, bool verbose_=DEFAULT_DBG_VERBOSITY) {
+	sBaseObj(char* objName_, sBaseObj* objParent_, bool verbose_=DEFAULT_DBG_VERBOSITY) {
 		try {
 			strcpy_s(objName, 64, objName_);
-			parentdbg=parentdbg_;
+			objParent=objParent_;
+			stackLevel=(objParent==nullptr) ? 0 : objParent->stackLevel+1;
 			dbg=new sDebugger(objName);
 			info("%s(%p)->%s() successful.", objName, this, __func__);
 		} catch(std::exception exc) {
@@ -72,7 +73,7 @@ struct sDio : sBaseObj {
 	int prop1;
 	int prop2;
 
-	sDio(char* objName_, sDebugger* parentdbg_, int prop1_, int prop2_, bool fail_=false, bool verbose_=DEFAULT_DBG_VERBOSITY) : sBaseObj(objName_, parentdbg_, verbose_) {
+	sDio(char* objName_, sBaseObj* objParent_, int prop1_, int prop2_, bool fail_=false, bool verbose_=DEFAULT_DBG_VERBOSITY) : sBaseObj(objName_, objParent_, verbose_) {
 		prop1=prop1_; prop2=prop2_;
 
 		if (fail_) {
@@ -93,42 +94,37 @@ struct sDio : sBaseObj {
 struct sRoot : sBaseObj {
 
 	//-- here we put everything that needs to be done
-	sRoot(sDebugger* parentdbg_, bool verbose_) : sBaseObj("root", parentdbg_, verbose_) {
+	sRoot(bool verbose_) : sBaseObj("root", nullptr, verbose_) {
 
-		//-- 1. object creation (successful)
-		safespawn(dio1, sDio, 1, 2, false);
-
-		//-- 1.1. call to object method (success)
-		//safecall(dio1->method(false));
-
-		//-- 2. object creation (constructor success)
-		safespawn(dio2, sDio, -1, -2, false);
-
-		//-- 3.1. call to object method (success)
-		safecall(dio2->method(false));
-		//-- 3.2. call to object method (failure)
 		try {
-			dio2->method(true);
+
+			//-- 1. object creation (successful)
+			safespawn(dio1, sDio, 1, 2, false);
+
+			//-- 1.1. call to object method (success)
+			//safecall(dio1->method(false));
+
+			//-- 2. object creation (constructor success)
+			safespawn(dio2, sDio, -1, -2, false);
+
+			//-- 3.1. call to object method (success)
+			safecall(dio2->method(false));
+			//-- 3.2. call to object method (failure)
+			//safecall(dio2->method(true));
+
+			//-- 2. object creation (constructor success)
+			safespawn(dio5, sDio, -1, -2, false);
+
+			//-- 4. first object (constructor failure)
+			safespawn(dio3, sDio, -10, -20, true);
+
+			//-- 5. first object (constructor successful)
+			safespawn(dio4, sDio, 10, 20, false);
+
 		}
 		catch (std::exception exc) {
-			//-- fail()
-			sprintf_s(dbg->msg, DBG_MSG_MAXLEN, "dioporco failed"); strcat_s(dbg->msg, DBG_MSG_MAXLEN, "\n"); 
-			strcat_s(dbg->stackmsg, DBG_STACK_MAXLEN, dbg->msg); 
-			if (parentdbg!=nullptr) sprintf_s(parentdbg->stackmsg, DBG_STACK_MAXLEN, "%s\nt%s", parentdbg->stackmsg, dbg->msg); 
-			printf("%s", dbg->msg); 
-			fprintf(dbg->outFile->handle, "%s", dbg->msg); 
+			throw(exc);
 		}
-		safecall(dio2->method(true));
-
-		//-- 2. object creation (constructor success)
-		safespawn(dio5, sDio, -1, -2, false);
-
-		//-- 4. first object (constructor failure)
-		safespawn(dio3, sDio, -10, -20, false);
-
-		//-- 5. first object (constructor successful)
-		safespawn(dio4, sDio, 10, 20, false);
-
 	}
 
 };
@@ -148,21 +144,11 @@ struct sRoot : sBaseObj {
 
 int main(int argc, char* argv[]) {
 	
-	//-- root object and debugger
-	sRoot* root=nullptr;
-	sDebugger* dbg=nullptr;
 	bool verbose_=true;
-
-	//-- 1. create root debugger
+	//-- 1. create root object. root constructor does everything else
+	sRoot* root=nullptr;
 	try {
-		dbg=new sDebugger("mainDebugger", verbose_);
-	} catch (std::exception exc) {
-		clientFail("Critical Error: Could not create main debugger.");
-	}
-
-	//-- 1. create root object, pass root debugger. root constructor does everything else
-	try {
-		root=new sRoot(dbg, verbose_);
+		root=new sRoot(verbose_);
 	} catch(std::exception exc){
 		clientFail("Exception thrown by root. See stack.");
 	}
