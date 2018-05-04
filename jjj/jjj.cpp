@@ -1,19 +1,39 @@
 #include "jjj.h"
 
-struct sDebugger {
+struct sDebuggerParms {
 	bool verbose;
-	tFileInfo* outFile;
+	bool timing;
+	bool pauseOnError;
 
+	sDebuggerParms(bool verbose_=DEFAULT_DBG_VERBOSITY, bool timing_=DEFAULT_DBG_TIMING, bool pauseOnError_=DEFAULT_DBG_PAUSERR){
+		verbose=verbose_;
+		timing=timing_;
+		pauseOnError=pauseOnError_;
+	}
+};
+
+struct sDebugger {
+
+	sDebuggerParms* parms;
+
+	tFileInfo* outFile;
 	char msg[DBG_MSG_MAXLEN]="";
 	char stackmsg[DBG_STACK_MAXLEN]="";
 
-	sDebugger(char* outFileName=DEFAULT_DBG_FNAME, bool verbose_=DEFAULT_DBG_VERBOSITY, char* outFilePath=DEFAULT_DBG_FPATH) {
-		verbose=verbose_;
+	//-- common constructor
+
+
+	sDebugger(char* outFileName=DEFAULT_DBG_FNAME, sDebuggerParms* parms_=nullptr, char* outFilePath=DEFAULT_DBG_FPATH) {
+		if (parms_==nullptr) {
+			parms=new sDebuggerParms();
+		} else {
+			parms=parms_;
+		}
 		char outfname[MAX_PATH];
-		sprintf_s(outfname, MAX_PATH, "%s/%s(%p).%s", outFilePath, outFileName, this, (verbose) ? "log": "err");
+		sprintf_s(outfname, MAX_PATH, "%s/%s(%p).%s", outFilePath, outFileName, this, (parms->verbose) ? "log": "err");
 		try {
 			outFile=new tFileInfo(outfname, FILE_MODE_WRITE);
-			//info_d("sDebugger(%p)->%s() called. Successfully created debugger outFile %s ...\n", this, __func__, outfname);
+			info_d("sDebugger(%p)->%s() called. Successfully created debugger outFile %s ...\n", this, __func__, outfname);
 		}
 		catch (std::exception exc) {			
 			err_d("sDebugger(%p)->%s() failed. Error creating debugger outFile %s ...\n", this, __func__, outfname);
@@ -21,7 +41,7 @@ struct sDebugger {
 		}
 	}
 	~sDebugger() {
-		//info_d("sDebugger(%p)->%s() called. Deleting %s ...", this, __func__, outFile->FullName);
+		info_d("sDebugger(%p)->%s() called. Deleting %s ...", this, __func__, outFile->FullName);
 		delete outFile;
 	}
 
@@ -34,17 +54,16 @@ struct sBaseObj {
 	sBaseObj* objParent;
 	int stackLevel;
 	int childrenCnt=0;
-	sBaseObj* objecttAddr=this;
 	sBaseObj* child[BASEOBJ_MAX_CHILDREN];
 
 	sDebugger* dbg;
 
-	sBaseObj(char* objName_, sBaseObj* objParent_, bool verbose_=DEFAULT_DBG_VERBOSITY) {
+	sBaseObj(char* objName_, sBaseObj* objParent_, sDebuggerParms* dbgparms_) {
 		try {
 			strcpy_s(objName, 64, objName_);
 			objParent=objParent_;
 			stackLevel=(objParent==nullptr) ? 0 : objParent->stackLevel+1;
-			dbg=new sDebugger(objName);
+			dbg=new sDebugger(objName, dbgparms_);
 			info("%s(%p)->%s() successful.", objName, this, __func__);
 		} catch(std::exception exc) {
 			char msg[DBG_MSG_MAXLEN]="";
@@ -73,7 +92,7 @@ struct sDio : sBaseObj {
 	int prop1;
 	int prop2;
 
-	sDio(char* objName_, sBaseObj* objParent_, int prop1_, int prop2_, bool fail_=false, bool verbose_=DEFAULT_DBG_VERBOSITY) : sBaseObj(objName_, objParent_, verbose_) {
+	sDio(char* objName_, sBaseObj* objParent_, int prop1_, int prop2_, bool fail_=false, sDebuggerParms* dbgparms_=nullptr) : sBaseObj(objName_, objParent_, dbgparms_) {
 		prop1=prop1_; prop2=prop2_;
 
 		if (fail_) {
@@ -94,15 +113,15 @@ struct sDio : sBaseObj {
 struct sRoot : sBaseObj {
 
 	//-- here we put everything that needs to be done
-	sRoot(bool verbose_) : sBaseObj("root", nullptr, verbose_) {
+	sRoot(sDebuggerParms* rootdbgparms_=nullptr) : sBaseObj("root", nullptr, rootdbgparms_) {
 
 		try {
 
 			//-- 1. object creation (successful)
-			safespawn(dio1, sDio, 1, 2, false);
+			safespawn(dio1, sDio, 1, 2, false, new sDebuggerParms(true, false,true));
 
 			//-- 1.1. call to object method (success)
-			//safecall(dio1->method(false));
+			safecall(dio1->method(false));
 
 			//-- 2. object creation (constructor success)
 			safespawn(dio2, sDio, -1, -2, false);
@@ -144,11 +163,10 @@ struct sRoot : sBaseObj {
 
 int main(int argc, char* argv[]) {
 	
-	bool verbose_=true;
 	//-- 1. create root object. root constructor does everything else
 	sRoot* root=nullptr;
 	try {
-		root=new sRoot(verbose_);
+		root=new sRoot();	//-- always takes default debugger settings
 	} catch(std::exception exc){
 		clientFail("Exception thrown by root. See stack.");
 	}

@@ -3,7 +3,9 @@
 
 #define DEFAULT_DBG_FPATH "C:/temp/logs"
 #define DEFAULT_DBG_FNAME "Debugger"
-#define DEFAULT_DBG_VERBOSITY true
+#define DEFAULT_DBG_VERBOSITY false
+#define DEFAULT_DBG_TIMING false
+#define DEFAULT_DBG_PAUSERR true
 #define DBG_MSG_MAXLEN 1024
 #define DBG_STACK_MAXLEN 32768
 
@@ -38,7 +40,7 @@
 }
 
 //-- info() , err(), fail() for sBaseObj object types
-#define info(mask, ...) { if(dbg->verbose) err(mask, __VA_ARGS__); }
+#define info(mask, ...) { if(dbg->parms->verbose) err(mask, __VA_ARGS__); }
 #define err(mask, ...) { \
 	sprintf_s(dbg->msg, DBG_MSG_MAXLEN, mask, __VA_ARGS__); strcat_s(dbg->msg, DBG_MSG_MAXLEN, "\n"); \
 	strcat_s(dbg->stackmsg, DBG_STACK_MAXLEN, dbg->msg); \
@@ -51,7 +53,7 @@
 	throw(std::exception(dbg->msg)); \
 }
 //-- info() , err(), fail() for non-sBaseObj object types
-#define info_d(mask, ...) { if(verbose) err_d(mask, __VA_ARGS__); }
+#define info_d(mask, ...) { if(parms->verbose) err_d(mask, __VA_ARGS__); }
 #define err_d(mask, ...) { \
 	sprintf_s(msg, DBG_MSG_MAXLEN, mask, __VA_ARGS__); \
 	printf("%s\n", msg); \
