@@ -1,58 +1,10 @@
-#include "..\FileInfo\FileInfo.h"
-
-#define DEFAULT_DBG_FPATH "C:/temp/logs"
-#define DEFAULT_DBG_FNAME "Debugger"
-#define DEFAULT_DBG_VERBOSITY true
-#define DBG_MSG_MAXLEN 1024
-#define DBG_STACK_MAXLEN 32768
-
-#define start(mask, ...) { \
-	msgbld("%s->%s(%s) starting.", this, __func__, __VA_ARGS__); \
-}
-
-//-- this is only needed so we can pass parentdbg's object address to child's constructor
-#define spawn(objname, objtype, ...){ \
-	objname = new objtype(#objname, dbg, __VA_ARGS__); \
-	child[childrenCnt]=objname; \
-	childrenCnt++; \
-}
-#define safespawn(objname, objtype, ...){ \
-	objtype* objname; \
-	try { \
-		spawn(objname, objtype, __VA_ARGS__); \
-	} catch (std::exception exc) { \
-		fail("%s->%s(%s) failed. Exception: %s", objName, __func__, #__VA_ARGS__, exc.what()); \
-	} \
-}
-
-//-- info() , err(), fail() for sBaseObj object types
-#define info(mask, ...) { if(dbg->verbose) err(mask, __VA_ARGS__); }
-#define err(mask, ...) { \
-	sprintf_s(dbg->msg, DBG_MSG_MAXLEN, mask, __VA_ARGS__); strcat_s(dbg->msg, DBG_MSG_MAXLEN, "\n"); \
-	strcat_s(dbg->stackmsg, DBG_STACK_MAXLEN, dbg->msg); \
-	if(parentdbg!=nullptr) sprintf_s(parentdbg->stackmsg, DBG_STACK_MAXLEN, "%s\n\t%s", parentdbg->stackmsg, dbg->stackmsg); \
-	printf("%s", dbg->msg); \
-	fprintf(dbg->outFile->handle, "%s", dbg->msg); \
-}
-#define fail(mask, ...) { \
-	err(mask, __VA_ARGS__); \
-	throw(std::exception(dbg->stackmsg)); \
-}
-//-- info() , err(), fail() for non-sBaseObj object types
-#define info_d(mask, ...) { if(verbose) err_d(mask, __VA_ARGS__); }
-#define err_d(mask, ...) { \
-	sprintf_s(msg, DBG_MSG_MAXLEN, mask, __VA_ARGS__); \
-	printf("%s\n", msg); \
-}
-#define fail_d(mask, ...) { \
-	err_d(mask, __VA_ARGS__); \
-	throw(std::exception(stackmsg)); \
-}
+#include "jjj.h"
 
 struct sDebugger {
 	bool verbose;
 	tFileInfo* outFile;
 
+	int stackLevel;
 	char msg[DBG_MSG_MAXLEN]="";
 	char stackmsg[DBG_STACK_MAXLEN]="";
 
@@ -113,6 +65,7 @@ struct sBaseObj {
 			delete child[c];
 		}
 	}
+
 };
 
 struct sDio : sBaseObj {
@@ -123,10 +76,17 @@ struct sDio : sBaseObj {
 		prop1=prop1_; prop2=prop2_;
 
 		if (fail_) {
-			fail("%s(%p)->%s(%d, %d) failed because of fail_=true", objName_, this, __func__, prop1, prop2);
+			fail("%s(%p)->%s(%d, %d) failed because of fail_=true", objName, this, __func__, prop1, prop2);
 		}
 
-		info("%s(%p)->%s(%d, %d) successful", objName_, this, __func__, prop1, prop2);
+		info("%s(%p)->%s(%d, %d) successful", objName, this, __func__, prop1, prop2);
+	}
+
+	void method(bool fail_) {
+
+		if (fail_) {
+			fail("%s(%p)->%s(%d, %d) failed because of fail_=true", objName, this, __func__, prop1, prop2);
+		}
 	}
 };
 
@@ -135,39 +95,53 @@ struct sRoot : sBaseObj {
 	//-- here we put everything that needs to be done
 	sRoot(sDebugger* parentdbg_, bool verbose_) : sBaseObj("root", parentdbg_, verbose_) {
 
-		//-- 1. first object (successful)
+		//-- 1. object creation (successful)
 		safespawn(dio1, sDio, 1, 2, false);
-		//-- 2. first object (constructor success)
+
+		//-- 1.1. call to object method (success)
+		//safecall(dio1->method(false));
+
+		//-- 2. object creation (constructor success)
 		safespawn(dio2, sDio, -1, -2, false);
-		//-- 3. first object (constructor failure)
-/*
-		sDio* dio3; 
+
+		//-- 3.1. call to object method (success)
+		safecall(dio2->method(false));
+		//-- 3.2. call to object method (failure)
 		try {
-			spawn(dio3, sDio, -10,-20,true); 
+			dio2->method(true);
 		}
 		catch (std::exception exc) {
-				printf("%s\n", exc.what());
-			fail("%s->%s(%s) failed. Exception: %s", "dio3", __func__, "-10,-20,true", exc.what()); 
-		} 
-*/
-		safespawn(dio3, sDio, -10, -20, true);
-		//-- 4. first object (constructor successful)
+			//-- fail()
+			sprintf_s(dbg->msg, DBG_MSG_MAXLEN, "dioporco failed"); strcat_s(dbg->msg, DBG_MSG_MAXLEN, "\n"); 
+			strcat_s(dbg->stackmsg, DBG_STACK_MAXLEN, dbg->msg); 
+			if (parentdbg!=nullptr) sprintf_s(parentdbg->stackmsg, DBG_STACK_MAXLEN, "%s\nt%s", parentdbg->stackmsg, dbg->msg); 
+			printf("%s", dbg->msg); 
+			fprintf(dbg->outFile->handle, "%s", dbg->msg); 
+		}
+		safecall(dio2->method(true));
+
+		//-- 2. object creation (constructor success)
+		safespawn(dio5, sDio, -1, -2, false);
+
+		//-- 4. first object (constructor failure)
+		safespawn(dio3, sDio, -10, -20, false);
+
+		//-- 5. first object (constructor successful)
 		safespawn(dio4, sDio, 10, 20, false);
 
 	}
-	~sRoot() {}
 
 };
 
-#define clientFail(){ \
+#define clientFail(failmsg){ \
 	delete root; \
-	printf("Client main() failed. \n"); \
+	printf("Client failed: %s\n", failmsg); \
 	system("pause"); \
 	return -1; \
 }
 #define clientSuccess(){ \
 	delete root; \
-	printf("Client main() success. \n"); \
+	printf("Client success. \n"); \
 	system("pause"); \
 	return 0; \
 }
@@ -183,15 +157,14 @@ int main(int argc, char* argv[]) {
 	try {
 		dbg=new sDebugger("mainDebugger", verbose_);
 	} catch (std::exception exc) {
-		printf("Critical Error: Could not create main debugger.\n");
-		clientFail();
+		clientFail("Critical Error: Could not create main debugger.");
 	}
 
 	//-- 1. create root object, pass root debugger. root constructor does everything else
 	try {
 		root=new sRoot(dbg, verbose_);
 	} catch(std::exception exc){
-		clientFail();
+		clientFail("Exception thrown by root. See stack.");
 	}
 
 	clientSuccess();
