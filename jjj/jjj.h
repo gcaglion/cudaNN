@@ -42,7 +42,8 @@
 //-- info() , err(), fail() for sBaseObj object types
 #define info(mask, ...) { if(dbg->parms->verbose) err(mask, __VA_ARGS__); }
 #define err(mask, ...) { \
-	sprintf_s(dbg->msg, DBG_MSG_MAXLEN, mask, __VA_ARGS__); strcat_s(dbg->msg, DBG_MSG_MAXLEN, "\n"); \
+	for(int t=0; t<stackLevel; t++) dbg->msg[t]='\t'; \
+	sprintf_s(&dbg->msg[stackLevel], DBG_MSG_MAXLEN, mask, __VA_ARGS__); strcat_s(dbg->msg, DBG_MSG_MAXLEN, "\n"); \
 	strcat_s(dbg->stackmsg, DBG_STACK_MAXLEN, dbg->msg); \
 	if(stackLevel>0) sprintf_s(objParent->dbg->stackmsg, DBG_STACK_MAXLEN, "%s\t%s", objParent->dbg->stackmsg, dbg->msg); \
 	printf("%s", dbg->msg); \

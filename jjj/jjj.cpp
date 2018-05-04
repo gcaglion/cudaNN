@@ -33,7 +33,7 @@ struct sDebugger {
 		sprintf_s(outfname, MAX_PATH, "%s/%s(%p).%s", outFilePath, outFileName, this, (parms->verbose) ? "log": "err");
 		try {
 			outFile=new tFileInfo(outfname, FILE_MODE_WRITE);
-			info_d("sDebugger(%p)->%s() called. Successfully created debugger outFile %s ...\n", this, __func__, outfname);
+			//info_d("sDebugger(%p)->%s() called. Successfully created debugger outFile %s ...\n", this, __func__, outfname);
 		}
 		catch (std::exception exc) {			
 			err_d("sDebugger(%p)->%s() failed. Error creating debugger outFile %s ...\n", this, __func__, outfname);
@@ -41,7 +41,7 @@ struct sDebugger {
 		}
 	}
 	~sDebugger() {
-		info_d("sDebugger(%p)->%s() called. Deleting %s ...", this, __func__, outFile->FullName);
+		//info_d("sDebugger(%p)->%s() called. Deleting %s ...", this, __func__, outFile->FullName);
 		delete outFile;
 	}
 
@@ -92,8 +92,18 @@ struct sDio : sBaseObj {
 	int prop1;
 	int prop2;
 
-	sDio(char* objName_, sBaseObj* objParent_, int prop1_, int prop2_, bool fail_=false, sDebuggerParms* dbgparms_=nullptr) : sBaseObj(objName_, objParent_, dbgparms_) {
+	sDio* childDio1;
+	sDio* childDio2;
+	sDio* childDio3;
+
+	sDio(char* objName_, sBaseObj* objParent_, int prop1_, int prop2_, int children_=0, bool fail_=false, sDebuggerParms* dbgparms_=nullptr) : sBaseObj(objName_, objParent_, dbgparms_) {
 		prop1=prop1_; prop2=prop2_;
+
+		if(children_>0){
+			safespawn(childDio1, sDio, 11, 11);
+			safespawn(childDio2, sDio, 22, 22);
+			safespawn(childDio3, sDio, 33, 33);
+		}
 
 		if (fail_) {
 			fail("%s(%p)->%s(%d, %d) failed because of fail_=true", objName, this, __func__, prop1, prop2);
@@ -118,13 +128,13 @@ struct sRoot : sBaseObj {
 		try {
 
 			//-- 1. object creation (successful)
-			safespawn(dio1, sDio, 1, 2, false, new sDebuggerParms(true, false,true));
+			safespawn(dio1, sDio, 1, 2);
 
 			//-- 1.1. call to object method (success)
 			safecall(dio1->method(false));
 
 			//-- 2. object creation (constructor success)
-			safespawn(dio2, sDio, -1, -2, false);
+			safespawn(dio2, sDio, -1, -2, 3);
 
 			//-- 3.1. call to object method (success)
 			safecall(dio2->method(false));
@@ -132,13 +142,13 @@ struct sRoot : sBaseObj {
 			//safecall(dio2->method(true));
 
 			//-- 2. object creation (constructor success)
-			safespawn(dio5, sDio, -1, -2, false);
+			safespawn(dio5, sDio, -1, -2);
 
 			//-- 4. first object (constructor failure)
-			safespawn(dio3, sDio, -10, -20, true);
+			safespawn(dio3, sDio, -10, -20, 0, true);
 
 			//-- 5. first object (constructor successful)
-			safespawn(dio4, sDio, 10, 20, false);
+			safespawn(dio4, sDio, 10, 20, 0, false);
 
 		}
 		catch (std::exception exc) {
