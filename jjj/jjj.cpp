@@ -42,6 +42,10 @@ struct sDebugger {
 		delete outFile;
 	}
 
+	void stackup(const char* msg) {
+		strcat_s(stackmsg, DBG_STACK_MAXLEN, msg);
+	}
+
 };
 
 #define BASEOBJ_MAX_CHILDREN 64
@@ -123,6 +127,11 @@ struct sRoot : sBaseObj {
 	sRoot(sDebuggerParms* rootdbgparms_=nullptr) : sBaseObj("root", nullptr, rootdbgparms_) {
 
 		try {
+
+			tFileInfo* parmsFile;
+			char* fname="C:/temp/parms.xml";
+
+			safecall(spawnFile(parmsFile, fname, FILE_MODE_WRITE));
 
 			//-- 1. object creation (successful)
 			safespawn(dio1, sDio, 1, 2);

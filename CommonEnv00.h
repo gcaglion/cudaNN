@@ -17,3 +17,5 @@ typedef float numtype;
 
 #define USE_ORCL
 //#define USE_GPU
+
+#define OBJNAME_MAXLEN 128

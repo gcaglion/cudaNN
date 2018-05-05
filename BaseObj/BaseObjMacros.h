@@ -8,6 +8,7 @@
 #define spawn(objname, objtype, ...){ \
 	objname = new objtype(#objname, this, __VA_ARGS__); \
 	child[childrenCnt]=objname; \
+	childHasDbg[childrenCnt]=(typeid(objname)==typeid(this)); \
 	childrenCnt++; \
 }
 #define safespawn(objname, objtype, ...) \

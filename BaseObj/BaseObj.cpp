@@ -60,6 +60,11 @@ sRoot::sRoot(sDebuggerParms* rootdbgparms_) : sBaseObj("root", nullptr, rootdbgp
 
 	try {
 
+		tFileInfo* parmsFile;
+		char* fname="c:/temp/parms.xml";
+		spawn(parmsFile, tFileInfo, fname, FILE_MODE_READ);
+
+
 		//-- 1. object creation (successful)
 		safespawn(dio1, sDio, 1, 2);
 

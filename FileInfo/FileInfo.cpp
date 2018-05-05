@@ -5,10 +5,11 @@ void sFileInfo::sFileInfo_common(){
 	setModeS(); 
 	fopen_s(&handle, FullName, modeS);
 	if (errno!=0) {
-		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d trying to %s file %s\n", __func__, errno, modeDesc, FullName); throw std::runtime_error(errmsg);
+		sprintf_s(errmsg, sizeof(errmsg), "%s(): Error %d trying to %s file %s\n", __func__, errno, modeDesc, FullName); throw std::exception(errmsg);
 	}
 	savePos();
 }
+
 sFileInfo::sFileInfo(char* Name_, char* Path_, int mode_) {
 	strcpy_s(Name, MAX_PATH, Name_);
 	strcpy_s(Path, MAX_PATH, Path_);
@@ -20,6 +21,24 @@ sFileInfo::sFileInfo(char* FullName_, int mode_) {
 	mode=mode_;
 	sFileInfo_common();
 }
+sFileInfo::sFileInfo(char* objName_, void* objParent_, char* Name_, char* Path_, int mode_) {
+	strcpy_s(objName, OBJNAME_MAXLEN, objName_);
+	objParent=objParent_;
+	
+	strcpy_s(Name, MAX_PATH, Name_);
+	strcpy_s(Path, MAX_PATH, Path_);
+	mode=mode_;
+	sFileInfo_common();
+}
+sFileInfo::sFileInfo(char* objName_, void* objParent_, char* FullName_, int mode_) {
+	strcpy_s(objName, OBJNAME_MAXLEN, objName_);
+	objParent=objParent_;
+
+	splitFullFileName(FullName_, Path, Name);
+	mode=mode_;
+	sFileInfo_common();
+}
+
 sFileInfo::~sFileInfo() {
 	fflush(handle);
 	fseek(handle, 0, SEEK_END); // seek to end of file

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <typeinfo.h>
 #include "BaseObjMacros.h"
 #include "../Debugger/Debugger.h"
 
@@ -10,7 +11,9 @@ struct sBaseObj {
 	sBaseObj* objParent;
 	int stackLevel;
 	int childrenCnt=0;
-	sBaseObj* child[BASEOBJ_MAX_CHILDREN];
+
+	bool childHasDbg[BASEOBJ_MAX_CHILDREN];
+	void* child[BASEOBJ_MAX_CHILDREN];
 
 	sDebugger* dbg;
 
