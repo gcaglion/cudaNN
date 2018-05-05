@@ -514,7 +514,7 @@ void sNN::run(tDataSet* runSet) {
 	safeCall(initNeurons());
 
 	//-- reset tse=0
-	safeCall(Vinit(1, tse, 0, 0)!=0);
+	safeCall(Vinit(1, tse, 0, 0));
 
 	//-- batch run
 	for (int b=0; b<batchCnt; b++) {

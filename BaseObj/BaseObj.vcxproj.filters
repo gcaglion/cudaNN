@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="kaz.cpp">
+    <ClCompile Include="BaseObj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="kazM.h">
+    <ClInclude Include="BaseObj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="kazM2.h">
+    <ClInclude Include="BaseObjMacros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

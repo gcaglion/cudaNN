@@ -434,13 +434,13 @@ void s_Algebra::h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStrea
 #ifdef USE_GPU
 	safeCall(h2d_cu(destAddr, srcAddr, size, ((useStreams)?cuStream:nullptr)) );
 #else
-	safeCall(memcpy_s(destAddr, size, srcAddr, size)==0);
+	memcpy_s(destAddr, size, srcAddr, size);
 #endif
 }
 void s_Algebra::d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams) {
 #ifdef USE_GPU
 	safeCall(d2h_cu(destAddr, srcAddr, size, ((useStreams)?cuStream:nullptr)) );
 #else
-	safeCall(memcpy_s(destAddr, size, srcAddr, size)==0);
+	memcpy_s(destAddr, size, srcAddr, size);
 #endif
 }
