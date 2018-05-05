@@ -18,7 +18,7 @@ typedef float numtype;
 #define DATE_FORMAT_LEN 12
 
 #define USE_ORCL
-//#define USE_GPU
+#define USE_GPU
 
 #define OBJNAME_MAXLEN 128
 

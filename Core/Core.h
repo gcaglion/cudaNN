@@ -5,6 +5,9 @@
 #include "../Utils/Utils.h"
 #include "../ParamMgr/ParamMgr.h"
 #include "../Data/Data.h"
+#ifdef USE_GPU
+#include <cuda_runtime.h>
+#endif
 
 #define CORE_MAX_DESC_LEN	128
 #define CORE_MAX_PARENTS	32
@@ -23,20 +26,20 @@ typedef struct sCoreLayout : sBaseObj {
 
 	tDataShape* shape;
 
-	void sCoreLayout_common(tDebugger* dbg_, int Id_);
-	EXPORT sCoreLayout(tParmsSource* parms, int Id_, tDataShape* shape_, tDebugger* dbg_=nullptr);
+	void sCoreLayout_common(sDebuggerParms* dbgparms_, int Id_);
+	EXPORT sCoreLayout(char* objName_, sBaseObj* objParent_, tParmsSource* parms, int Id_, tDataShape* shape_, sDebuggerParms* dbgparms_=nullptr);
+	//-- TO DO !!! EXPORT sCoreLayout(char* objName_, sBaseObj* objParent_, tParmsSource* parms, int Id_, tDataShape* shape_, sDebuggerParms* dbgparms_=nullptr);
 
 	EXPORT ~sCoreLayout();
-	EXPORT void cleanup();
 
 } tCoreLayout;
 
-typedef struct sCore {
+typedef struct sCore : sBaseObj {
 
 	int kaz;
 	tCoreLayout* layout;
 
-	EXPORT sCore();
-	EXPORT sCore(tParmsSource* parms, tCoreLayout* layout_);
+	EXPORT sCore(char* objName_, sBaseObj* objParent_, tParmsSource* parms, tCoreLayout* layout_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sCore(char* objName_, sBaseObj* objParent_, tDataShape* baseShape_, sDebuggerParms* dbgparms_=nullptr);
 
 } tCore;

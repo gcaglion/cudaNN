@@ -1,22 +1,10 @@
 #include "ParamMgr.h"
 
-
-
-sParmsSource::sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], tDebugger* dbg_) : sBaseObj("ParmsSource", dbg_) {
+sParmsSource::sParmsSource(char* objName_, sBaseObj* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 
 	CLoverridesCnt=CLoverridesCnt_; CLoverride=CLoverride_;
-/*
-	try {
-		parmsFile=new tFileInfo(pFileFullName, FILE_MODE_READ);
-	}
-	catch (std::exception e) {
-		dbg->write(DBG_LEVEL_ERR, "%s() failed. pFileFullName=%s \n lower-level message: %s\n ", 3, __func__, pFileFullName, e.what());
-		throw(e);
-	}
-	dbg->write(DBG_LEVEL_STD, "%s() successfully opened %s \n", 2, __func__, pFileFullName);
-	return;
-*/
-	safeCall(parmsFile=new tFileInfo(pFileFullName, FILE_MODE_READ));
+
+	safecall(spawnFile(parmsFile, pFileFullName, FILE_MODE_READ));
 
 	parmsCnt=0;
 	currentKey[0]='\0';
@@ -38,17 +26,6 @@ sParmsSource::~sParmsSource() {
 		free(parmVal[p]);
 	}
 	free(parmVal);
-}
-void sParmsSource::newDebugger(tDebugger* dbg_) {
-	int dbg_level, dbg_dest; 
-	char dbg_fname[MAX_PATH]; dbg_fname[MAX_PATH-1]='\0';
-
-	get(&dbg_level,"Level");
-	get(&dbg_dest, "Dest");
-	get(dbg_fname, "DestFileFullName");
-
-	safeCall(dbg_=new tDebugger(dbg_level, dbg_dest, dbg_fname));
-
 }
 void sParmsSource::buildSoughtParmFull(const char* soughtParmDesc) {
 	if (soughtParmDesc[0]=='.'||strlen(currentKey)==0) {
@@ -109,16 +86,7 @@ void sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 
 	bool success=(findKey(currentKey) || ignoreError);
 	if (!success) {
-
-		//--------safeThrow replacement------------
-		dbg->compose("KeyDesc_=%s", 1, KeyDesc_);
-			printf("dbg->parentObjName=%s\n", dbg->parentObjName);
-			printf("dbg->errmsg=%s\n", dbg->errmsg);
-			dbg->compose("safeThrow(): %s -> %s() failed with message: %sn", 3, dbg->parentObjName, __func__, dbg->errmsg);
-			printf("dbg->errmsg=%s\n", dbg->errmsg);
-			throw dbg->errmsg;
-			//------------------------------------------
-		//safeThrow("KeyDesc_=%s", 1, KeyDesc_);
+		fail("%s(%p)->%s() failed. KeyDesc_=%s", objName, this, __func__, KeyDesc_);
 	}
 }
 bool sParmsSource::findKey(char* KeyFullDesc){
@@ -157,7 +125,7 @@ void sParmsSource::getx(int** oVar){
 		if (isnumber(parmVal[foundParmId][e])) {
 			(*oVar)[e]=atoi(parmVal[foundParmId][e]);
 		} else {
-			safeCall(decode(e, &oVar[0][e]));
+			safecall(decode(e, &oVar[0][e]));
 		}
 	}
 }

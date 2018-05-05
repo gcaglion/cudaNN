@@ -58,11 +58,20 @@ sRoot::sRoot(sDebuggerParms* rootdbgparms_) : sBaseObj("root", nullptr, rootdbgp
 	//-- here we put everything that needs to be done
 	//-----------------------------------------------
 
+	//-- 1. declare all objects to be spawned
+	sDio* dio1=nullptr;
+	sDio* dio2=nullptr;
+	sDio* dio3=nullptr;
+	sDio* dio4=nullptr;
+	sDio* dio5=nullptr;
+
+	//-- 2. do stuff
+
 	try {
 
 		tFileInfo* parmsFile;
 		char* fname="c:/temp/parms.xml";
-		spawn(parmsFile, tFileInfo, fname, FILE_MODE_READ);
+		safecall(spawnFile(parmsFile, fname, FILE_MODE_READ));
 
 
 		//-- 1. object creation (successful)

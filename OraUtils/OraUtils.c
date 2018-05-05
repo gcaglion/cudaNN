@@ -135,59 +135,59 @@ typedef struct { unsigned short len; unsigned char arr[1]; } varchar;
 /* cud (compilation unit data) array */
 static const short sqlcud0[] =
 {13,4138,178,8,0,
-5,0,0,0,0,0,58,102,0,0,1,1,0,1,0,3,109,0,0,
-24,0,0,0,0,0,27,104,0,0,4,4,0,1,0,1,97,0,0,1,97,0,0,1,97,0,0,1,10,0,0,
-55,0,0,2,0,0,32,127,0,0,0,0,0,1,0,
-70,0,0,3,0,0,30,129,0,0,0,0,0,1,0,
-85,0,0,4,0,0,29,138,0,0,0,0,0,1,0,
-100,0,0,5,0,0,17,155,0,0,1,1,0,1,0,1,97,0,0,
-119,0,0,5,0,0,45,157,0,0,0,0,0,1,0,
-134,0,0,5,0,0,13,159,0,0,6,0,0,1,0,2,97,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,
+5,0,0,0,0,0,58,36,0,0,1,1,0,1,0,3,109,0,0,
+24,0,0,0,0,0,27,38,0,0,4,4,0,1,0,1,97,0,0,1,97,0,0,1,97,0,0,1,10,0,0,
+55,0,0,2,0,0,32,58,0,0,0,0,0,1,0,
+70,0,0,3,0,0,30,60,0,0,0,0,0,1,0,
+85,0,0,4,0,0,29,69,0,0,0,0,0,1,0,
+100,0,0,5,0,0,17,86,0,0,1,1,0,1,0,1,97,0,0,
+119,0,0,5,0,0,45,88,0,0,0,0,0,1,0,
+134,0,0,5,0,0,13,90,0,0,6,0,0,1,0,2,97,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,4,
+0,0,
+173,0,0,5,0,0,13,107,0,0,6,0,0,1,0,2,97,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,
 4,0,0,
-173,0,0,5,0,0,13,176,0,0,6,0,0,1,0,2,97,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,4,0,0,2,
-4,0,0,
-212,0,0,5,0,0,15,189,0,0,0,0,0,1,0,
-227,0,0,0,0,0,90,248,0,64,0,0,5,105,110,77,83,69,1,0,
-247,0,0,0,0,0,93,249,0,64,0,0,5,105,110,77,83,69,1,0,
-267,0,0,0,0,0,93,250,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
-291,0,0,0,0,0,93,251,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
-315,0,0,0,0,0,93,252,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
-339,0,0,0,0,0,93,253,0,64,1,1,5,105,110,77,83,69,1,0,3329,4,0,0,
-363,0,0,0,0,0,93,254,0,64,1,1,5,105,110,77,83,69,1,0,3329,4,0,0,
-387,0,0,6,0,0,17,255,0,0,1,1,0,1,0,1,97,0,0,
-406,0,0,6,0,0,23,256,0,64,0,0,5,105,110,77,83,69,1,0,
-426,0,0,0,0,0,91,265,0,64,0,0,5,105,110,77,83,69,1,0,
-446,0,0,0,0,0,90,329,0,64,0,0,6,105,110,67,73,78,78,1,0,
-467,0,0,0,0,0,93,330,0,64,0,0,6,105,110,67,73,78,78,1,0,
-488,0,0,0,0,0,93,331,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
-513,0,0,0,0,0,93,332,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
-538,0,0,0,0,0,93,333,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
-563,0,0,0,0,0,93,334,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
-588,0,0,0,0,0,93,335,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,4,0,0,
-613,0,0,6,0,0,17,336,0,0,1,1,0,1,0,1,97,0,0,
-632,0,0,6,0,0,23,337,0,64,0,0,6,105,110,67,73,78,78,1,0,
-653,0,0,0,0,0,91,345,0,64,0,0,6,105,110,67,73,78,78,1,0,
-674,0,0,7,0,0,24,374,0,0,1,1,0,1,0,1,97,0,0,
-693,0,0,0,0,0,90,456,0,64,0,0,5,105,110,82,117,110,1,0,
-713,0,0,0,0,0,93,457,0,64,0,0,5,105,110,82,117,110,1,0,
-733,0,0,0,0,0,93,458,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-757,0,0,0,0,0,93,459,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-781,0,0,0,0,0,93,460,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-805,0,0,0,0,0,93,461,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-829,0,0,0,0,0,93,462,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-853,0,0,0,0,0,93,463,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-877,0,0,0,0,0,93,464,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
-901,0,0,0,0,0,93,465,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-925,0,0,0,0,0,93,466,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-949,0,0,0,0,0,93,467,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
-973,0,0,6,0,0,17,468,0,0,1,1,0,1,0,1,97,0,0,
-992,0,0,6,0,0,23,469,0,64,0,0,5,105,110,82,117,110,1,0,
-1012,0,0,0,0,0,91,478,0,64,0,0,5,105,110,82,117,110,1,0,
-1032,0,0,8,84,0,4,519,0,0,3,2,0,1,0,2,3,0,0,1,3,0,0,1,3,0,0,
-1059,0,0,9,0,0,17,529,0,0,1,1,0,1,0,1,97,0,0,
-1078,0,0,9,0,0,45,531,0,0,0,0,0,1,0,
-1093,0,0,9,0,0,13,533,0,0,2,0,0,1,0,2,3,0,0,2,4,0,0,
-1116,0,0,9,0,0,15,544,0,0,0,0,0,1,0,
+212,0,0,5,0,0,15,120,0,0,0,0,0,1,0,
+227,0,0,0,0,0,90,179,0,64,0,0,5,105,110,77,83,69,1,0,
+247,0,0,0,0,0,93,180,0,64,0,0,5,105,110,77,83,69,1,0,
+267,0,0,0,0,0,93,181,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
+291,0,0,0,0,0,93,182,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
+315,0,0,0,0,0,93,183,0,64,1,1,5,105,110,77,83,69,1,0,3329,3,0,0,
+339,0,0,0,0,0,93,184,0,64,1,1,5,105,110,77,83,69,1,0,3329,4,0,0,
+363,0,0,0,0,0,93,185,0,64,1,1,5,105,110,77,83,69,1,0,3329,4,0,0,
+387,0,0,6,0,0,17,186,0,0,1,1,0,1,0,1,97,0,0,
+406,0,0,6,0,0,23,187,0,64,0,0,5,105,110,77,83,69,1,0,
+426,0,0,0,0,0,91,196,0,64,0,0,5,105,110,77,83,69,1,0,
+446,0,0,0,0,0,90,260,0,64,0,0,6,105,110,67,73,78,78,1,0,
+467,0,0,0,0,0,93,261,0,64,0,0,6,105,110,67,73,78,78,1,0,
+488,0,0,0,0,0,93,262,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
+513,0,0,0,0,0,93,263,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
+538,0,0,0,0,0,93,264,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
+563,0,0,0,0,0,93,265,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,3,0,0,
+588,0,0,0,0,0,93,266,0,64,1,1,6,105,110,67,73,78,78,1,0,3329,4,0,0,
+613,0,0,6,0,0,17,267,0,0,1,1,0,1,0,1,97,0,0,
+632,0,0,6,0,0,23,268,0,64,0,0,6,105,110,67,73,78,78,1,0,
+653,0,0,0,0,0,91,276,0,64,0,0,6,105,110,67,73,78,78,1,0,
+674,0,0,7,0,0,24,305,0,0,1,1,0,1,0,1,97,0,0,
+693,0,0,0,0,0,90,387,0,64,0,0,5,105,110,82,117,110,1,0,
+713,0,0,0,0,0,93,388,0,64,0,0,5,105,110,82,117,110,1,0,
+733,0,0,0,0,0,93,389,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+757,0,0,0,0,0,93,390,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+781,0,0,0,0,0,93,391,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+805,0,0,0,0,0,93,392,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+829,0,0,0,0,0,93,393,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+853,0,0,0,0,0,93,394,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+877,0,0,0,0,0,93,395,0,64,1,1,5,105,110,82,117,110,1,0,3329,3,0,0,
+901,0,0,0,0,0,93,396,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+925,0,0,0,0,0,93,397,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+949,0,0,0,0,0,93,398,0,64,1,1,5,105,110,82,117,110,1,0,3329,4,0,0,
+973,0,0,6,0,0,17,399,0,0,1,1,0,1,0,1,97,0,0,
+992,0,0,6,0,0,23,400,0,64,0,0,5,105,110,82,117,110,1,0,
+1012,0,0,0,0,0,91,409,0,64,0,0,5,105,110,82,117,110,1,0,
+1032,0,0,8,84,0,4,450,0,0,3,2,0,1,0,2,3,0,0,1,3,0,0,1,3,0,0,
+1059,0,0,9,0,0,17,460,0,0,1,1,0,1,0,1,97,0,0,
+1078,0,0,9,0,0,45,462,0,0,0,0,0,1,0,
+1093,0,0,9,0,0,13,464,0,0,2,0,0,1,0,2,3,0,0,2,4,0,0,
+1116,0,0,9,0,0,15,475,0,0,0,0,0,1,0,
 };
 
 
@@ -212,69 +212,6 @@ void getCurrentTime(char* ot) {
 	time_t mytime = time(NULL);
 	sprintf(ot, "%s", ctime(&mytime));
 }
-void LogWrite(tDebugger* dbg, int LogType, const char* msg, int argcount, ...) {
-	// pLogLevel=	0 (No screen, No file) | 1 (Screen, No file) | 2 (Screen AND File)
-	int n;
-	char*			arg_s;
-	int				arg_d;
-	double			arg_f;
-	va_list			arguments;
-	char submsg[MAX_PATH];
-	unsigned int	im = 0;
-	int				prev_im = 0;
-	//char timestamp[60];
-
-	if (dbg->level==0&&LogType==DBG_LEVEL_STD) return;
-
-	if (dbg->ThreadSafeLogging>0) WaitForSingleObject(dbg->Mtx, INFINITE);
-/*
-	//-- Opens Log file only once
-	if (dbg->fIsOpen!=1) {
-		strcpy(dbg->FullfName, dbg->fPath); strcat(dbg->FullfName, "/"); strcat(dbg->FullfName, dbg->fName);
-		dbg->outFile->handle = fopen(dbg->FullfName, "a");
-		dbg->fIsOpen = 1;
-		getCurrentTime(timestamp);
-		fprintf(dbg->outFile->handle, "\n---------- Process %d Started New Log at %s ----------\n", GetCurrentProcessId(), timestamp);
-	}
-*/
-	va_start(arguments, argcount);
-	n = 0;
-
-	do {
-		if (msg[im]==37) {                // "%"
-			memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
-			n++;
-			prev_im = im+2;
-			if (msg[im+1]==115) {   // "s"
-				arg_s = va_arg(arguments, char*);
-				if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_s);
-				if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR)	fprintf(dbg->outFile->handle, submsg, arg_s);
-			} else if (msg[im+1]==100) {   // "d"
-				arg_d = va_arg(arguments, int);
-				if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_d);
-				if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR)	fprintf(dbg->outFile->handle, submsg, arg_d);
-			} else if (msg[im+1]==112) {   // "p"
-				arg_d = va_arg(arguments, long);
-				if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_d);
-				if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR)	fprintf(dbg->outFile->handle, submsg, arg_d);
-			} else {   // this could be 67 ("f") or any mask before "f" -> in any case, it's a double
-				arg_f = va_arg(arguments, double);
-				if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg, arg_f);
-				if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR)	fprintf(dbg->outFile->handle, submsg, arg_f);
-			}
-		}
-		im++;
-	} while (im<strlen(msg));
-
-	memcpy(submsg, &msg[prev_im], (im-prev_im+2)); submsg[im-prev_im+2] = '\0';
-	if (dbg->level==1||dbg->level==3||LogType==DBG_LEVEL_ERR) printf(submsg);
-	if (dbg->level==2||dbg->level==3||LogType==DBG_LEVEL_ERR) fprintf(dbg->outFile->handle, submsg);
-	if (LogType==DBG_LEVEL_ERR && dbg->PauseOnError) { printf("Press any key..."); getchar(); }
-
-	va_end(arguments);
-
-	if (dbg->ThreadSafeLogging>0) ReleaseMutex(dbg->Mtx);
-}
 
 //=== DB common functions
 EXPORT bool  OraConnect(tDebugger* dbg, tDBConnection* DBConnInfo) {
@@ -288,11 +225,8 @@ EXPORT bool  OraConnect(tDebugger* dbg, tDBConnection* DBConnInfo) {
 	/* EXEC SQL END DECLARE SECTION; */ 
 
 
-	//LogWrite_C(dbg, "%s About to execute connect with %s , %s , %s\n", 4, timestamp_C, pUserName, pPassword, pDBString);
-
 	char* vPath = getenv("PATH");
 	char* vOH = getenv("ORACLE_HOME");
-	//printf("PATH=%s\nORACLE_HOME=%s\n", vPath, vOH);
 
 	/* EXEC SQL CONTEXT ALLOCATE : vCtx; */ 
 
@@ -390,16 +324,13 @@ EXPORT bool  OraConnect(tDebugger* dbg, tDBConnection* DBConnInfo) {
 
 
 	if (sqlca.sqlcode==0) {
-		//memcpy(DBConnInfo->Ctx, vCtx, sizeof(sql_context));
 		DBConnInfo->DBCtx = vCtx;
-		//dbg->DBCtx = vCtx;
-		LogWrite(dbg, DBG_LEVEL_STD, "OraConnect() - Connected to ORACLE as user: %s ; DBConnInfo->DBCtx=%p\n", 2, username, DBConnInfo->DBCtx);
+		info_c("OraConnect() - Connected to ORACLE as user: %s ; DBConnInfo->DBCtx=%p\n", username, DBConnInfo->DBCtx);
 	} else {
-		LogWrite(dbg, DBG_LEVEL_STD, "PATH=%s\n", 1, vPath);
-		LogWrite(dbg, DBG_LEVEL_STD, "ORACLE_HOME=%s\n", 1, vOH);
-		LogWrite(dbg, DBG_LEVEL_STD, "DBUser=%s\n", 1, DBConnInfo->DBUser);
-		//Oerr(dbg, __func__, sqlca.sqlcode);
-		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. user = %s\n Error %s", 3, __func__, DBConnInfo->DBUser, sqlca.sqlerrm.sqlerrmc);
+		info_c("PATH=%s", vPath);
+		info_c("ORACLE_HOME=%s", vOH);
+		info_c("DBUser=%s", DBConnInfo->DBUser);
+		err_c("%s failed. user = %s\n Error %s", __func__, DBConnInfo->DBUser, sqlca.sqlerrm.sqlerrmc);
 	}
 	return(sqlca.sqlcode==0);
 }
@@ -648,7 +579,7 @@ EXPORT bool Ora_GetFlatOHLCV(tDebugger* dbg, tDBConnection* db, char* pSymbol, c
 		} else if (sqlca.sqlcode==1403) {
 			break;
 		} else {
-			LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			err_c("%s failed. stmt = %s\n Error %s", __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 			retval = sqlca.sqlcode;
 			break;
 		}
@@ -741,7 +672,7 @@ EXPORT bool Ora_GetFlatOHLCV(tDebugger* dbg, tDBConnection* db, char* pSymbol, c
 		oBaseBar[3] = vClose;
 		oBaseBar[4] = vVolume;
 	} else if (sqlca.sqlcode!=1403) {
-		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		err_c("%s failed. stmt = %s\n Error %s", __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		retval = sqlca.sqlcode;
 	}
 
@@ -794,12 +725,12 @@ EXPORT bool Ora_LogSaveMSE(tDebugger* dbg, tDBConnection* db, int pid, int tid, 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
 		if (!OraConnect(dbg, db)) {
-			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+			err_c("%s() could not connect to Log Database...\n", __func__);
 			return false;
 		}
 		vCtx = db->DBCtx;
 	}
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, db->DBCtx, vCtx);
+	info_c("%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", __func__, db->DBCtx, vCtx);
 
 	vInsertCount=mseCnt;
 	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
@@ -818,7 +749,7 @@ EXPORT bool Ora_LogSaveMSE(tDebugger* dbg, tDBConnection* db, int pid, int tid, 
 
 	//-- Then, Build the Insert statement
 	sprintf(&stmt[0], "insert into TrainLog(ProcessId, ThreadId, Epoch, MSE_T, MSE_V) values(:P01, :P02, :P03, :P04, :P05)");
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
+	info_c("%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", __func__, stmt, pid, tid);
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
@@ -1100,9 +1031,9 @@ EXPORT bool Ora_LogSaveMSE(tDebugger* dbg, tDBConnection* db, int pid, int tid, 
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
 
 	//pInsertCount[vNetLevel] = sqlca.sqlerrd[2];
-	LogWrite(dbg, DBG_LEVEL_STD, "BulkMSEInsert() inserted %d rows.\n", 1, sqlca.sqlerrd[2]);
+	info_c("BulkMSEInsert() inserted %d rows.\n", sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
-		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s\n", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		if (sqlca.sqlcode!=1) err_c("%s failed. stmt = %s\n Error %s\n", __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		return false;
 	}
 	/* EXEC SQL DEALLOCATE DESCRIPTOR 'inMSE'; */ 
@@ -1160,12 +1091,12 @@ EXPORT bool Ora_LogSaveW(tDebugger* dbg, tDBConnection* db, int pid, int tid, in
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
 		if (!OraConnect(dbg, db)) {
-			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+			err_c("%s() could not connect to Log Database...\n", __func__);
 			return false;
 		}
 		vCtx = db->DBCtx;
 	}
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, db->DBCtx, vCtx);
+	info_c("%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", __func__, db->DBCtx, vCtx);
 
 	vInsertCount=Wcnt;
 	vProcessId=(int*)malloc(vInsertCount*sizeof(int));
@@ -1184,7 +1115,7 @@ EXPORT bool Ora_LogSaveW(tDebugger* dbg, tDBConnection* db, int pid, int tid, in
 
 	//-- Then, Build the Insert statement
 	sprintf(&stmt[0], "insert into CoreImage_NN (ProcessId, ThreadId, Epoch, WId, W) values(:P01, :P02, :P03, :P04, :P05)");
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
+	info_c("%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", __func__, stmt, pid, tid);
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
@@ -1465,9 +1396,9 @@ EXPORT bool Ora_LogSaveW(tDebugger* dbg, tDBConnection* db, int pid, int tid, in
 
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
 
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
+	info_c("%s() inserted %d rows.\n", __func__, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
-		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		if (sqlca.sqlcode!=1) err_c("%s failed. stmt = %s\n Error %s", __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		return (sqlca.sqlcode==0);
 	}
 	/* EXEC SQL DEALLOCATE DESCRIPTOR 'inCINN'; */ 
@@ -1510,7 +1441,7 @@ EXPORT bool Ora_LogSaveClient(tDebugger* dbg, tDBConnection* db, int pid, char* 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
 		if (!OraConnect(dbg, db)) {
-			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+			err_c("%s() could not connect to Log Database...\n", __func__);
 			return false;
 		}
 		vCtx = db->DBCtx;
@@ -1557,7 +1488,7 @@ EXPORT bool Ora_LogSaveClient(tDebugger* dbg, tDBConnection* db, int pid, char* 
 
 
 	if (sqlca.sqlcode!=0) {
-		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		err_c("%s failed. stmt = %s\n Error %s", __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		return false;
 	}
 	return true;
@@ -1594,12 +1525,12 @@ EXPORT bool Ora_LogSaveRun(tDebugger* dbg, tDBConnection* db, int pid, int tid, 
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
 		if (!OraConnect(dbg, db)) {
-			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+			err_c("%s() could not connect to Log Database...\n", __func__);
 			return false;
 		}
 		vCtx = db->DBCtx;
 	}
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", 3, __func__, db->DBCtx, vCtx);
+	info_c("%s() CheckPoint 2 - LogDB->DBCtx=%p , vCtx=%p\n", __func__, db->DBCtx, vCtx);
 
 	vFeaturesCnt=featuresCnt;
 	vInsertCount=barCnt*featuresCnt;
@@ -1634,7 +1565,7 @@ EXPORT bool Ora_LogSaveRun(tDebugger* dbg, tDBConnection* db, int pid, int tid, 
 
 	//-- Then, Build the Insert statement
 	sprintf(&stmt[0], "insert into RunLog (ProcessId, ThreadId, SetId, NetProcessId, NetThreadId, Pos, FeatureId, PredictedTRS, ActualTRS, ErrorTRS) values(:P01, :P02, :P03, :P04, :P05, :P06, :P07, :P08, :P09, :P10)");
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", 4, __func__, stmt, pid, tid);
+	info_c("%s() CheckPoint 4 - stmt='%s' ; pid[0]=%d ; tid[0]=%d\n", __func__, stmt, pid, tid);
 
 	/* EXEC SQL CONTEXT USE :vCtx; */ 
 
@@ -2096,9 +2027,9 @@ EXPORT bool Ora_LogSaveRun(tDebugger* dbg, tDBConnection* db, int pid, int tid, 
 	//EXEC SQL ALTER SESSION SET SQL_TRACE = FALSE;
 
 	//pInsertCount[vNetLevel] = sqlca.sqlerrd[2];
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() inserted %d rows.\n", 2, __func__, sqlca.sqlerrd[2]);
+	info_c("%s() inserted %d rows.\n", __func__, sqlca.sqlerrd[2]);
 	if (sqlca.sqlcode!=0) {
-		if (sqlca.sqlcode!=1) LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+		if (sqlca.sqlcode!=1) err_c("%s failed. stmt = %s\n Error %s", __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 		return false;
 	}
 	/* EXEC SQL DEALLOCATE DESCRIPTOR 'inRun'; */ 
@@ -2152,7 +2083,7 @@ EXPORT bool Ora_LogLoadW(tDebugger* dbg, tDBConnection* db, int pid, int tid, in
 	//-- Connects to DB only once
 	if (vCtx==NULL) {
 		if (!OraConnect(dbg, db)) {
-			LogWrite(dbg, DBG_LEVEL_ERR, "%s() could not connect to Log Database...\n", 1, __func__);
+			err_c("%s() could not connect to Log Database...\n", __func__);
 			return false;
 		}
 		vCtx = db->DBCtx;
@@ -2220,13 +2151,13 @@ sId=:b1 and ThreadId=:b2)";
 
 	}
 	if (vEpoch==-1) {
-		LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. Could not find max(epoch) for ProcessId=%d, ThreadId=%d\n", 3, __func__, vPid, vTid);
+		err_c("%s failed. Could not find max(epoch) for ProcessId=%d, ThreadId=%d\n", __func__, vPid, vTid);
 		return false;
 	}
 
 	sprintf(&stmt[0], "select WId, W from CoreImage_NN where ProcessId=%d and ThreadId=%d and Epoch=%d order by 1,2", pid, tid, vEpoch);
 	
-	LogWrite(dbg, DBG_LEVEL_STD, "%s() CheckPoint 3 - stmt=%s\n", 2, __func__, stmt);
+	info_c("%s() CheckPoint 3 - stmt=%s\n", __func__, stmt);
 	/* EXEC SQL PREPARE sLoadW FROM :stmt; */ 
 
 {
@@ -2340,7 +2271,7 @@ sId=:b1 and ThreadId=:b2)";
 		} else if (sqlca.sqlcode==1403) {
 			break;
 		} else {
-			LogWrite(dbg, DBG_LEVEL_ERR, "%s failed. stmt = %s\n Error %s\n", 3, __func__, stmt, sqlca.sqlerrm.sqlerrmc);
+			err_c("%s failed. stmt = %s\n Error %s\n", __func__, stmt, sqlca.sqlerrm.sqlerrmc);
 			retval = sqlca.sqlcode;
 			break;
 		}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
+#include "../BaseObj/BaseObj.h"
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
@@ -30,12 +31,12 @@ template <typename T> EXPORT void swap(T* v1, T* v2) {
 #define FAIL_MALLOC_u "Targets memory allocation failed. \n"
 #define FAIL_MALLOC_SCALAR "Scalars memory allocation failed. \n"
 
-typedef struct s_matrix : public sBaseObj {
+typedef struct s_matrix {
 	int my;
 	int mx;
 	numtype* m;
 
-	s_matrix(int my_, int mx_, bool init_=false, numtype val0=0, numtype inc=0 ) : sBaseObj("Matrix", nullptr) {
+	s_matrix(int my_, int mx_, bool init_=false, numtype val0=0, numtype inc=0 ) {
 		my=my_; mx=mx_;
 		m=(numtype*)malloc(my*mx*sizeof(numtype));
 		if(init_) { for (int i=0; i<(my*mx); i++) m[i]=val0+i*inc; }
@@ -206,9 +207,8 @@ typedef struct s_Algebra : public sBaseObj {
 	numtype* ss;	// shared scalar
 
 	//-- class constructor/destructor
-	EXPORT s_Algebra(tDebugger* dbg_);
+	EXPORT s_Algebra(char* objName_, sBaseObj* objParent_, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~s_Algebra();
-	EXPORT s_Algebra();
 
 	//-- class methods
 	EXPORT void MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);

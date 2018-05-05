@@ -10,8 +10,8 @@ typedef struct sFileData : public sDataSource {
 	int fieldSep;
 	int featuresCnt;
 
-	EXPORT sFileData(tFileInfo* srcFile_, int fieldSep_=COMMA_SEPARATOR, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, tDebugger* dbg_=nullptr);
-	EXPORT sFileData(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT sFileData(char* objName_, sBaseObj* objParent_, tFileInfo* srcFile_, int fieldSep_=COMMA_SEPARATOR, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sFileData(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sFileData();
 
 } tFileData;

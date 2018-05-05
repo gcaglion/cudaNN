@@ -1,19 +1,17 @@
 #pragma once
 
-#include <typeinfo.h>
-#include "BaseObjMacros.h"
+#include "../CommonMacros.h"
 #include "../Debugger/Debugger.h"
 
 #define BASEOBJ_MAX_CHILDREN 64
+;
 struct sBaseObj {
 
 	char objName[64];
 	sBaseObj* objParent;
 	int stackLevel;
 	int childrenCnt=0;
-
-	bool childHasDbg[BASEOBJ_MAX_CHILDREN];
-	void* child[BASEOBJ_MAX_CHILDREN];
+	sBaseObj* child[BASEOBJ_MAX_CHILDREN];
 
 	sDebugger* dbg;
 

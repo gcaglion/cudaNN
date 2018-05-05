@@ -1,37 +1,37 @@
 #include "Data.h"
 
 
-sDataShape::sDataShape(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_) : sBaseObj("DataShape", dbg_) {
+sDataShape::sDataShape(char* objName_, sBaseObj* objParent_, int sampleLen_, int predictionLen_, int featuresCnt_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 	sampleLen=sampleLen_; predictionLen=predictionLen_; featuresCnt=featuresCnt_;
 }
-sDataShape::sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("DataShape", dbg_) {
+sDataShape::sDataShape(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 
-	safeCall(parms->setKey(parmKey));
-	safeCall(parms->get(&sampleLen, "SampleLen"));
-	safeCall(parms->get(&predictionLen, "PredictionLen"));
-	safeCall(parms->get(&featuresCnt, "FeaturesCount"));
+	safecall(parms->setKey(parmKey));
+	safecall(parms->get(&sampleLen, "SampleLen"));
+	safecall(parms->get(&predictionLen, "PredictionLen"));
+	safecall(parms->get(&featuresCnt, "FeaturesCount"));
 
 }
 sDataShape::~sDataShape() {
 }
 
-sData::sData(tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, tDebugger* dbg_) : sBaseObj("Data", dbg_) {
+sData::sData(char* objName_, sBaseObj* objParent_, tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 	shape=shape_; 
 	ActionDo[TRAIN]=doTrain_; ActionDo[TEST]=doTest_; ActionDo[VALID]=doValidation_;
 
 }
-sData::sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("Data", dbg_) {
+sData::sData(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 
 	//-- Shape
-	safeCall(parms->setKey(parmKey));
-	safeCall(shape=new tDataShape(parms, "Shape"));
+	safecall(parms->setKey(parmKey));
+	safespawn(shape, tDataShape, parms, "Shape");
 
 	//-- Actions, TimeSeries and DataSets
 	for(int a=0; a<3; a++) {
-		safeCall(parms->setKey(parmKey)); safeCall(parms->setKey(ActionDesc[a]));
-		safeCall(parms->get(&ActionDo[a], "Do"));
+		safecall(parms->setKey(parmKey)); safecall(parms->setKey(ActionDesc[a]));
+		safecall(parms->get(&ActionDo[a], "Do"));
 		if(ActionDo[a]) {
-			safeCall(ds[a]=new tDataSet(parms, "DataSet"));
+			safespawn(ds[a], tDataSet, parms, "DataSet");
 		}
 	}
 

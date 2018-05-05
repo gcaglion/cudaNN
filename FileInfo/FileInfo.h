@@ -10,9 +10,6 @@
 
 typedef struct sFileInfo {
 
-	char objName[64]="";
-	void* objParent=nullptr;
-
 	char Path[MAX_PATH];
 	char Name[MAX_PATH];
 	char FullName[MAX_PATH];
@@ -24,6 +21,9 @@ typedef struct sFileInfo {
 	char modeDesc[30];
 
 #ifdef __cplusplus
+	char objName[64] ="";
+	void* objParent=nullptr;
+
 	EXPORT void sFileInfo_common();
 	EXPORT sFileInfo(char* Name_, char* Path_, int mode_);
 	EXPORT sFileInfo(char* FullName_, int mode_);

@@ -1,5 +1,6 @@
 #pragma once
 #include "../CommonEnv.h"
+#include "../BaseObj/BaseObj.h"
 #include "../Utils/Utils.h"
 #include "../FileInfo/FileInfo.h"
 #include "ParamMgr_limits.h"
@@ -14,9 +15,8 @@ typedef struct sParmsSource : public sBaseObj {
 	int parmsCnt=0;
 	int foundParmId;
 
-	EXPORT sParmsSource(char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], tDebugger* dbg_=nullptr);
+	EXPORT sParmsSource(char* objName_, sBaseObj* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sParmsSource();
-	void newDebugger(tDebugger* dbg_);
 
 	char parmName[XML_MAX_PARAMS_CNT][XML_MAX_PATH_LEN];
 	
@@ -50,7 +50,7 @@ typedef struct sParmsSource : public sBaseObj {
 
 		//-- lookup parm name&val
 		foundParmId=findParmId();
-		if (foundParmId<0) safeThrow("could not find parm %s. currentKey=%s", 1, soughtParmDesc, currentKey);
+		if (foundParmId<0) fail("could not find parm %s. currentKey=%s", soughtParmDesc, currentKey);
 
 		//-- set oListLen (if passed)
 		if (oListLen!=nullptr) (*oListLen)=parmValsCnt[foundParmId];

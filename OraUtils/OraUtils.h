@@ -11,10 +11,9 @@ typedef int bool;
 #endif
 
 #include "../CommonEnv.h"
+#include "../Debugger/Debugger.h"
 #include "../DBConnection/DBConnection.h"
 #include <math.h>
-
-
 
 //=== DB common functions
 EXPORT bool OraConnect(tDebugger* Debugger, tDBConnection* DBConnInfo);
@@ -35,4 +34,3 @@ EXPORT bool Ora_LogLoadW(tDebugger* dbg, tDBConnection* db, int pid, int tid, in
 #undef EXPORT
 #define EXPORT __declspec(dllexport)
 #endif
-

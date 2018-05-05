@@ -24,10 +24,9 @@ typedef struct sLogger : public sBaseObj {
 	bool saveInternals;
 	bool saveImage;
 
-	EXPORT sLogger(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
-	EXPORT sLogger(tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, tDebugger* dbg_=nullptr);
-	EXPORT sLogger(tFileData* logFile, tDebugger* dbg_=nullptr);
-	EXPORT ~sLogger();
+	EXPORT sLogger(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sLogger(char* objName_, sBaseObj* objParent_, tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sLogger(char* objName_, sBaseObj* objParent_, tFileData* logFile, sDebuggerParms* dbgparms_=nullptr);
 
 	EXPORT void SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV);
 	EXPORT void SaveRun(int pid, int tid, int setid, int npid, int ntid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);

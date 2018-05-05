@@ -20,8 +20,8 @@ typedef struct sDataShape : public sBaseObj {
 	int inputCnt;
 	int outputCnt;
 
-	EXPORT sDataShape(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
-	EXPORT sDataShape(int sampleLen_, int predictionLen_, int featuresCnt_, tDebugger* dbg_=nullptr);
+	EXPORT sDataShape(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sDataShape(char* objName_, sBaseObj* objParent_, int sampleLen_, int predictionLen_, int featuresCnt_, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sDataShape();
 
 } tDataShape;
@@ -38,8 +38,8 @@ typedef struct sData : public sBaseObj {
 	//-- DataSets (each include its own source TimeSerie)
 	tDataSet* ds[3];
 
-	EXPORT sData(tDataShape* shape_=nullptr, bool doTrain=true, bool doTest=true, bool doValidation=false, tDebugger* dbg_=nullptr);
-	EXPORT sData(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT sData(char* objName_, sBaseObj* objParent_, tDataShape* shape_=nullptr, bool doTrain=true, bool doTest=true, bool doValidation=false, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sData(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sData();
 
 } tData;

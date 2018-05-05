@@ -3,6 +3,7 @@
 #include "../CommonEnv.h"
 #include "DBConnection_enums.h"
 #ifdef __cplusplus
+#include "../BaseObj/BaseObj.h"
 #include "../ParamMgr/ParamMgr.h"
 #endif
 
@@ -22,8 +23,8 @@ typedef struct sDBConnection
 	void* DBCtx;
 
 #ifdef __cplusplus
-	EXPORT sDBConnection(char* username, char* password, char* connstring, tDebugger* dbg_=nullptr);
-	EXPORT sDBConnection(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT sDBConnection(char* objName_, sBaseObj* objParent_, char* username, char* password, char* connstring, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sDBConnection(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT sDBConnection();
 	EXPORT ~sDBConnection();
 #endif

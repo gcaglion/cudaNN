@@ -4,7 +4,7 @@
 #include "../DataSource/FileData_enums.h"
 #include "../DataSource/FXData_enums.h"
 #include "../DBConnection/DBConnection_enums.h"
-#include "../Debugger/Debugger_enums.h"
+//#include "../Debugger/Debugger_enums.h"
 #include "../FileInfo/FileInfo_enums.h"
 #include "../TimeSerie/TimeSerie_enums.h"
 #include "../Logger/Logger_enums.h"
@@ -31,13 +31,13 @@ void sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(ORCL_DEST, elementId);
 	optionLookup(FILE_DEST, elementId);
 	//-- Debugger enums
-	optionLookup(DBG_LEVEL_ERR, elementId);
-	optionLookup(DBG_LEVEL_STD, elementId);
-	optionLookup(DBG_LEVEL_DET, elementId);
+/*	optionLookup(DEFAULT_DBG_VERBOSITY, elementId);
+	optionLookup(DEFAULT_DBG_TIMING, elementId);
+	optionLookup(DEFAULT_DBG_PAUSERR, elementId);
 	optionLookup(DBG_DEST_FILE, elementId);
 	optionLookup(DBG_DEST_SCREEN, elementId);
 	optionLookup(DBG_DEST_BOTH, elementId);
-	//-- FileData_enums
+*/	//-- FileData_enums
 	optionLookup(COMMA_SEPARATOR, elementId);
 	optionLookup(TAB_SEPARATOR, elementId);
 	optionLookup(SPACE_SEPARATOR, elementId);
@@ -91,6 +91,6 @@ void sParmsSource::decode(int elementId, int* oVal) {
 	optionLookup(BP_SCGD, elementId);
 	optionLookup(BP_LM, elementId);
 
-	if(!success) safeThrow("could not decode value %s for parameter %s", 2, parmVal[foundParmId][elementId], soughtParmFull);
+	fail("could not decode value %s for parameter %s", parmVal[foundParmId][elementId], soughtParmFull);
 
 }

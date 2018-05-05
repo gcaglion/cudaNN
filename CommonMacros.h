@@ -11,7 +11,6 @@
 	childrenCnt++; \
 }
 #define safespawn(objname, objtype, ...) \
-	objtype* objname=nullptr; \
 	info("%s->%s() Trying:  %s = new %s(%s)...", objName, __func__, #objname, #objtype, #__VA_ARGS__); \
 	try { \
 		spawn(objname, objtype, __VA_ARGS__); \
@@ -57,4 +56,17 @@
 #define fail_d(mask, ...) { \
 	err_d(mask, __VA_ARGS__); \
 	throw(std::exception(stackmsg)); \
+}
+
+//-- info() , err() for C callers (with dbg defined)
+#define info_c(mask, ...) { if(dbg->parms->verbose) err_c_(mask, __VA_ARGS__); }
+#define err_c(mask, ...) { \
+	err_c_(mask, __VA_ARGS__); \
+	if (dbg->parms->pauseOnError) { printf("Press any key..."); getchar(); } \
+}
+#define err_c_(mask, ...) { \
+	sprintf_s(dbg->msg, DBG_MSG_MAXLEN, mask, __VA_ARGS__); strcat_s(dbg->msg, DBG_MSG_MAXLEN, "\n"); \
+	strcat_s(dbg->stackmsg, DBG_STACK_MAXLEN, dbg->msg); \
+	printf("%s", dbg->msg); \
+	fprintf(dbg->outFile->handle, "%s", dbg->msg); \
 }

@@ -10,23 +10,35 @@
 #define DBG_MSG_MAXLEN 1024
 #define DBG_STACK_MAXLEN 32768
 
-struct sDebuggerParms {
+typedef struct sDebuggerParms {
 	bool verbose;
 	bool timing;
 	bool pauseOnError;
 
+#ifdef __cplusplus
 	EXPORT sDebuggerParms(bool verbose_=DEFAULT_DBG_VERBOSITY, bool timing_=DEFAULT_DBG_TIMING, bool pauseOnError_=DEFAULT_DBG_PAUSERR);
-};
+#endif
+} tDebuggerParms;
 
-struct sDebugger {
+typedef struct sDebugger {
 
-	sDebuggerParms* parms;
-
+	tDebuggerParms* parms;
 	tFileInfo* outFile;
-	char msg[DBG_MSG_MAXLEN]="";
-	char stackmsg[DBG_STACK_MAXLEN]="";
 
+	char msg[DBG_MSG_MAXLEN]
+#ifdef __cplusplus
+		=""
+#endif
+		;
+	char stackmsg[DBG_STACK_MAXLEN]
+#ifdef __cplusplus
+		=""
+#endif
+		;
+
+#ifdef __cplusplus
 	EXPORT sDebugger(char* outFileName=DEFAULT_DBG_FNAME, sDebuggerParms* parms_=nullptr, char* outFilePath=DEFAULT_DBG_FPATH);
 	EXPORT ~sDebugger();
+#endif
 
-};
+} tDebugger;

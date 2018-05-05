@@ -8,7 +8,7 @@
 #include "NN_parms.h"
 #include "NN_enums.h"
 
-typedef struct sNN :public sCore, public sBaseObj {
+typedef struct sNN :public sCore {
 
 	//-- MyAlgebra common structures
 	Algebra* Alg=nullptr;
@@ -74,9 +74,9 @@ typedef struct sNN :public sCore, public sBaseObj {
 	DWORD WUstart, WUtimeTot=0, WUcnt=0; float WUtimeAvg;
 	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
-	void sNN_common(tDataShape* baseShape, tDebugger* dbg_);
-	EXPORT sNN(tParmsSource* XMLparms, tCoreLayout* coreLayout, tDebugger* dbg_=nullptr);
-	EXPORT sNN(tDataShape* baseShape, tNNparms* NNparms_, tDebugger* dbg_=nullptr);
+	void sNN_common(tDataShape* baseShape, sDebuggerParms* dbgparms_);
+	EXPORT sNN(char* objName_, sBaseObj* objParent_, tParmsSource* XMLparms, tCoreLayout* coreLayout, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sNN(char* objName_, sBaseObj* objParent_, tDataShape* baseShape, tNNparms* NNparms_, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sNN();
 
 	EXPORT void setActivationFunction(int* func_);

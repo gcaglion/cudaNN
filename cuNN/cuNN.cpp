@@ -1,6 +1,6 @@
 #include "cuNN.h"
 
-void sNN::sNN_common(tDataShape* baseShape, tDebugger* dbg_) {
+void sNN::sNN_common(tDataShape* baseShape, sDebuggerParms* dbgparms_) {
 	pid=GetCurrentProcessId();
 	tid=GetCurrentThreadId();
 
@@ -12,24 +12,24 @@ void sNN::sNN_common(tDataShape* baseShape, tDebugger* dbg_) {
 	featuresCnt=baseShape->featuresCnt;
 
 	//-- bias still not working(!) Better abort until it does
-	if (parms->useBias) safeThrow("Bias still not working properly. NN creation aborted.", 0);
+	if (parms->useBias) fail("Bias still not working properly. NN creation aborted.");
 
 	//-- set Layout. We don't have batchSampleCnt, so we set it at 1. train() and run() will set it later
 	setLayout(1);
 
 	//-- weights can be set now, as they are not affected by batchSampleCnt
-	safeCall(createWeights());
+	safecall(createWeights());
 
 	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
-	safeCall(Alg=new Algebra(dbg));
+	safespawn(Alg, Algebra, );
 
 	//-- x. set scaleMin / scaleMax
 	scaleMin=(numtype*)malloc(parms->levelsCnt*sizeof(int));
 	scaleMax=(numtype*)malloc(parms->levelsCnt*sizeof(int));
 
 	//-- 3. malloc device-based scalar value, to be used by reduction functions (sum, ssum, ...)
-	safeCall(myMalloc(&se, 1));
-	safeCall(myMalloc(&tse, 1));
+	safecall(myMalloc(&se, 1));
+	safecall(myMalloc(&tse, 1));
 
 	//-- 4. we need to malloc these here (issue when running with no training...)
 	mseT=(numtype*)malloc(1*sizeof(numtype));
@@ -37,28 +37,28 @@ void sNN::sNN_common(tDataShape* baseShape, tDebugger* dbg_) {
 
 }
 
-sNN::sNN(tParmsSource* XMLparms, tCoreLayout* coreLayout, tDebugger* dbg_) : sBaseObj("NN", dbg_), sCore(XMLparms, coreLayout) {
+sNN::sNN(char* objName_, sBaseObj* objParent_, tParmsSource* XMLparms, tCoreLayout* coreLayout, sDebuggerParms* dbgparms_) : sCore(objName_, objParent_, XMLparms, coreLayout, dbgparms_) {
 	
 	//-- 0. read NN Parms (Topology + Training)
 	parms=new tNNparms();
-	safeCall(XMLparms->setKey("Topology"));
-	safeCall(XMLparms->get(&parms->levelRatio, "LevelRatio", &parms->levelsCnt)); parms->levelsCnt+=2;
-	safeCall(XMLparms->get(&parms->ActivationFunction, "LevelActivation", new int));
-	safeCall(XMLparms->get(&parms->useContext, "UseContext"));
-	safeCall(XMLparms->get(&parms->useBias, "UseBias"));
+	safecall(XMLparms->setKey("Topology"));
+	safecall(XMLparms->get(&parms->levelRatio, "LevelRatio", &parms->levelsCnt)); parms->levelsCnt+=2;
+	safecall(XMLparms->get(&parms->ActivationFunction, "LevelActivation", new int));
+	safecall(XMLparms->get(&parms->useContext, "UseContext"));
+	safecall(XMLparms->get(&parms->useBias, "UseBias"));
 	
-	safeCall(XMLparms->setKey("..Training"));
-	safeCall(XMLparms->get(&parms->MaxEpochs, "MaxEpochs"));
-	safeCall(XMLparms->get(&parms->TargetMSE, "TargetMSE"));
-	safeCall(XMLparms->get(&parms->NetSaveFreq, "NetSaveFrequency"));
-	safeCall(XMLparms->get(&parms->StopOnDivergence, "StopOnDivergence"));
-	safeCall(XMLparms->get(&parms->BP_Algo, "BP_Algo"));
+	safecall(XMLparms->setKey("..Training"));
+	safecall(XMLparms->get(&parms->MaxEpochs, "MaxEpochs"));
+	safecall(XMLparms->get(&parms->TargetMSE, "TargetMSE"));
+	safecall(XMLparms->get(&parms->NetSaveFreq, "NetSaveFrequency"));
+	safecall(XMLparms->get(&parms->StopOnDivergence, "StopOnDivergence"));
+	safecall(XMLparms->get(&parms->BP_Algo, "BP_Algo"));
 
 	switch (parms->BP_Algo) {
 		//--... TO DO ...
 	case BP_STD:
-		safeCall(XMLparms->get(&parms->LearningRate, "BP_Std.LearningRate"));
-		safeCall(XMLparms->get(&parms->LearningMomentum, "BP_Std.LearningMomentum"));
+		safecall(XMLparms->get(&parms->LearningRate, "BP_Std.LearningRate"));
+		safecall(XMLparms->get(&parms->LearningMomentum, "BP_Std.LearningMomentum"));
 		break;
 	case BP_QUICKPROP:
 		break;
@@ -68,20 +68,20 @@ sNN::sNN(tParmsSource* XMLparms, tCoreLayout* coreLayout, tDebugger* dbg_) : sBa
 	case BP_SCGD: break;
 	case BP_LM: break;
 	default:
-		safeThrow("invalid BP_Algo: %d", 1, parms->BP_Algo);
+		fail("invalid BP_Algo: %d", parms->BP_Algo);
 	}
 
 	//-- 1. common constructor
-	sNN_common(coreLayout->shape, dbg_);
+	sNN_common(coreLayout->shape, dbgparms_);
 
 }
-sNN::sNN(tDataShape* baseShape, tNNparms* NNparms_, tDebugger* dbg_) : sBaseObj("NN", dbg_) {
+sNN::sNN(char* objName_, sBaseObj* objParent_, tDataShape* baseShape_, tNNparms* NNparms_, sDebuggerParms* dbgparms_) : sCore(objName_, objParent_, baseShape_, dbgparms_) {
 	
 	//-- set NN parms
 	parms=NNparms_;
 
 	//-- call common constructor
-	sNN_common(baseShape, dbg_);
+	sNN_common(baseShape_, dbgparms_);
 
 
 
@@ -204,12 +204,12 @@ void sNN::FF() {
 
 		//-- actual feed forward ( W10[nc1 X nc0] X F0[nc0 X batchSize] => a1 [nc1 X batchSize] )
 		FF0start=timeGetTime(); FF0cnt++;
-		safeCall(Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C));
+		safecall(Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, false, B, C));
 		FF0timeTot+=((DWORD)(timeGetTime()-FF0start));
 
 		//-- activation sets F[l+1] and dF[l+1]
 		FF1start=timeGetTime(); FF1cnt++;
-		safeCall(Activate(l+1));
+		safecall(Activate(l+1));
 		FF1timeTot+=((DWORD)(timeGetTime()-FF1start));
 
 		//-- feed back to context neurons
@@ -251,37 +251,37 @@ void sNN::Activate(int level) {
 		retf=-1;
 		break;
 	}
-	if (!(retf&&retd)) safeThrow("retf=%d ; retd=%d", 2, retf, retd);
+	if (!(retf&&retd)) fail("retf=%d ; retd=%d", retf, retd);
 
 }
 void sNN::calcErr() {
 	//-- sets e, bte; adds squared sum(e) to tse
-	safeCall(Vdiff(nodesCnt[outputLevel], &F[levelFirstNode[outputLevel]], 1, u, 1, e));	// e=F[2]-u
-	safeCall(Vssum(nodesCnt[outputLevel], e, se));										// se=ssum(e) 
-	safeCall(Vadd(1, tse, 1, se, 1, tse));												// tse+=se;
+	safecall(Vdiff(nodesCnt[outputLevel], &F[levelFirstNode[outputLevel]], 1, u, 1, e));	// e=F[2]-u
+	safecall(Vssum(nodesCnt[outputLevel], e, se));										// se=ssum(e) 
+	safecall(Vadd(1, tse, 1, se, 1, tse));												// tse+=se;
 }
 
 void sNN::mallocNeurons() {
 	//-- malloc neurons (on either CPU or GPU)
-	safeCall(myMalloc(&a, nodesCntTotal));
-	safeCall(myMalloc(&F, nodesCntTotal));
-	safeCall(myMalloc(&dF, nodesCntTotal));
-	safeCall(myMalloc(&edF, nodesCntTotal));
-	safeCall(myMalloc(&e, nodesCnt[outputLevel]));
-	safeCall(myMalloc(&u, nodesCnt[outputLevel]));
+	safecall(myMalloc(&a, nodesCntTotal));
+	safecall(myMalloc(&F, nodesCntTotal));
+	safecall(myMalloc(&dF, nodesCntTotal));
+	safecall(myMalloc(&edF, nodesCntTotal));
+	safecall(myMalloc(&e, nodesCnt[outputLevel]));
+	safecall(myMalloc(&u, nodesCnt[outputLevel]));
 }
 void sNN::initNeurons(){
 	//--
-	safeCall(Vinit(nodesCntTotal, F, 0, 0));
+	safecall(Vinit(nodesCntTotal, F, 0, 0));
 	//---- the following are needed by cublas version of MbyM
-	safeCall(Vinit(nodesCntTotal, a, 0, 0));
-	safeCall(Vinit(nodesCntTotal, dF, 0, 0));
-	safeCall(Vinit(nodesCntTotal, edF, 0, 0));
+	safecall(Vinit(nodesCntTotal, a, 0, 0));
+	safecall(Vinit(nodesCntTotal, dF, 0, 0));
+	safecall(Vinit(nodesCntTotal, edF, 0, 0));
 
 	if (parms->useBias) {
 		for (int l=0; l<outputLevel; l++) {
 			//-- set every bias node's F=1
-			safeCall(Vinit(1, &F[levelFirstNode[l]], 1, 0));
+			safecall(Vinit(1, &F[levelFirstNode[l]], 1, 0));
 		}
 	}
 }
@@ -295,10 +295,10 @@ void sNN::destroyNeurons() {
 }
 void sNN::createWeights() {
 	//-- malloc weights (on either CPU or GPU)
-	safeCall(myMalloc(&W, weightsCntTotal));
-	safeCall(myMalloc(&prevW, weightsCntTotal));
-	safeCall(myMalloc(&dW, weightsCntTotal));
-	safeCall(myMalloc(&dJdW, weightsCntTotal));
+	safecall(myMalloc(&W, weightsCntTotal));
+	safecall(myMalloc(&prevW, weightsCntTotal));
+	safecall(myMalloc(&dW, weightsCntTotal));
+	safecall(myMalloc(&dJdW, weightsCntTotal));
 }
 void sNN::destroyWeights() {
 	myFree(W);
@@ -314,7 +314,7 @@ void sNN::BP_std(){
 	for (int l = outputLevel; l>0; l--) {
 		if (l==(outputLevel)) {
 			//-- top level only
-			safeCall(VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]));	// edF(l) = e * dF(l)
+			safecall(VbyV2V(nodesCnt[l], e, &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]));	// edF(l) = e * dF(l)
 		} else {
 			//-- lower levels
 			Ay=nodesCnt[l+1]/parms->batchSamplesCnt;
@@ -330,8 +330,8 @@ void sNN::BP_std(){
 			Cstart=levelFirstNode[l];
 			C=&edF[Cstart];
 
-			safeCall(Alg->MbyM(Ay, Ax, 1, true, A, By, Bx, 1, false, B, C));	// edF(l) = edF(l+1) * WT(l)
-			safeCall(VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]));	// edF(l) = edF(l) * dF(l)
+			safecall(Alg->MbyM(Ay, Ax, 1, true, A, By, Bx, 1, false, B, C));	// edF(l) = edF(l+1) * WT(l)
+			safecall(VbyV2V(nodesCnt[l], &edF[levelFirstNode[l]], &dF[levelFirstNode[l]], &edF[levelFirstNode[l]]));	// edF(l) = edF(l) * dF(l)
 		}
 
 		//-- common	
@@ -349,7 +349,7 @@ void sNN::BP_std(){
 		C=&dJdW[Cstart];
 
 		// dJdW(l-1) = edF(l) * F(l-1)
-		safeCall(Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, true, B, C));
+		safecall(Alg->MbyM(Ay, Ax, 1, false, A, By, Bx, 1, true, B, C));
 
 	}
 
@@ -357,31 +357,31 @@ void sNN::BP_std(){
 void sNN::WU_std(){
 
 	//-- 1. calc dW = LM*dW - LR*dJdW
-	safeCall(Vdiff(weightsCntTotal, dW, parms->LearningMomentum, dJdW, parms->LearningRate, dW));
+	safecall(Vdiff(weightsCntTotal, dW, parms->LearningMomentum, dJdW, parms->LearningRate, dW));
 
 	//-- 2. update W = W + dW for current batch
-	safeCall(Vadd(weightsCntTotal, W, 1, dW, 1, W));
+	safecall(Vadd(weightsCntTotal, W, 1, dW, 1, W));
 
 }
 void sNN::ForwardPass(tDataSet* ds, int batchId, bool haveTargets) {
 
 	//-- 1. load samples (and targets, if passed) from single batch in dataset onto input layer
 	LDstart=timeGetTime(); LDcnt++;
-	safeCall(Alg->h2d(&F[(parms->useBias)?1:0], &ds->sampleBFS[batchId*layout->shape->inputCnt], layout->shape->inputCnt*sizeof(numtype), true));
+	safecall(Alg->h2d(&F[(parms->useBias)?1:0], &ds->sampleBFS[batchId*layout->shape->inputCnt], layout->shape->inputCnt*sizeof(numtype), true));
 	if (haveTargets) {
-		safeCall(Alg->h2d(&u[0], &ds->targetBFS[batchId*layout->shape->outputCnt], layout->shape->outputCnt*sizeof(numtype), true));
+		safecall(Alg->h2d(&u[0], &ds->targetBFS[batchId*layout->shape->outputCnt], layout->shape->outputCnt*sizeof(numtype), true));
 	}
 	LDtimeTot+=((DWORD)(timeGetTime()-LDstart));
 
 	//-- 2. Feed Forward
 	FFstart=timeGetTime(); FFcnt++;	
-	safeCall(FF());
+	safecall(FF());
 	FFtimeTot+=((DWORD)(timeGetTime()-FFstart));
 
 	//-- 3. If we have targets, Calc Error (sets e[], te, updates tse) for the whole batch
 	CEstart=timeGetTime(); CEcnt++;
 	if (haveTargets) {
-		safeCall(calcErr());
+		safecall(calcErr());
 	}
 	CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
 
@@ -390,13 +390,13 @@ void sNN::BackwardPass(tDataSet* ds, int batchId, bool updateWeights) {
 
 	//-- 1. BackPropagate, calc dJdW for for current batch
 	BPstart=timeGetTime(); BPcnt++;
-	safeCall(BP_std());
+	safecall(BP_std());
 	BPtimeTot+=((DWORD)(timeGetTime()-BPstart));
 
 	//-- 2. Weights Update for current batch
 	WUstart=timeGetTime(); WUcnt++;
 	if (updateWeights) {
-		safeCall(WU_std());
+		safecall(WU_std());
 	}
 	WUtimeTot+=((DWORD)(timeGetTime()-WUstart));
 
@@ -429,8 +429,8 @@ void sNN::train(tDataSet* trainSet) {
 	setLayout(parms->batchSamplesCnt);
 
 	//-- 0. malloc + init neurons
-	safeCall(mallocNeurons());
-	safeCall(initNeurons());
+	safecall(mallocNeurons());
+	safecall(initNeurons());
 
 	//-- malloc mse[maxepochs], always host-side. We need to free them, first (see issue when running without training...)
 	free(mseT); mseT=(numtype*)malloc(parms->MaxEpochs*sizeof(numtype));
@@ -438,12 +438,12 @@ void sNN::train(tDataSet* trainSet) {
 
 	//---- 0.2. Init W
 	for (l=0; l<(outputLevel); l++) VinitRnd(weightsCnt[l], &W[levelFirstWeight[l]], -1/sqrtf((numtype)nodesCnt[l]), 1/sqrtf((numtype)nodesCnt[l]), Alg->cuRandH);
-	//safeCall(dumpArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
-	//safeCall(loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW_4F.txt"));
+	//safecall(dumpArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW.txt"));
+	//safecall(loadArray(weightsCntTotal, &W[0], "C:/temp/referenceW/initW_4F.txt"));
 
 	//---- 0.3. Init dW, dJdW
-	safeCall(Vinit(weightsCntTotal, dW, 0, 0));
-	safeCall(Vinit(weightsCntTotal, dJdW, 0, 0));
+	safecall(Vinit(weightsCntTotal, dW, 0, 0));
+	safecall(Vinit(weightsCntTotal, dJdW, 0, 0));
 
 	//-- 1. for every epoch, train all batch with one Forward pass ( loadSamples(b)+FF()+calcErr() ), and one Backward pass (BP + calcdW + W update)
 	for (epoch=0; epoch<parms->MaxEpochs; epoch++) {
@@ -452,16 +452,16 @@ void sNN::train(tDataSet* trainSet) {
 		epoch_starttime=timeGetTime();
 
 		//-- 1.0. reset epoch tse
-		safeCall(Vinit(1, tse, 0, 0));
+		safecall(Vinit(1, tse, 0, 0));
 
 		//-- 1.1. train one batch at a time
 		for (b=0; b<batchCnt; b++) {
 
 			//-- forward pass, with targets
-			safeCall(ForwardPass(trainSet, b, true));
+			safecall(ForwardPass(trainSet, b, true));
 
 			//-- backward pass, with weights update
-			safeCall(BackwardPass(trainSet, b, true));
+			safecall(BackwardPass(trainSet, b, true));
 
 		}
 
@@ -473,8 +473,8 @@ void sNN::train(tDataSet* trainSet) {
 
 	//-- 2. test run. need this to make sure all batches pass through the net with the latest weights, and training targets
 	TRstart=timeGetTime(); TRcnt++;
-	safeCall(Vinit(1, tse, 0, 0));
-	for (b=0; b<batchCnt; b++) safeCall(ForwardPass(trainSet, b, true));
+	safecall(Vinit(1, tse, 0, 0));
+	for (b=0; b<batchCnt; b++) safecall(ForwardPass(trainSet, b, true));
 	TRtimeTot+=((DWORD)(timeGetTime()-TRstart));
 
 	//-- calc and display final epoch MSE
@@ -510,26 +510,26 @@ void sNN::run(tDataSet* runSet) {
 	setLayout(runSet->batchSamplesCnt);
 
 	//-- malloc + init neurons
-	safeCall(mallocNeurons());
-	safeCall(initNeurons());
+	safecall(mallocNeurons());
+	safecall(initNeurons());
 
 	//-- reset tse=0
-	safeCall(Vinit(1, tse, 0, 0));
+	safecall(Vinit(1, tse, 0, 0));
 
 	//-- batch run
 	for (int b=0; b<batchCnt; b++) {
 
 		//-- 1.1.1.  load samples/targets onto GPU
-		safeCall(Alg->h2d(&F[(parms->useBias) ? 1 : 0], &runSet->sampleBFS[b*layout->shape->inputCnt], layout->shape->inputCnt*sizeof(numtype), true));
-		safeCall(Alg->h2d(&u[0], &runSet->targetBFS[b*layout->shape->outputCnt], layout->shape->outputCnt*sizeof(numtype), true));
+		safecall(Alg->h2d(&F[(parms->useBias) ? 1 : 0], &runSet->sampleBFS[b*layout->shape->inputCnt], layout->shape->inputCnt*sizeof(numtype), true));
+		safecall(Alg->h2d(&u[0], &runSet->targetBFS[b*layout->shape->outputCnt], layout->shape->outputCnt*sizeof(numtype), true));
 
 		//-- 1.1.2. Feed Forward
-		safeCall(FF());
+		safecall(FF());
 
 		//-- 1.1.3. copy last layer neurons (on dev) to prediction (on host)
-		safeCall(Alg->d2h(&runSet->predictionBFS[b*layout->shape->outputCnt], &F[levelFirstNode[outputLevel]], layout->shape->outputCnt*sizeof(numtype)));
+		safecall(Alg->d2h(&runSet->predictionBFS[b*layout->shape->outputCnt], &F[levelFirstNode[outputLevel]], layout->shape->outputCnt*sizeof(numtype)));
 
-		safeCall(calcErr());
+		safecall(calcErr());
 	}
 
 	//-- calc and display final epoch MSE
@@ -541,8 +541,8 @@ void sNN::run(tDataSet* runSet) {
 	//-- convert prediction from BFS to SFB (fol all batches at once)
 	runSet->BFS2SFBfull(runSet->targetLen, runSet->predictionBFS, runSet->predictionSFB);
 	//-- extract first bar only from target/prediction SFB
-	safeCall(Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->targetSFB, 0, runSet->target0, true));
-	safeCall(Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->predictionSFB, 0, runSet->prediction0, true));
+	safecall(Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->targetSFB, 0, runSet->target0, true));
+	safecall(Alg->getMcol(runSet->batchCnt*runSet->batchSamplesCnt*runSet->selectedFeaturesCnt, runSet->targetLen, runSet->predictionSFB, 0, runSet->prediction0, true));
 
 
 	//-- feee neurons()

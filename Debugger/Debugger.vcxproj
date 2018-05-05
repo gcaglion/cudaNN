@@ -158,7 +158,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="DebuggerMacros.h" />
     <ClInclude Include="Debugger.h" />
   </ItemGroup>
   <ItemGroup>

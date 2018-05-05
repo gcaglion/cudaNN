@@ -1,20 +1,19 @@
 #include "Forecaster.h"
 
-sForecaster::sForecaster(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("Forecaster", dbg_) {
+sForecaster::sForecaster(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+
+	tData* data;
+	tEngine* engine;
+	tLogger* persistor;
 
 	//-- define forecaster Data
-	safeCall(data=new tData(parms, ".Forecaster.Data"))
+	safespawn(data, tData, parms, ".Forecaster.Data");
 
 	//-- define forecaster Engine, pass Data shape info
-	safeCall(engine=new tEngine(parms, ".Forecaster.Engine", data->shape));
+	safespawn(engine, tEngine, parms, ".Forecaster.Engine", data->shape);
 
 	//-- define forecaster Persistor
-	safeCall(persistor=new tLogger(parms, ".Forecaster.Persistor"));
+	safespawn(persistor, tLogger, parms, ".Forecaster.Persistor");
 
 	//-- train each 
-}
-sForecaster::~sForecaster() {
-	delete persistor;
-	delete engine;
-	delete data;
 }

@@ -14,10 +14,10 @@ typedef struct sFXData : public sDataSource {
 	char TimeFrame[FX_TIMEFRAME_MAXLEN];
 	bool IsFilled;
 #ifdef __cplusplus
-	EXPORT sFXData(tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, tDebugger* dbg_=nullptr);
-	EXPORT sFXData(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT sFXData(char* objName_, sBaseObj* objParent_, tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sFXData(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sFXData();
-	EXPORT void sFXData_common(tDebugger* dbg_=nullptr);
+	EXPORT void sFXData_common(sDebuggerParms* dbgparms_=nullptr);
 #endif
 } tFXData;
 

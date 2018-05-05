@@ -80,6 +80,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParamMgr", "ParamMgr\ParamMgr.vcxproj", "{07152385-57C7-4182-AC11-11CBC888A723}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1AAD3007-81AD-41D8-9044-AE99D5E9358F} = {1AAD3007-81AD-41D8-9044-AE99D5E9358F}
+		{A99AEC3C-1C6A-4A98-BAC9-5C9D6C766276} = {A99AEC3C-1C6A-4A98-BAC9-5C9D6C766276}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utils", "Utils\Utils.vcxproj", "{72AFD829-9419-401D-9B8D-CEACC96B7C70}"
@@ -106,6 +107,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jjj", "jjj\jjj.vcxproj", "{
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseObj", "BaseObj\BaseObj.vcxproj", "{A99AEC3C-1C6A-4A98-BAC9-5C9D6C766276}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1AAD3007-81AD-41D8-9044-AE99D5E9358F} = {1AAD3007-81AD-41D8-9044-AE99D5E9358F}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

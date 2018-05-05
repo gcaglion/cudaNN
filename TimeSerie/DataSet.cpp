@@ -1,7 +1,7 @@
 #include "DataSet.h"
 
 //-- sDataSet, constructors  /destructor
-sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* BWFeature_, tDebugger* dbg_) : sBaseObj("DataSet", dbg_) {
+sDataSet::sDataSet(char* objName_, sBaseObj* objParent_, int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* BWFeature_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 
 	selectedFeaturesCnt=selectedFeaturesCnt_;
 	for (int f=0; f<selectedFeaturesCnt; f++) selectedFeature[f]=selectedFeature_[f];
@@ -11,10 +11,10 @@ sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int sel
 	sampleLen=sampleLen_;
 	targetLen=targetLen_;
 	samplesCnt=sourceTS->steps-sampleLen-targetLen;// +1;
-	if (samplesCnt<1) safeThrow("Not Enough Data. samplesCnt=%d", 1, samplesCnt);
+	if (samplesCnt<1) fail("Not Enough Data. samplesCnt=%d", samplesCnt);
 	batchSamplesCnt=batchSamplesCnt_;
 	batchCnt=samplesCnt/batchSamplesCnt;
-	if ((batchCnt*batchSamplesCnt)!=samplesCnt) safeThrow("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", 2, samplesCnt, batchSamplesCnt);
+	if ((batchCnt*batchSamplesCnt)!=samplesCnt) fail("Wrong Batch Size. samplesCnt=%d, batchSamplesCnt=%d", samplesCnt, batchSamplesCnt);
 
 	sample=(numtype*)malloc(samplesCnt*sampleLen*selectedFeaturesCnt*sizeof(numtype));
 	target=(numtype*)malloc(samplesCnt*targetLen*selectedFeaturesCnt*sizeof(numtype));
@@ -40,19 +40,19 @@ sDataSet::sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int sel
 		BFS2SFB(b, targetLen, targetBFS, targetSFB);
 	}
 }
-sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseObj("DataSet", dbg_) {
+sDataSet::sDataSet(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 
 	selectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
 	BWFeature=(int*)malloc(2*sizeof(int));
 
-	safeCall(parms->setKey(parmKey));
+	safecall(parms->setKey(parmKey));
 
 	//-- 0. common parameters
 	parms->get(&batchSamplesCnt, "BatchSamplesCount");
 	parms->get(&selectedFeature, "SelectedFeatures", &selectedFeaturesCnt);
 
 	//-- 1. TimeSerie parameters
-	safeCall(sourceTS=new tTimeSerie(parms, "TimeSerie"));
+	safespawn(sourceTS, tTimeSerie, parms, "TimeSerie");
 
 	//-- 2. DataSource-specific parameters (so far, only BWFeature)
 	switch (sourceTS->sourceType) {
@@ -62,10 +62,10 @@ sDataSet::sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_) : sBaseO
 	case FXDB_SOURCE:
 		BWFeature[0]=FXHIGH; BWFeature[1]=FXLOW;
 		break;
-/*	case MT4_SOURCE:
+	case MT4_SOURCE:
 		//-- ...... ?? boh ??? ...
 		break;
-*/	default:
+	default:
 		break;
 	}
 

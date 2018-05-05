@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../CommonEnv.h"
+#include "../FileInfo/FileInfo.h"
 #include "../ParamMgr/ParamMgr.h"
 #include "TimeSerie.h"
 
@@ -34,8 +35,8 @@ typedef struct sDataSet : public sBaseObj {
 	numtype* prediction0=nullptr;
 
 	//-- constructor / destructor
-	EXPORT sDataSet(int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* datafileBWFeature_, tDebugger* dbg_=nullptr);
-	EXPORT sDataSet(tParmsSource* parms, char* parmKey, tDebugger* dbg_=nullptr);
+	EXPORT sDataSet(char* objName_, sBaseObj* objParent_, int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* datafileBWFeature_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sDataSet(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sDataSet();
 
 	bool isSelected(int ts_f);

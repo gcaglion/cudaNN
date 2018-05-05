@@ -11,25 +11,6 @@
 #define MAX_ENGINE_LAYERS	8
 #define MAX_ENGINE_CORES	32
 
-/*
-typedef struct sEngineLayout {
-	int coresCnt;
-
-	int* coreLayer;
-	int* coreType;
-	char** coreDesc;
-	int*  coreParentsCnt;
-	int** coreParent;
-	int** coreParentConnType;
-	char*** coreParentDesc;
-	int* coreInputCnt;
-	int* coreOutputCnt;
-
-	EXPORT sEngineLayout(int coresCnt_);
-	EXPORT ~sEngineLayout();
-
-} tEngineLayout;
-*/
 typedef struct sEngine : public sBaseObj {
 
 	int type;
@@ -42,8 +23,8 @@ typedef struct sEngine : public sBaseObj {
 	tCoreLayout** coreLayout;
 	tCore** core;
 
-	EXPORT void sEngine::sEngine_common(tParmsSource* parms, tDataShape* shape_, tDebugger* dbg_);
-	EXPORT sEngine(tParmsSource* parms, char* parmKey, tDataShape* shape_, tDebugger* dbg_=nullptr);
+	EXPORT void sEngine::sEngine_common(tParmsSource* parms, tDataShape* shape_);
+	EXPORT sEngine(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, tDataShape* shape_, sDebuggerParms* dbgparms_=nullptr);
 
 	EXPORT void setCoreLayer(tCoreLayout* c);
 	EXPORT void train(tDataSet* trainDS);
