@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Debugger.h">
+    <ClInclude Include="Debugger_enums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DebuggerMacros.h">
+    <ClInclude Include="Debugger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
