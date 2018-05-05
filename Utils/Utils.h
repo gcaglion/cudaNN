@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../CommonEnv00.h"
+#include "../CommonEnv.h"
 
 EXPORT char* MyGetCurrentDirectory();
 EXPORT bool getCurrentPath(char* oPath);

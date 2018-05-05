@@ -14,9 +14,9 @@ sDebugger::sDebugger(char* outFileName, sDebuggerParms* parms_, char* outFilePat
 	}
 	char outfname[MAX_PATH];
 	sprintf_s(outfname, MAX_PATH, "%s/%s(%p).%s", outFilePath, outFileName, this, (parms->verbose) ? "log" : "err");
+
 	try {
-		outFile=new tFileInfo(outfname, FILE_MODE_WRITE);
-		//info_d("sDebugger(%p)->%s() called. Successfully created debugger outFile %s ...\n", this, __func__, outfname);
+		spawnFile(outFile, outfname, FILE_MODE_WRITE);
 	}
 	catch (std::exception exc) {
 		err_d("sDebugger(%p)->%s() failed. Error creating debugger outFile %s ...\n", this, __func__, outfname);

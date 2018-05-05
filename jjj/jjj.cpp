@@ -131,7 +131,7 @@ struct sRoot : sBaseObj {
 			tFileInfo* parmsFile;
 			char* fname="C:/temp/parms.xml";
 
-			safecall(spawnFile(parmsFile, fname, FILE_MODE_WRITE));
+			safecall(spawnFile(parmsFile, fname, FILE_MODE_READ));
 
 			//-- 1. object creation (successful)
 			safespawn(dio1, sDio, 1, 2);

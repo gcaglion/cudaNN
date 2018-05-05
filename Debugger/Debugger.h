@@ -1,6 +1,6 @@
 #pragma once
-#include "..\FileInfo\FileInfo.h"
-#include "DebuggerMacros.h"
+#include "../CommonEnv.h"
+#include "../FileInfo/FileInfo.h"
 
 #define DEFAULT_DBG_FPATH "C:/temp/logs"
 #define DEFAULT_DBG_FNAME "Debugger"
