@@ -43,41 +43,32 @@ void sLogger::SaveRun(int pid, int tid, int setid, int npid, int ntid, int runCn
 
 void sLogger::SaveW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
 	if (saveImage) {
-		numtype* hW;
-		#ifdef USE_GPU
-			hW=(numtype*)malloc(Wcnt*sizeof(numtype));
-			if(!(cudaMemcpy(hW, W, Wcnt*sizeof(numtype), cudaMemcpyDeviceToHost)==cudaSuccess)) fail("%s(%p)->%s(%d, %d, %d) failed.", objName, this, __func__, pid, tid, epoch);
-		#else
-			hW=W;
-		#endif
+	
+		numtype* hW=(numtype*)malloc(Wcnt*sizeof(numtype));
+
 		if (dest==ORCL_DEST) {
 			safecall(Ora_LogSaveW(dbg, db, pid, tid, epoch, Wcnt, hW));
 		} else {
+			fail("%s(%p)->%s() not implemented for FILE_DEST.", objName, this, __func__);
 		}
-		
-		#ifdef USE_GPU
-			free(hW);
-		#endif
-	} else {
-	}
+
+		Alg->x2h(hW, W, Wcnt*sizeof(numtype));
+		free(hW);
+	} 
 }
 void sLogger::LoadW(int pid, int tid, int epoch, int Wcnt, numtype* W) {
-	numtype* hW;
-#ifdef USE_GPU
-	hW=(numtype*)malloc(Wcnt*sizeof(numtype));
-#else
-	hW=W;
-#endif
+
+	numtype* hW=(numtype*)malloc(Wcnt*sizeof(numtype));
+
 	if (dest==ORCL_DEST) {
 		safecall(Ora_LogLoadW(dbg, db, pid, tid, epoch, Wcnt, hW));
 	} else {
+		fail("%s(%p)->%s() not implemented for FILE_DEST.", objName, this, __func__);
 	}
-#ifdef USE_GPU
-	if (!(cudaMemcpy(hW, W, Wcnt*sizeof(numtype), cudaMemcpyDeviceToHost)==cudaSuccess)) fail("%s(%p)->%s(%d, %d, %d) failed.", objName, this, __func__, pid, tid, epoch);
 
-	if(!(cudaMemcpy(W, hW, Wcnt*sizeof(numtype), cudaMemcpyHostToDevice)==cudaSuccess)) fail("%s(%p)->%s() failed.", objName, this, __func__);
+	Alg->h2x(W, hW, Wcnt*sizeof(numtype));
+
 	free(hW);
-#endif
 }
 void sLogger::SaveClient(int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun) {
 	if (saveClient) {

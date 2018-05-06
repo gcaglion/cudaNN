@@ -15,7 +15,7 @@ typedef struct sParmsSource : public sBaseObj {
 	int parmsCnt=0;
 	int foundParmId;
 
-	EXPORT sParmsSource(char* objName_, sBaseObj* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sParmsSource(char* objName_, sBaseObj* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], bool autoParse=false, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sParmsSource();
 
 	char parmName[XML_MAX_PARAMS_CNT][XML_MAX_PATH_LEN];

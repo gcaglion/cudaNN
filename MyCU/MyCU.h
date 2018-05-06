@@ -5,15 +5,7 @@
 #include <cublas_v2.h>
 #include <curand.h>
 #include <stdio.h>
-
-#define CUDA_BLOCK_SIZE 64
-#define MAX_STREAMS 2
-
-//-- CUDA Exceptions
-#define FAIL_INITCUDA "CUDA Initialization Failed. \n"
-#define FAIL_INITCUBLAS "CUBLAS Initialization Failed. \n"
-#define FAIL_INITCU "CUDA/CUBLAS Initialization Failed. \n"
-#define FAIL_CUDAMALLOC "CUDA malloc failed. \n"
+#include "MyCUparms.h"
 
 EXPORT bool initCUDA();
 EXPORT bool initCUBLAS(void* cublasH);
@@ -64,4 +56,3 @@ EXPORT bool SoftPlus_cu(int vlen, numtype* in, numtype* out);
 EXPORT bool dSoftPlus_cu(int vlen, numtype* in, numtype* out);
 
 EXPORT bool cuMtr_naive(int my, int mx, numtype* m, numtype* omt);
-

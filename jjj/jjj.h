@@ -1,6 +1,6 @@
 #pragma once
 #include "..\FileInfo\FileInfo.h"
-
+/*
 #define DEFAULT_DBG_FPATH "C:/temp/logs"
 #define DEFAULT_DBG_FNAME "Debugger"
 #define DEFAULT_DBG_VERBOSITY true
@@ -67,3 +67,4 @@
 	err_d(mask, __VA_ARGS__); \
 	throw(std::exception(stackmsg)); \
 }
+*/

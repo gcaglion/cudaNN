@@ -5,10 +5,10 @@
 #include "../Utils/Utils.h"
 #include "../ParamMgr/ParamMgr.h"
 #include "../Data/Data.h"
-#ifdef USE_GPU
+/*#ifdef USE_GPU
 #include <cuda_runtime.h>
 #endif
-
+*/
 #define CORE_MAX_DESC_LEN	128
 #define CORE_MAX_PARENTS	32
 

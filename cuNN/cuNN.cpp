@@ -21,7 +21,7 @@ void sNN::sNN_common(tDataShape* baseShape, sDebuggerParms* dbgparms_) {
 	safecall(createWeights());
 
 	//-- init Algebra / CUDA/CUBLAS/CURAND stuff
-	safespawn(Alg, Algebra, );
+	safespawn(Alg, tAlgebra, );
 
 	//-- x. set scaleMin / scaleMax
 	scaleMin=(numtype*)malloc(parms->levelsCnt*sizeof(int));

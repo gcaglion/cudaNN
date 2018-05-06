@@ -11,7 +11,7 @@
 typedef struct sNN :public sCore {
 
 	//-- MyAlgebra common structures
-	Algebra* Alg=nullptr;
+	tAlgebra* Alg=nullptr;
 
 	//-- every instantiation has 1 process id and 1 thread id (TO BE CONFIRMED)
 	int pid;

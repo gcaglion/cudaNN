@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyCU.h" />
+    <ClInclude Include="MyCUparms.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4579EEB8-1D8C-40D7-9641-1F78E9DDD32E}</ProjectGuid>

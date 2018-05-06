@@ -1,28 +1,34 @@
 #include "../CommonEnv.h"
-#include "../Forecaster/Forecaster.h"
+#include "../ParamMgr/ParamMgr.h"
+#include "../Data/Data.h"
+#include "../Engine/Engine.h"
+#include "../Logger/Logger.h"
 
 struct sRoot : sBaseObj {
 
-	//-- here we put everything that needs to be done
 	sRoot(int argc=0, char* argv[]=nullptr, sDebuggerParms* rootdbgparms_=nullptr) : sBaseObj("root", nullptr, rootdbgparms_) {
 
-		//-- 2. objects used throughout the client
-		tParmsSource* XMLparms=nullptr;
-		tForecaster* forecaster=nullptr;
-		//tData* data0=nullptr;
-		//tEngine* engine0=nullptr;
+		//-- a) declarations for all objects used throughout the client
+		
+		tParmsSource*	XMLparms=nullptr;	//-- Forecaster XML parameters
+		tData*			fData=nullptr;		//-- Forecaster data
+		tEngine*		fEngine=nullptr;	//-- Forecaster engine
+		tLogger*		fPersistor=nullptr;	//-- Forecaster Persistor
 
+		//-- b) do everything here
 		try {
 
-			//-- create client parms, include command-line parms, and read parameters file
-			safespawn(XMLparms, tParmsSource, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv);
-			safecall(XMLparms->parse());
+			//-- 1. create client parms, include command-line parms, read parameters file, and parse it on creation
+			safespawn(XMLparms, tParmsSource, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv, true);
 
-			//-- create Data Forecaster from parms
-			safespawn(forecaster, tForecaster, XMLparms, "Forecaster");
+			//-- 2. create Forecaster Data from parms
+			safespawn(fData, tData, XMLparms, ".Forecaster.Data");
+			//-- 3. create Forecaster Engine from parms
+			safespawn(fEngine, tEngine, XMLparms, ".Forecaster.Engine", fData->shape);
+			//-- 4. create Forecaster Persistor
+			safespawn(fPersistor, tLogger, XMLparms, ".Forecaster.Persistor");
 
-			//safespawn(data0, tData, XMLparms, ".Forecaster.Data");
-			//safespawn(engine0, tEngine, XMLparms, ".Forecaster.Engine", data0->shape);
+			int kaz=0;
 
 		}
 		catch (std::exception exc) {

@@ -1,6 +1,6 @@
 #include "ParamMgr.h"
 
-sParmsSource::sParmsSource(char* objName_, sBaseObj* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sParmsSource::sParmsSource(char* objName_, sBaseObj* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], bool autoParse, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 
 	CLoverridesCnt=CLoverridesCnt_; CLoverride=CLoverride_;
 
@@ -17,6 +17,8 @@ sParmsSource::sParmsSource(char* objName_, sBaseObj* objParent_, char* pFileFull
 			parmVal[p][e]=(char*)malloc(XML_MAX_PARAM_VAL_LEN);
 		}
 	}
+
+	if (autoParse) parse();
 }
 sParmsSource::~sParmsSource() {
 	for (int p=0; p<XML_MAX_PARAMS_CNT; p++) {

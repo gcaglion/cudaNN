@@ -93,7 +93,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_WINDOWS;_USRDLL;ORAUTILS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(ORACLE_HOME2)\precomp\public</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ORACLE_HOME2)\precomp\public</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Link>
@@ -116,7 +116,7 @@ $(ORACLE_HOME2)\bin\proc $(ProjectName).pc $(ProjectName).c SQLCHECK=SEMANTICS u
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;ORAUTILS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(ORACLE_HOME1)\precomp\public</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ORACLE_HOME1)\precomp\public</AdditionalIncludeDirectories>
       <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Link>

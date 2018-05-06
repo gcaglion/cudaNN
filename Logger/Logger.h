@@ -4,17 +4,16 @@
 #include "../DBConnection/DBConnection.h"
 #include "../DataSource/FileData.h"
 #include "../ParamMgr/ParamMgr.h"
+#include "../MyAlgebra/MyAlgebra.h"	//-- we need this in LoadW() and SaveW()
 #include "Logger_enums.h"
 
 #ifdef USE_ORCL
 #include "../OraUtils/OraUtils.h"
 #endif
-#ifdef USE_GPU
-#include "../MyCU/MyCU.h"
-#endif
 
 typedef struct sLogger : public sBaseObj {
 	int dest;
+	tAlgebra* Alg;	//-- we need this in LoadW() and SaveW()
 	tDBConnection* db=nullptr;
 	tFileData* file=nullptr;
 	bool saveNothing;

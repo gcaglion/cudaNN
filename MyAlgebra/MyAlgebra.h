@@ -7,7 +7,7 @@
 #include <math.h>
 
 #ifdef USE_GPU
-#include "../MyCU/MyCU.h"
+#include "../MyCU/MyCUparms.h"	//-- defines MAX_STREAMS
 #else
 #define MAX_STREAMS 1
 #endif
@@ -199,7 +199,7 @@ EXPORT bool Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtyp
 EXPORT bool MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu);
 EXPORT bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T);
 
-typedef struct s_Algebra : public sBaseObj {
+typedef struct sAlgebra : public sBaseObj {
 	
 	void* cublasH;
 	void* cuRandH;
@@ -207,8 +207,8 @@ typedef struct s_Algebra : public sBaseObj {
 	numtype* ss;	// shared scalar
 
 	//-- class constructor/destructor
-	EXPORT s_Algebra(char* objName_, sBaseObj* objParent_, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT ~s_Algebra();
+	EXPORT sAlgebra(char* objName_, sBaseObj* objParent_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT ~sAlgebra();
 
 	//-- class methods
 	EXPORT void MbyM(int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, bool forceCPU=false);
@@ -216,5 +216,7 @@ typedef struct s_Algebra : public sBaseObj {
 	//-- CPU<->GPU transfer functions
 	EXPORT void h2d(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
 	EXPORT void d2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
-} Algebra;
+	EXPORT void x2h(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
+	EXPORT void h2x(numtype* destAddr, numtype* srcAddr, int size, bool useStreams=false);
+} tAlgebra;
 

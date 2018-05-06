@@ -25,9 +25,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Client.ini" />
-  </ItemGroup>
-  <ItemGroup>
     <Xml Include="client.xml" />
   </ItemGroup>
 </Project>

@@ -8,11 +8,7 @@
 
 #ifdef USE_ORCL
 #include "../OraUtils/OraUtils.h"
-#endif // USE_ORCL
-
-#ifdef USE_GPU
-#include "../MyCU/MyCU.h"
-#endif
+#endif 
 
 #define MAX_DATA_FEATURES 128
 #define MAX_TSF_CNT	32
