@@ -1,10 +1,33 @@
 #include "Data.h"
 
+#define safemethod(mname, ...) { \
+	info("%s->%s() Trying:  %s(%s)...", objName, __func__, #mname, __VA_ARGS__); \
+	try { \
+		mname(__VA_ARGS__); \
+		info("%s->%s() Success: %s(%s)...", objName, __func__, #mname, __VA_ARGS__); \
+	} catch (std::exception exc) { \
+		fail("%s->%s() Failure: %s(%s) . Exception: ---%s---", objName, __func__, #mname, __VA_ARGS__, exc.what()); \
+	} \
+}
+
+#define method(mname, ...) { \
+	info("%s->%s() Trying:  %s(%s)...", objName, __func__, #mname, __VA_ARGS__); \
+	try { \
+		mname(__VA_ARGS__); \
+	} catch (std::exception exc) { \
+		printf("DioPorco!\n"); \
+	} \
+}
+
+
 
 sDataShape::sDataShape(char* objName_, sBaseObj* objParent_, int sampleLen_, int predictionLen_, int featuresCnt_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 	sampleLen=sampleLen_; predictionLen=predictionLen_; featuresCnt=featuresCnt_;
 }
 sDataShape::sDataShape(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+
+	safemethod(parms->setKey, parmKey);
+	safemethod(parms->get, &sampleLen, "SampleLen");
 
 	safecall(parms->setKey(parmKey));
 	safecall(parms->get(&sampleLen, "SampleLen"));

@@ -30,6 +30,7 @@
 		fail("%s->%s() Failure: %s = new %s(%s). Exception: %s", objName, __func__, #objname, #objtype, #__VA_ARGS__, exc.what()); \
 	} 
 
+//-- these calls class methods only. no static functions
 #define safecall(...) { \
 	info("%s->%s() Trying:  %s...", objName, __func__, #__VA_ARGS__); \
 	try { \
