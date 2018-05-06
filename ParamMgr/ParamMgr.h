@@ -72,6 +72,6 @@ typedef struct sParmsSource : public sBaseObj {
 
 	EXPORT void cleanup();
 
-	EXPORT void loadObjectDebugParms(char* KeyDesc, sDebuggerParms* oDbgParms);
+	EXPORT void ObjectDebugParmsOverride(char* KeyDesc, sDebugger* dbg_);
 
 } tParmsSource;

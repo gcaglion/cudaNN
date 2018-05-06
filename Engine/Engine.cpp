@@ -8,6 +8,9 @@ void sEngine::sEngine_common(tParmsSource* parms, tDataShape* shape_) {
 sEngine::sEngine(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, tDataShape* shape_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 	int c;
 
+	//-- look for object-specific debugger properties in parms file. If they are there, then create a new debugger and replace the default one
+	parms->ObjectDebugParmsOverride(parmKey, dbg);
+
 	sEngine_common(parms, shape_);
 
 	safecall(parms->setKey(parmKey));

@@ -207,33 +207,35 @@ void sParmsSource::cleanup() {
 	printf("\nsParamsSource->cleanup() called.\n");
 }
 
-void sParmsSource::loadObjectDebugParms(char* KeyDesc_, sDebuggerParms* oDbgParms) {
+void sParmsSource::ObjectDebugParmsOverride(char* KeyDesc_, sDebugger* objdbg_) {
 	
 	setKey(KeyDesc_);
 
 	setKey("Debugger", true);
 
-	bool verbose_=DEFAULT_DBG_VERBOSITY;
-	bool timing_=DEFAULT_DBG_TIMING;
-	bool pauseOnError_=DEFAULT_DBG_PAUSERR;
-	int dest_=DEFAULT_DBG_DEST;
-	char destFileFullName_[MAX_PATH]="";
+	sDebuggerParms* newparms= new sDebuggerParms(objdbg_->parms->dest, objdbg_->parms->verbose, objdbg_->parms->timing, objdbg_->parms->pauseOnError, objdbg_->parms->outFileFullName, objdbg_->parms->outFilePath, objdbg_->parms->outFileName);
 
 	//-- we need to ignore exceptions, so include all calls in try/catch
 	try {
-		safecall(get(&verbose_, "Verbose"));
-		safecall(get(&timing_, "Timing"));
-		safecall(get(&pauseOnError_, "PauseOnError"));
-		safecall(get(&dest_, "Dest"));
-		safecall(get(destFileFullName_, "DestFileFullName"));
+		safecall(get(&newparms->verbose, "Verbose"));
+		safecall(get(&newparms->timing, "Timing"));
+		safecall(get(&newparms->pauseOnError, "PauseOnError"));
+		safecall(get(&newparms->dest, "Dest"));
+		safecall(get(newparms->outFileFullName, "OutFileFullName"));
 	}
 	catch (std::exception exc) {
-		//.. do nothing ...
+		//.. do nothing...
 	}
-
-	oDbgParms->verbose=verbose_;
-	oDbgParms->timing=timing_;
-	oDbgParms->pauseOnError=pauseOnError_;
-	oDbgParms->dest=dest_;
-
+	
+	//-- delete current dbg
+	delete objdbg_;
+	//-- create new dbg with newparms, and assign it to objdbg_
+	try {
+		objdbg_=new sDebugger(newparms);
+	}
+	catch (std::exception exc) {
+		char msg[DBG_MSG_MAXLEN]="";
+		err("%s(%p)->%s() failed. Exception: %s", objName, this, __func__, exc.what());
+		throw(exc);
+	}
 }

@@ -80,11 +80,11 @@
 	</Data>
 	<Engine>
 		<Debugger>
-			Verbose 			= true
-			Timing				= false
-			PauseOnError		= true
-			Dest				= DBG_DEST_BOTH
-			DestFileFullName	= C:\temp\logs\mainDebugger.log
+			Verbose 		= true
+			Timing			= false
+			PauseOnError	= true
+			Dest			= DBG_DEST_BOTH
+			OutFileFullName	= C:\temp\logs\mainDebugger.log
 		</Debugger>		
 		Type 		= ENGINE_CUSTOM
 		<Custom>
