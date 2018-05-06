@@ -26,8 +26,8 @@ sDataShape::sDataShape(char* objName_, sBaseObj* objParent_, int sampleLen_, int
 }
 sDataShape::sDataShape(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
 
-	safemethod(parms->setKey, parmKey);
-	safemethod(parms->get, &sampleLen, "SampleLen");
+	//safemethod(parms->setKey, parmKey);
+	//safemethod(parms->get, &sampleLen, "SampleLen");
 
 	safecall(parms->setKey(parmKey));
 	safecall(parms->get(&sampleLen, "SampleLen"));

@@ -19,13 +19,13 @@ sFXData::sFXData(char* objName_, sBaseObj* objParent_, tDBConnection* db_, char*
 	strcpy_s(TimeFrame, FX_TIMEFRAME_MAXLEN, tf_);
 	IsFilled=isFilled_;
 }
-sFXData::sFXData(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, dbgparms_) {
+sFXData::sFXData(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, parms, dbgparms_) {
 	sFXData_common(dbgparms_);
 	//--
 	safecall(parms->setKey(parmKey));
-	parms->get(Symbol, "Symbol");
-	parms->get(TimeFrame, "TimeFrame");
-	parms->get(&IsFilled, "IsFilled");
-	safespawn(db, tDBConnection, parms, objName);
+	safecall(parms->get(Symbol, "Symbol"));
+	safecall(parms->get(TimeFrame, "TimeFrame"));
+	safecall(parms->get(&IsFilled, "IsFilled"));
+	safespawn(db, tDBConnection, parms, "DBConnection");
 }
 sFXData::~sFXData() {}
