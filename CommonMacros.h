@@ -1,8 +1,19 @@
 #pragma once
 
-#define start(mask, ...) { \
-	msgbld("%s->%s(%s) starting.", this, __func__, __VA_ARGS__); \
+//-- client closures
+#define clientFail(failmsg){ \
+	delete root; \
+	printf("Client failed: %s\n", failmsg); \
+	system("pause"); \
+	return -1; \
 }
+#define clientSuccess(){ \
+	delete root; \
+	printf("Client success. \n"); \
+	system("pause"); \
+	return 0; \
+}
+
 
 //-- this is only needed so we can pass parentdbg's object address to child's constructor
 #define spawn(objname, objtype, ...){ \

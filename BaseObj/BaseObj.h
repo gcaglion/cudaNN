@@ -36,8 +36,11 @@ struct sDio : sBaseObj {
 	void method(bool fail_);
 };
 
+//-- sRoot should be in the client (???)
+/*
 struct sRoot : sBaseObj {
 
 	EXPORT sRoot(sDebuggerParms* rootdbgparms_=nullptr);
 
 };
+*/

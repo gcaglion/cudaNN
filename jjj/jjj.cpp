@@ -1,5 +1,10 @@
 #include "jjj.h"
 
+#include "../ParamMgr/ParamMgr.h"
+#include "../Forecaster/Forecaster.h"
+#include "../Data/Data.h"
+#include "../Engine/Engine.h"
+
 struct sDebuggerParms {
 	bool verbose;
 	bool timing;
@@ -124,11 +129,27 @@ struct sDio : sBaseObj {
 struct sRoot : sBaseObj {
 
 	//-- here we put everything that needs to be done
-	sRoot(sDebuggerParms* rootdbgparms_=nullptr) : sBaseObj("root", nullptr, rootdbgparms_) {
+	sRoot(int argc=0, char* argv[]=nullptr, sDebuggerParms* rootdbgparms_=nullptr) : sBaseObj("root", nullptr, rootdbgparms_) {
+
+		//-- 2. objects used throughout the client
+		tParmsSource* XMLparms=nullptr;
+		tForecaster* forecaster=nullptr;
+		tData* data0=nullptr;
+		tEngine* engine0=nullptr;
 
 		try {
 
-			tFileInfo* parmsFile;
+			//-- create client parms, include command-line parms, and read parameters file
+			safespawn(XMLparms, tParmsSource, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv);
+			safecall(XMLparms->parse());
+
+			//-- create Data Forecaster from parms
+			//safecall(forecaster=new tForecaster(XMLparms, "Forecaster"));
+
+			safespawn(data0, tData, XMLparms, ".Forecaster.Data");
+			safespawn(engine0, tEngine, XMLparms, ".Forecaster.Engine", data0->shape);
+
+/*			tFileInfo* parmsFile;
 			char* fname="C:/temp/parms.xml";
 
 			safecall(spawnFile(parmsFile, fname, FILE_MODE_READ));
@@ -155,7 +176,7 @@ struct sRoot : sBaseObj {
 
 			//-- 5. first object (constructor successful)
 			safespawn(dio4, sDio, 10, 20, 0, false);
-
+*/
 		}
 		catch (std::exception exc) {
 			throw(exc);

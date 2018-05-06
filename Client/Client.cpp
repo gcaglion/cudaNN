@@ -1,58 +1,47 @@
 #include "../CommonEnv.h"
 #include "../Forecaster/Forecaster.h"
 
-#define SUCCESS 0
-#define FAILURE -1
-#define Bye(retcode) { system("pause"); return retcode; }
+struct sRoot : sBaseObj {
 
-void objCleanup(int objCnt, ...) {
-	va_list args;
-	sBaseObj* obj;
+	//-- here we put everything that needs to be done
+	sRoot(int argc=0, char* argv[]=nullptr, sDebuggerParms* rootdbgparms_=nullptr) : sBaseObj("root", nullptr, rootdbgparms_) {
 
-	va_start(args, objCnt);
-	for (int o=0; o<objCnt; o++) {
-		obj=va_arg(args, sBaseObj*);
-		delete (obj);
+		//-- 2. objects used throughout the client
+		tParmsSource* XMLparms=nullptr;
+		tForecaster* forecaster=nullptr;
+		tData* data0=nullptr;
+		tEngine* engine0=nullptr;
+
+		try {
+
+			//-- create client parms, include command-line parms, and read parameters file
+			safespawn(XMLparms, tParmsSource, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv);
+			safecall(XMLparms->parse());
+
+			//-- create Data Forecaster from parms
+			//safecall(forecaster=new tForecaster(XMLparms, "Forecaster"));
+
+			safespawn(data0, tData, XMLparms, ".Forecaster.Data");
+			safespawn(engine0, tEngine, XMLparms, ".Forecaster.Engine", data0->shape);
+
+		}
+		catch (std::exception exc) {
+			throw(exc);
+		}
 	}
-	va_end(args);
-}
 
-void cleanup() {
-	printf("\nClient->cleanup() called.\n");
-}
+};
+
 int main(int argc, char* argv[]) {
 
-	//-- 1. main debugger declaration & creation. Also declares and starts timer (mainStart)
-	createMainDebugger(DBG_LEVEL_STD, DBG_DEST_BOTH);
-
-	//-- 2. objects used throughout the client
-	tParmsSource* XMLparms=nullptr;
-	tForecaster* forecaster=nullptr;
-	tData* data0=nullptr;
-	tEngine* engine0=nullptr;
-
-	//==================  main stuff ========================================================================================================
+	//-- 1. create root object. root constructor does everything else
+	sRoot* root=nullptr;
 	try {
-		//-- create client parms, include command-line parms, and read parameters file
-		safeCall(XMLparms=new tParmsSource("C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv));
-		safeCall(XMLparms->parse());
-
-		//-- create Data Forecaster from parms
-		//safeCall(forecaster=new tForecaster(XMLparms, "Forecaster"));
-
-		safeCall(data0=new tData(XMLparms, ".Forecaster.Data"));
-		safeCall(engine0=new tEngine(XMLparms, ".Forecaster.Engine", data0->shape));
-		delete engine0;
-
+		root=new sRoot();	//-- always takes default debugger settings
 	}
-	catch (char* e) {
-		objCleanup(4, XMLparms, forecaster, data0, engine0);
-		dbg->write(DBG_LEVEL_ERR, "main() failed. Exception=%s\n", 1, e);
-		Bye(FAILURE);
+	catch (std::exception exc) {
+		clientFail("Exception thrown by root. See stack.");
 	}
-	//==========================================================================================================================
 
-
-	objCleanup(4, XMLparms, forecaster, data0, engine0);
-	Bye(SUCCESS);
+	clientSuccess();
 }

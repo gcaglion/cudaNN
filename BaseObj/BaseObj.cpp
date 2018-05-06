@@ -6,7 +6,7 @@ sBaseObj::sBaseObj(char* objName_, sBaseObj* objParent_, sDebuggerParms* dbgparm
 		objParent=objParent_;
 		stackLevel=(objParent==nullptr) ? 0 : objParent->stackLevel+1;
 		dbg=new sDebugger(objName, dbgparms_);
-		info("%s(%p)->%s() successful.", objName, this, __func__);
+		//info("%s(%p)->%s() successful.", objName, this, __func__);
 	}
 	catch (std::exception exc) {
 		char msg[DBG_MSG_MAXLEN]="";
@@ -52,6 +52,8 @@ void sDio::method(bool fail_) {
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+//-- sRoot should be in the client (???)
+/*
 sRoot::sRoot(sDebuggerParms* rootdbgparms_) : sBaseObj("root", nullptr, rootdbgparms_) {
 
 	//-----------------------------------------------
@@ -102,3 +104,4 @@ sRoot::sRoot(sDebuggerParms* rootdbgparms_) : sBaseObj("root", nullptr, rootdbgp
 		throw(exc);
 	}
 }
+*/
