@@ -116,7 +116,7 @@
 				</Training>
 			</Core0>
 			<Core1>
-				Type			= CORE_xNN
+				Type			= CORE_NN
 				Parents			= 
 				ParentsConnType	= 
 				<Topology>

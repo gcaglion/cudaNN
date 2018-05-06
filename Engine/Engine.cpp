@@ -11,13 +11,13 @@ sEngine::sEngine(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char
 	sEngine_common(parms, shape_);
 
 	safecall(parms->setKey(parmKey));
-	safecall(parms->backupKey());
 
 	safecall(parms->get(&type, "Type"));
 
 	switch (type) {
 	case ENGINE_CUSTOM:
 		safecall(parms->setKey("Custom"));
+		safecall(parms->backupKey());
 		//-- 0. coresCnt
 		safecall(parms->get(&coresCnt, "CoresCount"));
 		//-- 1. malloc one core and one coreLayout for each core
@@ -25,10 +25,8 @@ sEngine::sEngine(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char
 		coreLayout=(tCoreLayout**)malloc(coresCnt*sizeof(tCoreLayout*));
 		//-- 2. create layout, set base coreLayout properties for each Core (type, desc, connType, outputCnt)
 		for (c=0; c<coresCnt; c++) {
-
 			safespawn(coreLayout[c], sCoreLayout, parms, c, shape);
 			safecall(parms->restoreKey());
-
 		}
 		break;
 	case ENGINE_WNN:

@@ -9,8 +9,8 @@ struct sRoot : sBaseObj {
 		//-- 2. objects used throughout the client
 		tParmsSource* XMLparms=nullptr;
 		tForecaster* forecaster=nullptr;
-		tData* data0=nullptr;
-		tEngine* engine0=nullptr;
+		//tData* data0=nullptr;
+		//tEngine* engine0=nullptr;
 
 		try {
 
@@ -19,10 +19,10 @@ struct sRoot : sBaseObj {
 			safecall(XMLparms->parse());
 
 			//-- create Data Forecaster from parms
-			//safecall(forecaster=new tForecaster(XMLparms, "Forecaster"));
+			safespawn(forecaster, tForecaster, XMLparms, "Forecaster");
 
-			safespawn(data0, tData, XMLparms, ".Forecaster.Data");
-			safespawn(engine0, tEngine, XMLparms, ".Forecaster.Engine", data0->shape);
+			//safespawn(data0, tData, XMLparms, ".Forecaster.Data");
+			//safespawn(engine0, tEngine, XMLparms, ".Forecaster.Engine", data0->shape);
 
 		}
 		catch (std::exception exc) {

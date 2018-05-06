@@ -10,6 +10,7 @@ sForecaster::sForecaster(char* objName_, sBaseObj* objParent_, tParmsSource* par
 	safespawn(data, tData, parms, ".Forecaster.Data");
 
 	//-- define forecaster Engine, pass Data shape info
+
 	safespawn(engine, tEngine, parms, ".Forecaster.Engine", data->shape);
 
 	//-- define forecaster Persistor

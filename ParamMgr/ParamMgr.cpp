@@ -61,6 +61,8 @@ void sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 	
 	//-- KeyDesc may be passed as literal, therefore we need a buffer to copy KeyDesc_ to, so we can overwrite it
 	char KeyDesc[XML_MAX_PATH_LEN];	strcpy_s(KeyDesc, XML_MAX_PATH_LEN, KeyDesc_);
+	//-- save current key, to be printed in case of failure
+	char tmpCurrentKey[XML_MAX_PATH_LEN]; strcpy_s(tmpCurrentKey, XML_MAX_PATH_LEN, currentKey);
 
 	//-- "." before KeyDesc makes search start from root;
 	if (KeyDesc[0]=='.' && KeyDesc[1]!='.') {
@@ -86,7 +88,7 @@ void sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 
 	bool success=(findKey(currentKey) || ignoreError);
 	if (!success) {
-		fail("%s(%p)->%s() failed. KeyDesc_=%s", objName, this, __func__, KeyDesc_);
+		fail("%s(%p)->%s(%s) failed. CurrentKey=%s", objName, this, __func__, KeyDesc_, tmpCurrentKey);
 	}
 }
 bool sParmsSource::findKey(char* KeyFullDesc){
