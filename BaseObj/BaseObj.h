@@ -3,15 +3,16 @@
 #include "../CommonMacros.h"
 #include "../Debugger/Debugger.h"
 
-#define BASEOBJ_MAX_CHILDREN 64
-;
+#define OBJ_MAX_CHILDREN 64
+#define OBJ_NAME_MAXLEN	128
+
 struct sBaseObj {
 
-	char objName[64];
+	char objName[OBJ_NAME_MAXLEN];
 	sBaseObj* objParent;
 	int stackLevel;
 	int childrenCnt=0;
-	sBaseObj* child[BASEOBJ_MAX_CHILDREN];
+	sBaseObj* child[OBJ_MAX_CHILDREN];
 
 	sDebugger* dbg;
 

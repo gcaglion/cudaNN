@@ -80,9 +80,11 @@
 	</Data>
 	<Engine>
 		<Debugger>
-			Level = DBG_LEVEL_DET
-			Dest  = DBG_DEST_BOTH
-			DestFileFullName  = C:\temp\logs\mainDebugger.log
+			Verbose 			= true
+			Timing				= false
+			PauseOnError		= true
+			Dest				= DBG_DEST_BOTH
+			DestFileFullName	= C:\temp\logs\mainDebugger.log
 		</Debugger>		
 		Type 		= ENGINE_CUSTOM
 		<Custom>

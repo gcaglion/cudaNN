@@ -206,3 +206,34 @@ bool sParmsSource::parse() {
 void sParmsSource::cleanup() {
 	printf("\nsParamsSource->cleanup() called.\n");
 }
+
+void sParmsSource::loadObjectDebugParms(char* KeyDesc_, sDebuggerParms* oDbgParms) {
+	
+	setKey(KeyDesc_);
+
+	setKey("Debugger", true);
+
+	bool verbose_=DEFAULT_DBG_VERBOSITY;
+	bool timing_=DEFAULT_DBG_TIMING;
+	bool pauseOnError_=DEFAULT_DBG_PAUSERR;
+	int dest_=DEFAULT_DBG_DEST;
+	char destFileFullName_[MAX_PATH]="";
+
+	//-- we need to ignore exceptions, so include all calls in try/catch
+	try {
+		safecall(get(&verbose_, "Verbose"));
+		safecall(get(&timing_, "Timing"));
+		safecall(get(&pauseOnError_, "PauseOnError"));
+		safecall(get(&dest_, "Dest"));
+		safecall(get(destFileFullName_, "DestFileFullName"));
+	}
+	catch (std::exception exc) {
+		//.. do nothing ...
+	}
+
+	oDbgParms->verbose=verbose_;
+	oDbgParms->timing=timing_;
+	oDbgParms->pauseOnError=pauseOnError_;
+	oDbgParms->dest=dest_;
+
+}

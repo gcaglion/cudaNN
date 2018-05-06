@@ -159,9 +159,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Debugger.h" />
+    <ClInclude Include="DebuggerParms.h" />
+    <ClInclude Include="Debugger_enums.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Debugger.cpp" />
+    <ClCompile Include="DebuggerParms.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -34,10 +34,10 @@ void sParmsSource::decode(int elementId, int* oVal) {
 /*	optionLookup(DEFAULT_DBG_VERBOSITY, elementId);
 	optionLookup(DEFAULT_DBG_TIMING, elementId);
 	optionLookup(DEFAULT_DBG_PAUSERR, elementId);
-	optionLookup(DBG_DEST_FILE, elementId);
+*/	optionLookup(DBG_DEST_FILE, elementId);
 	optionLookup(DBG_DEST_SCREEN, elementId);
 	optionLookup(DBG_DEST_BOTH, elementId);
-*/	//-- FileData_enums
+	//-- FileData_enums
 	optionLookup(COMMA_SEPARATOR, elementId);
 	optionLookup(TAB_SEPARATOR, elementId);
 	optionLookup(SPACE_SEPARATOR, elementId);

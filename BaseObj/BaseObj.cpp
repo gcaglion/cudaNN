@@ -2,10 +2,10 @@
 
 sBaseObj::sBaseObj(char* objName_, sBaseObj* objParent_, sDebuggerParms* dbgparms_) {
 	try {
-		strcpy_s(objName, 64, objName_);
+		strcpy_s(objName, OBJ_NAME_MAXLEN, objName_);
 		objParent=objParent_;
 		stackLevel=(objParent==nullptr) ? 0 : objParent->stackLevel+1;
-		dbg=new sDebugger(objName, dbgparms_);
+		dbg=new sDebugger(dbgparms_);
 		//info("%s(%p)->%s() successful.", objName, this, __func__);
 	}
 	catch (std::exception exc) {

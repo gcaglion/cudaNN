@@ -8,6 +8,10 @@ struct sRoot : sBaseObj {
 
 	sRoot(int argc=0, char* argv[]=nullptr, sDebuggerParms* rootdbgparms_=nullptr) : sBaseObj("root", nullptr, rootdbgparms_) {
 
+
+		//tParmsSource* xparms=new tParmsSource("xparms", this, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv, true);
+
+
 		//-- a) declarations for all objects used throughout the client
 		
 		tParmsSource*	XMLparms=nullptr;	//-- Forecaster XML parameters
@@ -20,6 +24,8 @@ struct sRoot : sBaseObj {
 
 			//-- 1. create client parms, include command-line parms, read parameters file, and parse it on creation
 			safespawn(XMLparms, tParmsSource, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv, true);
+
+			
 
 			//-- 2. create Forecaster Data from parms
 			safespawn(fData, tData, XMLparms, ".Forecaster.Data");
@@ -39,7 +45,7 @@ struct sRoot : sBaseObj {
 };
 
 int main(int argc, char* argv[]) {
-
+	
 	//-- 1. create root object. root constructor does everything else
 	sRoot* root=nullptr;
 	try {
