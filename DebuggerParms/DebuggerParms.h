@@ -1,5 +1,6 @@
 #pragma once
 #include "../CommonEnv.h"
+#include "../FileInfo/FileInfo.h"
 #include "Debugger_enums.h"
 
 #define DEFAULT_DBG_DEST		DBG_DEST_BOTH
@@ -20,9 +21,12 @@ typedef struct sDebuggerParms {
 	char outFilePath[MAX_PATH];
 	char outFileName[MAX_PATH];
 	char outFileFullName[MAX_PATH];
+	//FILE* outFileHandle;
+	tFileInfo* outFile;
 
 #ifdef __cplusplus
-	EXPORT sDebuggerParms(int dest_=DEFAULT_DBG_DEST, bool verbose_=DEFAULT_DBG_VERBOSITY, bool timing_=DEFAULT_DBG_TIMING, bool pauseOnError_=DEFAULT_DBG_PAUSERR, char* outFileFullName_=nullptr, char* outFilePath_=nullptr, char* outFileName_=nullptr);
+	EXPORT sDebuggerParms(char* ownerObjName_=nullptr, int dest_=DEFAULT_DBG_DEST, bool verbose_=DEFAULT_DBG_VERBOSITY, bool timing_=DEFAULT_DBG_TIMING, bool pauseOnError_=DEFAULT_DBG_PAUSERR, char* outFileFullName_=nullptr, char* outFilePath_=nullptr);
+	EXPORT ~sDebuggerParms();
 #endif
 } tDebuggerParms;
 

@@ -55,6 +55,16 @@
 	printf("%s", dbg->msg); \
 	fprintf(dbg->outFile->handle, "%s", dbg->msg); \
 }
+/*
+#define err_(mask, ...) { \
+	for(int t=0; t<stackLevel; t++) dbg->msg[t]='\t'; \
+	sprintf_s(&dbg->msg[stackLevel], DBG_MSG_MAXLEN, mask, __VA_ARGS__); strcat_s(dbg->msg, DBG_MSG_MAXLEN, "\n"); \
+	strcat_s(dbg->stackmsg, DBG_STACK_MAXLEN, dbg->msg); \
+	if(stackLevel>0) sprintf_s(objParent->dbg->stackmsg, DBG_STACK_MAXLEN, "%s\t%s", objParent->dbg->stackmsg, dbg->msg); \
+	printf("%s", dbg->msg); \
+	fprintf(dbg->outFile->handle, "%s", dbg->msg); \
+}
+*/
 #define fail(mask, ...) { \
 	err(mask, __VA_ARGS__); \
 	throw(std::exception(dbg->msg)); \

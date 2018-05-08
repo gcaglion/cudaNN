@@ -1,10 +1,10 @@
 #include "ParamMgr.h"
 
-sParmsSource::sParmsSource(char* objName_, sBaseObj* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], bool autoParse, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sParmsSource::sParmsSource(char* objName_, s0* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], bool autoParse, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	CLoverridesCnt=CLoverridesCnt_; CLoverride=CLoverride_;
 
-	safecall(spawnFile(parmsFile, pFileFullName, FILE_MODE_READ));
+	spawnFile(parmsFile, pFileFullName, FILE_MODE_READ);
 
 	parmsCnt=0;
 	currentKey[0]='\0';
@@ -90,7 +90,7 @@ void sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 
 	bool success=(findKey(currentKey) || ignoreError);
 	if (!success) {
-		fail("%s(%p)->%s(%s) failed. CurrentKey=%s", objName, this, __func__, KeyDesc_, tmpCurrentKey);
+		fail("CurrentKey=%s", KeyDesc_);
 	}
 }
 bool sParmsSource::findKey(char* KeyFullDesc){
@@ -207,6 +207,7 @@ void sParmsSource::cleanup() {
 	printf("\nsParamsSource->cleanup() called.\n");
 }
 
+/*
 void sParmsSource::ObjectDebugParmsOverride(char* KeyDesc_, sDebugger* objdbg_) {
 	
 	setKey(KeyDesc_);
@@ -239,3 +240,4 @@ void sParmsSource::ObjectDebugParmsOverride(char* KeyDesc_, sDebugger* objdbg_) 
 		throw(exc);
 	}
 }
+*/

@@ -2,8 +2,6 @@
 
 #include <Windows.h>
 
-#include "CommonMacros.h"
-
 #ifndef EXPORT
 #define EXPORT __declspec(dllexport)
 #endif
@@ -20,5 +18,6 @@ typedef float numtype;
 #define USE_ORCL
 #define USE_GPU
 
-#define OBJNAME_MAXLEN 128
+#define OBJ_NAME_MAXLEN 128
+#define OBJ_MAX_CHILDREN 64
 

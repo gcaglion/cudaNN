@@ -1,12 +1,23 @@
 #include "BaseObj.h"
 
+void sBaseObj::spawndbg(sDebuggerParms* dbgparms_) {
+	char dbgoutfname[MAX_PATH];
+
+	if (dbgparms_==nullptr) dbgparms_=new sDebuggerParms();
+	sprintf_s(dbgparms_->outFileName, MAX_PATH, "%s_dbg", objName);
+	try {
+		dbg=new sDebugger(dbgparms_);
+	}
+	catch (std::exception exc) {
+		
+	}
+}
 sBaseObj::sBaseObj(char* objName_, sBaseObj* objParent_, sDebuggerParms* dbgparms_) {
 	try {
 		strcpy_s(objName, OBJ_NAME_MAXLEN, objName_);
 		objParent=objParent_;
 		stackLevel=(objParent==nullptr) ? 0 : objParent->stackLevel+1;
-		dbg=new sDebugger(dbgparms_);
-		//info("%s(%p)->%s() successful.", objName, this, __func__);
+		spawndbg(dbgparms_);
 	}
 	catch (std::exception exc) {
 		char msg[DBG_MSG_MAXLEN]="";

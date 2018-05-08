@@ -1,12 +1,13 @@
 #pragma once
 #include "../CommonEnv.h"
-#include "../BaseObj/BaseObj.h"
+#include "../s0/s0.h"
+
 #include "../Utils/Utils.h"
 #include "../FileInfo/FileInfo.h"
 #include "ParamMgr_limits.h"
 
 
-typedef struct sParmsSource : public sBaseObj {
+typedef struct sParmsSource : public s0 {
 
 	tFileInfo* parmsFile=nullptr;
 	int CLoverridesCnt;
@@ -15,7 +16,7 @@ typedef struct sParmsSource : public sBaseObj {
 	int parmsCnt=0;
 	int foundParmId;
 
-	EXPORT sParmsSource(char* objName_, sBaseObj* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], bool autoParse=false, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sParmsSource(char* objName_, s0* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], bool autoParse=false, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sParmsSource();
 
 	char parmName[XML_MAX_PARAMS_CNT][XML_MAX_PATH_LEN];
@@ -72,6 +73,6 @@ typedef struct sParmsSource : public sBaseObj {
 
 	EXPORT void cleanup();
 
-	EXPORT void ObjectDebugParmsOverride(char* KeyDesc, sDebugger* dbg_);
+	//EXPORT void ObjectDebugParmsOverride(char* KeyDesc, sDebugger* dbg_);
 
 } tParmsSource;

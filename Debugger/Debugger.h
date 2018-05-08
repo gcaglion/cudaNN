@@ -1,28 +1,20 @@
 #pragma once
 #include "../CommonEnv.h"
+#include "../s0/s0.h"
 #include "../FileInfo/FileInfo.h"
-#include "Debugger_enums.h"
-#include "DebuggerParms.h"
+#include "../DebuggerParms/DebuggerParms.h"
 
-typedef struct sDebugger {
+typedef struct sDebugger : s0 {
 
-	tDebuggerParms* parms;
 	tFileInfo* outFile;
+	char msg[DBG_MSG_MAXLEN]="";
+	char stackmsg[DBG_STACK_MAXLEN];
 
-	char msg[DBG_MSG_MAXLEN]
-#ifdef __cplusplus
-		=""
-#endif
-		;
-	char stackmsg[DBG_STACK_MAXLEN]
-#ifdef __cplusplus
-		=""
-#endif
-		;
 
 #ifdef __cplusplus
-	EXPORT sDebugger(sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sDebugger(char* objName_, s0* objParent_, sDebuggerParms* dbgparms_);
 	EXPORT ~sDebugger();
 #endif
 
 } tDebugger;
+

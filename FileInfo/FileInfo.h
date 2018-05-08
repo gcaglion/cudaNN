@@ -21,14 +21,12 @@ typedef struct sFileInfo {
 	char modeDesc[30];
 
 #ifdef __cplusplus
-	char objName[64] ="";
+	char objName[OBJ_NAME_MAXLEN] ="";
 	void* objParent=nullptr;
 
 	EXPORT void sFileInfo_common();
 	EXPORT sFileInfo(char* Name_, char* Path_, int mode_);
 	EXPORT sFileInfo(char* FullName_, int mode_);
-	EXPORT sFileInfo(char* objName_, void* objParent_, char* Name_, char* Path_, int mode_);
-	EXPORT sFileInfo(char* objName_, void* objParent_, char* FullName_, int mode_);
 	EXPORT ~sFileInfo();
 	EXPORT void savePos();
 	EXPORT void restorePos();

@@ -15,12 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Debugger.h">
+    <ClInclude Include="DebuggerParms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Debugger_enums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Debugger.cpp">
+    <ClCompile Include="DebuggerParms.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

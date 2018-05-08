@@ -1,14 +1,14 @@
 #include "DebuggerParms.h"
 
-sDebuggerParms::sDebuggerParms(int dest_, bool verbose_, bool timing_, bool pauseOnError_, char* outFileFullName_, char* outFilePath_, char* outFileName_) {
+sDebuggerParms::sDebuggerParms(char* ownerObjName, int dest_, bool verbose_, bool timing_, bool pauseOnError_, char* outFileFullName_, char* outFilePath_) {
 	dest=dest_;
 	verbose=verbose_;
 	timing=timing_;
 	pauseOnError=pauseOnError_;
-	if (outFileName_==nullptr) {
+	if (ownerObjName==nullptr) {
 		strcpy_s(outFileName, MAX_PATH, DEFAULT_DBG_FNAME);
 	} else {
-		strcpy_s(outFileName, MAX_PATH, outFileName_);
+		sprintf_s(outFileName, MAX_PATH, "%s_Debugger", ownerObjName);
 	}
 	if (outFilePath_==nullptr) {
 		strcpy_s(outFilePath, MAX_PATH, DEFAULT_DBG_FPATH);
@@ -20,6 +20,8 @@ sDebuggerParms::sDebuggerParms(int dest_, bool verbose_, bool timing_, bool paus
 	} else {
 		strcpy_s(outFileFullName, MAX_PATH, outFileFullName_);
 	}
-
+	outFile=nullptr;
 }
-
+sDebuggerParms::~sDebuggerParms() {
+	delete outFile;
+}
