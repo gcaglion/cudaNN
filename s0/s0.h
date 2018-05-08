@@ -6,12 +6,13 @@
 typedef struct sdebuggerC {
 	char* name;
 	int stackLevel;
-	sDebuggerParms* dbgparms;
+	tDebuggerParms* dbgparms;
 	char dbgmsgmask[DBG_MSG_MAXLEN];
 	char dbgmsg[DBG_MSG_MAXLEN];
 	char stackmsg[DBG_STACK_MAXLEN];
 } tdebuggerC;
 
+#ifdef __cplusplus
 struct s0 {
 	char name[OBJ_NAME_MAXLEN];
 	int stackLevel=0;
@@ -24,7 +25,6 @@ struct s0 {
 	char dbgmsg[DBG_MSG_MAXLEN]="";
 	char stackmsg[DBG_STACK_MAXLEN]="";
 
-#ifdef __cplusplus__
 	EXPORT s0(char* name_, s0* parent_, sDebuggerParms* dbgparms_);
 	EXPORT ~s0();
 
@@ -34,8 +34,6 @@ struct s0 {
 	EXPORT void _fout(bool success);
 
 	tdebuggerC* Cdbg;
-#endif
 
 };
-
-//
+#endif
