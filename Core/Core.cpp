@@ -9,7 +9,7 @@ void sCoreLayout::sCoreLayout_common(sDebuggerParms* dbgparms_, int Id_) {
 	char fname[MAX_PATH]; sprintf_s(fname, MAX_PATH, "Core%d.err", Id_);
 }
 
-sCoreLayout::sCoreLayout(char* objName_, sBaseObj* objParent_, tParmsSource* parms, int Id_, tDataShape* shape_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sCoreLayout::sCoreLayout(char* objName_, s0* objParent_, tParmsSource* parms, int Id_, tDataShape* shape_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	sCoreLayout_common(dbgparms_, Id_);
 	Id=Id_; shape=shape_;
 	sprintf_s(desc, CORE_MAX_DESC_LEN, "Core%d", Id);
@@ -32,9 +32,9 @@ sCoreLayout::~sCoreLayout() {
 	free(parentDesc);
 }
 
-sCore::sCore(char* objName_, sBaseObj* objParent_, tParmsSource* parms, tCoreLayout* layout_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sCore::sCore(char* objName_, s0* objParent_, tParmsSource* parms, tCoreLayout* layout_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	layout=layout_;
 }
-sCore::sCore(char* objName_, sBaseObj* objParent_, tDataShape* baseShape_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sCore::sCore(char* objName_, s0* objParent_, tDataShape* baseShape_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	//-- TO DO !!! layout=new tCoreLayout(objName_, objParent_, baseShape_, dbgparms_);
 }

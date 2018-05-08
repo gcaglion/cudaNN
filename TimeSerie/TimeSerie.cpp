@@ -24,10 +24,10 @@ void sTimeSerie::sTimeSeriecommon(int steps_, int featuresCnt_, int tsfCnt_, int
 }
 
 //-------- To fix --------------
-sTimeSerie::sTimeSerie(char* objName_, sBaseObj* objParent_, int steps_, int featuresCnt_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sTimeSerie::sTimeSerie(char* objName_, s0* objParent_, int steps_, int featuresCnt_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	sTimeSeriecommon(steps_, featuresCnt_, 0, nullptr, dbgparms_);
 }
-sTimeSerie::sTimeSerie(char* objName_, sBaseObj* objParent_, tFXData* dataSource_, int steps_, char* date0_, int dt_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sTimeSerie::sTimeSerie(char* objName_, s0* objParent_, tFXData* dataSource_, int steps_, char* date0_, int dt_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	//-- 1. create
 	sTimeSeriecommon(steps_, FXDATA_FEATURESCNT, 0, nullptr, dbgparms_);	// no safecall() because we don't set dbg, here
 	//-- 2. load data
@@ -35,14 +35,14 @@ sTimeSerie::sTimeSerie(char* objName_, sBaseObj* objParent_, tFXData* dataSource
 	//-- 3. transform
 	safecall(transform(dt_));
 }
-sTimeSerie::sTimeSerie(char* objName_, sBaseObj* objParent_, tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sTimeSerie::sTimeSerie(char* objName_, s0* objParent_, tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	featuresCnt=featuresCnt_;
 }
 /*sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_){
 }
 //-------------------------------------------------------------------------------------------------------------------------------------
 */
-sTimeSerie::sTimeSerie(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sTimeSerie::sTimeSerie(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	tsf=(int*)malloc(MAX_TSF_CNT*sizeof(int));
 	date0[DATE_FORMAT_LEN]='\0';

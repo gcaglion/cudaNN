@@ -4,9 +4,9 @@
 #include "../Engine/Engine.h"
 #include "../Logger/Logger.h"
 
-struct sRoot : sBaseObj {
+struct sRoot : s0 {
 
-	sRoot(int argc=0, char* argv[]=nullptr, sDebuggerParms* rootdbgparms_=nullptr) : sBaseObj("root", nullptr, rootdbgparms_) {
+	sRoot(int argc=0, char* argv[]=nullptr, sDebuggerParms* rootdbgparms_=nullptr) : s0("root", nullptr, rootdbgparms_) {
 
 
 		//tParmsSource* xparms=new tParmsSource("xparms", this, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv, true);

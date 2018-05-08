@@ -5,7 +5,7 @@ void sEngine::sEngine_common(tParmsSource* parms, tDataShape* shape_) {
 	layerCoresCnt=(int*)malloc(MAX_ENGINE_LAYERS*sizeof(int)); for (int l=0; l<MAX_ENGINE_LAYERS; l++) layerCoresCnt[l]=0;
 	shape=shape_;
 }
-sEngine::sEngine(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, tDataShape* shape_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sEngine::sEngine(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, tDataShape* shape_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	int c;
 
 	//-- look for object-specific debugger properties in parms file. If they are there, then create a new debugger and replace the default one

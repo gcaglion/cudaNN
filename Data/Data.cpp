@@ -21,10 +21,10 @@
 
 
 
-sDataShape::sDataShape(char* objName_, sBaseObj* objParent_, int sampleLen_, int predictionLen_, int featuresCnt_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sDataShape::sDataShape(char* objName_, s0* objParent_, int sampleLen_, int predictionLen_, int featuresCnt_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	sampleLen=sampleLen_; predictionLen=predictionLen_; featuresCnt=featuresCnt_;
 }
-sDataShape::sDataShape(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sDataShape::sDataShape(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	//safemethod(parms->setKey, parmKey);
 	//safemethod(parms->get, &sampleLen, "SampleLen");
@@ -38,12 +38,12 @@ sDataShape::sDataShape(char* objName_, sBaseObj* objParent_, tParmsSource* parms
 sDataShape::~sDataShape() {
 }
 
-sData::sData(char* objName_, sBaseObj* objParent_, tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sData::sData(char* objName_, s0* objParent_, tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	shape=shape_; 
 	ActionDo[TRAIN]=doTrain_; ActionDo[TEST]=doTest_; ActionDo[VALID]=doValidation_;
 
 }
-sData::sData(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sData::sData(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	//-- Shape
 	safecall(parms->setKey(parmKey));

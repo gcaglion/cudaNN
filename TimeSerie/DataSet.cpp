@@ -1,7 +1,7 @@
 #include "DataSet.h"
 
 //-- sDataSet, constructors  /destructor
-sDataSet::sDataSet(char* objName_, sBaseObj* objParent_, int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* BWFeature_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sDataSet::sDataSet(char* objName_, s0* objParent_, int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* BWFeature_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	selectedFeaturesCnt=selectedFeaturesCnt_;
 	for (int f=0; f<selectedFeaturesCnt; f++) selectedFeature[f]=selectedFeature_[f];
@@ -40,7 +40,7 @@ sDataSet::sDataSet(char* objName_, sBaseObj* objParent_, int sampleLen_, int tar
 		BFS2SFB(b, targetLen, targetBFS, targetSFB);
 	}
 }
-sDataSet::sDataSet(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sDataSet::sDataSet(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	selectedFeature=(int*)malloc(MAX_DATA_FEATURES*sizeof(int));
 	BWFeature=(int*)malloc(2*sizeof(int));

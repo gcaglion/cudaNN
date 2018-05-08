@@ -199,7 +199,7 @@ EXPORT bool Vdiffcomp(int Vlen, numtype* V1, numtype scale1, numtype* V2, numtyp
 EXPORT bool MbyMcomp(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C, numtype* T, boolean usegpu);
 EXPORT bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, int Cy, int Cx, numtype* C, numtype* T);
 
-typedef struct sAlgebra : public sBaseObj {
+typedef struct sAlgebra : public s0 {
 	
 	void* cublasH;
 	void* cuRandH;
@@ -207,7 +207,7 @@ typedef struct sAlgebra : public sBaseObj {
 	numtype* ss;	// shared scalar
 
 	//-- class constructor/destructor
-	EXPORT sAlgebra(char* objName_, sBaseObj* objParent_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sAlgebra(char* objName_, s0* objParent_, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sAlgebra();
 
 	//-- class methods

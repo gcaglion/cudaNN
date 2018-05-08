@@ -1,6 +1,6 @@
 #include "Forecaster.h"
 
-sForecaster::sForecaster(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sForecaster::sForecaster(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	tData* data;
 	tEngine* engine;

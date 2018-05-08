@@ -385,7 +385,7 @@ bool MbyMcompare(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtyp
 }
 
 //-- class constructor/destructor
-sAlgebra::sAlgebra(char* objName_, sBaseObj* objParent_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sAlgebra::sAlgebra(char* objName_, s0* objParent_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	//-- init CUDA/BLAS
 	cublasH=new void*;

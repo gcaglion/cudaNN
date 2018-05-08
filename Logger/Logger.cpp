@@ -1,6 +1,6 @@
 #include "Logger.h"
 
-sLogger::sLogger(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sLogger::sLogger(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	safecall(parms->setKey(parmKey));
 	parms->get(&saveNothing, "saveNothing");
 	parms->get(&saveClient, "saveClient");
@@ -15,12 +15,12 @@ sLogger::sLogger(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char
 		safespawn(file, tFileData, parms, "DestFiles");
 	}
 }
-sLogger::sLogger(char* objName_, sBaseObj* objParent_, tDBConnection* logDB, bool saveNothing_, bool saveClient_, bool saveMSE_, bool saveRun_, bool saveInternals_, bool saveImage_, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sLogger::sLogger(char* objName_, s0* objParent_, tDBConnection* logDB, bool saveNothing_, bool saveClient_, bool saveMSE_, bool saveRun_, bool saveInternals_, bool saveImage_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	dest=ORCL_DEST;
 	db=logDB;
 	saveNothing=saveNothing_; saveClient=saveClient_; saveMSE=saveMSE_; saveRun=saveRun_; saveInternals=saveInternals_; saveImage=saveImage_;
 }
-sLogger::sLogger(char* objName_, sBaseObj* objParent_, tFileData* logFile, sDebuggerParms* dbgparms_) : sBaseObj(objName_, objParent_, dbgparms_) {
+sLogger::sLogger(char* objName_, s0* objParent_, tFileData* logFile, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	dest=FILE_DEST;
 	file=logFile;
 }

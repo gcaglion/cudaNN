@@ -37,7 +37,7 @@ void sNN::sNN_common(tDataShape* baseShape, sDebuggerParms* dbgparms_) {
 
 }
 
-sNN::sNN(char* objName_, sBaseObj* objParent_, tParmsSource* XMLparms, tCoreLayout* coreLayout, sDebuggerParms* dbgparms_) : sCore(objName_, objParent_, XMLparms, coreLayout, dbgparms_) {
+sNN::sNN(char* objName_, s0* objParent_, tParmsSource* XMLparms, tCoreLayout* coreLayout, sDebuggerParms* dbgparms_) : sCore(objName_, objParent_, XMLparms, coreLayout, dbgparms_) {
 	
 	//-- 0. read NN Parms (Topology + Training)
 	parms=new tNNparms();
@@ -75,7 +75,7 @@ sNN::sNN(char* objName_, sBaseObj* objParent_, tParmsSource* XMLparms, tCoreLayo
 	sNN_common(coreLayout->shape, dbgparms_);
 
 }
-sNN::sNN(char* objName_, sBaseObj* objParent_, tDataShape* baseShape_, tNNparms* NNparms_, sDebuggerParms* dbgparms_) : sCore(objName_, objParent_, baseShape_, dbgparms_) {
+sNN::sNN(char* objName_, s0* objParent_, tDataShape* baseShape_, tNNparms* NNparms_, sDebuggerParms* dbgparms_) : sCore(objName_, objParent_, baseShape_, dbgparms_) {
 	
 	//-- set NN parms
 	parms=NNparms_;

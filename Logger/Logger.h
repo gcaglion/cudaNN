@@ -11,7 +11,7 @@
 #include "../OraUtils/OraUtils.h"
 #endif
 
-typedef struct sLogger : public sBaseObj {
+typedef struct sLogger : public s0 {
 	int dest;
 	tAlgebra* Alg;	//-- we need this in LoadW() and SaveW()
 	tDBConnection* db=nullptr;
@@ -23,9 +23,9 @@ typedef struct sLogger : public sBaseObj {
 	bool saveInternals;
 	bool saveImage;
 
-	EXPORT sLogger(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sLogger(char* objName_, sBaseObj* objParent_, tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sLogger(char* objName_, sBaseObj* objParent_, tFileData* logFile, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sLogger(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sLogger(char* objName_, s0* objParent_, tDBConnection* logDB, bool saveNothing_=false, bool saveClient_=true, bool saveMSE_=true, bool saveRun_=true, bool saveInternals_=false, bool saveImage_=true, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sLogger(char* objName_, s0* objParent_, tFileData* logFile, sDebuggerParms* dbgparms_=nullptr);
 
 	EXPORT void SaveMSE(int pid, int tid, int mseCnt, numtype* mseT, numtype* mseV);
 	EXPORT void SaveRun(int pid, int tid, int setid, int npid, int ntid, int runCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);

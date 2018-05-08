@@ -11,7 +11,7 @@
 #define MAX_ENGINE_LAYERS	8
 #define MAX_ENGINE_CORES	32
 
-typedef struct sEngine : public sBaseObj {
+typedef struct sEngine : public s0 {
 
 	int type;
 	int coresCnt;
@@ -24,7 +24,7 @@ typedef struct sEngine : public sBaseObj {
 	tCore** core;
 
 	EXPORT void sEngine::sEngine_common(tParmsSource* parms, tDataShape* shape_);
-	EXPORT sEngine(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, tDataShape* shape_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sEngine(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, tDataShape* shape_, sDebuggerParms* dbgparms_=nullptr);
 
 	EXPORT void setCoreLayer(tCoreLayout* c);
 	EXPORT void train(tDataSet* trainDS);

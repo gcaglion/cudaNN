@@ -5,7 +5,7 @@
 #include "../ParamMgr/ParamMgr.h"
 #include "TimeSerie.h"
 
-typedef struct sDataSet : public sBaseObj {
+typedef struct sDataSet : public s0 {
 
 	tTimeSerie* sourceTS=nullptr;
 
@@ -35,8 +35,8 @@ typedef struct sDataSet : public sBaseObj {
 	numtype* prediction0=nullptr;
 
 	//-- constructor / destructor
-	EXPORT sDataSet(char* objName_, sBaseObj* objParent_, int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* datafileBWFeature_, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sDataSet(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sDataSet(char* objName_, s0* objParent_, int sampleLen_, int targetLen_, int batchSamplesCnt_, int selectedFeaturesCnt_, int* selectedFeature_, int* datafileBWFeature_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sDataSet(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sDataSet();
 
 	bool isSelected(int ts_f);

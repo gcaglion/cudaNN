@@ -13,7 +13,7 @@
 #define MAX_DATA_FEATURES 128
 #define MAX_TSF_CNT	32
 
-typedef struct sTimeSerie : public sBaseObj {
+typedef struct sTimeSerie : public s0 {
 
 	//-- data source
 	int sourceType;
@@ -46,11 +46,11 @@ typedef struct sTimeSerie : public sBaseObj {
 
 	//-- constructors / destructor
 	EXPORT void sTimeSeriecommon(int steps_, int featuresCnt_, int tsfCnt_=0, int* tsf_=nullptr, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sTimeSerie(char* objName_, sBaseObj* objParent_, int steps_, int featuresCnt_, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sTimeSerie(char* objName_, sBaseObj* objParent_, tFXData* dataSource_, int steps_, char* date0_, int dt_, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sTimeSerie(char* objName_, sBaseObj* objParent_, tFileData* dataSource_, int featuresCnt_, int steps_, char* date0_, int dt_, sDebuggerParms* dbgparms_=nullptr);
-//	EXPORT sTimeSerie(char* objName_, sBaseObj* objParent_, tMT4Data* dataSource_, int steps_, char* date0_, int dt_, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sTimeSerie(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sTimeSerie(char* objName_, s0* objParent_, int steps_, int featuresCnt_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sTimeSerie(char* objName_, s0* objParent_, tFXData* dataSource_, int steps_, char* date0_, int dt_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sTimeSerie(char* objName_, s0* objParent_, tFileData* dataSource_, int featuresCnt_, int steps_, char* date0_, int dt_, sDebuggerParms* dbgparms_=nullptr);
+//	EXPORT sTimeSerie(char* objName_, s0* objParent_, tMT4Data* dataSource_, int steps_, char* date0_, int dt_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sTimeSerie(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sTimeSerie();
 	
 	EXPORT void load(tFXData* tsFXData, char* pDate0);

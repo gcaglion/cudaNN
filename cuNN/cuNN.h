@@ -75,8 +75,8 @@ typedef struct sNN :public sCore {
 	DWORD TRstart, TRtimeTot=0, TRcnt=0; float TRtimeAvg;
 
 	void sNN_common(tDataShape* baseShape, sDebuggerParms* dbgparms_);
-	EXPORT sNN(char* objName_, sBaseObj* objParent_, tParmsSource* XMLparms, tCoreLayout* coreLayout, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sNN(char* objName_, sBaseObj* objParent_, tDataShape* baseShape, tNNparms* NNparms_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sNN(char* objName_, s0* objParent_, tParmsSource* XMLparms, tCoreLayout* coreLayout, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sNN(char* objName_, s0* objParent_, tDataShape* baseShape, tNNparms* NNparms_, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sNN();
 
 	EXPORT void setActivationFunction(int* func_);

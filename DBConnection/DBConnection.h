@@ -3,7 +3,7 @@
 #include "../CommonEnv.h"
 #include "DBConnection_enums.h"
 #ifdef __cplusplus
-#include "../BaseObj/BaseObj.h"
+#include "../s0/s0.h"
 #include "../ParamMgr/ParamMgr.h"
 #endif
 
@@ -14,7 +14,7 @@
 
 typedef struct sDBConnection
 #ifdef __cplusplus
-	: public sBaseObj
+	: public s0
 #endif
 {
 	char DBUser[DBUSER_MAXLEN];
@@ -23,8 +23,8 @@ typedef struct sDBConnection
 	void* DBCtx;
 
 #ifdef __cplusplus
-	EXPORT sDBConnection(char* objName_, sBaseObj* objParent_, char* username, char* password, char* connstring, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sDBConnection(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sDBConnection(char* objName_, s0* objParent_, char* username, char* password, char* connstring, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sDBConnection(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT sDBConnection();
 	EXPORT ~sDBConnection();
 #endif

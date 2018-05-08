@@ -11,7 +11,7 @@ void sFXData::sFXData_common(sDebuggerParms* dbgparms_){	//--parent DataSource p
 	featuresCnt=5;
 	BWfeatureH=FXHIGH; BWfeatureL=FXLOW;
 }
-sFXData::sFXData(char* objName_, sBaseObj* objParent_, tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, dbgparms_) {
+sFXData::sFXData(char* objName_, s0* objParent_, tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, dbgparms_) {
 	sFXData_common(dbgparms_);
 	//--
 	db=db_;
@@ -19,7 +19,7 @@ sFXData::sFXData(char* objName_, sBaseObj* objParent_, tDBConnection* db_, char*
 	strcpy_s(TimeFrame, FX_TIMEFRAME_MAXLEN, tf_);
 	IsFilled=isFilled_;
 }
-sFXData::sFXData(char* objName_, sBaseObj* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, parms, dbgparms_) {
+sFXData::sFXData(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, parms, dbgparms_) {
 	sFXData_common(dbgparms_);
 	//--
 	safecall(parms->setKey(parmKey));

@@ -14,7 +14,7 @@
 
 #define coreCalled
 
-typedef struct sCoreLayout : sBaseObj {
+typedef struct sCoreLayout : s0 {
 	int Id;
 	char* desc;
 	int layer=-1;
@@ -27,19 +27,19 @@ typedef struct sCoreLayout : sBaseObj {
 	tDataShape* shape;
 
 	void sCoreLayout_common(sDebuggerParms* dbgparms_, int Id_);
-	EXPORT sCoreLayout(char* objName_, sBaseObj* objParent_, tParmsSource* parms, int Id_, tDataShape* shape_, sDebuggerParms* dbgparms_=nullptr);
-	//-- TO DO !!! EXPORT sCoreLayout(char* objName_, sBaseObj* objParent_, tParmsSource* parms, int Id_, tDataShape* shape_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sCoreLayout(char* objName_, s0* objParent_, tParmsSource* parms, int Id_, tDataShape* shape_, sDebuggerParms* dbgparms_=nullptr);
+	//-- TO DO !!! EXPORT sCoreLayout(char* objName_, s0* objParent_, tParmsSource* parms, int Id_, tDataShape* shape_, sDebuggerParms* dbgparms_=nullptr);
 
 	EXPORT ~sCoreLayout();
 
 } tCoreLayout;
 
-typedef struct sCore : sBaseObj {
+typedef struct sCore : s0 {
 
 	int kaz;
 	tCoreLayout* layout;
 
-	EXPORT sCore(char* objName_, sBaseObj* objParent_, tParmsSource* parms, tCoreLayout* layout_, sDebuggerParms* dbgparms_=nullptr);
-	EXPORT sCore(char* objName_, sBaseObj* objParent_, tDataShape* baseShape_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sCore(char* objName_, s0* objParent_, tParmsSource* parms, tCoreLayout* layout_, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sCore(char* objName_, s0* objParent_, tDataShape* baseShape_, sDebuggerParms* dbgparms_=nullptr);
 
 } tCore;
