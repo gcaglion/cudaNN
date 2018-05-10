@@ -39,7 +39,7 @@ typedef struct sDataSet : public s0 {
 	EXPORT sDataSet(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sDataSet();
 
-	bool isSelected(int ts_f);
+	Bool isSelected(int ts_f);
 	EXPORT void buildFromTS();
 	EXPORT void SBF2BFS(int batchId, int barCnt, numtype* fromSBF, numtype* toBFS);
 	EXPORT void BFS2SBF(int batchId, int barCnt, numtype* fromBFS, numtype* toSBF);

@@ -5,7 +5,7 @@
 		sprintf_s(dbgmsg, DBG_MSG_MAXLEN, dbgmsgmask, __VA_ARGS__); \
 }
 #define info(mask, ...)  { \
-	if(dbg->dbgparms->verbose) { \
+	if(dbgparms->verbose) { \
 		setmsg(mask, __VA_ARGS__); \
 		_fout(true); \
 	} \

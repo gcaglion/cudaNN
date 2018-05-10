@@ -38,7 +38,7 @@ static const char *cudaGetErrorEnum(cublasStatus_t error)
 	return "<unknown>";
 }
 
-EXPORT bool initCUDA() {
+EXPORT Bool initCUDA() {
 	// init CUDA GPU
 	if (cudaSetDevice(0)!=cudaSuccess) {
 		printf("cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?\n");
@@ -46,7 +46,7 @@ EXPORT bool initCUDA() {
 	}
 	return true;
 }
-EXPORT bool initCUBLAS(void* cublasH) {
+EXPORT Bool initCUBLAS(void* cublasH) {
 	// init CUBLAS
 
 	if (cublasCreate((cublasHandle_t*)cublasH)!=CUBLAS_STATUS_SUCCESS) {
@@ -56,7 +56,7 @@ EXPORT bool initCUBLAS(void* cublasH) {
 
 	return true;
 }
-EXPORT bool initCURand(void* cuRandH) {
+EXPORT Bool initCURand(void* cuRandH) {
 	if (curandCreateGenerator((curandGenerator_t*)cuRandH, CURAND_RNG_PSEUDO_DEFAULT)!=CURAND_STATUS_SUCCESS) {
 		//if (curandCreateGenerator((curandGenerator_t*)cuRandH, CURAND_RNG_PSEUDO_DEFAULT)!=CURAND_STATUS_SUCCESS) {
 		printf("CURAND initialization error!\n");
@@ -66,22 +66,22 @@ EXPORT bool initCURand(void* cuRandH) {
 	if (curandSetPseudoRandomGeneratorSeed((*(curandGenerator_t*)cuRandH), timeGetTime())!=CURAND_STATUS_SUCCESS) return false;
 	return true;
 }
-EXPORT bool initCUstreams(void* cuStream[]) {
+EXPORT Bool initCUstreams(void* cuStream[]) {
 	for (int s=0; s<MAX_STREAMS; s++) {
 		if (cudaStreamCreate((cudaStream_t*)cuStream[s])!=cudaSuccess) return false;
 	}
 	return true;
 }
 
-EXPORT bool Malloc_cu(numtype** var, int size) {
+EXPORT Bool Malloc_cu(numtype** var, int size) {
 	return ((cudaMalloc(var, size*sizeof(numtype))==cudaSuccess));
 }
-EXPORT bool Free_cu(numtype* var) {
+EXPORT Bool Free_cu(numtype* var) {
 	return (cudaFree(var)==cudaSuccess);
 }
 
 //-- CPU<->GPU transfer functions
-EXPORT bool h2d_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
+EXPORT Bool h2d_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
 	if(cuStream==nullptr) {
 		return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyHostToDevice)==cudaSuccess));
 	} else {
@@ -97,7 +97,7 @@ EXPORT bool h2d_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream
 		return true;
 	}
 }
-EXPORT bool d2h_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
+EXPORT Bool d2h_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
 	if (cuStream==nullptr) {
 		return ((cudaMemcpy(destAddr, srcAddr, size, cudaMemcpyDeviceToHost)==cudaSuccess));
 	} else {
@@ -130,7 +130,7 @@ EXPORT		void initGPUData(float *data, int numElements, float value) {
 	initGPUData_ker<<< gridDim, blockDim>>> (data, numElements, value);
 }
 
-EXPORT bool loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
+EXPORT Bool loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void* cuStream[]) {
 	int streamSize=size/sizeof(numtype)/MAX_STREAMS;
 	size_t streamBytes=streamSize*sizeof(numtype);
 	for (int s=0; s<MAX_STREAMS; s++) {
@@ -142,7 +142,7 @@ EXPORT bool loadBatchData_cu(numtype* destAddr, numtype* srcAddr, int size, void
 	}
 	return true;
 }
-EXPORT bool dumpArray_cu(int vlen, numtype* v, const char* fname) {
+EXPORT Bool dumpArray_cu(int vlen, numtype* v, const char* fname) {
 	numtype* hw=(numtype*)malloc(vlen*sizeof(numtype));
 	if (cudaMemcpy(hw, v, vlen*sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return false;
 	FILE* f=fopen(fname, "w");
@@ -152,7 +152,7 @@ EXPORT bool dumpArray_cu(int vlen, numtype* v, const char* fname) {
 	fclose(f);
 	return true;
 }
-EXPORT bool loadArray_cu(int vlen, numtype* v, const char* fname){
+EXPORT Bool loadArray_cu(int vlen, numtype* v, const char* fname){
 	numtype fh;
 	numtype* vh=(numtype*)malloc(vlen*sizeof(numtype));
 	FILE* f=fopen(fname, "r");
@@ -168,14 +168,14 @@ EXPORT bool loadArray_cu(int vlen, numtype* v, const char* fname){
 }
 
 //-- matrix functions
-EXPORT bool cuMtr_cublas(void* cublasH, int my, int mx, numtype* m, numtype* otm) {
+EXPORT Bool cuMtr_cublas(void* cublasH, int my, int mx, numtype* m, numtype* otm) {
 	float alpha=1;
 	float beta=0;
 	if (cublasSgeam((*(cublasHandle_t*)cublasH), CUBLAS_OP_T, CUBLAS_OP_T, my, mx, &alpha, m, mx, &beta, m, mx, otm, my)!=CUBLAS_STATUS_SUCCESS) return false;
 	return true;
 }
 
-EXPORT bool MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, bool Atr, numtype* A, int By, int Bx, numtype Bscale, bool Btr, numtype* B, numtype* C) {
+EXPORT Bool MbyM_cu(void* cublasH, int Ay, int Ax, numtype Ascale, Bool Atr, numtype* A, int By, int Bx, numtype Bscale, Bool Btr, numtype* B, numtype* C) {
 
 	float *alpha = &Ascale;
 	float *beta = &Bscale;
@@ -291,13 +291,13 @@ __global__ void VbyV2V_ker(int vlen, numtype* v1, numtype* v2, numtype* ov) {
 }
 
 //-- scalar functions
-EXPORT bool Sadd_cu(numtype* s1, numtype* s2, numtype* ssum) {
+EXPORT Bool Sadd_cu(numtype* s1, numtype* s2, numtype* ssum) {
 	cuSadd<<< 1, 1>>>(s1, s2, ssum);
 	return ((cudaGetLastError()==cudaSuccess));
 }
 
 //-- vector functions;
-EXPORT bool getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, int col, numtype* oCol) {
+EXPORT Bool getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, int col, numtype* oCol) {
 	cublasStatus_t err=cublasScopy((*((cublasHandle_t*)cublasH)), Ax, A, Ax, oCol, 1);
 	if (err!=CUBLAS_STATUS_SUCCESS) {
 		printf("getMcol_cu() CUBLAS error %d: %s\n", err, cudaGetErrorEnum(err));
@@ -305,7 +305,7 @@ EXPORT bool getMcol_cu(void* cublasH, int Ay, int Ax, numtype* A, int col, numty
 	}
 	return true;
 }
-EXPORT bool Vscale_cu(int vlen, numtype* v, numtype s){
+EXPORT Bool Vscale_cu(int vlen, numtype* v, numtype s){
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -315,7 +315,7 @@ EXPORT bool Vscale_cu(int vlen, numtype* v, numtype s){
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool Vcopy_cu(int vlen, numtype* v1, numtype* v2) {
+EXPORT Bool Vcopy_cu(int vlen, numtype* v1, numtype* v2) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -325,7 +325,7 @@ EXPORT bool Vcopy_cu(int vlen, numtype* v1, numtype* v2) {
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool Vadd_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
+EXPORT Bool Vadd_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -335,7 +335,7 @@ EXPORT bool Vadd_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype 
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool Vdiff_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
+EXPORT Bool Vdiff_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype scale2, numtype* ov) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -345,7 +345,7 @@ EXPORT bool Vdiff_cu(int vlen, numtype* v1, numtype scale1, numtype* v2, numtype
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool Vsum_cu(int vlen, numtype* v, numtype* ovsum, numtype* ss_d) {
+EXPORT Bool Vsum_cu(int vlen, numtype* v, numtype* ovsum, numtype* ss_d) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -358,7 +358,7 @@ EXPORT bool Vsum_cu(int vlen, numtype* v, numtype* ovsum, numtype* ss_d) {
 	return ((cudaGetLastError()==cudaSuccess));
 }
 
-EXPORT bool Vssum_cu(int vlen, numtype* v, numtype* ovssum) {
+EXPORT Bool Vssum_cu(int vlen, numtype* v, numtype* ovssum) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -368,18 +368,18 @@ EXPORT bool Vssum_cu(int vlen, numtype* v, numtype* ovssum) {
 
 	return ((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool Vssum_cu_cublas(void* cublasH, int Vlen, numtype* V, numtype* oVssum, numtype* ss_d) {
+EXPORT Bool Vssum_cu_cublas(void* cublasH, int Vlen, numtype* V, numtype* oVssum, numtype* ss_d) {
 	if (cublasSnrm2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVssum)!=CUBLAS_STATUS_SUCCESS) return false;
 	(*oVssum)=(*oVssum)*(*oVssum);
 	return true;
 }
 
-EXPORT bool Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm, numtype* ss_d) {
+EXPORT Bool Vnorm_cu(void* cublasH, int Vlen, numtype* V,  numtype* oVnorm, numtype* ss_d) {
 	if (cublasSnrm2((*(cublasHandle_t*)cublasH), Vlen, V, 1, oVnorm)!=CUBLAS_STATUS_SUCCESS) return false;
 	if (cudaMemcpy(oVnorm, ss_d, sizeof(numtype), cudaMemcpyDeviceToHost)!=cudaSuccess) return false;
 	return true;
 }
-EXPORT bool Vinit_cu(int vlen, numtype* v, numtype start, numtype inc) {
+EXPORT Bool Vinit_cu(int vlen, numtype* v, numtype start, numtype inc) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -389,7 +389,7 @@ EXPORT bool Vinit_cu(int vlen, numtype* v, numtype start, numtype inc) {
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool VbyV2V_cu(int vlen, numtype* v1, numtype* v2, numtype* ov) {
+EXPORT Bool VbyV2V_cu(int vlen, numtype* v1, numtype* v2, numtype* ov) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -400,7 +400,7 @@ EXPORT bool VbyV2V_cu(int vlen, numtype* v1, numtype* v2, numtype* ov) {
 	return((cudaGetLastError()==cudaSuccess));
 }
 
-EXPORT bool VinitRnd_cu(int vlen, numtype* v, numtype rndmin, numtype rndmax, void* cuRandH) {
+EXPORT Bool VinitRnd_cu(int vlen, numtype* v, numtype rndmin, numtype rndmax, void* cuRandH) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -465,7 +465,7 @@ __global__ void cudSoftPlus_ker(int vlen, numtype* in, numtype* out) {
 	out[i] = 1/(1+exp(-in[i]));
 }
 
-EXPORT bool Tanh_cu(int vlen, numtype* in, numtype* out) {
+EXPORT Bool Tanh_cu(int vlen, numtype* in, numtype* out) {
 	/*	int blockSize=64; // The launch configurator returned block size
 	int minGridSize; // The minimum grid size needed to achieve the // maximum occupancy for a full device
 	int gridSize; // The actual grid size needed, based on input // size
@@ -483,7 +483,7 @@ EXPORT bool Tanh_cu(int vlen, numtype* in, numtype* out) {
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool dTanh_cu(int vlen, numtype* in, numtype* out) {
+EXPORT Bool dTanh_cu(int vlen, numtype* in, numtype* out) {
 /*	int blockSize=64; // The launch configurator returned block size
 	int minGridSize; // The minimum grid size needed to achieve the // maximum occupancy for a full device 
 	int gridSize; // The actual grid size needed, based on input // size 
@@ -501,7 +501,7 @@ EXPORT bool dTanh_cu(int vlen, numtype* in, numtype* out) {
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool Exp4_cu(int vlen, numtype* in, numtype* out) {
+EXPORT Bool Exp4_cu(int vlen, numtype* in, numtype* out) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -510,7 +510,7 @@ EXPORT bool Exp4_cu(int vlen, numtype* in, numtype* out) {
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool dExp4_cu(int vlen, numtype* in, numtype* out) {
+EXPORT Bool dExp4_cu(int vlen, numtype* in, numtype* out) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -520,7 +520,7 @@ EXPORT bool dExp4_cu(int vlen, numtype* in, numtype* out) {
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool Relu_cu(int vlen, numtype* in, numtype* out) {
+EXPORT Bool Relu_cu(int vlen, numtype* in, numtype* out) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -530,7 +530,7 @@ EXPORT bool Relu_cu(int vlen, numtype* in, numtype* out) {
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool dRelu_cu(int vlen, numtype* in, numtype* out) {
+EXPORT Bool dRelu_cu(int vlen, numtype* in, numtype* out) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -540,7 +540,7 @@ EXPORT bool dRelu_cu(int vlen, numtype* in, numtype* out) {
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool SoftPlus_cu(int vlen, numtype* in, numtype* out) {
+EXPORT Bool SoftPlus_cu(int vlen, numtype* in, numtype* out) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;
@@ -550,7 +550,7 @@ EXPORT bool SoftPlus_cu(int vlen, numtype* in, numtype* out) {
 
 	return((cudaGetLastError()==cudaSuccess));
 }
-EXPORT bool dSoftPlus_cu(int vlen, numtype* in, numtype* out) {
+EXPORT Bool dSoftPlus_cu(int vlen, numtype* in, numtype* out) {
 	dim3 gridDim;
 	dim3 blockDim;
 	blockDim.x = CUDA_BLOCK_SIZE;

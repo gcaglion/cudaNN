@@ -1,6 +1,6 @@
 #include "DebuggerParms.h"
 
-sDebuggerParms::sDebuggerParms(char* ownerObjName, int dest_, bool verbose_, bool timing_, bool pauseOnError_, char* outFileFullName_, char* outFilePath_) {
+sDebuggerParms::sDebuggerParms(char* ownerObjName, int dest_, Bool verbose_, Bool timing_, Bool pauseOnError_, char* outFileFullName_, char* outFilePath_) {
 	dest=dest_;
 	verbose=verbose_;
 	timing=timing_;
@@ -25,3 +25,16 @@ sDebuggerParms::sDebuggerParms(char* ownerObjName, int dest_, bool verbose_, boo
 sDebuggerParms::~sDebuggerParms() {
 	delete outFile;
 }
+
+//-- C stuff
+/*
+EXPORT void _foutC(tDebuggerC* dbg, Bool success) {
+	for (int t=0; t<dbg->stackLevel; t++) sprintf_s(dbg->dbgmsg, DBG_MSG_MAXLEN, "\t%s", dbg->dbgmsg);
+	strcat_s(dbg->dbgmsg, DBG_MSG_MAXLEN, "\n");
+	strcat_s(dbg->stackmsg, DBG_STACK_MAXLEN, dbg->dbgmsg);
+	//if (stackLevel>0) sprintf_s(parent->stackmsg, DBG_STACK_MAXLEN, "%st%s", dbg->parent->stackmsg, dbg->dbgmsg);
+	printf("%s", dbg->dbgmsg);
+	if (dbg->dbgparms->outFile!=NULL) fprintf(dbg->dbgparms->outFile->handle, "%s", dbg->dbgmsg);
+	if (!success && dbg->dbgparms->pauseOnError) { printf("Press any key..."); getchar(); }
+}
+*/

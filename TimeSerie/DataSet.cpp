@@ -146,7 +146,7 @@ void sDataSet::dump(char* filename) {
 	}
 	fclose(LogFile);
 }
-bool sDataSet::isSelected(int ts_f) {
+Bool sDataSet::isSelected(int ts_f) {
 	for (int ds_f=0; ds_f<selectedFeaturesCnt; ds_f++) {
 		if (selectedFeature[ds_f]==ts_f) return true;
 	}

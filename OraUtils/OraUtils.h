@@ -16,19 +16,19 @@ typedef int bool;
 #include <math.h>
 
 //=== DB common functions
-EXPORT bool OraConnect(tdebuggerC* dbg, tDBConnection* DBConnInfo);
+EXPORT bool OraConnect(tDebuggerC* dbg, tDBConnection* DBConnInfo);
 EXPORT void OraDisconnect(tDBConnection* DBConnInfo, int Commit);
 EXPORT void OraCommit(tDBConnection* DBConnInfo);
 
 //=== Retrieval functions
-EXPORT bool Ora_GetFlatOHLCV(tdebuggerC* debugger, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar);
+EXPORT bool Ora_GetFlatOHLCV(tDebuggerC* debugger, tDBConnection* db, char* pSymbol, char* pTF, char* pDate0, int pRecCount, char** oBarTime, float* oBarData, char* oBaseTime, float* oBaseBar);
 
 //=== Logging functions
-EXPORT bool Ora_LogSaveMSE(tdebuggerC* debugger, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV);
-EXPORT bool Ora_LogSaveW(tdebuggerC* debugger, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W);
-EXPORT bool Ora_LogSaveClient(tdebuggerC* debugger, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun);
-EXPORT bool Ora_LogSaveRun(tdebuggerC* debugger, tDBConnection* db, int pid, int tid, int setid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
-EXPORT bool Ora_LogLoadW(tdebuggerC* debugger, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW);
+EXPORT bool Ora_LogSaveMSE(tDebuggerC* debugger, tDBConnection* db, int pid, int tid, int mseCnt, float* mseT, float* mseV);
+EXPORT bool Ora_LogSaveW(tDebuggerC* debugger, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* W);
+EXPORT bool Ora_LogSaveClient(tDebuggerC* debugger, tDBConnection* db, int pid, char* clientName, DWORD startTime, DWORD duration, int simulLen, char* simulStart, bool doTrain, bool doTrainRun, bool doTestRun);
+EXPORT bool Ora_LogSaveRun(tDebuggerC* debugger, tDBConnection* db, int pid, int tid, int setid, int npid, int ntid, int barCnt, int featuresCnt, int* feature, numtype* prediction, numtype* actual);
+EXPORT bool Ora_LogLoadW(tDebuggerC* debugger, tDBConnection* db, int pid, int tid, int epoch, int Wcnt, numtype* oW);
 
 #ifdef __cplusplus
 #undef EXPORT

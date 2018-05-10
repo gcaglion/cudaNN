@@ -363,7 +363,7 @@ void sNN::WU_std(){
 	safecall(Vadd(weightsCntTotal, W, 1, dW, 1, W));
 
 }
-void sNN::ForwardPass(tDataSet* ds, int batchId, bool haveTargets) {
+void sNN::ForwardPass(tDataSet* ds, int batchId, Bool haveTargets) {
 
 	//-- 1. load samples (and targets, if passed) from single batch in dataset onto input layer
 	LDstart=timeGetTime(); LDcnt++;
@@ -386,7 +386,7 @@ void sNN::ForwardPass(tDataSet* ds, int batchId, bool haveTargets) {
 	CEtimeTot+=((DWORD)(timeGetTime()-CEstart));
 
 }
-void sNN::BackwardPass(tDataSet* ds, int batchId, bool updateWeights) {
+void sNN::BackwardPass(tDataSet* ds, int batchId, Bool updateWeights) {
 
 	//-- 1. BackPropagate, calc dJdW for for current batch
 	BPstart=timeGetTime(); BPcnt++;
@@ -401,7 +401,7 @@ void sNN::BackwardPass(tDataSet* ds, int batchId, bool updateWeights) {
 	WUtimeTot+=((DWORD)(timeGetTime()-WUstart));
 
 }
-bool sNN::epochMetCriteria(int epoch, DWORD starttime, bool displayProgress) {
+Bool sNN::epochMetCriteria(int epoch, DWORD starttime, Bool displayProgress) {
 	numtype tse_h;	// total squared error copid on host at the end of each eopch
 
 	Alg->d2h(&tse_h, tse, sizeof(numtype));

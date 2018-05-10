@@ -72,25 +72,23 @@ struct sRoot : s0 {
 	sRoot(int argc=0, char* argv[]=nullptr, sDebuggerParms* rootdbgparms_=nullptr) : s0("root", nullptr, rootdbgparms_) {
 
 		//-- 1. declarations
-		tParmsSource*	xparms=nullptr;
+		tParmsSource*	XMLparms=nullptr;
 		tData*			fData=nullptr;		//-- Forecaster data
 		tEngine*		fEngine=nullptr;	//-- Forecaster engine
 		tLogger*		fPersistor=nullptr;	//-- Forecaster Persistor
 
-		//-- 2. do stuff
-		safespawn(xparms, tParmsSource, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv, true);
-		//-- 2. create Forecaster Data from parms
-		safespawn(fData, tData, XMLparms, ".Forecaster.Data");
-		//-- 3. create Forecaster Engine from parms
-		safespawn(fEngine, tEngine, XMLparms, ".Forecaster.Engine", fData->shape);
-		//-- 4. create Forecaster Persistor
-		safespawn(fPersistor, tLogger, XMLparms, ".Forecaster.Persistor");
-
 		try {
-			xparms=new tParmsSource("xparms", this, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv, true);
+			//-- 2. do stuff
+			safespawn(XMLparms, tParmsSource, "C:\\Users\\gcaglion\\dev\\cudaNN\\Client\\Client.xml", argc, argv, true);
+			//-- 2. create Forecaster Data from parms
+			safespawn(fData, tData, XMLparms, ".Forecasffffffffffffffster.Data");
+			//-- 3. create Forecaster Engine from parms
+			safespawn(fEngine, tEngine, XMLparms, ".Forecaster.Engine", fData->shape);
+			//-- 4. create Forecaster Persistor
+			safespawn(fPersistor, tLogger, XMLparms, ".Forecaster.Persistor");
 		}
 		catch (std::exception exc) {
-			fail("Could not create debugger outfile. Exception: %s", exc.what());
+			fail("Exception=%s", exc.what());
 		}
 	}
 

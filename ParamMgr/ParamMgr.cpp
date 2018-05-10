@@ -1,6 +1,6 @@
 #include "ParamMgr.h"
 
-sParmsSource::sParmsSource(char* objName_, s0* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], bool autoParse, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
+sParmsSource::sParmsSource(char* objName_, s0* objParent_, char* pFileFullName, int CLoverridesCnt_, char* CLoverride_[], Bool autoParse, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	CLoverridesCnt=CLoverridesCnt_; CLoverride=CLoverride_;
 
@@ -51,7 +51,7 @@ int sParmsSource::findParmId(){
 	return ret;
 }
 
-bool stripLastStep(char* fullDesc, char* oStrippedDesc) {
+Bool stripLastStep(char* fullDesc, char* oStrippedDesc) {
 	int lastDotPos=instr('.', fullDesc, true);
 	if (lastDotPos<0) return false;
 	memcpy_s(oStrippedDesc, strlen(fullDesc), fullDesc, lastDotPos);
@@ -59,7 +59,7 @@ bool stripLastStep(char* fullDesc, char* oStrippedDesc) {
 	return true;
 }
 
-void sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
+void sParmsSource::setKey(char* KeyDesc_, Bool ignoreError) {
 	
 	//-- KeyDesc may be passed as literal, therefore we need a buffer to copy KeyDesc_ to, so we can overwrite it
 	char KeyDesc[XML_MAX_PATH_LEN];	strcpy_s(KeyDesc, XML_MAX_PATH_LEN, KeyDesc_);
@@ -88,12 +88,12 @@ void sParmsSource::setKey(char* KeyDesc_, bool ignoreError) {
 
 	UpperCase(currentKey);
 
-	bool success=(findKey(currentKey) || ignoreError);
+	Bool success=(findKey(currentKey) || ignoreError);
 	if (!success) {
 		fail("CurrentKey=%s", KeyDesc_);
 	}
 }
-bool sParmsSource::findKey(char* KeyFullDesc){
+Bool sParmsSource::findKey(char* KeyFullDesc){
 	char keyDescFromParmDesc[XML_MAX_PATH_LEN];
 	for (int p=0; p<parmsCnt; p++) {
 		strcpy_s(keyDescFromParmDesc, XML_MAX_PATH_LEN, parmName[p]);
@@ -113,7 +113,7 @@ void sParmsSource::restoreKey() {
 void sParmsSource::getx(int* oVar){
 	getx(&oVar);
 }
-void sParmsSource::getx(bool* oVar){
+void sParmsSource::getx(Bool* oVar){
 	getx(&oVar);
 }
 void sParmsSource::getx(char* oVar){
@@ -133,7 +133,7 @@ void sParmsSource::getx(int** oVar){
 		}
 	}
 }
-void sParmsSource::getx(bool** oVar) {
+void sParmsSource::getx(Bool** oVar) {
 	for (int e=0; e<parmValsCnt[foundParmId]; e++) {
 		UpperCase(parmVal[foundParmId][e]);
 		(*oVar)[e]=(strcmp(parmVal[foundParmId][e], "TRUE")==0);
@@ -155,7 +155,7 @@ void sParmsSource::getx(numtype** oVar){
 }
 
 
-bool sParmsSource::parse() {
+Bool sParmsSource::parse() {
 	char vLine[XML_MAX_LINE_SIZE];
 	size_t llen;
 	char readKeyDesc[XML_MAX_SECTION_DESC_LEN];
@@ -201,10 +201,6 @@ bool sParmsSource::parse() {
 
 	}
 	return true;
-}
-
-void sParmsSource::cleanup() {
-	printf("\nsParamsSource->cleanup() called.\n");
 }
 
 /*

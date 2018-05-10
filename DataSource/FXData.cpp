@@ -11,7 +11,7 @@ void sFXData::sFXData_common(sDebuggerParms* dbgparms_){	//--parent DataSource p
 	featuresCnt=5;
 	BWfeatureH=FXHIGH; BWfeatureL=FXLOW;
 }
-sFXData::sFXData(char* objName_, s0* objParent_, tDBConnection* db_, char* symbol_, char* tf_, bool isFilled_, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, dbgparms_) {
+sFXData::sFXData(char* objName_, s0* objParent_, tDBConnection* db_, char* symbol_, char* tf_, Bool isFilled_, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, dbgparms_) {
 	sFXData_common(dbgparms_);
 	//--
 	db=db_;

@@ -1,6 +1,6 @@
 #pragma once
 #include "../CommonEnv.h"
-#include "../Debugger/Debugger.h"
+#include "../DebuggerParms/DebuggerParms.h"
 #include "../ParamMgr/ParamMgr.h"
 #include "../Data/Data.h"
 #include "../Core/Core.h"

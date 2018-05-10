@@ -26,7 +26,7 @@ typedef struct sTimeSerie : public s0 {
 	int featuresCnt;
 	int len;
 	int dt;	// data transformation
-	bool BWcalc;	// Bar width calc
+	Bool BWcalc;	// Bar width calc
 	int tsfCnt;
 	int* tsf;
 
@@ -39,9 +39,9 @@ typedef struct sTimeSerie : public s0 {
 	char** dtime;	//-- may always be useful...
 	numtype* bd;	//-- host   base data ( 1 X featuresCnt )
 	char* bdtime;	
-	bool hasTR=false;
+	Bool hasTR=false;
 	numtype* d_tr;
-	bool hasTRS=false;
+	Bool hasTRS=false;
 	numtype* d_trs;
 
 	//-- constructors / destructor
@@ -66,7 +66,7 @@ typedef struct sTimeSerie : public s0 {
 	EXPORT void dump(char* dumpFileName="C:/temp/TSdump.csv");
 
 private:
-	bool LoadOHLCVdata(char* date0);
+	Bool LoadOHLCVdata(char* date0);
 
 } tTimeSerie;
 

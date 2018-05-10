@@ -30,19 +30,26 @@ void s0::createDebugger(sDebuggerParms* dbgparms_) {
 	}
 
 	//-- C debugger 
-	Cdbg=new sdebuggerC();
-	strcpy_s(Cdbg->name, OBJ_NAME_MAXLEN, name);
+	Cdbg=new sDebuggerC();
+	Cdbg->name=name;
 	Cdbg->stackLevel=stackLevel;
-	Cdbg->dbgparms=dbgparms;
-	strcpy_s(Cdbg->dbgmsgmask, OBJ_NAME_MAXLEN, dbgmsgmask);
-	strcpy_s(Cdbg->dbgmsg, OBJ_NAME_MAXLEN, dbgmsg);
-	strcpy_s(Cdbg->stackmsg, DBG_STACK_MAXLEN, stackmsg);
+	Cdbg->parent=parent;
+	Cdbg->dest=dbgparms->dest;
+	Cdbg->verbose=dbgparms->verbose;
+	Cdbg->timing=dbgparms->timing;
+	Cdbg->pauseOnError=dbgparms->pauseOnError;
+	Cdbg->dest=dbgparms->dest;
+	Cdbg->outFile=dbgparms->outFile;
+
+	Cdbg->dbgmsgmask=dbgmsgmask;
+	Cdbg->dbgmsg=dbgmsg;
+	Cdbg->stackmsg=stackmsg;
 
 }
 void s0::failmethod(int p) {
 	if (p<0) throw(std::exception("failed method DioPorco."));
 }
-void s0::_fout(bool success) {
+void s0::_fout(Bool success) {
 	for (int t=0; t<stackLevel; t++) sprintf_s(dbgmsg, DBG_MSG_MAXLEN, "\t%s", dbgmsg);
 	strcat_s(dbgmsg, DBG_MSG_MAXLEN, "\n");
 	strcat_s(stackmsg, DBG_STACK_MAXLEN, dbgmsg);

@@ -10,6 +10,14 @@
 #include <stdexcept>
 #endif
 
+#ifdef __cplusplus
+#define Bool bool
+#else
+typedef int Bool;
+#define true 1
+#define false 0
+#endif
+
 
 typedef float numtype;
 #define DATE_FORMAT "YYYYMMDDHHMI"

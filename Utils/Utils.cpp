@@ -14,7 +14,7 @@ EXPORT char* MyGetCurrentDirectory() {
 	wcstombs_s(&convcharsn, RetBuf, Buffer, MAX_PATH-1);
 	return &RetBuf[0];
 }
-EXPORT bool getCurrentPath(char* oPath) {
+EXPORT Bool getCurrentPath(char* oPath) {
 	TCHAR Buffer[MAX_PATH];
 	char  RetBuf[MAX_PATH];
 	DWORD dwRet;
@@ -88,7 +88,7 @@ EXPORT char* right(char* str, int len) {
 EXPORT char* left(char* str, int len) {
 	return(substr(str, 0, len));
 }
-EXPORT int  instr(char soughtChar, char* intoStr, bool fromRight) {
+EXPORT int  instr(char soughtChar, char* intoStr, Bool fromRight) {
 	int i;
 	if (fromRight) {
 		for (i=(int)strlen(intoStr)-1; i>=0; i--) {
@@ -135,7 +135,7 @@ EXPORT void stripChar(char* istr, char c) {
 	istr[ri]='\0';
 	free(ostr);
 }
-EXPORT bool getValuePair(char* istr, char* oName, char* oVal, char eqSign) {
+EXPORT Bool getValuePair(char* istr, char* oName, char* oVal, char eqSign) {
 	int eqpos=instr(eqSign, istr, false); if (eqpos<0) return false;
 	memcpy_s(oName, eqpos, istr, eqpos);
 	oName[eqpos]='\0';
@@ -143,13 +143,13 @@ EXPORT bool getValuePair(char* istr, char* oName, char* oVal, char eqSign) {
 	oVal[strlen(istr)-eqpos]='\0';
 	return true;
 }
-EXPORT bool isnumber(char* str) {
+EXPORT Bool isnumber(char* str) {
 	for (int i=0; i<strlen(str); i++) {
 		if (str[i]>'9'||str[i]<'0') return false;
 	}
 	return true;
 }
-EXPORT bool isInList(int soughtVal, int listLen, int* list) {
+EXPORT Bool isInList(int soughtVal, int listLen, int* list) {
 	for(int i=0; i<listLen; i++) {
 		if (list[i]==soughtVal) return true;
 	}

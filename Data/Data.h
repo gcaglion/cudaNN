@@ -32,13 +32,13 @@ typedef struct sData : public s0 {
 	tDataShape* shape=nullptr;
 
 	//-- actions
-	bool ActionDo[3];
+	Bool ActionDo[3];
 	char ActionDesc[3][XML_MAX_SECTION_DESC_LEN]={"Train","Test","Validation"};
 
 	//-- DataSets (each include its own source TimeSerie)
 	tDataSet* ds[3];
 
-	EXPORT sData(char* objName_, s0* objParent_, tDataShape* shape_=nullptr, bool doTrain=true, bool doTest=true, bool doValidation=false, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sData(char* objName_, s0* objParent_, tDataShape* shape_=nullptr, Bool doTrain=true, Bool doTest=true, Bool doValidation=false, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT sData(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sData();
 

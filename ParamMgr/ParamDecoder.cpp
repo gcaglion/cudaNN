@@ -21,7 +21,7 @@
 }
 void sParmsSource::decode(int elementId, int* oVal) { 
 	char optionS[XML_MAX_PARAM_VAL_LEN];
-	bool success=false;
+	Bool success=false;
 
 	//-- DataSource_enums
 	optionLookup(FXDB_SOURCE, elementId);

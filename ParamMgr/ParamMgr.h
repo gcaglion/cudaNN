@@ -32,7 +32,7 @@ typedef struct sParmsSource : public s0 {
 	char soughtParmFull[XML_MAX_PATH_LEN];
 
 	//--
-	EXPORT void setKey(char* KeyDesc, bool ignoreError=false);
+	EXPORT void setKey(char* KeyDesc, Bool ignoreError=false);
 	EXPORT void backupKey();
 	EXPORT void restoreKey();
 	bool findKey(char* KeyFullDesc);
@@ -70,8 +70,6 @@ typedef struct sParmsSource : public s0 {
 	EXPORT void getx(bool** oVar);
 	EXPORT void getx(char** oVar);
 	EXPORT void getx(numtype** oVar);
-
-	EXPORT void cleanup();
 
 	//EXPORT void ObjectDebugParmsOverride(char* KeyDesc, sDebugger* dbg_);
 

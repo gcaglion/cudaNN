@@ -10,14 +10,14 @@ typedef struct sNNparms {
 	float* levelRatio;
 	int* ActivationFunction;	// can be different for each level
 	int batchSamplesCnt;	// usually referred to as Batch Size
-	bool useContext;
-	bool useBias;
+	Bool useContext;
+	Bool useBias;
 
 	//-- training-common
 	int MaxEpochs;
 	float TargetMSE;
 	int NetSaveFreq;
-	bool StopOnDivergence;
+	Bool StopOnDivergence;
 	int BP_Algo;
 	//-- training-BP_Std specific
 	float LearningRate;

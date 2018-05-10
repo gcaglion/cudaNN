@@ -3,15 +3,6 @@
 #include "../DebuggerParms/DebuggerParms.h"
 #include "s0macros.h"
 
-typedef struct sdebuggerC {
-	char* name;
-	int stackLevel;
-	tDebuggerParms* dbgparms;
-	char dbgmsgmask[DBG_MSG_MAXLEN];
-	char dbgmsg[DBG_MSG_MAXLEN];
-	char stackmsg[DBG_STACK_MAXLEN];
-} tdebuggerC;
-
 #ifdef __cplusplus
 struct s0 {
 	char name[OBJ_NAME_MAXLEN];
@@ -33,7 +24,7 @@ struct s0 {
 	EXPORT void failmethod(int p);
 	EXPORT void _fout(bool success);
 
-	tdebuggerC* Cdbg;
+	tDebuggerC* Cdbg;
 
 };
 #endif

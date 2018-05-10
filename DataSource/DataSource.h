@@ -9,12 +9,12 @@ typedef struct sDataSource : public s0 {
 	int type;
 
 	int featuresCnt;
-	bool calcBW;
+	Bool calcBW;
 	int BWfeatureH;
 	int BWfeatureL;
 
 #ifdef __cplusplus
-	sDataSource(char* objName_, s0* objParent_, int type_, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, sDebuggerParms* dbgparms_=nullptr);
+	sDataSource(char* objName_, s0* objParent_, int type_, Bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, sDebuggerParms* dbgparms_=nullptr);
 	sDataSource(char* objName_, s0* objParent_, tParmsSource* parms, sDebuggerParms* dbgparms_=nullptr);
 	sDataSource(char* objName_, s0* objParent_, sDebuggerParms* dbgparms_=nullptr);
 	~sDataSource();

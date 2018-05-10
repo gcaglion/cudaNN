@@ -38,7 +38,7 @@ sDataShape::sDataShape(char* objName_, s0* objParent_, tParmsSource* parms, char
 sDataShape::~sDataShape() {
 }
 
-sData::sData(char* objName_, s0* objParent_, tDataShape* shape_, bool doTrain_, bool doTest_, bool doValidation_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
+sData::sData(char* objName_, s0* objParent_, tDataShape* shape_, Bool doTrain_, Bool doTest_, Bool doValidation_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	shape=shape_; 
 	ActionDo[TRAIN]=doTrain_; ActionDo[TEST]=doTest_; ActionDo[VALID]=doValidation_;
 

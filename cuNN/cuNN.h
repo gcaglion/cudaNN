@@ -89,11 +89,11 @@ private:
 	void FF();
 	void Activate(int level);
 	void calcErr();
-	void ForwardPass(tDataSet* ds, int batchId, bool haveTargets);
-	bool epochMetCriteria(int epoch, DWORD starttime, bool displayProgress=true);
+	void ForwardPass(tDataSet* ds, int batchId, Bool haveTargets);
+	Bool epochMetCriteria(int epoch, DWORD starttime, Bool displayProgress=true);
 	void BP_std();
 	void WU_std();
-	void BackwardPass(tDataSet* ds, int batchId, bool updateWeights);
+	void BackwardPass(tDataSet* ds, int batchId, Bool updateWeights);
 	//-- malloc + init
 	void mallocNeurons();
 	void initNeurons();

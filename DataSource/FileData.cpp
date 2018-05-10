@@ -1,7 +1,7 @@
 #include "FileData.h"
 
 //=== sFileData
-sFileData::sFileData(char* objName_, s0* objParent_, tFileInfo* srcFile_, int fieldSep_, bool calcBW_, int BWfeatureH_, int BWfeatureL_, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, dbgparms_) {
+sFileData::sFileData(char* objName_, s0* objParent_, tFileInfo* srcFile_, int fieldSep_, Bool calcBW_, int BWfeatureH_, int BWfeatureL_, sDebuggerParms* dbgparms_) : sDataSource(objName_, objParent_, dbgparms_) {
 	//--parent DataSource properties
 	type=FILE_SOURCE;
 	calcBW=calcBW_; BWfeatureH=BWfeatureH_; BWfeatureL=BWfeatureL_;

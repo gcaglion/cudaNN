@@ -10,7 +10,7 @@ typedef struct sFileData : public sDataSource {
 	int fieldSep;
 	int featuresCnt;
 
-	EXPORT sFileData(char* objName_, s0* objParent_, tFileInfo* srcFile_, int fieldSep_=COMMA_SEPARATOR, bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, sDebuggerParms* dbgparms_=nullptr);
+	EXPORT sFileData(char* objName_, s0* objParent_, tFileInfo* srcFile_, int fieldSep_=COMMA_SEPARATOR, Bool calcBW_=false, int BWfeatureH_=1, int BWfeatureL_=2, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT sFileData(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_=nullptr);
 	EXPORT ~sFileData();
 

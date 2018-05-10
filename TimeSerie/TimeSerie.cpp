@@ -38,10 +38,7 @@ sTimeSerie::sTimeSerie(char* objName_, s0* objParent_, tFXData* dataSource_, int
 sTimeSerie::sTimeSerie(char* objName_, s0* objParent_, tFileData* dataSource_, int steps_, int featuresCnt_, char* date0_, int dt_, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 	featuresCnt=featuresCnt_;
 }
-/*sTimeSerie::sTimeSerie(tMT4Data* dataSource_, int steps_, char* date0_, int dt_, tDebugger* dbg_){
-}
-//-------------------------------------------------------------------------------------------------------------------------------------
-*/
+
 sTimeSerie::sTimeSerie(char* objName_, s0* objParent_, tParmsSource* parms, char* parmKey, sDebuggerParms* dbgparms_) : s0(objName_, objParent_, dbgparms_) {
 
 	tsf=(int*)malloc(MAX_TSF_CNT*sizeof(int));
@@ -109,10 +106,10 @@ sTimeSerie::~sTimeSerie() {
 }
 
 //-- sTimeSerie, other methods
-bool sTimeSerie::LoadOHLCVdata(char* date0) {
+Bool sTimeSerie::LoadOHLCVdata(char* date0) {
 
-	if (!OraConnect(dbg, fxData->db)) return false;
-	if (!Ora_GetFlatOHLCV(dbg, fxData->db, fxData->Symbol, fxData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)) return false;
+	if (!OraConnect(Cdbg, fxData->db)) return false;
+	if (!Ora_GetFlatOHLCV(Cdbg, fxData->db, fxData->Symbol, fxData->TimeFrame, date0, this->steps, this->dtime, this->d, this->bdtime, this->bd)) return false;
 
 	return true;
 }
@@ -122,7 +119,7 @@ void sTimeSerie::load(tFXData* tsFXData_, char* pDate0) {
 	if (!LoadOHLCVdata(pDate0)) fail("pDate0=%s", pDate0);
 }
 void sTimeSerie::load(tFileData* tsFileData, char* pDate0) {
-	fail("%s(%p)->%s() failed. pDate0=%s", objName, this, __func__, pDate0);
+	fail("pDate0=%s", pDate0);
 }
 /*void sTimeSerie::load(tMT4Data* tsMT4Data, char* pDate0) {
 	safeThrow("", 0);
