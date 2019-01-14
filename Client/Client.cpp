@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 		bool doTrain=true;
 		bool doTrainRun =true;				//-- In-Sample test. Runs on Training set.
 		char* trainTSdate0="201712300000";
-		int trainTShistoryLen=503;
+		int trainTShistoryLen=5003;
 		int trainTS_DT=DT_DELTA;
 		int batchSamplesCnt_Train=10;
 
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 		//int testWpid=76168, testWtid=77828;	//-- if both 0, use currently loaded W
 		int testWpid=0, testWtid=0;				//-- if both 0, use currently loaded W
 		char* testTSdate0="201612300000";
-		int testTShistoryLen=503;				//-- can be different
+		int testTShistoryLen=5003;				//-- can be different
 		int testTS_DT=DT_DELTA;					//-- can be different
 		int batchSamplesCnt_Test=10;			//-- can be different
 		
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 		int modelFeaturesCnt=sizeof(modelFeature)/sizeof(int);
 
 		//-- net geometry
-		char* levelRatioS= "0.5";//"0.7"
+		char* levelRatioS= "2";//"0.7"
 		int activationFunction[]={ NN_ACTIVATION_TANH,NN_ACTIVATION_TANH,NN_ACTIVATION_TANH, NN_ACTIVATION_TANH, NN_ACTIVATION_TANH };
 		bool useContext=true;
 		bool useBias=false;
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
 		tDbg* NNdbg; safeCallEE(NNdbg=new tDbg(DBG_LEVEL_ERR, DBG_DEST_BOTH, new tFileInfo("NN.log"), true));
 		tNN* myNN;   safeCallEE(myNN=new tNN(sampleLen, predictionLen, modelFeaturesCnt, levelRatioS, activationFunction, useContext, useBias, NNdbg));
 		//-- 0.1. set training parameters
-		myNN->MaxEpochs=50;
+		myNN->MaxEpochs=100;
 		myNN->NetSaveFreq=200;
 		myNN->TargetMSE=(float)0.0001;
 		myNN->BP_Algo=BP_STD;
